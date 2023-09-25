@@ -163,6 +163,7 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
+	log.Printf("[DEBUG] Deleting S3 Bucket Accelerate Configuration: %s", d.Id())
 	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
