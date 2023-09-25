@@ -6,11 +6,11 @@ package docdb_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -39,7 +39,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
@@ -163,7 +163,7 @@ func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile(fmt.Sprintf("^%s", rNamePrefix))),
+					resource.TestMatchResourceAttr(resourceName, "identifier", regexache.MustCompile(fmt.Sprintf("^%s", rNamePrefix))),
 				),
 			},
 
@@ -197,7 +197,7 @@ func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 

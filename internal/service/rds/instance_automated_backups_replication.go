@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,10 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// AWS flip-flop on the capitalization of status codes. Use uppercase.
 const (
-	InstanceAutomatedBackupStatusPending     = "Pending"
-	InstanceAutomatedBackupStatusReplicating = "Replicating"
-	InstanceAutomatedBackupStatusRetained    = "Retained"
+	InstanceAutomatedBackupStatusPending     = "PENDING"
+	InstanceAutomatedBackupStatusReplicating = "REPLICATING"
+	InstanceAutomatedBackupStatusRetained    = "RETAINED"
 )
 
 // @SDKResource("aws_db_instance_automated_backups_replication")
@@ -183,13 +185,14 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
 		DBInstanceAutomatedBackupsArn: aws.String(arn),
 	}
-	output, err := findDBInstanceAutomatedBackup(ctx, conn, input)
+	output, err := findDBInstanceAutomatedBackup(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstanceAutomatedBackup]())
 
 	if err != nil {
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
+	// AWS flip-flop on the capitalization of status codes. Case-insensitive comparison.
+	if status := aws.StringValue(output.Status); strings.EqualFold(status, InstanceAutomatedBackupStatusRetained) {
 		// If the automated backup is retained, the replication is stopped.
 		return nil, &retry.NotFoundError{
 			Message:     status,
@@ -207,8 +210,8 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 	return output, nil
 }
 
-func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
-	output, err := findDBInstanceAutomatedBackups(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstanceAutomatedBackup]())
+func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[*rds.DBInstanceAutomatedBackup]) (*rds.DBInstanceAutomatedBackup, error) {
+	output, err := findDBInstanceAutomatedBackups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -260,7 +263,8 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn str
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		// AWS flip-flop on the capitalization of status codes. Convert to uppercase.
+		return output, strings.ToUpper(aws.StringValue(output.Status)), nil
 	}
 }
 

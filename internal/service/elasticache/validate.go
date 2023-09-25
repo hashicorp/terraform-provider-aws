@@ -5,7 +5,8 @@ package elasticache
 
 import (
 	"fmt"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
@@ -14,7 +15,7 @@ func validReplicationGroupAuthToken(v interface{}, k string) (ws []string, error
 		errors = append(errors, fmt.Errorf(
 			"%q must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)", k))
 	}
-	if !regexp.MustCompile(`^[^@"\/]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[^@"\/]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
 	}

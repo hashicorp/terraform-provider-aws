@@ -291,10 +291,6 @@ func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, n string, v
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Account Public Access Block ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		output, err := tfs3control.FindPublicAccessBlockByAccountID(ctx, conn, rs.Primary.ID)

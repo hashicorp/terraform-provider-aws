@@ -7,6 +7,13 @@ import (
 	"context"
 )
 
+// DataSourceMetadata describes metadata for a data resource in the GetMetadata
+// RPC.
+type DataSourceMetadata struct {
+	// TypeName is the name of the data resource.
+	TypeName string
+}
+
 // DataSourceServer is an interface containing the methods a data source
 // implementation needs to fill.
 type DataSourceServer interface {

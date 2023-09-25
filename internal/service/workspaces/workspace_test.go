@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
@@ -50,7 +51,7 @@ func testAccWorkspace_basic(t *testing.T) {
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, "id"),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttr(resourceName, "state", string(types.WorkspaceStateAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "Administrator"),
@@ -248,7 +249,7 @@ func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateRootVolumeSize(rName, domain),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
 			},
 		},
 	})
@@ -267,7 +268,7 @@ func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateUserVolumeSize(rName, domain),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
 			},
 		},
 	})

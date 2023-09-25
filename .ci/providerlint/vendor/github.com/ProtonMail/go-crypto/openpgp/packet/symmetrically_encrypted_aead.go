@@ -144,7 +144,7 @@ func getSymmetricallyEncryptedAeadInstance(c CipherFunction, mode AEADMode, inpu
 	_, _ = readFull(hkdfReader, encryptionKey)
 
 	// Last 64 bits of nonce are the counter
-	nonce = make([]byte, mode.IvLength() - 8)
+	nonce = make([]byte, mode.IvLength()-8)
 
 	_, _ = readFull(hkdfReader, nonce)
 

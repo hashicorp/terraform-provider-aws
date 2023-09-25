@@ -306,7 +306,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 
 					r := ResourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(PrincipalPortfolioAssociationID(AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
+					d.SetId(PrincipalPortfolioAssociationCreateResourceID(AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id), aws.StringValue(principal.PrincipalType)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -516,6 +516,7 @@ func sweepProvisionedProducts(region string) error {
 			r := ResourceProvisionedProduct()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(detail.Id))
+			d.Set("ignore_errors", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

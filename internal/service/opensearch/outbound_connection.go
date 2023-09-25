@@ -121,8 +121,18 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.Get("accept_connection").(bool) {
-		if err := inboundConnectionAccept(ctx, d, conn); err != nil {
-			return diag.Errorf("unable to accept Connection: %s", err)
+		input := &opensearchservice.AcceptInboundConnectionInput{
+			ConnectionId: aws.String(d.Id()),
+		}
+
+		_, err := conn.AcceptInboundConnectionWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("accepting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitInboundConnectionAccepted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
 		}
 	}
 
@@ -160,13 +170,12 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	req := &opensearchservice.DeleteOutboundConnectionInput{
+	log.Printf("[DEBUG] Deleting OpenSearch Outbound Connection: %s", d.Id())
+	_, err := conn.DeleteOutboundConnectionWithContext(ctx, &opensearchservice.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteOutboundConnectionWithContext(ctx, req)
-
-	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -288,24 +297,6 @@ func outboundConnectionDomainInfoSchema() *schema.Schema {
 			},
 		},
 	}
-}
-
-func inboundConnectionAccept(ctx context.Context, d *schema.ResourceData, conn *opensearchservice.OpenSearchService) error {
-	// Create the Inbound Connection
-	acceptOpts := &opensearchservice.AcceptInboundConnectionInput{
-		ConnectionId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Inbound Connection Accept options: %#v", acceptOpts)
-
-	_, err := conn.AcceptInboundConnectionWithContext(ctx, acceptOpts)
-	if err != nil {
-		return err
-	}
-
-	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	return err
 }
 
 func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservice.DomainInformationContainer {

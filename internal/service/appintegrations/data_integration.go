@@ -6,8 +6,8 @@ package appintegrations
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -55,7 +55,7 @@ func ResourceDataIntegration() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 				),
 			},
 			"schedule_config": {
@@ -77,7 +77,7 @@ func ResourceDataIntegration() *schema.Resource {
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 							),
 						},
 						"schedule_expression": {
@@ -95,7 +95,7 @@ func ResourceDataIntegration() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexp.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
+					validation.StringMatch(regexache.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),

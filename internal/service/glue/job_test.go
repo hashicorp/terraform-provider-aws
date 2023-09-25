@@ -6,9 +6,9 @@ package glue_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -360,7 +360,7 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_executionProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
+				ExpectError: regexache.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
 			},
 			{
 				Config: testAccJobConfig_executionProperty(rName, 1),
@@ -401,7 +401,7 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_maxRetries(rName, 11),
-				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
 				Config: testAccJobConfig_maxRetries(rName, 0),
@@ -440,7 +440,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_notificationProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
+				ExpectError: regexache.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
 			},
 			{
 				Config: testAccJobConfig_notificationProperty(rName, 1),
