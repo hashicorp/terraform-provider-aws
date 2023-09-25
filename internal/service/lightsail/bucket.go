@@ -5,6 +5,7 @@ package lightsail
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -30,6 +31,7 @@ func ResourceBucket() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketRead,
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,13 +45,18 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bundle_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -59,11 +66,6 @@ func ResourceBucket() *schema.Resource {
 			"region": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"force_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"support_code": {
 				Type:     schema.TypeString,
@@ -76,6 +78,7 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -163,11 +166,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	forceDelete := d.Get("force_delete").(bool)
-
+	log.Printf("[DEBUG] Deleting Lightsail Bucket: %s", d.Id())
 	out, err := conn.DeleteBucket(ctx, &lightsail.DeleteBucketInput{
 		BucketName:  aws.String(d.Id()),
-		ForceDelete: aws.Bool(forceDelete),
+		ForceDelete: aws.Bool(d.Get("force_delete").(bool)),
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
