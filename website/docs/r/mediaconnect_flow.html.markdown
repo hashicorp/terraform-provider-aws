@@ -1,14 +1,13 @@
 ---
 subcategory: "Elemental MediaConnect"
 layout: "aws"
-page_title: "AWS: aws_medialive_flow"
+page_title: "AWS: aws_mediaconnect_flow"
 description: |-
-  Terraform resource for managing an AWS MediaConnect Flow.
+  Terraform resource for managing an AWS Elemental MediaConnect Flow.
 ---
-
 # Resource: aws_mediaconnect_flow
 
-Terraform resource for managing an AWS MediaConnect Flow.
+Terraform resource for managing an AWS Elemental MediaConnect Flow.
 
 ## Example Usage
 
@@ -63,15 +62,15 @@ The following arguments are optional:
 * `protocol` - (Optional) The protocol that is used by the source.
 * `sender_control_port` - (Optional) The port that the flow uses to send outbound requests to initiate connection with the sender.
 * `sender_ip_address` - (Optional) The IP address that the flow communicates with to initiate connection with the sender.
-* `source_listener_address` - (Optional) Source IP or domain name for SRT-caller protocol.
-* `source_listener_port` - (Optional) Source port for SRT-caller protocol.
+* `listener_address` - (Optional) Source IP or domain name for SRT-caller protocol.
+* `listener_port` - (Optional) Source port for SRT-caller protocol.
 * `stream_id` - (Optional) The stream ID that you want to use for this transport. This parameter applies only to Zixi and SRT caller-based streams.
 * `vpc_interface_name` - (Optional) The name of the VPC interface to use for this source.
 * `whitelist_cidr` - (Optional) The range of IP addresses that should be allowed to contribute content to your source. These IP addresses should be in the form of a Classless Inter-Domain Routing (CIDR) block; for example, 10.0.0.0/16.
 
 ### Gateway Bridge Source
 
-* `bridge_arn` - (Required) The ARN of the bridge feeding this flow.
+* `arn` - (Required) The ARN of the bridge feeding this flow.
 * `vpc_interface_attachment` - (Optional) The name of the VPC interface attachment to use for this bridge source. See [VPC Interface Attachment](#vpc-interface-attachment) for more details.
 
 ### VPC Interface Attachment
@@ -81,12 +80,12 @@ The following arguments are optional:
 ### Media Stream Source Configurations
 
 * `encoding_name` - (Required) The format you want to use to encode the data. For ancillary data streams, set the encoding name to smpte291. For audio streams, set the encoding name to pcm. For video, 2110 streams, set the encoding name to raw. For video, JPEG XS streams, set the encoding name to jxsv.
-* `media_stream_name` - (Required) The name of the media stream.
+* `name` - (Required) The name of the media stream.
 * `input_configurations` - (Optional) The transport parameters that you want to associate with the media stream. See [Input Configurations](#input-configurations) for more details.
 
 ### Input Configurations
 
-* `input_port` - (Required) The port that you want the flow to listen on for an incoming media stream.
+* `port` - (Required) The port that you want the flow to listen on for an incoming media stream.
 * `interface` - (Required) The VPC interface that you want to use for the incoming media stream. See [VPC Interface](#vpc-interface) for more details.
 
 ### Entitlements
@@ -95,7 +94,7 @@ The following arguments are optional:
 * `data_transfer_subscriber_fee_percent` - (Optional) Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
 * `description` - (Required) A description of the entitlement. This description appears only on the AWS Elemental MediaConnect console and will not be seen by the subscriber or end user.
 * `encryption` - (Optional) The type of encryption that will be used on the output that is associated with this entitlement. Allowable encryption types: static-key, speke. See [Encryption](#encryption) for more details.
-* `entitlement_status` - (Optional) An indication of whether the new entitlement should be enabled or disabled as soon as it is created. If you don’t specify the entitlementStatus field in your request, MediaConnect sets it to ENABLED.
+* `status` - (Optional) An indication of whether the new entitlement should be enabled or disabled as soon as it is created. If you don’t specify the entitlementStatus field in your request, MediaConnect sets it to ENABLED.
 * `name` - (Required) The name of the entitlement. This value must be unique within the current flow.
 
 ### Encryption
@@ -112,14 +111,14 @@ The following arguments are optional:
 
 ### Maintenance
 
-* `maintenance_day` - (Optional) The day of the week to use for maintenance.
-* `maintenance_start_time` - (Optional) The hour maintenance will start.
+* `day` - (Optional) The day of the week to use for maintenance.
+* `start_time` - (Optional) The hour maintenance will start.
 
 ### Media Streams
 
-* `media_stream_id` - (Required) A unique identifier for the media stream.
-* `media_stream_name` - (Required) A name that helps you distinguish one media stream from another.
-* `media_stream_type` - (Required) The type of media stream.
+* `id` - (Required) A unique identifier for the media stream.
+* `name` - (Required) A name that helps you distinguish one media stream from another.
+* `type` - (Required) The type of media stream.
 * `attributes` - (Optional) The attributes that you want to assign to the new media stream. See [Media Stream Attributes](#media-stream-attributes) for more details.
 * `clock_rate` - (Optional) The sample rate (in Hz) for the stream. If the media stream type is video or ancillary data, set this value to 90000. If the media stream type is audio, set this value to either 48000 or 96000.
 * `description` - (Optional) A description that can help you quickly identify what your media stream is used for.
@@ -161,7 +160,7 @@ The following arguments are optional:
 ### Media Stream Output Configurations
 
 * `encoding_name` - (Required) The format that will be used to encode the data. For ancillary data streams, set the encoding name to smpte291. For audio streams, set the encoding name to pcm. For video, 2110 streams, set the encoding name to raw. For video, JPEG XS streams, set the encoding name to jxsv.
-* `media_stream_name` - (Required) The name of the media stream that is associated with the output.
+* `name` - (Required) The name of the media stream that is associated with the output.
 * `desination_configurations` - (Optional) The transport parameters that you want to associate with the media stream. See [Destination Configurations](#destination-configurations) for more details.
 * `encoding_parameters` - (Optional) A collection of parameters that determine how MediaConnect will convert the content. These fields only apply to outputs on flows that have a CDI source. See [Encoding Parameters](#encoding-parameters) for more details.
 
@@ -207,7 +206,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -215,7 +214,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaConnect Flow using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elemental MediaConnect Flow using the `example_id_arg`. For example:
 
 ```terraform
 import {
@@ -224,7 +223,7 @@ import {
 }
 ```
 
-Using `terraform import`, import MediaConnect Flow using the `arn`. For example:
+Using `terraform import`, import Elemental MediaConnect Flow using the `example_id_arg`. For example:
 
 ```console
 % terraform import aws_mediaconnect_flow.example arn:aws:mediaconnect:us-west-2:123456789012:flow:1-7e7a28d2-163f-4b8f:tfflow
