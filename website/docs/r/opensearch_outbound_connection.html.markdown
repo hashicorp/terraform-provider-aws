@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
 * `connection_mode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `accept_connection` - (Optional, Forces new resource) Accepts the connection.
-* `connection_properties` - (Optional, Forces new resource) Configuration block for the outbound connection..
+* `connection_properties` - (Optional, Forces new resource) Configuration block for the outbound connection.
 * `local_domain_info` - (Required, Forces new resource) Configuration block for the local Opensearch domain.
 * `remote_domain_info` - (Required, Forces new resource) Configuration block for the remote Opensearch domain.
 
