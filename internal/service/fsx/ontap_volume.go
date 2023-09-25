@@ -38,6 +38,7 @@ func ResourceONTAPVolume() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("bypass_snaplock_enterprise_retention", false)
 				d.Set("skip_final_backup", false)
 
 				return []*schema.ResourceData{d}, nil
@@ -54,6 +55,11 @@ func ResourceONTAPVolume() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"bypass_snaplock_enterprise_retention": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"copy_tags_to_backups": {
 				Type:     schema.TypeBool,
@@ -473,7 +479,8 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())
 	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{
 		OntapConfiguration: &fsx.DeleteVolumeOntapConfiguration{
-			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
+			BypassSnaplockEnterpriseRetention: aws.Bool(d.Get("bypass_snaplock_enterprise_retention").(bool)),
+			SkipFinalBackup:                   aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
 		VolumeId: aws.String(d.Id()),
 	})

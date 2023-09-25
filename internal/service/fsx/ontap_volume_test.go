@@ -37,6 +37,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", "false"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", fmt.Sprintf("/%[1]s", rName)),
@@ -50,16 +51,15 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "volume_type", "ONTAP"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,7 +112,7 @@ func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_copyTagsToBackups(rName, false),
@@ -152,7 +152,7 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath2),
@@ -191,7 +191,7 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName2),
@@ -228,7 +228,7 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 		},
 	})
@@ -258,7 +258,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "NTFS"),
@@ -308,7 +308,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_size(rName, size2),
@@ -325,7 +325,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 
 func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1 /*, volume2*/ fsx.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
@@ -339,6 +339,7 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_snaplockCreate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", "true"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "false"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
@@ -363,33 +364,39 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
-			{
-				Config: testAccONTAPVolumeConfig_snaplockUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
-					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "true"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "14"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "PERMANENTLY_DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "30"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "MONTHS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "9"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "HOURS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "24"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", "true"),
-				),
-			},
+			/*
+				See https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-snaplock-works.html#snaplock-audit-log-volume.
+				> The minimum retention period for a SnapLock audit log volume is six months. Until this retention period expires, the SnapLock audit log volume and the SVM and file system that are associated with it can't be deleted even if the volume was created in SnapLock Enterprise mode.
+
+				{
+					Config: testAccONTAPVolumeConfig_snaplockUpdate(rName),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
+						testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
+						resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", "true"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "true"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "DAYS"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "14"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "PERMANENTLY_DISABLED"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "DAYS"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "30"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "MONTHS"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "9"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "HOURS"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "24"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
+						resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", "true"),
+					),
+				},
+			*/
 		},
 	})
 }
@@ -420,7 +427,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy2),
@@ -459,7 +466,7 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, false),
@@ -498,7 +505,7 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -547,7 +554,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tieringPolicy(rName, "SNAPSHOT_ONLY", 10),
@@ -755,10 +762,13 @@ resource "aws_fsx_ontap_volume" "test" {
   snaplock_configuration {
     snaplock_type = "ENTERPRISE"
   }
+
+  bypass_snaplock_enterprise_retention = true
 }
 `, rName))
 }
 
+/*
 func testAccONTAPVolumeConfig_snaplockUpdate(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
@@ -796,9 +806,12 @@ resource "aws_fsx_ontap_volume" "test" {
       }
     }
   }
+
+  bypass_snaplock_enterprise_retention = true
 }
 `, rName))
 }
+*/
 
 func testAccONTAPVolumeConfig_snapshotPolicy(rName, snapshotPolicy string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
