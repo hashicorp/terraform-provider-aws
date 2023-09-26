@@ -410,6 +410,10 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 			Value:     `[{}]`,
 			WantError: `"json" contains an invalid JSON policy: contains a JSON array, not a JSON object`,
 		},
+		{
+			Value:     `{"a":"foo","a":"bar"}`,
+			WantError: `"json" contains duplicate JSON keys: duplicate key "a"`,
+		},
 	}
 	for _, test := range tests {
 		test := test
