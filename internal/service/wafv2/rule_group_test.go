@@ -4703,16 +4703,18 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			%[2]s {
-				name = %[3]q
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          %[2]s {
+            name = %[3]q
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
       }
     }
 
@@ -4750,15 +4752,16 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			%[2]s {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          %[2]s {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
       }
     }
 
@@ -4796,21 +4799,22 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			ip {
+        limit              = 50000
 
-			}
-		}
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          ip {}
+        }
       }
     }
 
@@ -4848,25 +4852,27 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		forwarded_ip_config {
-			fallback_behavior = "MATCH"
-			header_name       = "x-forwarded-for"
-		}
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			forwarded_ip {
+        limit              = 50000
 
-			}
-		}
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          forwarded_ip {}
+        }
       }
     }
 
@@ -4904,11 +4910,11 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			http_method {
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          http_method {}
+        }
       }
     }
 
@@ -4946,45 +4952,51 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			header {
-				name = "x-api-key"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			query_string {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			uri_path {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			http_method {
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          header {
+            name = "x-api-key"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          query_string {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          uri_path {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          http_method {}
+        }
       }
     }
 
