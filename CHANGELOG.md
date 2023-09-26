@@ -1,8 +1,13 @@
 ## 5.19.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_iam_*: This release introduces additional validation of IAM policy JSON arguments to detect duplicate keys. Previously, arguments with duplicated keys resulted in all but one of the key values being overwritten. Since this results in unexpected IAM policies being submitted to AWS, we have updated the validation logic to error in these cases. This may cause existing IAM policy arguments to fail validation, however, those policies are likely not what was originally intended. ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+
 FEATURES:
 
 * **New Resource:** `aws_dms_replication_config` ([#32908](https://github.com/hashicorp/terraform-provider-aws/issues/32908))
+* **New Resource:** `aws_rds_custom_db_engine_version` ([#33285](https://github.com/hashicorp/terraform-provider-aws/issues/33285))
 
 ENHANCEMENTS:
 
@@ -16,7 +21,17 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_glacier_vault_lock: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_iam_group_policy: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_iam_policy: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_iam_role: Fail validation if duplicated keys are found in `assume_role_policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_iam_role_policy: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_iam_user_policy: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_mediastore_container_policy: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
 * resource/aws_s3_bucket_policy: Fix intermittent `couldn't find resource` errors on resource Create ([#33537](https://github.com/hashicorp/terraform-provider-aws/issues/33537))
+* resource/aws_ssoadmin_permission_set_inline_policy: Fail validation if duplicated keys are found in `inline_policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_transfer_access: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
+* resource/aws_transfer_user: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
 
 ## 5.18.0 (September 21, 2023)
 
