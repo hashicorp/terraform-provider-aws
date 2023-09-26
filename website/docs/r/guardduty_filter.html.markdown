@@ -49,7 +49,7 @@ resource "aws_guardduty_filter" "MyFilter" {
 The following arguments are supported:
 
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
-* `name` - (Required) The name of your filter. Names can be between 3 and 64 characters long and the valid characters are a-z, A-Z, 0-9, '_' (underscore), '-' (hyphen), and '.' (period).
+* `name` - (Required) The name of your filter.
 * `description` - (Optional) Description of the filter.
 * `rank` - (Required) Specifies the position of the filter in the list of current filters. Also specifies the order in which this filter is applied to the findings.
 * `action` - (Required) Specifies the action that is to be applied to the findings that match the filter. Can be one of `ARCHIVE` or `NOOP`.
