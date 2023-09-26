@@ -55,7 +55,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						},
 					},
 				},
-				"parameters_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
+				"parameter_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
 					MaxItems: 200,
@@ -490,7 +490,7 @@ func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionD
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameters_declarations"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
 		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
@@ -1046,7 +1046,7 @@ func FlattenTemplateDefinition(apiObject *quicksight.TemplateVersionDefinition) 
 		tfMap["filter_groups"] = flattenFilterGroups(apiObject.FilterGroups)
 	}
 	if apiObject.ParameterDeclarations != nil {
-		tfMap["parameters_declarations"] = flattenParameterDeclarations(apiObject.ParameterDeclarations)
+		tfMap["parameter_declarations"] = flattenParameterDeclarations(apiObject.ParameterDeclarations)
 	}
 	if apiObject.Sheets != nil {
 		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
