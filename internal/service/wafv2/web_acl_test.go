@@ -4378,12 +4378,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysBasic(rName, customKey, customKeyName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4396,16 +4397,18 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			%[2]s {
-				name = %[3]q
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          %[2]s {
+            name = %[3]q
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
       }
     }
 
@@ -4420,7 +4423,6 @@ resource "aws_wafv2_web_acl" "test" {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
-
 
   visibility_config {
     cloudwatch_metrics_enabled = false
@@ -4434,12 +4436,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysMinimal(rName, customKey string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4452,15 +4455,16 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			%[2]s {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          %[2]s {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
       }
     }
 
@@ -4476,7 +4480,6 @@ resource "aws_wafv2_web_acl" "test" {
     Tag2 = "Value2"
   }
 
-
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
@@ -4489,12 +4492,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysIP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4507,21 +4511,22 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			ip {
+        limit              = 50000
 
-			}
-		}
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          ip {}
+        }
       }
     }
 
@@ -4550,12 +4555,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysForwardedIP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4568,25 +4574,27 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		forwarded_ip_config {
-			fallback_behavior = "MATCH"
-			header_name       = "x-forwarded-for"
-		}
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			forwarded_ip {
+        limit              = 50000
 
-			}
-		}
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          forwarded_ip {}
+        }
       }
     }
 
@@ -4601,7 +4609,6 @@ resource "aws_wafv2_web_acl" "test" {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
-
 
   visibility_config {
     cloudwatch_metrics_enabled = false
@@ -4615,12 +4622,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysHTTPMethod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4633,11 +4641,11 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			http_method {
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          http_method {}
+        }
       }
     }
 
@@ -4653,7 +4661,6 @@ resource "aws_wafv2_web_acl" "test" {
     Tag2 = "Value2"
   }
 
-
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
@@ -4666,12 +4673,13 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_rateBasedStatement_customKeysMaxKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
-	default_action {
-		allow {}
-	}
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "rule-1"
@@ -4684,45 +4692,51 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
-        limit = 50000
-		custom_key {
-			cookie {
-				name = "cookie-name"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			header {
-				name = "x-api-key"
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			query_string {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			uri_path {
-				text_transformation {
-					type = "NONE"
-					priority = 0
-				}
-			}
-		}
-		custom_key {
-			http_method {
-			}
-		}
+        limit              = 50000
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          header {
+            name = "x-api-key"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          query_string {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          uri_path {
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          http_method {}
+        }
       }
     }
 
