@@ -656,3 +656,34 @@ func flattenFeaturesAdditionalConfigurationsResult(detectorAdditionalFeatureConf
 
 	return result
 }
+
+func FindDetector(ctx context.Context, conn *guardduty.GuardDuty) (*string, error) {
+	output, err := findDetectors(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDetectors(ctx context.Context, conn *guardduty.GuardDuty) ([]*string, error) {
+	input := &guardduty.ListDetectorsInput{}
+	var output []*string
+
+	err := conn.ListDetectorsPagesWithContext(ctx, input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.DetectorIds...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
