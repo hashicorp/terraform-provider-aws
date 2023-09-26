@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -57,7 +56,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassGlacier),
+				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassGlacier)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -67,7 +66,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 						"prefix":                      "foo",
 						"status":                      string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
-						"destination.0.storage_class": s3.StorageClassGlacier,
+						"destination.0.storage_class": string(types.StorageClassGlacier),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
 				),
@@ -483,7 +482,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusEnabled),
 						"destination.#":                      "1",
 						"destination.0.replication_time.#":   "1",
-						"destination.0.replication_time.0.status":           s3.ReplicationTimeStatusEnabled,
+						"destination.0.replication_time.0.status":           string(types.ReplicationTimeStatusEnabled),
 						"destination.0.replication_time.0.time.#":           "1",
 						"destination.0.replication_time.0.time.0.minutes":   "15",
 						"destination.0.metrics.#":                           "1",
