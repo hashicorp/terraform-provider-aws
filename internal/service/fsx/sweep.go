@@ -33,7 +33,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
 		Name: "aws_fsx_ontap_file_system",
-		F:    sweepOntapFileSystems,
+		F:    sweepONTAPFileSystems,
 		Dependencies: []string{
 			"aws_datasync_location",
 			"aws_fsx_ontap_storage_virtual_machine",
@@ -42,7 +42,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
 		Name: "aws_fsx_ontap_storage_virtual_machine",
-		F:    sweepOntapStorageVirtualMachine,
+		F:    sweepONTAPStorageVirtualMachine,
 		Dependencies: []string{
 			"aws_fsx_ontap_volume",
 		},
@@ -50,7 +50,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_fsx_ontap_volume", &resource.Sweeper{
 		Name: "aws_fsx_ontap_volume",
-		F:    sweepOntapVolume,
+		F:    sweepONTAPVolumes,
 	})
 
 	resource.AddTestSweepers("aws_fsx_openzfs_file_system", &resource.Sweeper{
@@ -171,7 +171,7 @@ func sweepLustreFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepOntapFileSystems(region string) error {
+func sweepONTAPFileSystems(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
@@ -194,7 +194,7 @@ func sweepOntapFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceOntapFileSystem()
+			r := ResourceONTAPFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -220,7 +220,7 @@ func sweepOntapFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepOntapStorageVirtualMachine(region string) error {
+func sweepONTAPStorageVirtualMachine(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
@@ -239,7 +239,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 		}
 
 		for _, vm := range page.StorageVirtualMachines {
-			r := ResourceOntapStorageVirtualMachine()
+			r := ResourceONTAPStorageVirtualMachine()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
 
@@ -265,7 +265,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepOntapVolume(region string) error {
+func sweepONTAPVolumes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
@@ -291,9 +291,10 @@ func sweepOntapVolume(region string) error {
 				continue
 			}
 
-			r := ResourceOntapVolume()
+			r := ResourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
+			d.Set("bypass_snaplock_enterprise_retention", true)
 			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -393,7 +394,7 @@ func sweepOpenZFSVolume(region string) error {
 				continue
 			}
 
-			r := ResourceOpenzfsVolume()
+			r := ResourceOpenZFSVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 

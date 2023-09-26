@@ -50,7 +50,7 @@ func ResourceProject() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,31}$`),
 						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},

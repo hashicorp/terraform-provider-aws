@@ -41,7 +41,7 @@ func DataSourceOutpostAssets() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9-]*$`), "must match [a-zA-Z0-9-]"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]*$`), "must match [0-9A-Za-z-]"),
 					),
 				},
 			},

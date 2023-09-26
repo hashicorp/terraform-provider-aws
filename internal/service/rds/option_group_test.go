@@ -521,6 +521,59 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/21367
+func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var optionGroup1 rds.OptionGroup
+	resourceName := "aws_db_option_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOptionGroupConfig_badDiffs1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"port": "3872",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "SQLT",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "S3_INTEGRATION",
+					}),
+				),
+			},
+			{
+				Config:   testAccOptionGroupConfig_badDiffs1(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccOptionGroupConfig_badDiffs2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"port": "3873",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "SQLT",
+						"version":     "2018-07-25.v1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "S3_INTEGRATION",
+						"version":     "1.0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
@@ -1052,4 +1105,124 @@ resource "aws_db_option_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccOptionGroupConfig_badDiffs1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
+resource "aws_db_option_group" "test" {
+  name                     = %[1]q
+  option_group_description = "Option Group for Numagove"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
+
+  option {
+    option_name = "S3_INTEGRATION"
+  }
+
+  option {
+    option_name = "SQLT"
+    option_settings {
+      name  = "LICENSE_PACK"
+      value = "T"
+    }
+  }
+
+  option {
+    option_name                    = "OEM_AGENT"
+    version                        = "13.5.0.0.v1"
+    port                           = 3872
+    vpc_security_group_memberships = [aws_security_group.test.id]
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "TESTPASSWORDBGY"
+    }
+    option_settings {
+      name  = "MINIMUM_TLS_VERSION"
+      value = "TLSv1.2"
+    }
+    option_settings {
+      name  = "TLS_CIPHER_SUITE"
+      value = "TLS_RSA_WITH_AES_128_CBC_SHA"
+    }
+    option_settings {
+      name  = "OMS_HOST"
+      value = "BGY-TEST"
+    }
+    option_settings {
+      name  = "OMS_PORT"
+      value = "1159"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOptionGroupConfig_badDiffs2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
+resource "aws_db_option_group" "test" {
+  name                     = %[1]q
+  option_group_description = "Option Group for Numagove"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
+
+  option {
+    option_name = "S3_INTEGRATION"
+    version     = "1.0"
+  }
+
+  option {
+    option_name = "SQLT"
+    option_settings {
+      name  = "LICENSE_PACK"
+      value = "T"
+    }
+    version = "2018-07-25.v1"
+  }
+
+  option {
+    option_name                    = "OEM_AGENT"
+    version                        = "13.5.0.0.v1"
+    port                           = 3873
+    vpc_security_group_memberships = [aws_security_group.test.id]
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "TESTPASSWORDBGY"
+    }
+    option_settings {
+      name  = "MINIMUM_TLS_VERSION"
+      value = "TLSv1.2"
+    }
+    option_settings {
+      name  = "TLS_CIPHER_SUITE"
+      value = "TLS_RSA_WITH_AES_128_CBC_SHA"
+    }
+    option_settings {
+      name  = "OMS_HOST"
+      value = "BGY-TEST"
+    }
+    option_settings {
+      name  = "OMS_PORT"
+      value = "1159"
+    }
+  }
+}
+`, rName)
 }

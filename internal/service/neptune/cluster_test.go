@@ -573,6 +573,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
+	keyResourceName := "aws_kms_key.test2"
 	parameterGroupResourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -587,6 +588,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -1295,6 +1297,52 @@ resource "aws_neptune_cluster_instance" "secondary" {
 
 func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_kms_key" "test1" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_kms_key" "test2" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-2",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
 resource "aws_default_vpc" "test" {}
 
 resource "aws_security_group" "test" {
@@ -1312,6 +1360,8 @@ resource "aws_neptune_cluster" "source" {
   cluster_identifier                   = "%[1]s-src"
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  kms_key_arn                          = aws_kms_key.test1.arn
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
@@ -1330,10 +1380,11 @@ resource "aws_neptune_cluster_parameter_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  skip_final_snapshot = true
-  snapshot_identifier = aws_neptune_cluster_snapshot.test.id
-
+  cluster_identifier                   = %[1]q
+  skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  snapshot_identifier                  = aws_neptune_cluster_snapshot.test.id
+  kms_key_arn                          = aws_kms_key.test2.arn
   backup_retention_period              = 5
   neptune_cluster_parameter_group_name = aws_neptune_cluster_parameter_group.test.id
   vpc_security_group_ids               = aws_security_group.test[*].id

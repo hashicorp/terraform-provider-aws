@@ -20,6 +20,14 @@ func init() {
 	resource.AddTestSweepers("aws_dms_endpoint", &resource.Sweeper{
 		Name: "aws_dms_endpoint",
 		F:    sweepEndpoints,
+		Dependencies: []string{
+			"aws_dms_replication_config",
+		},
+	})
+
+	resource.AddTestSweepers("aws_dms_replication_config", &resource.Sweeper{
+		Name: "aws_dms_replication_config",
+		F:    sweepReplicationConfigs,
 	})
 
 	resource.AddTestSweepers("aws_dms_replication_instance", &resource.Sweeper{
@@ -82,6 +90,50 @@ func sweepEndpoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping DMS Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepReplicationConfigs(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.DMSConn(ctx)
+	input := &dms.DescribeReplicationConfigsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeReplicationConfigsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationConfigsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ReplicationConfigs {
+			r := ResourceReplicationConfig()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ReplicationConfigArn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping DMS Replication Config sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing DMS Replication Configs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DMS Replication Configs (%s): %w", region, err)
 	}
 
 	return nil

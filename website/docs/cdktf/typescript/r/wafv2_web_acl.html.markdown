@@ -696,6 +696,7 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 ### `awsManagedRulesAtpRuleSet` Block
 
+* `enableRegexInPath` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `loginPath` - (Required) The path of the login endpoint for your application.
 * `requestInspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`requestInspection`](#request_inspection-block) for more details.
 * `responseInspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`responseInspection`](#response_inspection-block) for more details.
@@ -905,4 +906,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `id/name/scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b21108f94e0190590d75670772bc0f0967dc261b0009d219814c2555b26abbcf -->
+<!-- cache-key: cdktf-0.18.0 input-eeda21c13772d8f873f236c8175db66eb2eeeebd7a2ebfbd7fbf24bde2a57f5b -->

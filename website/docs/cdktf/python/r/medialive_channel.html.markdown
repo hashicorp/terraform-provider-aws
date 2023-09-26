@@ -147,7 +147,8 @@ The following arguments are optional:
 
 * `input_attachment_name` - (Optional) User-specified name for the attachment.
 * `input_id` - (Required) The ID of the input.
-* `input_settings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details
+* `input_settings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details.
+* `automatic_input_failover_settings` - (Optional) User-specified settings for defining what the conditions are for declaring the input unhealthy and failing over to a different input. See [Automatic Input Failover Settings](#automatic-input-failover-settings) for more details.
 
 ### Input Settings
 
@@ -271,6 +272,37 @@ The following arguments are optional:
 * `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
 * `retry_interval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
 * `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
+
+### Automatic Input Failover Settings
+
+* `secondary_input_id` - (Required) The input ID of the secondary input in the automatic input failover pair.
+* `error_clear_time_msec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
+* `failover_conditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `input_preference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
+
+### Failover Conditions
+
+* `failover_condition_settings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
+
+### Failover Condition Settings
+
+* `audio_silence_settings` - (Optional) MediaLive will perform a failover if the specified audio selector is silent for the specified period. See [Audio Silence Failover Settings](#audio-silence-failover-settings) for more details.
+* `input_loss_settings` - (Optional) MediaLive will perform a failover if content is not detected in this input for the specified period. See [Input Loss Failover Settings](#input-loss-failover-settings) for more details.
+* `video_black_settings` - (Optional) MediaLive will perform a failover if content is considered black for the specified period. See [Video Black Failover Settings](#video-black-failover-settings) for more details.
+
+### Audio Silence Failover Settings
+
+* `audio_selector_name` - (Required) The name of the audio selector in the input that MediaLive should monitor to detect silence. Select your most important rendition. If you didn't create an audio selector in this input, leave blank.
+* `audio_silence_threshold_msec` - (Optional) The amount of time (in milliseconds) that the active input must be silent before automatic input failover occurs. Silence is defined as audio loss or audio quieter than -50 dBFS.
+
+### Input Loss Failover Settings
+
+* `input_loss_threshold_msec` - (Optional) The amount of time (in milliseconds) that no input is detected. After that time, an input failover will occur.
+
+### Video Black Failover Settings
+
+* `black_detect_threshold` - (Optional) A value used in calculating the threshold below which MediaLive considers a pixel to be 'black'. For the input to be considered black, every pixel in a frame must be below this threshold. The threshold is calculated as a percentage (expressed as a decimal) of white. Therefore .1 means 10% white (or 90% black). Note how the formula works for any color depth. For example, if you set this field to 0.1 in 10-bit color depth: (10230.1=102.3), which means a pixel value of 102 or less is 'black'. If you set this field to .1 in an 8-bit color depth: (2550.1=25.5), which means a pixel value of 25 or less is 'black'. The range is 0.0 to 1.0, with any number of decimal places.
+* `video_black_threshold_msec` - (Optional) The amount of time (in milliseconds) that the active input must be black before automatic input failover occurs.
 
 ### Maintenance
 
@@ -701,7 +733,7 @@ The following arguments are optional:
 * `media_package_output_settings` - (Optional) Media package output settings. This can be set as an empty block.
 * `multiplex_output_settings` - (Optional) Multiplex output settings. See [Multiplex Output Settings](#multiplex-output-settings) for more details.
 * `rtmp_output_settings` - (Optional) RTMP output settings. See [RTMP Output Settings](#rtmp-output-settings) for more details.
-* `udp_output_settings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details
+* `udp_output_settings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details.
 
 ### Archive Output Settings
 
@@ -772,4 +804,4 @@ Using `terraform import`, import MediaLive Channel using the `channel_id`. For e
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c77c00877634043a44e5b525efc176344d144f1e847a22855eed5012b86ea5b5 -->
+<!-- cache-key: cdktf-0.18.0 input-571a359c838df10c2be2ed2e92dddd2426f2b9fcd68054cf3c5dbeb6ceb93a31 -->

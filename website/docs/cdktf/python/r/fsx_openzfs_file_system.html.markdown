@@ -39,18 +39,21 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1` and `SINGLE_AZ_2`.
+* `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
-* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Exactly 1 subnet need to be provided.
+* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from.
 * `throughput_capacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deployment_type`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backup_id` - (Optional) The ID of the source backup to create the filesystem from.
 * `copy_tags_to_backups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
 * `copy_tags_to_volumes` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
 * `daily_automatic_backup_start_time` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
-* `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [Disk Iops Configuration](#disk-iops-configuration) Below.
+* `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
+* `endpoint_ip_address_range` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
-* `root_volume_configuration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) Below.
+* `preferred_subnet_id` - (Optional) (Multi-AZ only) Required when `deployment_type` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
+* `root_volume_configuration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) below.
+* `route_table_ids` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `security_group_ids` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `storage_type` - (Optional) The filesystem storage type. Only `SSD` is supported.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -151,4 +154,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d87c7b5bfe7c429d5f88e3887efde0e8c14020c3d6c10fc22a0b9db4f4d847fb -->
+<!-- cache-key: cdktf-0.18.0 input-747caeeb6ae73c2beade6eba7cdec24bd727587f1c4cbe894ef193c84d502d2e -->

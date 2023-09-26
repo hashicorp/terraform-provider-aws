@@ -243,7 +243,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
+	tags, err := ObjectListTagsV1(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)

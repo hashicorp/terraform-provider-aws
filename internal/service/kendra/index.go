@@ -240,7 +240,7 @@ func ResourceIndex() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"The name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),

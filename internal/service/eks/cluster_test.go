@@ -640,7 +640,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
@@ -672,7 +672,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				Config: testAccClusterConfig_outpostPlacement(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),

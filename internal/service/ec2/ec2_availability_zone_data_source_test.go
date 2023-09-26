@@ -90,7 +90,7 @@ func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
-					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z0-9][a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
@@ -148,7 +148,7 @@ func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
-					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z0-9][a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
