@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -53,12 +56,24 @@ var ReservedResourceFields = []string{
 // being implemented.
 type Resource struct {
 	// Schema is the structure and type information for this component. This
-	// field is required for all Resource concepts.
+	// field, or SchemaFunc, is required for all Resource concepts. To prevent
+	// storing all schema information in memory for the lifecycle of a provider,
+	// use SchemaFunc instead.
 	//
 	// The keys of this map are the names used in a practitioner configuration,
 	// such as the attribute or block name. The values describe the structure
 	// and type information of that attribute or block.
 	Schema map[string]*Schema
+
+	// SchemaFunc is the structure and type information for this component. This
+	// field, or Schema, is required for all Resource concepts. Use this field
+	// instead of Schema on top level Resource declarations to prevent storing
+	// all schema information in memory for the lifecycle of a provider.
+	//
+	// The keys of this map are the names used in a practitioner configuration,
+	// such as the attribute or block name. The values describe the structure
+	// and type information of that attribute or block.
+	SchemaFunc func() map[string]*Schema
 
 	// SchemaVersion is the version number for this resource's Schema
 	// definition. This field is only valid when the Resource is a managed
@@ -580,6 +595,62 @@ type Resource struct {
 	// See github.com/hashicorp/terraform-plugin-sdk/issues/655 for more
 	// details.
 	UseJSONNumber bool
+
+	// EnableLegacyTypeSystemApplyErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// ApplyResourceChange (Create, Update, and Delete) operations. Before
+	// enabling this setting in a production release for a resource, the
+	// resource should be exhaustively acceptance tested with the setting
+	// enabled in an environment where it is easy to clean up resources,
+	// potentially outside of Terraform, since these errors may be unavoidable
+	// in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemApplyErrors bool
+
+	// EnableLegacyTypeSystemPlanErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// PlanResourceChange operations. Before enabling this setting in a
+	// production release for a resource, the resource should be exhaustively
+	// acceptance tested with the setting enabled in an environment where it is
+	// easy to clean up resources, potentially outside of Terraform, since these
+	// errors may be unavoidable in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemPlanErrors bool
+}
+
+// SchemaMap returns the schema information for this Resource whether it is
+// defined via the SchemaFunc field or Schema field. The SchemaFunc field, if
+// defined, takes precedence over the Schema field.
+func (r *Resource) SchemaMap() map[string]*Schema {
+	if r.SchemaFunc != nil {
+		return r.SchemaFunc()
+	}
+
+	return r.Schema
 }
 
 // ShimInstanceStateFromValue converts a cty.Value to a
@@ -591,7 +662,7 @@ func (r *Resource) ShimInstanceStateFromValue(state cty.Value) (*terraform.Insta
 
 	// We now rebuild the state through the ResourceData, so that the set indexes
 	// match what helper/schema expects.
-	data, err := schemaMap(r.Schema).Data(s, nil)
+	data, err := schemaMap(r.SchemaMap()).Data(s, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -764,7 +835,8 @@ func (r *Resource) Apply(
 	s *terraform.InstanceState,
 	d *terraform.InstanceDiff,
 	meta interface{}) (*terraform.InstanceState, diag.Diagnostics) {
-	data, err := schemaMap(r.Schema).Data(s, d)
+	schema := schemaMap(r.SchemaMap())
+	data, err := schema.Data(s, d)
 	if err != nil {
 		return s, diag.FromErr(err)
 	}
@@ -821,7 +893,7 @@ func (r *Resource) Apply(
 		}
 
 		// Reset the data to be stateless since we just destroyed
-		data, err = schemaMap(r.Schema).Data(nil, d)
+		data, err = schema.Data(nil, d)
 		if err != nil {
 			return nil, append(diags, diag.FromErr(err)...)
 		}
@@ -865,7 +937,7 @@ func (r *Resource) Diff(
 		return nil, fmt.Errorf("[ERR] Error decoding timeout: %s", err)
 	}
 
-	instanceDiff, err := schemaMap(r.Schema).Diff(ctx, s, c, r.CustomizeDiff, meta, true)
+	instanceDiff, err := schemaMap(r.SchemaMap()).Diff(ctx, s, c, r.CustomizeDiff, meta, true)
 	if err != nil {
 		return instanceDiff, err
 	}
@@ -887,7 +959,7 @@ func (r *Resource) SimpleDiff(
 	c *terraform.ResourceConfig,
 	meta interface{}) (*terraform.InstanceDiff, error) {
 
-	instanceDiff, err := schemaMap(r.Schema).Diff(ctx, s, c, r.CustomizeDiff, meta, false)
+	instanceDiff, err := schemaMap(r.SchemaMap()).Diff(ctx, s, c, r.CustomizeDiff, meta, false)
 	if err != nil {
 		return instanceDiff, err
 	}
@@ -912,7 +984,7 @@ func (r *Resource) SimpleDiff(
 
 // Validate validates the resource configuration against the schema.
 func (r *Resource) Validate(c *terraform.ResourceConfig) diag.Diagnostics {
-	diags := schemaMap(r.Schema).Validate(c)
+	diags := schemaMap(r.SchemaMap()).Validate(c)
 
 	if r.DeprecationMessage != "" {
 		diags = append(diags, diag.Diagnostic{
@@ -934,7 +1006,7 @@ func (r *Resource) ReadDataApply(
 ) (*terraform.InstanceState, diag.Diagnostics) {
 	// Data sources are always built completely from scratch
 	// on each read, so the source state is always nil.
-	data, err := schemaMap(r.Schema).Data(nil, d)
+	data, err := schemaMap(r.SchemaMap()).Data(nil, d)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
@@ -975,10 +1047,12 @@ func (r *Resource) RefreshWithoutUpgrade(
 		}
 	}
 
+	schema := schemaMap(r.SchemaMap())
+
 	if r.Exists != nil {
 		// Make a copy of data so that if it is modified it doesn't
 		// affect our Read later.
-		data, err := schemaMap(r.Schema).Data(s, nil)
+		data, err := schema.Data(s, nil)
 		if err != nil {
 			return s, diag.FromErr(err)
 		}
@@ -1001,7 +1075,7 @@ func (r *Resource) RefreshWithoutUpgrade(
 		}
 	}
 
-	data, err := schemaMap(r.Schema).Data(s, nil)
+	data, err := schema.Data(s, nil)
 	if err != nil {
 		return s, diag.FromErr(err)
 	}
@@ -1020,7 +1094,7 @@ func (r *Resource) RefreshWithoutUpgrade(
 		state = nil
 	}
 
-	schemaMap(r.Schema).handleDiffSuppressOnRefresh(ctx, s, state)
+	schema.handleDiffSuppressOnRefresh(ctx, s, state)
 	return r.recordCurrentSchemaVersion(state), diags
 }
 
@@ -1066,13 +1140,14 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 		}
 	}
 
+	schema := schemaMap(r.SchemaMap())
 	tsm := topSchemaMap
 
 	if r.isTopLevel() && writable {
 		// All non-Computed attributes must be ForceNew if Update is not defined
 		if !r.updateFuncSet() {
 			nonForceNewAttrs := make([]string, 0)
-			for k, v := range r.Schema {
+			for k, v := range schema {
 				if !v.ForceNew && !v.Computed {
 					nonForceNewAttrs = append(nonForceNewAttrs, k)
 				}
@@ -1083,19 +1158,19 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 			}
 		} else {
 			nonUpdateableAttrs := make([]string, 0)
-			for k, v := range r.Schema {
+			for k, v := range schema {
 				if v.ForceNew || v.Computed && !v.Optional {
 					nonUpdateableAttrs = append(nonUpdateableAttrs, k)
 				}
 			}
-			updateableAttrs := len(r.Schema) - len(nonUpdateableAttrs)
+			updateableAttrs := len(schema) - len(nonUpdateableAttrs)
 			if updateableAttrs == 0 {
 				return fmt.Errorf(
 					"All fields are ForceNew or Computed w/out Optional, Update is superfluous")
 			}
 		}
 
-		tsm = schemaMap(r.Schema)
+		tsm = schema
 
 		// Destroy, and Read are required
 		if !r.readFuncSet() {
@@ -1154,12 +1229,16 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 
 	// Data source
 	if r.isTopLevel() && !writable {
-		tsm = schemaMap(r.Schema)
+		tsm = schema
 		for k := range tsm {
 			if isReservedDataSourceFieldName(k) {
 				return fmt.Errorf("%s is a reserved field name", k)
 			}
 		}
+	}
+
+	if r.SchemaFunc != nil && r.Schema != nil {
+		return fmt.Errorf("SchemaFunc and Schema should not both be set")
 	}
 
 	// check context funcs are not set alongside their nonctx counterparts
@@ -1204,7 +1283,7 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 		return fmt.Errorf("Delete and DeleteWithoutTimeout should not both be set")
 	}
 
-	return schemaMap(r.Schema).InternalValidate(tsm)
+	return schema.InternalValidate(tsm)
 }
 
 func isReservedDataSourceFieldName(name string) bool {
@@ -1251,7 +1330,7 @@ func isReservedResourceFieldName(name string) bool {
 //
 // This function is useful for unit tests and ResourceImporter functions.
 func (r *Resource) Data(s *terraform.InstanceState) *ResourceData {
-	result, err := schemaMap(r.Schema).Data(s, nil)
+	result, err := schemaMap(r.SchemaMap()).Data(s, nil)
 	if err != nil {
 		// At the time of writing, this isn't possible (Data never returns
 		// non-nil errors). We panic to find this in the future if we have to.
@@ -1278,7 +1357,7 @@ func (r *Resource) Data(s *terraform.InstanceState) *ResourceData {
 // TODO: May be able to be removed with the above ResourceData function.
 func (r *Resource) TestResourceData() *ResourceData {
 	return &ResourceData{
-		schema: r.Schema,
+		schema: r.SchemaMap(),
 	}
 }
 

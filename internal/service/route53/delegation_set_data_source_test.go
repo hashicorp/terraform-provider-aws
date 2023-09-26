@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -27,7 +30,7 @@ func TestAccRoute53DelegationSetDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name_servers.#", resourceName, "name_servers.#"),
-					resource.TestMatchResourceAttr("data.aws_route53_delegation_set.dset", "caller_reference", regexp.MustCompile("DynDNS(.*)")),
+					resource.TestMatchResourceAttr("data.aws_route53_delegation_set.dset", "caller_reference", regexache.MustCompile("DynDNS(.*)")),
 				),
 			},
 		},

@@ -1,11 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -44,7 +46,7 @@ func ResourceEventIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 			},
 			"event_filter": {
 				Type:     schema.TypeList,
@@ -57,7 +59,7 @@ func ResourceEventIntegration() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^aws\.partner\/.*$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^aws\.partner\/.*$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 						},
 					},
 				},
@@ -66,7 +68,7 @@ func ResourceEventIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -76,7 +78,7 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateEventIntegrationInput{
@@ -84,7 +86,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -95,11 +97,11 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): %w", name, err))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): empty output", name))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): empty output", name)
 	}
 
 	// Name is unique
@@ -109,7 +111,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -124,11 +126,11 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): %w", d.Id(), err))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): empty response", d.Id()))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.EventIntegrationArn)
@@ -137,16 +139,16 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
+		return diag.Errorf("setting event_filter: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return nil
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -157,7 +159,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.Errorf("updating EventIntegration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -165,7 +167,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -174,7 +176,7 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting EventIntegration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting EventIntegration (%s): %s", d.Id(), err)
 	}
 
 	return nil

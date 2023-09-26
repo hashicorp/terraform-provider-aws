@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -65,7 +68,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
 			},
 			"replication_config": {
 				Type:     schema.TypeList,
@@ -143,7 +146,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		timeout = 2 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &eventbridge.CreateEndpointInput{
@@ -183,7 +186,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	output, err := FindEndpointByName(ctx, conn, d.Id())
 
@@ -228,7 +231,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		timeout = 2 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.UpdateEndpointInput{
 		Name: aws.String(d.Id()),
@@ -274,7 +277,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		timeout = 2 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Global Endpoint: %s", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &eventbridge.DeleteEndpointInput{

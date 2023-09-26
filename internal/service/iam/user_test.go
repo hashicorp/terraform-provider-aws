@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -466,7 +469,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_user" {
@@ -501,7 +504,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *iam.User) resource
 			return fmt.Errorf("No IAM User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		output, err := tfiam.FindUserByName(ctx, conn, rs.Primary.ID)
 
@@ -547,7 +550,7 @@ func testAccCheckUserPermissionsBoundary(user *iam.User, expectedPermissionsBoun
 
 func testAccCheckUserCreatesAccessKey(ctx context.Context, user *iam.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: user.UserName,
@@ -563,7 +566,7 @@ func testAccCheckUserCreatesAccessKey(ctx context.Context, user *iam.User) resou
 
 func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *iam.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		password, err := tfiam.GeneratePassword(32)
 		if err != nil {
 			return err
@@ -583,7 +586,7 @@ func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *iam.User) re
 
 func testAccCheckUserCreatesMFADevice(ctx context.Context, user *iam.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 user.Path,
@@ -628,7 +631,7 @@ func testAccCheckUserUploadsSSHKey(ctx context.Context, user *iam.User) resource
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         user.UserName,
@@ -647,7 +650,7 @@ func testAccCheckUserUploadsSSHKey(ctx context.Context, user *iam.User) resource
 // Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
 func testAccCheckUserServiceSpecificCredential(ctx context.Context, user *iam.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		input := &iam.CreateServiceSpecificCredentialInput{
 			UserName:    user.UserName,
@@ -665,7 +668,7 @@ func testAccCheckUserServiceSpecificCredential(ctx context.Context, user *iam.Us
 
 func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T, user *iam.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")

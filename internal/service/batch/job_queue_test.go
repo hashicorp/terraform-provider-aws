@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
@@ -67,9 +70,42 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					testAccCheckJobQueueDisappears(ctx, &jobQueue1),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueue, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.13.1",
+					},
+				},
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				PlanOnly:                 true,
 			},
 		},
 	})
@@ -271,9 +307,9 @@ func testAccCheckJobQueueExists(ctx context.Context, n string, jq *batch.JobQueu
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 		name := rs.Primary.Attributes["name"]
-		queue, err := tfbatch.GetJobQueue(ctx, conn, name)
+		queue, err := tfbatch.FindJobQueueByName(ctx, conn, name)
 		if err != nil {
 			return err
 		}
@@ -292,8 +328,8 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_batch_job_queue" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
-			jq, err := tfbatch.GetJobQueue(ctx, conn, rs.Primary.Attributes["name"])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+			jq, err := tfbatch.FindJobQueueByName(ctx, conn, rs.Primary.Attributes["name"])
 			if err == nil {
 				if jq != nil {
 					return fmt.Errorf("Error: Job Queue still exists")
@@ -305,27 +341,13 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckJobQueueDisappears(ctx context.Context, jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
-		name := aws.StringValue(jobQueue.JobQueueName)
-
-		err := tfbatch.DisableJobQueue(ctx, name, conn)
-		if err != nil {
-			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
-		}
-
-		return tfbatch.DeleteJobQueue(ctx, name, conn)
-	}
-}
-
 // testAccCheckJobQueueComputeEnvironmentOrderUpdate simulates the change of a Compute Environment Order
 // An external update to the Batch Job Queue (e.g. console) may trigger changes to the value of the Order
 // parameter that do not affect the operation of the queue itself, but the resource logic needs to handle.
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
 func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		input := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: jobQueue.ComputeEnvironmentOrder,
@@ -565,7 +587,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccCheckLaunchTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_template" {

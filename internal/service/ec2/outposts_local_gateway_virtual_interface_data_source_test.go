@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -23,13 +26,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-vif-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexp.MustCompile(`^\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexp.MustCompile(`^lgw-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexp.MustCompile(`^\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-vif-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -48,13 +51,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-vif-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexp.MustCompile(`^\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexp.MustCompile(`^lgw-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexp.MustCompile(`^\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-vif-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -10,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -260,9 +263,61 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightTemplate_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var template quicksight.Template
+	resourceName := "aws_quicksight_template.copy"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTemplateConfig_TemplateSourceEntity(rId, rName, sourceId, sourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"source_entity"},
+			},
+
+			{
+				Config: testAccTemplateConfig_TemplateSourceEntity(rId, rNameUpdated, sourceId, sourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_template" {
@@ -297,7 +352,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, template *quic
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTemplate, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindTemplateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -559,6 +614,12 @@ resource "aws_quicksight_template" "test" {
               header_style {
                 background_color = "#99CCFF"
                 height           = 20
+                font_configuration {
+                  font_color = "#212121"
+                  font_size {
+                    relative = "LARGE"
+                  }
+                }
               }
             }
             sort_configuration {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -10,7 +13,6 @@ import (
 	"io/fs"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,17 +23,20 @@ type ServiceDatum struct {
 }
 
 type TemplateData struct {
-	Services []ServiceDatum
+	PackageName string
+	Services    []ServiceDatum
 }
 
 func main() {
 	const (
-		filename      = `../../sweep/sweep_test.go`
-		namesDataFile = "../../../names/names_data.csv"
+		filename      = `sweep_test.go`
+		namesDataFile = "../../names/names_data.csv"
 	)
 	g := common.NewGenerator()
 
-	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../"))
+	packageName := os.Getenv("GOPACKAGE")
+
+	g.Infof("Generating %s/%s", packageName, filename)
 
 	data, err := common.ReadAllCSVData(namesDataFile)
 
@@ -39,7 +44,9 @@ func main() {
 		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
-	td := TemplateData{}
+	td := TemplateData{
+		PackageName: packageName,
+	}
 
 	for i, l := range data {
 		if i < 1 { // no header
@@ -60,11 +67,11 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(fmt.Sprintf("../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(fmt.Sprintf("../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 

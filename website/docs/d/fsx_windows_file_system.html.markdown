@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `active_directory_id` - The ID for Microsoft Active Directory instance that the file system is join to.
 * `aliases` - An array DNS alias names associated with the Amazon FSx file system.
@@ -38,6 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `copy_tags_to_backups` - A boolean flag indicating whether tags on the file system should be copied to backups.
 * `daily_automatic_backup_start_time` - The preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - The file system deployment type.
+* `disk_iops_configuration` - The SSD IOPS configuration for the file system.
 * `dns_name` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.

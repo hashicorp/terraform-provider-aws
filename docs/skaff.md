@@ -6,13 +6,16 @@
 
 1. Figure out what you're trying to do:
     * Create a resource or a data source?
-    * [AWS Go SDK v1 or v2](aws-go-sdk-versions.md) code?
+    * [AWS Go SDK v2 or v1](aws-go-sdk-versions.md) code?\*
+    * [Terraform Plugin Framework or Plugin SDKv2](terraform-plugin-versions.md) based?\*
     * [Name](naming.md) of the new resource or data source?
 2. Use `skaff` to generate provider code
 3. Go through the generated code completing code and customizing for the AWS Go SDK API
 4. Run, test, refine
 5. Remove "TIP" comments
 6. Submit code in pull request
+
+> \*Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework. See [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
 
 ## Running `skaff`
 
@@ -69,16 +72,20 @@ Create scaffolding for a data source
 
 ```console
 $ skaff datasource --help
+Create scaffolding for a data source
+
 Usage:
   skaff datasource [flags]
 
 Flags:
-  -c, --clear-comments     Do not include instructional comments in source
-  -f, --force              Force creation, overwriting existing files
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
   -h, --help               help for datasource
-  -n, --name string        Name of the entity
-  -s, --snakename string   If skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 Generate code targeting aws-sdk-go v1 (some existing services) 
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
+  -n, --name string        name of the entity
+  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```
 
 ### Resource
@@ -87,14 +94,18 @@ Create scaffolding for a resource
 
 ```console
 $ skaff resource --help
+Create scaffolding for a resource
+
 Usage:
   skaff resource [flags]
 
 Flags:
-  -c, --clear-comments     Do not include instructional comments in source
-  -f, --force              Force creation, overwriting existing files
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
   -h, --help               help for resource
-  -n, --name string        Name of the entity
-  -s, --snakename string   If skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 Generate code targeting aws-sdk-go v1 (some existing services) 
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
+  -n, --name string        name of the entity
+  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```

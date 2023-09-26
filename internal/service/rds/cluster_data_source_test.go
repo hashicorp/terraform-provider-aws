@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -30,6 +33,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "database_name", resourceName, "database_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_system_id", resourceName, "db_system_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_mode", resourceName, "engine_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),

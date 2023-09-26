@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -34,7 +37,7 @@ func TestAccKMSAlias_basic(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`alias/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`alias/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", tfkms.AliasNamePrefix+rName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
@@ -89,7 +92,7 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 				Config: testAccAliasConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix),
 				),
 			},
@@ -239,7 +242,7 @@ func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 
 func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_alias" {
@@ -274,7 +277,7 @@ func testAccCheckAliasExists(ctx context.Context, name string, v *kms.AliasListE
 			return fmt.Errorf("No KMS Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		output, err := tfkms.FindAliasByName(ctx, conn, rs.Primary.ID)
 

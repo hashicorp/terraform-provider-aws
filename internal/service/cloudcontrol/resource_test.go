@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudcontrol_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
@@ -42,8 +45,8 @@ func TestAccCloudControlResource_basic(t *testing.T) {
 			{
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`^\{.*\}$`)),
+					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},
@@ -86,13 +89,13 @@ func TestAccCloudControlResource_DesiredState_booleanValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":false`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":true`)),
 				),
 			},
 		},
@@ -113,13 +116,13 @@ func TestAccCloudControlResource_DesiredState_booleanValueRemoved(t *testing.T) 
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":true`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":false`)),
 				),
 			},
 		},
@@ -140,13 +143,13 @@ func TestAccCloudControlResource_DesiredState_booleanValueUpdate(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":true`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Enabled":false`)),
 				),
 			},
 		},
@@ -168,13 +171,13 @@ func TestAccCloudControlResource_DesiredState_createOnly(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateCreateOnly(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":"`+rName1+`"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"LogGroupName":"`+rName1+`"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateCreateOnly(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":"`+rName2+`"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"LogGroupName":"`+rName2+`"`)),
 				),
 			},
 		},
@@ -195,13 +198,13 @@ func TestAccCloudControlResource_DesiredState_integerValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"LogGroupName":`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 		},
@@ -222,13 +225,13 @@ func TestAccCloudControlResource_DesiredState_integerValueRemoved(t *testing.T) 
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"LogGroupName":`)),
 				),
 			},
 		},
@@ -249,13 +252,13 @@ func TestAccCloudControlResource_DesiredState_integerValueUpdate(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":7`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"RetentionInDays":7`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 		},
@@ -274,7 +277,7 @@ func TestAccCloudControlResource_DesiredState_invalidPropertyName(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccResourceConfig_desiredStateInvalidPropertyName(rName),
-				ExpectError: regexp.MustCompile(`\(root\): Additional property InvalidName is not allowed`),
+				ExpectError: regexache.MustCompile(`\(root\): Additional property InvalidName is not allowed`),
 			},
 		},
 	})
@@ -292,7 +295,7 @@ func TestAccCloudControlResource_DesiredState_invalidPropertyValue(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccResourceConfig_desiredStateInvalidPropertyValue(rName),
-				ExpectError: regexp.MustCompile(`Model validation failed`),
+				ExpectError: regexache.MustCompile(`Model validation failed`),
 			},
 		},
 	})
@@ -312,13 +315,13 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Value":"value1"`)),
 				),
 			},
 		},
@@ -339,13 +342,13 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
 				),
 			},
 		},
@@ -366,19 +369,19 @@ func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1updated"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Value":"value1updated"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value2"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Value":"value2"`)),
 				),
 			},
 		},
@@ -399,13 +402,13 @@ func TestAccCloudControlResource_DesiredState_stringValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateStringValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Description":"description1"`)),
 				),
 			},
 		},
@@ -426,13 +429,13 @@ func TestAccCloudControlResource_DesiredState_stringValueRemoved(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Description":"description1"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateStringValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
 				),
 			},
 		},
@@ -453,13 +456,13 @@ func TestAccCloudControlResource_DesiredState_stringValueUpdate(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Description":"description1"`)),
 				),
 			},
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description2"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Description":"description2"`)),
 				),
 			},
 		},
@@ -509,8 +512,8 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 			{
 				Config: testAccResourceConfig_lambdaFunction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`^\{.*\}$`)),
+					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},
@@ -519,7 +522,7 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 
 func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudcontrolapi_resource" {

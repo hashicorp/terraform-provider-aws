@@ -1,16 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,7 +53,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 			"domain_validation_records": {
 				Type:     schema.TypeSet,
@@ -80,8 +86,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"name": {
@@ -90,8 +96,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"subject_alternative_names": {
@@ -103,7 +109,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
 				Set: schema.HashString,
@@ -126,7 +132,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domain_name)
 						if err := diff.SetNew("subject_alternative_names", sanSet); err != nil {
-							return fmt.Errorf("error setting new subject_alternative_names diff: %w", err)
+							return fmt.Errorf("setting new subject_alternative_names diff: %w", err)
 						}
 					}
 				}
@@ -138,7 +144,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	certName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
 		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
@@ -147,16 +153,16 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	}
 
 	if v, ok := d.GetOk("subject_alternative_names"); ok {
-		in.CertificateAlternativeNames = aws.StringSlice(expandSubjectAlternativeNames(v))
+		in.CertificateAlternativeNames = expandSubjectAlternativeNames(v)
 	}
 
-	out, err := conn.CreateLoadBalancerTlsCertificateWithContext(ctx, &in)
+	out, err := conn.CreateLoadBalancerTlsCertificate(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName, err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
 
 	if diag != nil {
 		return diag
@@ -174,7 +180,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerCertificateById(ctx, conn, d.Id())
 
@@ -194,29 +200,29 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	d.Set("domain_validation_records", flattenLoadBalancerDomainValidationRecords(out.DomainValidationRecords))
 	d.Set("lb_name", out.LoadBalancerName)
 	d.Set("name", out.Name)
-	d.Set("subject_alternative_names", aws.StringValueSlice(out.SubjectAlternativeNames))
+	d.Set("subject_alternative_names", out.SubjectAlternativeNames)
 	d.Set("support_code", out.SupportCode)
 
 	return nil
 }
 
 func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	lbName := id_parts[0]
 	certName := id_parts[1]
 
-	out, err := conn.DeleteLoadBalancerTlsCertificateWithContext(ctx, &lightsail.DeleteLoadBalancerTlsCertificateInput{
+	out, err := conn.DeleteLoadBalancerTlsCertificate(ctx, &lightsail.DeleteLoadBalancerTlsCertificateInput{
 		CertificateName:  aws.String(certName),
 		LoadBalancerName: aws.String(lbName),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName, err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
 
 	if diag != nil {
 		return diag
@@ -225,18 +231,59 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []*lightsail.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]interface{} {
+func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]interface{} {
 	var domainValidationResult []map[string]interface{}
 
 	for _, o := range domainValidationRecords {
 		validationOption := map[string]interface{}{
-			"domain_name":           aws.StringValue(o.DomainName),
-			"resource_record_name":  aws.StringValue(o.Name),
-			"resource_record_type":  aws.StringValue(o.Type),
-			"resource_record_value": aws.StringValue(o.Value),
+			"domain_name":           aws.ToString(o.DomainName),
+			"resource_record_name":  aws.ToString(o.Name),
+			"resource_record_type":  aws.ToString(o.Type),
+			"resource_record_value": aws.ToString(o.Value),
 		}
 		domainValidationResult = append(domainValidationResult, validationOption)
 	}
 
 	return domainValidationResult
+}
+
+func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Client, id string) (*types.LoadBalancerTlsCertificate, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer certificate id")
+	}
+
+	lbName := id_parts[0]
+	cName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerTlsCertificatesInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerTlsCertificates(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry types.LoadBalancerTlsCertificate
+	entryExists := false
+
+	for _, n := range out.TlsCertificates {
+		if cName == aws.ToString(n.Name) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return &entry, nil
 }

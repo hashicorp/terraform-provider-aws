@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
@@ -31,8 +34,8 @@ func testAccType_basic(t *testing.T) {
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeResourceExists(ctx, resourceName, &typ),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+")),
+					testAccCheckTypeExists(ctx, resourceName, &typ),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "format", "SDL"),
 					resource.TestCheckResourceAttr(resourceName, "name", "Mutation"),
@@ -62,7 +65,7 @@ func testAccType_disappears(t *testing.T) {
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeResourceExists(ctx, resourceName, &typ),
+					testAccCheckTypeExists(ctx, resourceName, &typ),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,7 +76,7 @@ func testAccType_disappears(t *testing.T) {
 
 func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_type" {
@@ -85,7 +88,7 @@ func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfappsync.FindTypeByID(ctx, conn, apiID, format, name)
+			_, err = tfappsync.FindTypeByThreePartKey(ctx, conn, apiID, format, name)
 			if err == nil {
 				if tfresource.NotFound(err) {
 					return nil
@@ -99,7 +102,7 @@ func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTypeResourceExists(ctx context.Context, resourceName string, typ *appsync.Type) resource.TestCheckFunc {
+func testAccCheckTypeExists(ctx context.Context, resourceName string, typ *appsync.Type) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,8 +114,8 @@ func testAccCheckTypeResourceExists(ctx context.Context, resourceName string, ty
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
-		out, err := tfappsync.FindTypeByID(ctx, conn, apiID, format, name)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		out, err := tfappsync.FindTypeByThreePartKey(ctx, conn, apiID, format, name)
 		if err != nil {
 			return err
 		}

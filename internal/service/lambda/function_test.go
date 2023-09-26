@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -6,18 +9,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	signertypes "github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -370,7 +374,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(rName),
-				ExpectError: regexp.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
+				ExpectError: regexache.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
 			},
 		},
 	})
@@ -575,7 +579,7 @@ func TestAccLambdaFunction_nameValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_basic(badFuncName, rName, rName, rName),
-				ExpectError: regexp.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
+				ExpectError: regexache.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
 			},
 		},
 	})
@@ -903,7 +907,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_nilDeadLetter(rName),
-				ExpectError: regexp.MustCompile(
+				ExpectError: regexache.MustCompile(
 					fmt.Sprintf("nil dead_letter_config supplied for function: %s", rName)),
 			},
 		},
@@ -2074,7 +2078,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		{
 			// Test invalid runtime.
 			Config:      testAccFunctionConfig_runtime(rName, rName),
-			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
+			ExpectError: regexache.MustCompile(`expected runtime to be one of`),
 		},
 	}
 	for _, runtime := range types.Runtime("").Values() {
@@ -2089,6 +2093,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case types.RuntimeRuby25:
 			fallthrough
+		case types.RuntimeNodejs12x:
+			fallthrough
 		case types.RuntimeNodejs10x:
 			fallthrough
 		case types.RuntimeNodejs810:
@@ -2100,6 +2106,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		case types.RuntimeNodejs43:
 			fallthrough
 		case types.RuntimeNodejs:
+			fallthrough
+		case types.RuntimeDotnetcore31:
 			fallthrough
 		case types.RuntimeDotnetcore20:
 			fallthrough
@@ -2143,11 +2151,11 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_zipNoHandler(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
 				Config:      testAccFunctionConfig_zipNoRuntime(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 		},
 	})
@@ -2215,7 +2223,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function" {
@@ -2241,7 +2249,7 @@ func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckFunctionNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function" {
@@ -2268,7 +2276,7 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *lambda.GetFunc
 			return fmt.Errorf("No Lambda Function ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		output, err := tflambda.FindFunctionByName(ctx, conn, rs.Primary.ID)
 
@@ -2299,7 +2307,7 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 func testAccInvokeFunction(ctx context.Context, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		// If the function is VPC-enabled this will create ENI automatically
 		_, err := conn.Invoke(ctx, &lambda.InvokeInput{
@@ -3727,11 +3735,6 @@ resource "aws_s3_bucket" "artifacts" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
   versioning_configuration {
@@ -3786,11 +3789,6 @@ func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
 resource "aws_s3_bucket" "artifacts" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "o" {
@@ -3891,38 +3889,37 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-	var foundPlatform bool
-	err := conn.ListSigningPlatformsPagesWithContext(ctx, &signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {
+	input := &signer.ListSigningPlatformsInput{}
+
+	pages := signer.NewListSigningPlatformsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
 		if page == nil {
-			return !lastPage
+			t.Skip("skipping acceptance testing: empty response")
 		}
 
 		for _, platform := range page.Platforms {
-			if platform == nil {
+			if platform == (signertypes.SigningPlatform{}) {
 				continue
 			}
 
 			if aws.ToString(platform.PlatformId) == platformID {
-				foundPlatform = true
-
-				return false
+				return
 			}
 		}
-
-		return !lastPage
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if !foundPlatform {
-		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
-	}
+	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }

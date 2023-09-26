@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rolesanywhere
 
 import (
@@ -77,13 +80,13 @@ func ResourceProfile() *schema.Resource {
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("duration_seconds"); ok {
@@ -119,7 +122,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	profile, err := FindProfileByID(ctx, conn, d.Id())
 
@@ -146,7 +149,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	if d.HasChangesExcept("enabled", "tags_all") {
 		input := &rolesanywhere.UpdateProfileInput{
@@ -199,7 +202,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
 	_, err := conn.DeleteProfile(ctx, &rolesanywhere.DeleteProfileInput{
@@ -219,7 +222,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.DisableProfileInput{
 		ProfileId: aws.String(profileId),
@@ -230,7 +233,7 @@ func disableProfile(ctx context.Context, profileId string, meta interface{}) err
 }
 
 func enableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.EnableProfileInput{
 		ProfileId: aws.String(profileId),

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -69,7 +72,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
 				),
 			},
 			"edge_location": {
@@ -78,7 +81,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+					validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 				),
 			},
 			"options": {
@@ -119,7 +122,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
 				),
 			},
 		},
@@ -127,7 +130,7 @@ func ResourceConnectAttachment() *schema.Resource {
 }
 
 func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	edgeLocation := d.Get("edge_location").(string)
@@ -141,7 +144,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
 		Options:               options,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 		TransportAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -188,7 +191,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachment, err := FindConnectAttachmentByID(ctx, conn, d.Id())
 
@@ -229,7 +232,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
@@ -240,7 +243,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then Connect Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails

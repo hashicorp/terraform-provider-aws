@@ -5,6 +5,7 @@ package s3
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +23,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCanonicalUserID,
+			Factory:  dataSourceCanonicalUserID,
 			TypeName: "aws_canonical_user_id",
 		},
 		{
@@ -161,4 +162,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.S3
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -17,11 +19,11 @@ import (
 
 // GetTag fetches an individual route53domains service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func GetTag(ctx context.Context, conn *route53domains.Client, identifier, key string) (*string, error) {
-	listTags, err := ListTags(ctx, conn, identifier)
+	listTags, err := listTags(ctx, conn, identifier)
 
 	if err != nil {
 		return nil, err
@@ -34,10 +36,10 @@ func GetTag(ctx context.Context, conn *route53domains.Client, identifier, key st
 	return listTags.KeyValue(key), nil
 }
 
-// ListTags lists route53domains service tags.
+// listTags lists route53domains service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *route53domains.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *route53domains.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &route53domains.ListTagsForDomainInput{
 		DomainName: aws.String(identifier),
 	}
@@ -54,7 +56,7 @@ func ListTags(ctx context.Context, conn *route53domains.Client, identifier strin
 // ListTags lists route53domains service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -96,9 +98,9 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns route53domains service tags from Context.
+// getTagsIn returns route53domains service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []awstypes.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -108,19 +110,21 @@ func GetTagsIn(ctx context.Context) []awstypes.Tag {
 	return nil
 }
 
-// SetTagsOut sets route53domains service tags in Context.
-func SetTagsOut(ctx context.Context, tags []awstypes.Tag) {
+// setTagsOut sets route53domains service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates route53domains service tags.
+// updateTags updates route53domains service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *route53domains.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Route53Domains)
@@ -158,5 +162,5 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 // UpdateTags updates route53domains service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(ctx), identifier, oldTags, newTags)
 }

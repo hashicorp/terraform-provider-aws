@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -158,7 +161,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_cloudWatchAlarm(rName),
+				Config: testAccTopicRuleConfig_cloudWatchAlarm(rName, "myalarm"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "1"),
@@ -194,6 +197,38 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccTopicRuleConfig_cloudWatchAlarm(rName, "differentName"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_alarm.*", map[string]string{
+						"alarm_name":   "differentName",
+						"state_reason": "test",
+						"state_value":  "OK",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Example rule"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -210,7 +245,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_cloudWatchLogs(rName),
+				Config: testAccTopicRuleConfig_cloudWatchLogs(rName, "mylogs1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -247,6 +282,39 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccTopicRuleConfig_cloudWatchLogs(rName, "updatedlogs1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
+						"log_group_name": "updatedlogs1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
+						"log_group_name": "mylogs2",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -263,7 +331,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_cloudWatchMetric(rName),
+				Config: testAccTopicRuleConfig_cloudWatchMetric(rName, "TestName"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -271,6 +339,38 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_metric.*", map[string]string{
 						"metric_name":      "TestName",
+						"metric_namespace": "TestNS",
+						"metric_unit":      "s",
+						"metric_value":     "10",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_cloudWatchMetric(rName, "OtherName"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_metric.*", map[string]string{
+						"metric_name":      "OtherName",
 						"metric_namespace": "TestNS",
 						"metric_unit":      "s",
 						"metric_value":     "10",
@@ -315,7 +415,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_dynamoDB(rName),
+				Config: testAccTopicRuleConfig_dynamoDB(rName, "tn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -353,7 +453,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicRuleConfig_dynamoDBRangeKey(rName),
+				Config: testAccTopicRuleConfig_dynamoDBRangeKey(rName, "tn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -405,7 +505,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_dynamoDBv2(rName),
+				Config: testAccTopicRuleConfig_dynamoDBv2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -416,6 +516,36 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodbv2.*", map[string]string{
 						"put_item.#":            "1",
 						"put_item.0.table_name": "test",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_dynamoDBv2(rName, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodbv2.*", map[string]string{
+						"put_item.#":            "1",
+						"put_item.0.table_name": "updated",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
@@ -450,7 +580,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_elasticSearch(rName),
+				Config: testAccTopicRuleConfig_elasticSearch(rName, "myindex"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -485,6 +615,37 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccTopicRuleConfig_elasticSearch(rName, "updatedindex"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "elasticsearch.*", map[string]string{
+						"id":    "myIdentifier",
+						"index": "updatedindex",
+						"type":  "mydocument",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -501,7 +662,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_firehose(rName),
+				Config: testAccTopicRuleConfig_firehose(rName, "mystream1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -539,6 +700,41 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleConfig_firehose(rName, "updatedstream1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "updatedstream1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream3",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
 			},
 		},
 	})
@@ -884,7 +1080,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_analytics(rName),
+				Config: testAccTopicRuleConfig_analytics(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -899,6 +1095,35 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_analytics(rName, "differentdata"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
+						"channel_name": "differentdata",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -928,7 +1153,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_analytics(rName),
+				Config: testAccTopicRuleConfig_analytics(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1115,9 +1340,6 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.test"
@@ -1129,7 +1351,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_kafka(rName),
+				Config: testAccTopicRuleConfig_kafka(rName, "fake_topic", "b-1.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1166,6 +1388,81 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-2.localhost:9094"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
+						"client_properties.%":                     "8",
+						"client_properties.acks":                  "1",
+						"client_properties.bootstrap.servers":     "b-2.localhost:9094",
+						"client_properties.compression.type":      "none",
+						"client_properties.key.serializer":        "org.apache.kafka.common.serialization.StringSerializer",
+						"client_properties.security.protocol":     "SSL",
+						"client_properties.ssl.keystore.password": "password",
+						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
+						"topic":                                   "different_topic",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			// Validate that updates only to a value inside the schema-less client_properties also works
+			{
+				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-3.localhost:9094"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
+						"client_properties.%":                     "8",
+						"client_properties.acks":                  "1",
+						"client_properties.bootstrap.servers":     "b-3.localhost:9094",
+						"client_properties.compression.type":      "none",
+						"client_properties.key.serializer":        "org.apache.kafka.common.serialization.StringSerializer",
+						"client_properties.security.protocol":     "SSL",
+						"client_properties.ssl.keystore.password": "password",
+						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
+						"topic":                                   "different_topic",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1190,7 +1487,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_kinesis(rName),
+				Config: testAccTopicRuleConfig_kinesis(rName, "mystream"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1208,6 +1505,35 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kinesis.*", map[string]string{
 						"stream_name": "mystream",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_kinesis(rName, "otherstream"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kinesis.*", map[string]string{
+						"stream_name": "otherstream",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
@@ -1285,7 +1611,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_republish(rName),
+				Config: testAccTopicRuleConfig_republish(rName, "mytopic"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1318,6 +1644,36 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleConfig_republish(rName, "othertopic"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "republish.*", map[string]string{
+						"qos":   "0",
+						"topic": "othertopic",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
 			},
 		},
 	})
@@ -1385,7 +1741,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_s3(rName),
+				Config: testAccTopicRuleConfig_s3(rName, "mybucket"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1416,6 +1772,37 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccTopicRuleConfig_s3(rName, "yourbucket"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
+						"bucket_name": "yourbucket",
+						"canned_acl":  "private",
+						"key":         "mykey",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1436,7 +1823,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_sns(rName),
+				Config: testAccTopicRuleConfig_sns(rName, "RAW"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1456,6 +1843,38 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns.*", map[string]string{
+						"message_format": "RAW",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_sns(rName, "JSON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns.*", map[string]string{
+						"message_format": "JSON",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
@@ -1482,7 +1901,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_sqs(rName),
+				Config: testAccTopicRuleConfig_sqs(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1512,6 +1931,36 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccTopicRuleConfig_sqs(rName, "yourdata"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sqs.*", map[string]string{
+						"queue_url":  "yourdata",
+						"use_base64": "false",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1532,7 +1981,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_stepFunctions(rName),
+				Config: testAccTopicRuleConfig_stepFunctions(rName, "mystatemachine"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1562,6 +2011,36 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccTopicRuleConfig_stepFunctions(rName, "yourstatemachine"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "step_functions.*", map[string]string{
+						"execution_name_prefix": "myprefix",
+						"state_machine_name":    "yourstatemachine",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1582,7 +2061,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_timestream(rName),
+				Config: testAccTopicRuleConfig_timestream(rName, "dim1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1607,15 +2086,61 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*", map[string]string{
 						"database_name":     "TestDB",
-						"dimension.#":       "1",
+						"dimension.#":       "2",
 						"table_name":        "test_table",
 						"timestamp.#":       "1",
 						"timestamp.0.unit":  "MILLISECONDS",
 						"timestamp.0.value": "${time}",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
-						"name":  "dim",
-						"value": "${dim}",
+						"name":  "dim1",
+						"value": "${dim1}",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
+						"name":  "dim2",
+						"value": "${dim2}",
+					}),
+				),
+			},
+			{
+				Config: testAccTopicRuleConfig_timestream(rName, "dim3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*", map[string]string{
+						"database_name":     "TestDB",
+						"dimension.#":       "2",
+						"table_name":        "test_table",
+						"timestamp.#":       "1",
+						"timestamp.0.unit":  "MILLISECONDS",
+						"timestamp.0.value": "${time}",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
+						"name":  "dim3",
+						"value": "${dim3}",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
+						"name":  "dim2",
+						"value": "${dim2}",
 					}),
 				),
 			},
@@ -1640,7 +2165,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_errorAction(rName),
+				Config: testAccTopicRuleConfig_kinesisErrorAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1710,7 +2235,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_kinesis(rName),
+				Config: testAccTopicRuleConfig_kinesis(rName, "mystream"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1739,7 +2264,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTopicRuleConfig_errorAction(rName),
+				Config: testAccTopicRuleConfig_kinesisErrorAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1798,7 +2323,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 
 func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_topic_rule" {
@@ -1833,7 +2358,7 @@ func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No IoT Topic Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		_, err := tfiot.FindTopicRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -1933,7 +2458,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccTopicRuleConfig_cloudWatchAlarm(rName string) string {
+func testAccTopicRuleConfig_cloudWatchAlarm(rName string, alarmName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -1945,16 +2470,16 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_alarm {
-    alarm_name   = "myalarm"
+    alarm_name   = %[2]q
     role_arn     = aws_iam_role.test.arn
     state_reason = "test"
     state_value  = "OK"
   }
 }
-`, rName))
+`, rName, alarmName))
 }
 
-func testAccTopicRuleConfig_cloudWatchLogs(rName string) string {
+func testAccTopicRuleConfig_cloudWatchLogs(rName string, logGroupName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -1965,7 +2490,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_logs {
-    log_group_name = "mylogs1"
+    log_group_name = %[2]q
     role_arn       = aws_iam_role.test.arn
   }
 
@@ -1974,10 +2499,10 @@ resource "aws_iot_topic_rule" "test" {
     role_arn       = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, logGroupName))
 }
 
-func testAccTopicRuleConfig_cloudWatchMetric(rName string) string {
+func testAccTopicRuleConfig_cloudWatchMetric(rName string, metricName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -1988,17 +2513,17 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_metric {
-    metric_name      = "TestName"
+    metric_name      = %[2]q
     metric_namespace = "TestNS"
     metric_value     = "10"
     metric_unit      = "s"
     role_arn         = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, metricName))
 }
 
-func testAccTopicRuleConfig_dynamoDB(rName string) string {
+func testAccTopicRuleConfig_dynamoDB(rName string, tableName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2014,13 +2539,13 @@ resource "aws_iot_topic_rule" "test" {
     hash_key_value = "hkv"
     payload_field  = "pf"
     role_arn       = aws_iam_role.test.arn
-    table_name     = "tn"
+    table_name     = %[2]q
   }
 }
-`, rName))
+`, rName, tableName))
 }
 
-func testAccTopicRuleConfig_dynamoDBRangeKey(rName string) string {
+func testAccTopicRuleConfig_dynamoDBRangeKey(rName string, tableName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2039,14 +2564,14 @@ resource "aws_iot_topic_rule" "test" {
     range_key_value = "rkv"
     range_key_type  = "STRING"
     role_arn        = aws_iam_role.test.arn
-    table_name      = "tn"
+    table_name      = %[2]q
     operation       = "INSERT"
   }
 }
-`, rName))
+`, rName, tableName))
 }
 
-func testAccTopicRuleConfig_dynamoDBv2(rName string) string {
+func testAccTopicRuleConfig_dynamoDBv2(rName string, tableName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2058,16 +2583,16 @@ resource "aws_iot_topic_rule" "test" {
 
   dynamodbv2 {
     put_item {
-      table_name = "test"
+      table_name = %[2]q
     }
 
     role_arn = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, tableName))
 }
 
-func testAccTopicRuleConfig_elasticSearch(rName string) string {
+func testAccTopicRuleConfig_elasticSearch(rName string, index string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2082,15 +2607,15 @@ resource "aws_iot_topic_rule" "test" {
   elasticsearch {
     endpoint = "https://domain.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
     id       = "myIdentifier"
-    index    = "myindex"
+    index    = %[2]q
     type     = "mydocument"
     role_arn = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, index))
 }
 
-func testAccTopicRuleConfig_firehose(rName string) string {
+func testAccTopicRuleConfig_firehose(rName string, streamName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2101,7 +2626,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   firehose {
-    delivery_stream_name = "mystream1"
+    delivery_stream_name = %[2]q
     role_arn             = aws_iam_role.test.arn
   }
 
@@ -2115,7 +2640,7 @@ resource "aws_iot_topic_rule" "test" {
     role_arn             = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, streamName))
 }
 
 func testAccTopicRuleConfig_firehoseSeparator(rName, separator string) string {
@@ -2235,7 +2760,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName)
 }
 
-func testAccTopicRuleConfig_analytics(rName string) string {
+func testAccTopicRuleConfig_analytics(rName string, channelName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2246,11 +2771,11 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   iot_analytics {
-    channel_name = "fakedata"
+    channel_name = %[2]q
     role_arn     = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, channelName))
 }
 
 func testAccTopicRuleConfig_analyticsBatchMode(rName string, batchMode bool) string {
@@ -2311,11 +2836,14 @@ resource "aws_iot_topic_rule" "test" {
 `, rName, batchMode))
 }
 
-func testAccTopicRuleConfig_kafka(rName string) string {
+func testAccTopicRuleConfig_kafka(rName string, topic string, broker string) string {
+	// Making a topic rule destination takes several minutes, as it requires creating many networking resources.
+	// It's far faster to simply use a properly-formatted but nonexistent ARN for the destination.
 	return acctest.ConfigCompose(
-		testAccTopicRuleDestinationConfig_basic(rName),
+		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
@@ -2324,12 +2852,12 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kafka {
-    destination_arn = aws_iot_topic_rule_destination.test.arn
-    topic           = "fake_topic"
+    destination_arn = "arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:ruledestination/vpc/pretend-this-is-a-uuid"
+    topic           = %[2]q
 
     client_properties = {
       "acks"                  = "1"
-      "bootstrap.servers"     = "b-1.localhost:9094"
+      "bootstrap.servers"     = %[3]q
       "compression.type"      = "none"
       "key.serializer"        = "org.apache.kafka.common.serialization.StringSerializer"
       "security.protocol"     = "SSL"
@@ -2339,10 +2867,10 @@ resource "aws_iot_topic_rule" "test" {
     }
   }
 }
-`, rName))
+`, rName, topic, broker))
 }
 
-func testAccTopicRuleConfig_kinesis(rName string) string {
+func testAccTopicRuleConfig_kinesis(rName string, streamName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2353,11 +2881,11 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kinesis {
-    stream_name = "mystream"
+    stream_name = %[2]q
     role_arn    = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, streamName))
 }
 
 func testAccTopicRuleConfig_lambda(rName string) string {
@@ -2379,7 +2907,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName)
 }
 
-func testAccTopicRuleConfig_republish(rName string) string {
+func testAccTopicRuleConfig_republish(rName string, topic string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2391,10 +2919,10 @@ resource "aws_iot_topic_rule" "test" {
 
   republish {
     role_arn = aws_iam_role.test.arn
-    topic    = "mytopic"
+    topic    = %[2]q
   }
 }
-`, rName))
+`, rName, topic))
 }
 
 func testAccTopicRuleConfig_republishQoS(rName string) string {
@@ -2416,7 +2944,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName))
 }
 
-func testAccTopicRuleConfig_s3(rName string) string {
+func testAccTopicRuleConfig_s3(rName string, bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2427,16 +2955,16 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   s3 {
-    bucket_name = "mybucket"
+    bucket_name = %[2]q
     canned_acl  = "private"
     key         = "mykey"
     role_arn    = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, bucketName))
 }
 
-func testAccTopicRuleConfig_sns(rName string) string {
+func testAccTopicRuleConfig_sns(rName string, messageFormat string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2449,14 +2977,15 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   sns {
-    role_arn   = aws_iam_role.test.arn
-    target_arn = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
+    message_format = %[2]q
+    role_arn       = aws_iam_role.test.arn
+    target_arn     = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
   }
 }
-`, rName))
+`, rName, messageFormat))
 }
 
-func testAccTopicRuleConfig_sqs(rName string) string {
+func testAccTopicRuleConfig_sqs(rName string, queueUrl string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2467,15 +2996,15 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   sqs {
-    queue_url  = "fakedata"
+    queue_url  = %[2]q
     role_arn   = aws_iam_role.test.arn
     use_base64 = false
   }
 }
-`, rName))
+`, rName, queueUrl))
 }
 
-func testAccTopicRuleConfig_stepFunctions(rName string) string {
+func testAccTopicRuleConfig_stepFunctions(rName string, smName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2487,14 +3016,14 @@ resource "aws_iot_topic_rule" "test" {
 
   step_functions {
     execution_name_prefix = "myprefix"
-    state_machine_name    = "mystatemachine"
+    state_machine_name    = %[2]q
     role_arn              = aws_iam_role.test.arn
   }
 }
-`, rName))
+`, rName, smName))
 }
 
-func testAccTopicRuleConfig_timestream(rName string) string {
+func testAccTopicRuleConfig_timestream(rName string, dimName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
@@ -2510,8 +3039,13 @@ resource "aws_iot_topic_rule" "test" {
     table_name    = "test_table"
 
     dimension {
-      name  = "dim"
-      value = "$${dim}"
+      name  = %[2]q
+      value = "$${%[2]s}"
+    }
+
+    dimension {
+      name  = "dim2"
+      value = "$${dim2}"
     }
 
     timestamp {
@@ -2520,10 +3054,10 @@ resource "aws_iot_topic_rule" "test" {
     }
   }
 }
-`, rName))
+`, rName, dimName))
 }
 
-func testAccTopicRuleConfig_errorAction(rName string) string {
+func testAccTopicRuleConfig_kinesisErrorAction(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`

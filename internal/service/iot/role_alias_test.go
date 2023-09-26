@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -56,7 +59,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName2),
 				),
-				ExpectError: regexp.MustCompile("Role alias .+? already exists for this account"),
+				ExpectError: regexache.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{
 				Config: testAccRoleAliasConfig_update4(alias2),
@@ -68,7 +71,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Config: testAccRoleAliasConfig_update5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName2),
-					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
+					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexache.MustCompile("role/rolebogus")),
 				),
 			},
 			{
@@ -82,7 +85,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 
 func testAccCheckRoleAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_role_alias" {
 				continue
@@ -111,7 +114,7 @@ func testAccCheckRoleAliasExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		role_arn := rs.Primary.Attributes["role_arn"]
 
 		roleAliasDescription, err := tfiot.GetRoleAliasDescription(ctx, conn, rs.Primary.ID)

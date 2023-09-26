@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
@@ -36,7 +39,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glue", regexp.MustCompile(`mlTransform/tfm-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -216,7 +219,7 @@ func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMLTransformConfig_maxRetries(rName, 11),
-				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
 				Config: testAccMLTransformConfig_maxRetries(rName, 0),
@@ -434,7 +437,7 @@ func testAccCheckMLTransformExists(ctx context.Context, resourceName string, mlT
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
@@ -463,7 +466,7 @@ func testAccCheckMLTransformDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
 				TransformId: aws.String(rs.Primary.ID),

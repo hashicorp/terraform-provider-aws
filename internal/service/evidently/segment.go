@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -66,7 +69,7 @@ func ResourceSegment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
 			"pattern": {
@@ -92,13 +95,13 @@ func ResourceSegment() *schema.Resource {
 }
 
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateSegmentInput{
 		Name:    aws.String(name),
 		Pattern: aws.String(d.Get("pattern").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -117,7 +120,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	segment, err := FindSegmentByNameOrARN(ctx, conn, d.Id())
 
@@ -140,7 +143,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", segment.Name)
 	d.Set("pattern", segment.Pattern)
 
-	SetTagsOut(ctx, segment.Tags)
+	setTagsOut(ctx, segment.Tags)
 
 	return nil
 }
@@ -151,7 +154,7 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
 	_, err := conn.DeleteSegmentWithContext(ctx, &cloudwatchevidently.DeleteSegmentInput{

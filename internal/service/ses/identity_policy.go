@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,7 +44,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
 				),
 			},
 			"policy": {
@@ -61,7 +64,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 
 func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity := d.Get("identity").(string)
 	policyName := d.Get("name").(string)
@@ -89,7 +92,7 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -117,7 +120,7 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -167,7 +170,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {

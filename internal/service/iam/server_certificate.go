@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -106,14 +109,14 @@ func ResourceServerCertificate() *schema.Resource {
 
 func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	sslCertName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -141,7 +144,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	d.Set("name", sslCertName) // Required for resource Read.
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := serverCertificateCreateTags(ctx, conn, sslCertName, tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -159,7 +162,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	cert, err := FindServerCertificateByName(ctx, conn, d.Get("name").(string))
 
@@ -192,14 +195,14 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("upload_date", nil)
 	}
 
-	SetTagsOut(ctx, cert.Tags)
+	setTagsOut(ctx, cert.Tags)
 
 	return diags
 }
 
 func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -221,7 +224,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Minute, func() (interface{}, error) {

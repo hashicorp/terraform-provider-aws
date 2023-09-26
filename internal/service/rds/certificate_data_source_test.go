@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -44,14 +47,14 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_latestValidTill(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexp.MustCompile(`cert:rds-ca-[0-9]{4}`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexache.MustCompile(`cert:rds-ca-[0-9]{4}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
 					resource.TestCheckResourceAttr(dataSourceName, "customer_override", "false"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`rds-ca-[0-9]{4}`)),
-					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexp.MustCompile(`[0-9a-f]+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexp.MustCompile(acctest.RFC3339RegexPattern)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexp.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`rds-ca-[0-9]{4}`)),
+					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexache.MustCompile(`[0-9a-f]+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexache.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexache.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -59,7 +62,7 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 }
 
 func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeCertificatesInput{}
 

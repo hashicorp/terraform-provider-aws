@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -55,6 +58,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql5.7"),
+					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -165,7 +169,7 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 		},
@@ -187,7 +191,7 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 				Config: testAccClusterConfig_identifierPrefix("tf-test-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 		},
@@ -757,10 +761,17 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_dbClusterInstanceClass(rName),
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.m5d.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.m5d.2xlarge"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.r6gd.4xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.4xlarge"),
 				),
 			},
 		},
@@ -912,7 +923,7 @@ func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_withoutUserNameAndPassword(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
+				ExpectError: regexache.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
 			},
 		},
 	})
@@ -1349,7 +1360,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_engineVersion(rName, true),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
+				ExpectError: regexache.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
@@ -1440,7 +1451,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
@@ -1502,7 +1513,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
 		},
 	})
@@ -2530,7 +2541,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2556,7 +2567,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2609,7 +2620,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds
 			return fmt.Errorf("No RDS Cluster ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).RDSConn()
+		conn := providerF().Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -2996,12 +3007,12 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_dbClusterInstanceClass(rName string) string {
+func testAccClusterConfig_dbClusterInstanceClass(rName, instanceClass string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
-  db_cluster_instance_class = "db.r6gd.xlarge"
+  db_cluster_instance_class = %[2]q
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -3010,7 +3021,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName, instanceClass)
 }
 
 func testAccClusterConfig_backtrackWindow(backtrackWindow int) string {
@@ -3187,6 +3198,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -3200,7 +3213,7 @@ resource "aws_kms_key" "foo" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -3637,7 +3650,7 @@ data "aws_availability_zones" "available" {
 }
 
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_rds_cluster_parameter_group" "test" {
@@ -3685,7 +3698,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

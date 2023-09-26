@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -32,11 +35,11 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(ctx, resourceName, &origin),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
-					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
-					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexp.MustCompile("^[a-z0-9]+")),
-					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexache.MustCompile("^[0-9a-z]+")),
+					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexache.MustCompile("^origin-access-identity/cloudfront/[0-9A-Z]+")),
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "iam_arn", regexp.MustCompile(fmt.Sprintf("^arn:%s:iam::cloudfront:user/CloudFront Origin Access Identity [A-Z0-9]+", acctest.Partition()))),
+					resource.TestMatchResourceAttr(resourceName, "iam_arn", regexache.MustCompile(fmt.Sprintf("^arn:%s:iam::cloudfront:user/CloudFront Origin Access Identity [0-9A-Z]+", acctest.Partition()))),
 				),
 			},
 			{
@@ -63,11 +66,11 @@ func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 				Config: testAccOriginAccessIdentityConfig_noComment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(ctx, resourceName, &origin),
-					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
-					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexp.MustCompile("^[a-z0-9]+")),
-					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexache.MustCompile("^[0-9a-z]+")),
+					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexache.MustCompile("^origin-access-identity/cloudfront/[0-9A-Z]+")),
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "iam_arn", regexp.MustCompile(fmt.Sprintf("^arn:%s:iam::cloudfront:user/CloudFront Origin Access Identity [A-Z0-9]+", acctest.Partition()))),
+					resource.TestMatchResourceAttr(resourceName, "iam_arn", regexache.MustCompile(fmt.Sprintf("^arn:%s:iam::cloudfront:user/CloudFront Origin Access Identity [0-9A-Z]+", acctest.Partition()))),
 				),
 			},
 			{
@@ -104,7 +107,7 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 
 func testAccCheckOriginAccessIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_origin_access_identity" {
@@ -135,7 +138,7 @@ func testAccCheckOriginAccessIdentityExistence(ctx context.Context, r string, or
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 			Id: aws.String(rs.Primary.ID),

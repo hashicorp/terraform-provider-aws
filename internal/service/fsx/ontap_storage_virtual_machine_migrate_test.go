@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -26,7 +29,7 @@ func TestOntapStorageVirtualMachineStateUpgradeV0(t *testing.T) {
 	t.Parallel()
 
 	expected := testOntapStorageVirtualMachineStateDataV1()
-	actual, err := tffsx.ResourceOntapStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
+	actual, err := tffsx.ResourceONTAPStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
 
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)

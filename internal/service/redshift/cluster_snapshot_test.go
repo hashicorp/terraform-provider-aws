@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -32,7 +35,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`snapshot:.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
@@ -49,7 +52,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_retention(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`snapshot:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "1"),
@@ -141,7 +144,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Cluster Snapshot is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -157,7 +160,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster_snapshot" {

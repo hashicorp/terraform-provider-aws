@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -29,7 +32,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexache.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
 			},
@@ -37,7 +40,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccResourceGroupConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexache.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
 					testAccCheckResourceGroupRecreated(&v1, &v2),
 				),
@@ -48,7 +51,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

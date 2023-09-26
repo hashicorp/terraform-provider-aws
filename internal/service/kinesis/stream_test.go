@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
@@ -141,7 +144,7 @@ func TestAccKinesisStream_encryptionWithoutKMSKeyThrowsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStreamConfig_encryptionAndNoKMSKey(rName),
-				ExpectError: regexp.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
+				ExpectError: regexache.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
 			},
 		},
 	})
@@ -568,12 +571,12 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 			// Check that we can't create an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationNothingSet(rName),
-				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+				ExpectError: regexache.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
 			},
 			// Check that we can't create an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationShardCountWhenOnDemand(rName),
-				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+				ExpectError: regexache.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
 			},
 			// Prepare for updates...
 			{
@@ -587,12 +590,12 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 			// Check that we can't update to an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationNothingSet(rName),
-				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+				ExpectError: regexache.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
 			},
 			// Check that we can't update to an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationShardCountWhenOnDemand(rName),
-				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+				ExpectError: regexache.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
 			},
 		},
 	})
@@ -600,7 +603,7 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 
 func testAccCheckStreamExists(ctx context.Context, n string, v *kinesis.StreamDescriptionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -625,7 +628,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *kinesis.StreamDe
 
 func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_stream" {
@@ -651,7 +654,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccStreamRegisterStreamConsumer(ctx context.Context, stream *kinesis.StreamDescriptionSummary, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		if _, err := conn.RegisterStreamConsumerWithContext(ctx, &kinesis.RegisterStreamConsumerInput{
 			ConsumerName: aws.String(rName),

@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -34,7 +37,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexp.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -51,14 +54,14 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "shards.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexp.MustCompile(`^000[12]$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexache.MustCompile(`^000[12]$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.slots", "0-8191"),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "shards.0.nodes.0.availability_zone"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "shards.0.nodes.0.create_time"),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexp.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexp.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexache.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexache.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
@@ -824,7 +827,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_securityGroups(rName, 2, 0), // attempt to remove all
-				ExpectError: regexp.MustCompile(`removing all security groups is not possible`),
+				ExpectError: regexache.MustCompile(`removing all security groups is not possible`),
 			},
 			{
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
@@ -1059,7 +1062,7 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_cluster" {
@@ -1094,7 +1097,7 @@ func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("No MemoryDB Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes["name"])
 
@@ -1104,7 +1107,7 @@ func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckSnapshotExistsByName(ctx context.Context, snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		_, err := tfmemorydb.FindSnapshotByName(ctx, conn, snapshotName)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,8 +32,19 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"auto_enable": {
-				Type:     schema.TypeBool,
-				Required: true,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
+				Deprecated:   "Use auto_enable_organization_members instead",
+			},
+
+			"auto_enable_organization_members": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
+				ValidateFunc: validation.StringInSlice(guardduty.AutoEnableMembers_Values(), false),
 			},
 
 			"datasources": {
@@ -119,18 +134,47 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+				// When creating an organization configuration with AutoEnable=true,
+				// AWS will automatically set AutoEnableOrganizationMembers=NEW.
+				//
+				// When configuring AutoEnableOrganizationMembers=ALL or NEW,
+				// AWS will automatically set AutoEnable=true.
+				//
+				// This diff customization keeps things consistent when configuring
+				// the resource against deprecation advice from AutoEnableOrganizationMembers=ALL
+				// to AutoEnable=true, and it also removes the need to use
+				// AutoEnable in the resource update function.
+
+				if attr := d.GetRawConfig().GetAttr("auto_enable_organization_members"); attr.IsKnown() && !attr.IsNull() {
+					return d.SetNew("auto_enable", attr.AsString() != guardduty.AutoEnableMembersNone)
+				}
+
+				if attr := d.GetRawConfig().GetAttr("auto_enable"); attr.IsKnown() && !attr.IsNull() {
+					if attr.True() {
+						return d.SetNew("auto_enable_organization_members", guardduty.AutoEnableMembersNew)
+					} else {
+						return d.SetNew("auto_enable_organization_members", guardduty.AutoEnableMembersNone)
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 
 	input := &guardduty.UpdateOrganizationConfigurationInput{
-		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
-		DetectorId: aws.String(detectorID),
+		AutoEnableOrganizationMembers: aws.String(d.Get("auto_enable_organization_members").(string)),
+		DetectorId:                    aws.String(detectorID),
 	}
 
 	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -150,7 +194,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := &guardduty.DescribeOrganizationConfigurationInput{
 		DetectorId: aws.String(d.Id()),
@@ -173,6 +217,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
+	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
 
 	if output.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {

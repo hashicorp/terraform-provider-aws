@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -124,7 +127,7 @@ func ResourceDetector() *schema.Resource {
 				},
 			},
 
-			"features": {
+			"feature": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -183,11 +186,11 @@ func ResourceDetector() *schema.Resource {
 
 func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
-		Tags:   GetTagsIn(ctx),
+		Tags:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -198,7 +201,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.DataSources = expandDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("feature"); ok && len(v.([]interface{})) > 0 {
 		input.Features = expandFeaturesConfigurations(v.([]interface{}))
 	}
 
@@ -214,7 +217,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -251,24 +254,24 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if gdo.Features != nil {
-		if err := d.Set("features", flattenFeaturesConfigurationsResult(gdo.Features)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
+		if err := d.Set("feature", flattenFeaturesConfigurationsResult(gdo.Features)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting feature: %s", err)
 		}
 	} else {
-		d.Set("features", nil)
+		d.Set("feature", nil)
 	}
 
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	SetTagsOut(ctx, gdo.Tags)
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }
 
 func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
@@ -281,14 +284,14 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
 		}
 
-		if d.HasChange("features") {
-			input.Features = expandFeaturesConfigurations(d.Get("features").([]interface{}))
+		if d.HasChange("feature") {
+			input.Features = expandFeaturesConfigurations(d.Get("feature").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 		_, err := conn.UpdateDetectorWithContext(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating GuardDuty Detector '%s' failed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -297,7 +300,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),

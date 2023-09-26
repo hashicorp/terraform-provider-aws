@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -76,43 +79,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"availability_zones": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-				ConflictsWith: []string{"preferred_cache_cluster_azs"},
-			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
-			},
-			"cluster_mode": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
-				Deprecated:    "Use num_node_groups and replicas_per_node_group instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"num_node_groups": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"num_node_groups", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
-							Deprecated:    "Use root-level num_node_groups instead",
-						},
-						"replicas_per_node_group": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"replicas_per_node_group"},
-							Deprecated:    "Use root-level replicas_per_node_group instead",
-						},
-					},
-				},
 			},
 			"configuration_endpoint_address": {
 				Type:     schema.TypeString,
@@ -128,7 +97,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"description", "replication_group_description"},
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"engine": {
@@ -154,7 +122,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ConflictsWith: []string{
-					"cluster_mode.0.num_node_groups",
 					"num_node_groups",
 					"parameter_group_name",
 					"engine",
@@ -230,20 +197,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeInt,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_node_groups", "number_cache_clusters"},
+				ConflictsWith: []string{"num_node_groups"},
 			},
 			"num_node_groups": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"cluster_mode", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
-			},
-			"number_cache_clusters": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_cache_clusters", "num_node_groups"},
-				Deprecated:    "Use num_cache_clusters instead",
+				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -266,10 +226,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				},
 			},
 			"preferred_cache_cluster_azs": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"availability_zones"},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
@@ -280,18 +239,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"replicas_per_node_group": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cluster_mode"},
-			},
-			"replication_group_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"description", "replication_group_description"},
-				Deprecated:   "Use description instead",
-				ValidateFunc: validation.StringIsNotEmpty,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -397,10 +347,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			CustomizeDiffValidateReplicationGroupAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("number_cache_clusters") ||
-					diff.HasChange("num_cache_clusters") ||
-					diff.HasChange("cluster_mode.0.num_node_groups") ||
-					diff.HasChange("cluster_mode.0.replicas_per_node_group") ||
+				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
 					diff.HasChange("replicas_per_node_group")
 			}),
@@ -411,18 +358,15 @@ func ResourceReplicationGroup() *schema.Resource {
 
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.ReplicationGroupDescription = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("replication_group_description"); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
@@ -455,9 +399,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
 		input.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
-	}
-	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
-		input.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -533,29 +474,12 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AuthToken = aws.String(v.(string))
 	}
 
-	if clusterMode, ok := d.GetOk("cluster_mode"); ok {
-		clusterModeList := clusterMode.([]interface{})
-		attributes := clusterModeList[0].(map[string]interface{})
-
-		if v, ok := attributes["num_node_groups"]; ok && v != 0 {
-			input.NumNodeGroups = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := attributes["replicas_per_node_group"]; ok {
-			input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
-		}
-	}
-
 	if v, ok := d.GetOk("num_node_groups"); ok && v != 0 {
 		input.NumNodeGroups = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("replicas_per_node_group"); ok {
 		input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
-	}
-
-	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
-		input.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
 
 	if numCacheClusters, ok := d.GetOk("num_cache_clusters"); ok {
@@ -596,7 +520,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ReplicationGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -614,7 +538,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	rgp, err := FindReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -660,14 +584,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("kms_key_id", rgp.KmsKeyId)
 	d.Set("description", rgp.Description)
-	d.Set("replication_group_description", rgp.Description)
-	d.Set("number_cache_clusters", len(rgp.MemberClusters))
 	d.Set("num_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
-	}
-	if err := d.Set("cluster_mode", flattenNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cluster_mode attribute: %s", err)
 	}
 
 	d.Set("num_node_groups", len(rgp.NodeGroups))
@@ -746,24 +665,16 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChanges(
-			"cluster_mode.0.num_node_groups",
-			"cluster_mode.0.replicas_per_node_group",
 			"num_node_groups",
 			"replicas_per_node_group",
 		) {
 			err := modifyReplicationGroupShardConfiguration(ctx, conn, d)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), err)
-			}
-		} else if d.HasChange("number_cache_clusters") {
-			// TODO: remove when number_cache_clusters is removed from resource schema
-			err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "number_cache_clusters")
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) clusters: %s", d.Id(), err)
 			}
 		} else if d.HasChange("num_cache_clusters") {
 			err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "num_cache_clusters")
@@ -780,11 +691,6 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("description") {
 			input.ReplicationGroupDescription = aws.String(d.Get("description").(string))
-			requestUpdate = true
-		}
-
-		if d.HasChange("replication_group_description") {
-			input.ReplicationGroupDescription = aws.String(d.Get("replication_group_description").(string))
 			requestUpdate = true
 		}
 
@@ -940,7 +846,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {
@@ -1055,33 +961,7 @@ func deleteReplicationGroup(ctx context.Context, replicationGroupID string, conn
 	return err
 }
 
-func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
-	if len(nodeGroups) == 0 {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"num_node_groups":         len(nodeGroups),
-		"replicas_per_node_group": (len(nodeGroups[0].NodeGroupMembers) - 1),
-	}
-	return []map[string]interface{}{m}
-}
-
 func modifyReplicationGroupShardConfiguration(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	if d.HasChange("cluster_mode.0.num_node_groups") {
-		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "cluster_mode.0.num_node_groups")
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("cluster_mode.0.replicas_per_node_group") {
-		err := modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx, conn, d, "cluster_mode.0.replicas_per_node_group")
-		if err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("num_node_groups") {
 		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "num_node_groups")
 		if err != nil {
@@ -1124,12 +1004,12 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	log.Printf("[DEBUG] Modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), input)
 	_, err := conn.ModifyReplicationGroupShardConfigurationWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
+		return fmt.Errorf("modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
 	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1148,11 +1028,11 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		}
 		_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+			return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
 		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
+			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
 	} else {
 		input := &elasticache.DecreaseReplicaCountInput{
@@ -1162,11 +1042,11 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		}
 		_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+			return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
 		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
+			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
 	}
 
@@ -1195,12 +1075,12 @@ func increaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 	}
 	_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
+		return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
 	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
 
 	return nil
@@ -1214,12 +1094,12 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 	}
 	_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
+		return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
 	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
 
 	return nil
@@ -1227,8 +1107,8 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )

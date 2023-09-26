@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -34,7 +37,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"execute-api:Invoke".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":"execute-api:Invoke".+`)),
 				),
 			},
 			{
@@ -47,7 +50,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
 			},
 		},
 	})
@@ -112,7 +115,7 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -144,7 +147,7 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 
 func testAccCheckRestAPIPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api_policy" {

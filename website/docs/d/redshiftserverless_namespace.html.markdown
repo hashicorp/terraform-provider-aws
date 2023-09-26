@@ -20,13 +20,13 @@ data "aws_redshiftserverless_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `namespace_name` - (Required) The name of the namespace.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `admin_username` - The username of the administrator for the first database created in the namespace.
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.

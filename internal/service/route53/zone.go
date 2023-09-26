@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -126,7 +129,7 @@ func ResourceZone() *schema.Resource {
 
 func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.CreateHostedZoneInput{
 		CallerReference: aws.String(id.UniqueId()),
@@ -162,7 +165,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -182,7 +185,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	output, err := FindHostedZoneByID(ctx, conn, d.Id())
 
@@ -244,7 +247,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("comment") {
@@ -298,7 +301,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get("name").(string)); err != nil {
@@ -314,7 +317,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Id: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", input)
+	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", d.Id())
 	_, err := conn.DeleteHostedZoneWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
@@ -407,6 +410,10 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.R
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",
 			err, lastDeleteErr, lastErrorFromWaiter)
@@ -442,7 +449,8 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		output, err = conn.GetDNSSECWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") ||
+		tfawserr.ErrMessageContains(err, "AccessDenied", "The operation GetDNSSEC is not available for the current AWS account") {
 		return "NOT_SIGNING", nil
 	}
 
@@ -680,8 +688,6 @@ func hostedZoneVPCHash(v interface{}) int {
 }
 
 func waitForChangeSynchronization(ctx context.Context, conn *route53.Route53, changeID string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	conf := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},

@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
@@ -563,7 +566,7 @@ func TestAccSQSQueue_FIFOQueue_expectNameError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccQueueConfig_fifo(rName),
-				ExpectError: regexp.MustCompile(`invalid queue name:`),
+				ExpectError: regexache.MustCompile(`invalid queue name:`),
 			},
 		},
 	})
@@ -649,7 +652,7 @@ func TestAccSQSQueue_StandardQueue_expectContentBasedDeduplicationError(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccQueueConfig_standardExpectContentBasedDeduplicationError(rName),
-				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO queue`),
+				ExpectError: regexache.MustCompile(`content-based deduplication can only be set for FIFO queue`),
 			},
 		},
 	})
@@ -837,7 +840,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[st
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn(ctx)
 
 		output, err := tfsqs.FindQueueAttributesByURL(ctx, conn, rs.Primary.ID)
 
@@ -853,7 +856,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[st
 
 func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sqs_queue" {

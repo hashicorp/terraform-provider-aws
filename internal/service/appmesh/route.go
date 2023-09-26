@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -240,7 +243,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								"prefix": {
 									Type:         schema.TypeString,
 									Optional:     true,
-									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
 								},
 								"query_parameter": {
 									Type:     schema.TypeSet,
@@ -737,14 +740,14 @@ func resourceRouteSpecSchema() *schema.Schema {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(name),
 		Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 
@@ -765,7 +768,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get("name").(string))
@@ -800,7 +803,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateRouteInput{
@@ -826,7 +829,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
 	input := &appmesh.DeleteRouteInput{
@@ -862,7 +865,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	virtualRouterName := parts[1]
 	name := parts[2]
 
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	route, err := FindRouteByFourPartKey(ctx, conn, meshName, "", virtualRouterName, name)
 

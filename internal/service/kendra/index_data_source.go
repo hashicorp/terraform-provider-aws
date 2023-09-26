@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -129,7 +132,7 @@ func DataSourceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -279,7 +282,7 @@ func DataSourceIndex() *schema.Resource {
 }
 
 func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -287,11 +290,11 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := findIndexByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("error getting Kendra Index (%s): %s", id, err)
+		return diag.Errorf("getting Kendra Index (%s): %s", id, err)
 	}
 
 	if resp == nil {
-		return diag.Errorf("error getting Kendra Index (%s): empty response", id)
+		return diag.Errorf("getting Kendra Index (%s): empty response", id)
 	}
 
 	arn := arn.ARN{
@@ -337,14 +340,14 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(id)

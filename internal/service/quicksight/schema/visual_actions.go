@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -74,7 +77,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																	Optional: true,
 																	MinItems: 1,
 																	MaxItems: 30,
-																	Elem:     schema.TypeString,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
 																},
 															},
 														},

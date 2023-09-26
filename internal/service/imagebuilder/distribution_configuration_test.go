@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
@@ -23,6 +26,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"You have reached the maximum allowed number of license configurations created in one day",
+		"Amazon Inspector is not enabled",
 	)
 }
 
@@ -700,12 +704,12 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_fastLaunchMaxParallelLaunches(rName, 5),
+				Config: testAccDistributionConfigurationConfig_fastLaunchMaxParallelLaunches(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", "5"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", "7"),
 				),
 			},
 			{
@@ -909,7 +913,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 
 func testAccCheckDistributionConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_distribution_configuration" {
@@ -946,7 +950,7 @@ func testAccCheckDistributionConfigurationExists(ctx context.Context, resourceNa
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		input := &imagebuilder.GetDistributionConfigurationInput{
 			DistributionConfigurationArn: aws.String(rs.Primary.ID),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
@@ -5,16 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -45,7 +48,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb4.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -91,7 +94,7 @@ func TestAccDocDBCluster_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-test-")),
+						"aws_docdb_cluster.test", "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{
@@ -125,7 +128,7 @@ func TestAccDocDBCluster_generatedName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-")),
+						"aws_docdb_cluster.test", "cluster_identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 			{
@@ -219,7 +222,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifier(rName),
-				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be added to an existing DocumentDB Global Cluster`),
+				ExpectError: regexache.MustCompile(`existing DocumentDB Clusters cannot be added to an existing DocumentDB Global Cluster`),
 			},
 		},
 	})
@@ -305,7 +308,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters`),
+				ExpectError: regexache.MustCompile(`existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters`),
 			},
 		},
 	})
@@ -389,7 +392,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_noUsernameOrPassword(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`required field is not set`),
+				ExpectError: regexache.MustCompile(`required field is not set`),
 			},
 		},
 	})
@@ -839,7 +842,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -886,7 +889,7 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -927,7 +930,7 @@ func testAccCheckClusterSnapshot(ctx context.Context, rInt int) resource.TestChe
 			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
 			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.DocDBConn()
+			conn := awsClient.DocDBConn(ctx)
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{

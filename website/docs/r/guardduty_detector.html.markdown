@@ -18,24 +18,25 @@ Provides a resource to manage a GuardDuty detector.
 resource "aws_guardduty_detector" "MyDetector" {
   enable = true
 
-  features {
+  feature {
     name   = "S3_DATA_EVENTS"
     enable = true
   }
 
-  features {
+  feature {
     name   = "EKS_AUDIT_LOGS"
     enable = false
   }
 
-  features {
+  feature {
     name   = "EBS_MALWARE_PROTECTION"
     enable = true
   }
 
-  features {
+  feature {
     name   = "EKS_RUNTIME_MONITORING"
     enable = true
+
     aditional_configuration {
       name   = "EKS_ADDON_MANAGEMENT"
       enable = true
@@ -44,14 +45,40 @@ resource "aws_guardduty_detector" "MyDetector" {
 }
 ```
 
+### Deprecated use of `datasources`
+
+```terraform
+resource "aws_guardduty_detector" "MyDetector" {
+  enable = true
+
+  datasources {
+    s3_logs {
+      enable = true
+    }
+    kubernetes {
+      audit_logs {
+        enable = false
+      }
+    }
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = true
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
 * `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
-* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of `features`.
-* `features` - (Optional) Describes which features will be enabled for the detector. See [Features](#features) below for more details.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of `feature` blocks.
+* `feature` - (Optional) Describes which features will be enabled for the detector. See [Features](#features) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Data Sources
@@ -111,7 +138,7 @@ The `ebs_volumes` block supports the following:
 
 ### Features
 
-The `features` block supports the following:
+The `feature` block supports the following:
 
 * `name` - (Required) Name of the feature to configure. See the [AWS GuardDuty documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation) for the allowed feature names.
 * `enable` - (Required) If true, enables the feature, false to disable the feature.
@@ -124,9 +151,9 @@ The `additional_configuration` block supports the following:
 * `name` - (Required) Name of the additional feature configuration.
 * `enable` - (Required) If true, enables the additional feature configuration, false to disable the feature.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `account_id` - The AWS account ID of the GuardDuty detector
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty detector
@@ -135,10 +162,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty detectors can be imported using the detector ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty detectors using the detector ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_detector.MyDetector
+  id = "00b00fd5aecc0ab60a708659477e9617"
+}
 ```
-$ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import GuardDuty detectors using the detector ID. For example:
+
+```console
+% terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
 ```
 
 The ID of the detector can be retrieved via the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/guardduty/list-detectors.html) using `aws guardduty list-detectors`.

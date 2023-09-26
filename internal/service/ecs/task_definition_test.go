@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
@@ -80,16 +83,16 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
@@ -414,6 +417,43 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 						"efs_volume_configuration.0.root_directory":          "/home/test",
 						"efs_volume_configuration.0.transit_encryption":      "ENABLED",
 						"efs_volume_configuration.0.transit_encryption_port": "2999",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolumeDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                       rName,
+						"efs_volume_configuration.#": "1",
+						"efs_volume_configuration.0.root_directory":     "/",
+						"efs_volume_configuration.0.transit_encryption": "DISABLED",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
 				),
@@ -1081,7 +1121,7 @@ func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
-				ExpectError: regexp.MustCompile(`invalid container definition supplied at index \(1\)`),
+				ExpectError: regexache.MustCompile(`invalid container definition supplied at index \(1\)`),
 			},
 		},
 	})
@@ -1228,7 +1268,7 @@ func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
 
 func testAccCheckTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_task_definition" {
@@ -1261,7 +1301,7 @@ func testAccCheckTaskDefinitionExists(ctx context.Context, name string, def *ecs
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		out, err := conn.DescribeTaskDefinitionWithContext(ctx, &ecs.DescribeTaskDefinitionInput{
 			TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),
@@ -1985,6 +2025,45 @@ TASK_DEFINITION
   }
 }
 `, rName, tEnc, tEncPort)
+}
+
+func testAccTaskDefinitionConfig_transitEncryptionEFSVolumeDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.test.id
+      root_directory     = "/"
+      transit_encryption = "DISABLED"
+
+      authorization_config {
+        iam = "DISABLED"
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccTaskDefinitionConfig_efsAccessPoint(rName, useIam string) string {

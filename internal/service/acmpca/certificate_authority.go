@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -327,12 +330,6 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// See https://github.com/hashicorp/terraform-provider-aws/issues/17832 for deprecation / removal status
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
@@ -356,14 +353,14 @@ func ResourceCertificateAuthority() *schema.Resource {
 
 func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("key_storage_security_standard"); ok {
@@ -394,7 +391,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	certificateAuthority, err := FindCertificateAuthorityByARN(ctx, conn, d.Id())
 
@@ -420,7 +417,6 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
@@ -479,7 +475,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &acmpca.UpdateCertificateAuthorityInput{
@@ -509,7 +505,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
 	updateInput := &acmpca.UpdateCertificateAuthorityInput{

@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dlm_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -32,7 +35,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
@@ -75,7 +78,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
@@ -522,7 +525,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -559,7 +562,7 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
@@ -576,7 +579,7 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 

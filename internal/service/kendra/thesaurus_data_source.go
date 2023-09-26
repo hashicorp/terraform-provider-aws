@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -44,7 +47,7 @@ func DataSourceThesaurus() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -91,7 +94,7 @@ func DataSourceThesaurus() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
 					),
 				),
@@ -105,7 +108,7 @@ func DataSourceThesaurus() *schema.Resource {
 }
 
 func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	thesaurusID := d.Get("thesaurus_id").(string)
@@ -142,7 +145,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting source_s3_path: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", arn, err)

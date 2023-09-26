@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
@@ -23,6 +26,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -71,7 +75,7 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
@@ -215,14 +219,14 @@ func ResourceEnvironment() *schema.Resource {
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {
@@ -303,7 +307,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	env, err := FindEnvironmentByID(ctx, conn, d.Id())
 
@@ -391,14 +395,14 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 			m["resource"] = aws.StringValue(optionSetting.ResourceName)
 		}
 
-		if optionSetting.Value != nil {
+		if value := aws.StringValue(optionSetting.Value); value != "" {
 			switch aws.StringValue(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(ctx, aws.StringValue(optionSetting.Value), meta)
+				m["value"] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
 			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
+				m["value"] = sortValues(value)
 			default:
-				m["value"] = aws.StringValue(optionSetting.Value)
+				m["value"] = value
 			}
 		}
 
@@ -431,7 +435,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
@@ -565,7 +569,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
@@ -675,8 +679,14 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Elast
 		return nil
 	}
 
-	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) bool {
-		return a.EventDate.Before(aws.TimeValue(b.EventDate))
+	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) int {
+		if a.EventDate.Before(aws.TimeValue(b.EventDate)) {
+			return -1
+		}
+		if a.EventDate.After(aws.TimeValue(b.EventDate)) {
+			return 1
+		}
+		return 0
 	})
 
 	var errors *multierror.Error
@@ -825,49 +835,21 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 	return settings
 }
 
-func dropGeneratedSecurityGroup(ctx context.Context, settingValue string, meta interface{}) string {
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	groups := strings.Split(settingValue, ",")
-
-	// Check to see if groups are ec2-classic or vpc security groups
-	ec2Classic := true
-	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
-	for _, g := range groups {
-		if beanstalkSGRegexp.MatchString(g) {
-			ec2Classic = false
-			break
-		}
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.EC2, settingValue string) string {
+	input := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: aws.StringSlice(strings.Split(settingValue, ",")),
 	}
 
-	var resp *ec2.DescribeSecurityGroupsOutput
-	var err error
-
-	if ec2Classic {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupNames: aws.StringSlice(groups),
-		})
-	} else {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupIds: aws.StringSlice(groups),
-		})
-	}
+	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		log.Printf("[DEBUG] Elastic Beanstalk error describing SecurityGroups: %v", err)
 		return settingValue
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk using ec2-classic security-groups: %t", ec2Classic)
 	var legitGroups []string
-	for _, group := range resp.SecurityGroups {
-		log.Printf("[DEBUG] Elastic Beanstalk SecurityGroup: %v", *group.GroupName)
-		if !strings.HasPrefix(*group.GroupName, "awseb") {
-			if ec2Classic {
-				legitGroups = append(legitGroups, *group.GroupName)
-			} else {
-				legitGroups = append(legitGroups, *group.GroupId)
-			}
+	for _, group := range securityGroup {
+		if !strings.HasPrefix(aws.StringValue(group.GroupName), "awseb") {
+			legitGroups = append(legitGroups, aws.StringValue(group.GroupId))
 		}
 	}
 

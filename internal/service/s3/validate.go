@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
 
@@ -17,10 +20,10 @@ func ValidBucketName(value string, region string) error {
 		if (len(value) < 3) || (len(value) > 63) {
 			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
 		}
-		if !regexp.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
 			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
 		}
-		if regexp.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
 			return fmt.Errorf("%q must not be formatted as an IP address", value)
 		}
 		if strings.HasPrefix(value, `.`) {
@@ -36,7 +39,7 @@ func ValidBucketName(value string, region string) error {
 		if len(value) > 255 {
 			return fmt.Errorf("%q must contain less than 256 characters", value)
 		}
-		if !regexp.MustCompile(`^[0-9a-zA-Z-._]+$`).MatchString(value) {
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
 			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
 		}
 	}

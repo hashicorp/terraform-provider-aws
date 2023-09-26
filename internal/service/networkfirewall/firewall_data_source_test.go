@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall_test
 
 import (
@@ -5,9 +8,10 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -43,7 +47,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
-						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
@@ -91,7 +95,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
-						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
@@ -139,7 +143,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
-						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),

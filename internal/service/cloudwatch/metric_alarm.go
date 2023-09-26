@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -105,7 +108,7 @@ func ResourceMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"statistic", "metric_query"},
 				ValidateFunc: validation.StringMatch(
 					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-					regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+					regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
 					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 				),
 			},
@@ -169,7 +172,7 @@ func ResourceMetricAlarm() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 255),
-											validation.StringMatch(regexp.MustCompile(`[^:].*`), "must not contain colon characters"),
+											validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
 										),
 									},
 									"period": {
@@ -187,7 +190,7 @@ func ResourceMetricAlarm() *schema.Resource {
 											validation.StringInSlice(cloudwatch.Statistic_Values(), false),
 											validation.StringMatch(
 												// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-												regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+												regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
 												"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 											),
 										),
@@ -226,7 +229,7 @@ func ResourceMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"metric_query"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[^:].*`), "must not contain colon characters"),
+					validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
 				),
 			},
 			"ok_actions": {
@@ -313,7 +316,7 @@ func validMetricAlarm(d *schema.ResourceData) error {
 
 func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	err := validMetricAlarm(d)
 	if err != nil {
@@ -339,7 +342,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(name)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
@@ -363,7 +366,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
 
@@ -415,7 +418,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := expandPutMetricAlarmInput(ctx, d)
@@ -432,7 +435,7 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{
@@ -485,7 +488,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
 	}
 

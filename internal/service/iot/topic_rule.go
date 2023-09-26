@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"context"
 	"log"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -1196,12 +1200,12 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 
 func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(KeyValueTags(ctx, GetTagsIn(ctx)).URLQueryString()),
+		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
@@ -1222,7 +1226,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindTopicRuleByName(ctx, conn, d.Id())
 
@@ -1328,7 +1332,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
@@ -1348,7 +1352,7 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
 	_, err := conn.DeleteTopicRuleWithContext(ctx, &iot.DeleteTopicRuleInput{
@@ -1698,6 +1702,10 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
+	}
+
+	if reflect.DeepEqual(&iot.KafkaAction{}, apiObject) {
+		return nil
 	}
 
 	return apiObject

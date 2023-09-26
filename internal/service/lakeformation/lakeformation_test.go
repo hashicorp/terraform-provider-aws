@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -12,9 +15,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccDataLakeSettings_basic,
-			"dataSource":       testAccDataLakeSettingsDataSource_basic,
 			"disappears":       testAccDataLakeSettings_disappears,
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
+			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
+		},
+		"DataLakeSettingsDataSource": {
+			"basic":          testAccDataLakeSettingsDataSource_basic,
+			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
 		},
 		"PermissionsBasic": {
 			"basic":               testAccPermissions_basic,
@@ -62,11 +69,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTags": {
-			"basic":            testAccResourceLFTags_basic,
-			"database":         testAccResourceLFTags_database,
-			"databaseMultiple": testAccResourceLFTags_databaseMultiple,
-			"table":            testAccResourceLFTags_table,
-			"tableWithColumns": testAccResourceLFTags_tableWithColumns,
+			"basic":                testAccResourceLFTags_basic,
+			"database":             testAccResourceLFTags_database,
+			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
+			"disappears":           testAccResourceLFTags_disappears,
+			"hierarchy":            testAccResourceLFTags_hierarchy,
+			"table":                testAccResourceLFTags_table,
+			"tableWithColumns":     testAccResourceLFTags_tableWithColumns,
 		},
 	}
 

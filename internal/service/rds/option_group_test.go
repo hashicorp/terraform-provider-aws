@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -33,7 +36,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`og:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "engine_name", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -95,7 +98,7 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 				Config: testAccOptionGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, "aws_db_option_group.test", &v),
-					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{
@@ -518,6 +521,59 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/21367
+func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var optionGroup1 rds.OptionGroup
+	resourceName := "aws_db_option_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOptionGroupConfig_badDiffs1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"port": "3872",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "SQLT",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "S3_INTEGRATION",
+					}),
+				),
+			},
+			{
+				Config:   testAccOptionGroupConfig_badDiffs1(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccOptionGroupConfig_badDiffs2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"port": "3873",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "SQLT",
+						"version":     "2018-07-25.v1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
+						"option_name": "S3_INTEGRATION",
+						"version":     "1.0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
@@ -536,7 +592,7 @@ func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) 
 		}
 
 		settingValue := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Value)
-		iamArnRegExp := regexp.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, acctest.Partition()))
+		iamArnRegExp := regexache.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, acctest.Partition()))
 		if !iamArnRegExp.MatchString(settingValue) {
 			return fmt.Errorf("Expected option setting to be a valid IAM role but received %s", settingValue)
 		}
@@ -571,7 +627,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
@@ -595,7 +651,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 
 func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_option_group" {
@@ -673,7 +729,7 @@ resource "aws_db_instance" "test" {
   engine            = data.aws_rds_orderable_db_instance.test.engine
   engine_version    = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -1049,4 +1105,124 @@ resource "aws_db_option_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccOptionGroupConfig_badDiffs1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
+resource "aws_db_option_group" "test" {
+  name                     = %[1]q
+  option_group_description = "Option Group for Numagove"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
+
+  option {
+    option_name = "S3_INTEGRATION"
+  }
+
+  option {
+    option_name = "SQLT"
+    option_settings {
+      name  = "LICENSE_PACK"
+      value = "T"
+    }
+  }
+
+  option {
+    option_name                    = "OEM_AGENT"
+    version                        = "13.5.0.0.v1"
+    port                           = 3872
+    vpc_security_group_memberships = [aws_security_group.test.id]
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "TESTPASSWORDBGY"
+    }
+    option_settings {
+      name  = "MINIMUM_TLS_VERSION"
+      value = "TLSv1.2"
+    }
+    option_settings {
+      name  = "TLS_CIPHER_SUITE"
+      value = "TLS_RSA_WITH_AES_128_CBC_SHA"
+    }
+    option_settings {
+      name  = "OMS_HOST"
+      value = "BGY-TEST"
+    }
+    option_settings {
+      name  = "OMS_PORT"
+      value = "1159"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOptionGroupConfig_badDiffs2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
+resource "aws_db_option_group" "test" {
+  name                     = %[1]q
+  option_group_description = "Option Group for Numagove"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
+
+  option {
+    option_name = "S3_INTEGRATION"
+    version     = "1.0"
+  }
+
+  option {
+    option_name = "SQLT"
+    option_settings {
+      name  = "LICENSE_PACK"
+      value = "T"
+    }
+    version = "2018-07-25.v1"
+  }
+
+  option {
+    option_name                    = "OEM_AGENT"
+    version                        = "13.5.0.0.v1"
+    port                           = 3873
+    vpc_security_group_memberships = [aws_security_group.test.id]
+
+    option_settings {
+      name  = "AGENT_REGISTRATION_PASSWORD"
+      value = "TESTPASSWORDBGY"
+    }
+    option_settings {
+      name  = "MINIMUM_TLS_VERSION"
+      value = "TLSv1.2"
+    }
+    option_settings {
+      name  = "TLS_CIPHER_SUITE"
+      value = "TLS_RSA_WITH_AES_128_CBC_SHA"
+    }
+    option_settings {
+      name  = "OMS_HOST"
+      value = "BGY-TEST"
+    }
+    option_settings {
+      name  = "OMS_PORT"
+      value = "1159"
+    }
+  }
+}
+`, rName)
 }

@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -69,7 +72,7 @@ func testAccGrant_basic(t *testing.T) {
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`grant:g-.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`grant:g-.+`)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ListPurchasedLicenses"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckoutLicense"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckInLicense"),
@@ -167,7 +170,7 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		out, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
@@ -185,7 +188,7 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant" {

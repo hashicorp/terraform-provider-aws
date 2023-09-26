@@ -1,5 +1,35 @@
 # HCL Changelog
 
+## v2.18.0 (August 30, 2023)
+
+### Enhancements
+
+* HCL now uses the tables from Unicode 15 when performing string normalization and character segmentation. HCL was previously using the Unicode 13 tables.
+
+    For calling applications where consistent Unicode support is important, consider also upgrading to Go 1.21 at the same time as adopting HCL v2.18.0 so that the standard library unicode tables (used for case folding, etc) will also be from Unicode 15.
+
+## v2.17.1 (August 30, 2023)
+
+### Enhancements
+
+* hclsyntax: When evaluating string templates that have a long known constant prefix, HCL will truncate the known prefix to avoid creating excessively-large refinements. String prefix refinements are intended primarily for relatively-short fixed prefixes, such as `https://` at the start of a URL known to use that scheme. ([#617](https://github.com/hashicorp/hcl/pull/617))
+* ext/tryfunc: The "try" and "can" functions now handle unknown values slightly more precisely, and so can return known values in more situations when given expressions referring to unknown symbols. ([#622](https://github.com/hashicorp/hcl/pull/622))
+
+### Bugs Fixed
+
+* ext/typeexpr: Will no longer try to refine unknown values of unknown type when dealing with a user-specified type constraint containing the `any` keyword, avoiding an incorrect panic at runtime. ([#625](https://github.com/hashicorp/hcl/pull/625))
+* ext/typeexpr: Now correctly handles attempts to declare the same object type attribute multiple times by returning an error. Previously this could potentially panic by creating an incoherent internal state. ([#624](https://github.com/hashicorp/hcl/pull/624))
+
+## v2.17.0 (May 31, 2023)
+
+### Enhancements
+
+* HCL now uses a newer version of the upstream `cty` library which has improved treatment of unknown values: it can now track additional optional information that reduces the range of an unknown value, which allows some operations against unknown values to return known or partially-known results. ([#590](https://github.com/hashicorp/hcl/pull/590))
+
+    **Note:** This change effectively passes on [`cty`'s notion of backward compatibility](https://github.com/zclconf/go-cty/blob/main/COMPATIBILITY.md) whereby unknown values can become "more known" in later releases. In particular, if your caller is using `cty.Value.RawEquals` in its tests against the results of operations with unknown values then you may see those tests begin failing after upgrading, due to the values now being more "refined".
+    
+    If so, you should review the refinements with consideration to [the `cty` refinements docs](https://github.com/zclconf/go-cty/blob/7dcbae46a6f247e983efb1fa774d2bb68781a333/docs/refinements.md) and update your expected results to match only if the reported refinements seem correct for the given situation. The `RawEquals` method is intended only for making exact value comparisons in test cases, so main application code should not use it; use `Equals` instead for real logic, which will take refinements into account automatically.
+
 ## v2.16.2 (March 9, 2023)
 
 ### Bugs Fixed

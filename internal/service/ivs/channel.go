@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +67,7 @@ func ResourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore and at most 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore and at most 128 characters"),
 			},
 			"playback_url": {
 				Type:     schema.TypeString,
@@ -95,10 +98,10 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateChannelInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authorized"); ok {
@@ -140,7 +143,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -167,7 +170,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	update := false
 
@@ -220,7 +223,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
 

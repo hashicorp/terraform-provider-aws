@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -197,7 +200,7 @@ func testAccCheckSamplingRuleExists(ctx context.Context, n string, v *types.Samp
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 		output, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -218,7 +221,7 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 			_, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -238,7 +241,7 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 	input := &xray.GetSamplingRulesInput{}
 

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
@@ -87,7 +90,7 @@ func TestAccKMSKeyPolicy_bypass(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccKeyPolicyConfig_policyBypass(rName, false),
-				ExpectError: regexp.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
+				ExpectError: regexache.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
 			},
 			{
 				Config: testAccKeyPolicyConfig_policyBypass(rName, true),

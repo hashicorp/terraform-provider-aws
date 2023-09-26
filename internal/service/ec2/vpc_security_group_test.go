@@ -1,21 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -793,106 +796,6 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	}
 }
 
-func TestExpandIPPerms_nonVPC(t *testing.T) {
-	t.Parallel()
-
-	hash := schema.HashString
-
-	expanded := []interface{}{
-		map[string]interface{}{
-			"protocol":    "icmp",
-			"from_port":   1,
-			"to_port":     -1,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
-				"sg-11111",
-				"foo/sg-22222",
-			}),
-		},
-		map[string]interface{}{
-			"protocol":  "icmp",
-			"from_port": 1,
-			"to_port":   -1,
-			"self":      true,
-		},
-	}
-	group := &ec2.SecurityGroup{
-		GroupName: aws.String("foo"),
-	}
-	perms, err := tfec2.ExpandIPPerms(group, expanded)
-	if err != nil {
-		t.Fatalf("error expanding perms: %v", err)
-	}
-
-	expected := []ec2.IpPermission{
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("sg-22222"),
-				},
-				{
-					GroupName: aws.String("sg-11111"),
-				},
-			},
-		},
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("foo"),
-				},
-			},
-		},
-	}
-
-	exp := expected[0]
-	perm := perms[0]
-
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
-	}
-
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[1].GroupName) != aws.StringValue(perm.UserIdGroupPairs[1].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[1].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[1].GroupName))
-	}
-
-	exp = expected[1]
-	perm = perms[1]
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-}
-
 func TestFlattenSecurityGroups(t *testing.T) {
 	t.Parallel()
 
@@ -915,8 +818,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-		// include the owner id, but keep it consitent with the same account. Tests
-		// EC2 classic situation
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -931,28 +832,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-
-		// include the owner id, but from a different account. This is reflects
-		// EC2 Classic when referring to groups by name
-		{
-			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
-					UserId:    aws.String("user4321"),
-				},
-			},
-			expected: []*tfec2.GroupIdentifier{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("user4321/somegroup"),
-				},
-			},
-		},
-
-		// include the owner id, but from a different account. This reflects in
-		// EC2 VPC when referring to groups by id
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -1010,7 +889,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`security-group/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`security-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -1607,7 +1486,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// DependencyViolation error
 			{
 				Config:      testAccVPCSecurityGroupConfig_revokeBaseRemoved(rName),
-				ExpectError: regexp.MustCompile("DependencyViolation"),
+				ExpectError: regexache.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
@@ -1695,7 +1574,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 			// DependencyViolation error
 			{
 				Config:      testAccVPCSecurityGroupConfig_revokeBaseRemoved(rName),
-				ExpectError: regexp.MustCompile("DependencyViolation"),
+				ExpectError: regexache.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
@@ -2302,19 +2181,19 @@ func TestAccVPCSecurityGroup_invalidCIDRBlock(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIngressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidEgressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIPv6IngressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIPv6EgressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
 	})
@@ -2590,7 +2469,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 			// append a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2639,7 +2518,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 			// append a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName, 0, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2651,7 +2530,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 
 					id := aws.StringValue(group.GroupId)
 
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 					match, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 					if tfresource.NotFound(err) {
@@ -2703,7 +2582,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 			// prepend a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 1, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2751,7 +2630,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 			// add a rule to step over the limit with entirely new rules
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 100, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				// all the rules should have been revoked and the add failed
@@ -2794,7 +2673,7 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 			// Add a bad rule to trigger API error
 			{
 				Config:      testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule(rName),
-				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
+				ExpectError: regexache.MustCompile("InvalidGroupId.Malformed"),
 			},
 			// All originally added rules must survive. This will return non-empty plan if anything changed.
 			{
@@ -2830,7 +2709,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`security-group/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`security-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -2838,7 +2717,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
-				ExpectError: regexp.MustCompile("unexpected state"),
+				ExpectError: regexache.MustCompile("unexpected state"),
 			},
 		},
 	})
@@ -2872,7 +2751,7 @@ func testAddRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		// cycle from primary to secondary
 		perm1 := cycleIPPermForGroup(aws.StringValue(secondary.GroupId))
@@ -2912,7 +2791,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
 			var err error
 			if sg.IpPermissions != nil {
@@ -2943,7 +2822,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 
 func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_security_group" {
@@ -2978,7 +2857,7 @@ func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *ec2.Secur
 			return fmt.Errorf("No VPC Security Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -3022,7 +2901,7 @@ func testAccCheckSecurityGroupRuleCount(ctx context.Context, group *ec2.Security
 }
 
 func testSecurityGroupRuleCount(ctx context.Context, id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	group, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 	if tfresource.NotFound(err) {
@@ -4891,7 +4770,7 @@ resource "aws_internet_gateway" "gw" {
 
 # elastic ip for NAT gateway
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name = %[1]q
   }

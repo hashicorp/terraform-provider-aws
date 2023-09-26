@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
@@ -7,9 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -96,7 +99,7 @@ func ResourcePipeline() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
 			"role_arn": {
@@ -123,7 +126,7 @@ func ResourcePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
@@ -140,7 +143,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
 									"namespace": {
@@ -148,7 +151,7 @@ func ResourcePipeline() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
 										),
 									},
 									"output_artifacts": {
@@ -187,7 +190,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
 										),
 									},
 								},
@@ -198,7 +201,7 @@ func ResourcePipeline() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 							),
 						},
 					},
@@ -213,7 +216,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	pipeline, err := expandPipelineDeclaration(d)
 
@@ -224,7 +227,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -241,7 +244,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	output, err := FindPipelineByName(ctx, conn, d.Id())
 
@@ -281,7 +284,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
@@ -303,7 +306,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{

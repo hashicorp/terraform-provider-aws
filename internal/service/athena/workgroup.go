@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -154,7 +157,7 @@ func ResourceWorkGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
 				),
 			},
 			"state": {
@@ -178,13 +181,13 @@ func ResourceWorkGroup() *schema.Resource {
 
 func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &athena.CreateWorkGroupInput{
 		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -215,7 +218,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -262,7 +265,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -282,7 +285,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateWorkGroupInput{

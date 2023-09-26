@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -40,7 +43,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -167,7 +170,7 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
@@ -203,7 +206,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -236,7 +239,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -284,7 +287,7 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 				Config: testAccTargetGroupConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
@@ -308,7 +311,7 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 
 func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_target_group" {
@@ -344,7 +347,7 @@ func testAccCheckTargetGroupExists(ctx context.Context, name string, targetGroup
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
 			TargetGroupIdentifier: aws.String(rs.Primary.ID),
 		})

@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
@@ -38,7 +41,7 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexache.MustCompile(`connectorprofile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),
@@ -122,7 +125,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 
 func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appflow_connector_profile" {
@@ -148,7 +151,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 
 func testAccCheckConnectorProfileExists(ctx context.Context, n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

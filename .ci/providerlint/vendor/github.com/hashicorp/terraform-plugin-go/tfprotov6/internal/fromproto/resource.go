@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fromproto
 
 import (
@@ -6,6 +9,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
+
+func ResourceMetadata(in *tfplugin6.GetMetadata_ResourceMetadata) *tfprotov6.ResourceMetadata {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ResourceMetadata{
+		TypeName: in.TypeName,
+	}
+}
 
 func ValidateResourceConfigRequest(in *tfplugin6.ValidateResourceConfig_Request) (*tfprotov6.ValidateResourceConfigRequest, error) {
 	resp := &tfprotov6.ValidateResourceConfigRequest{

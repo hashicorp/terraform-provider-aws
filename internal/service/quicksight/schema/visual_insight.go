@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -743,7 +746,7 @@ func flattenInsightConfiguration(apiObject *quicksight.InsightConfiguration) []i
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Computations != nil {
-		tfMap["computations"] = flattenComputation(apiObject.Computations)
+		tfMap["computation"] = flattenComputation(apiObject.Computations)
 	}
 	if apiObject.CustomNarrative != nil {
 		tfMap["custom_narrative"] = flattenCustomNarrativeOptions(apiObject.CustomNarrative)

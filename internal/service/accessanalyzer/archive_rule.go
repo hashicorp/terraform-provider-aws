@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer
 
 import (
@@ -16,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_accessanalyzer_archive_rule")
@@ -85,7 +88,7 @@ func resourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
@@ -112,7 +115,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
@@ -140,7 +143,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
@@ -168,7 +171,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 

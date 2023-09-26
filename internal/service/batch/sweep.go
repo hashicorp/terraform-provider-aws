@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -13,9 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/iam"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -51,12 +55,12 @@ func init() {
 
 func sweepComputeEnvironments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn()
-	iamconn := client.(*conns.AWSClient).IAMConn()
+	conn := client.BatchConn(ctx)
+	iamconn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -139,7 +143,7 @@ func sweepComputeEnvironments(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -147,21 +151,17 @@ func sweepComputeEnvironments(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Batch Compute Environments (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments (%s): %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -169,14 +169,14 @@ func sweepComputeEnvironments(region string) error {
 
 func sweepJobDefinitions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
 	}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobDefinitionsPagesWithContext(ctx, input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
@@ -185,11 +185,11 @@ func sweepJobDefinitions(region string) error {
 		}
 
 		for _, v := range page.JobDefinitions {
-			r := ResourceSchedulingPolicy()
+			r := ResourceJobDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.JobDefinitionArn))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -204,7 +204,7 @@ func sweepJobDefinitions(region string) error {
 		return fmt.Errorf("error listing Batch Job Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Job Definitions (%s): %w", region, err)
@@ -215,12 +215,12 @@ func sweepJobDefinitions(region string) error {
 
 func sweepJobQueues(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.DescribeJobQueuesInput{}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobQueuesPagesWithContext(ctx, input, func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
@@ -229,12 +229,11 @@ func sweepJobQueues(region string) error {
 		}
 
 		for _, v := range page.JobQueues {
-			r := ResourceJobQueue()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.JobQueueArn))
-			d.Set("name", v.JobQueueName)
+			id := aws.StringValue(v.JobQueueArn)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceJobQueue, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 
 		return !lastPage
@@ -249,7 +248,7 @@ func sweepJobQueues(region string) error {
 		return fmt.Errorf("error listing Batch Job Queues (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Job Queues (%s): %w", region, err)
@@ -260,12 +259,12 @@ func sweepJobQueues(region string) error {
 
 func sweepSchedulingPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.ListSchedulingPoliciesInput{}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSchedulingPoliciesPagesWithContext(ctx, input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
@@ -278,7 +277,7 @@ func sweepSchedulingPolicies(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Arn))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -293,7 +292,7 @@ func sweepSchedulingPolicies(region string) error {
 		return fmt.Errorf("error listing Batch Scheduling Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Scheduling Policies (%s): %w", region, err)

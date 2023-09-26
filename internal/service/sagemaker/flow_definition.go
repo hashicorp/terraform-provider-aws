@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -46,7 +49,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
 				),
 			},
 			"human_loop_activation_config": {
@@ -162,7 +165,7 @@ func ResourceFlowDefinition() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 30),
-									validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9]+( [A-Za-z0-9]+)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
 								),
 							},
 						},
@@ -223,7 +226,7 @@ func ResourceFlowDefinition() *schema.Resource {
 							ForceNew: true,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -246,7 +249,7 @@ func ResourceFlowDefinition() *schema.Resource {
 
 func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("flow_definition_name").(string)
 	input := &sagemaker.CreateFlowDefinitionInput{
@@ -254,7 +257,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
@@ -289,7 +292,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	flowDefinition, err := FindFlowDefinitionByName(ctx, conn, d.Id())
 
@@ -337,7 +340,7 @@ func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinitionWithContext(ctx, &sagemaker.DeleteFlowDefinitionInput{

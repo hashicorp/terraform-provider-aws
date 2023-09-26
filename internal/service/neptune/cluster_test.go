@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -51,7 +54,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
@@ -123,7 +126,7 @@ func TestAccNeptuneCluster_namePrefix(t *testing.T) {
 				Config: testAccClusterConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -570,6 +573,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
+	keyResourceName := "aws_kms_key.test2"
 	parameterGroupResourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -584,6 +588,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -603,7 +608,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
@@ -642,7 +647,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *nep
 			return fmt.Errorf("No Neptune Cluster ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn()
+		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		output, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -663,7 +668,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
@@ -1292,6 +1297,52 @@ resource "aws_neptune_cluster_instance" "secondary" {
 
 func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_kms_key" "test1" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_kms_key" "test2" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-2",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
 resource "aws_default_vpc" "test" {}
 
 resource "aws_security_group" "test" {
@@ -1309,6 +1360,8 @@ resource "aws_neptune_cluster" "source" {
   cluster_identifier                   = "%[1]s-src"
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  kms_key_arn                          = aws_kms_key.test1.arn
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
@@ -1327,10 +1380,11 @@ resource "aws_neptune_cluster_parameter_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  skip_final_snapshot = true
-  snapshot_identifier = aws_neptune_cluster_snapshot.test.id
-
+  cluster_identifier                   = %[1]q
+  skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  snapshot_identifier                  = aws_neptune_cluster_snapshot.test.id
+  kms_key_arn                          = aws_kms_key.test2.arn
   backup_retention_period              = 5
   neptune_cluster_parameter_group_name = aws_neptune_cluster_parameter_group.test.id
   vpc_security_group_ids               = aws_security_group.test[*].id

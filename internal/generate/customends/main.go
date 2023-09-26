@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -29,7 +32,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `../../../website/docs/guides/custom-service-endpoints.html.md`
+		filename      = `../../../website/docs/guides/custom-service-endpoints.html.markdown`
 		namesDataFile = "../../../names/names_data.csv"
 	)
 	g := common.NewGenerator()
@@ -50,6 +53,10 @@ func main() {
 		}
 
 		if l[names.ColExclude] != "" {
+			continue
+		}
+
+		if l[names.ColNotImplemented] != "" {
 			continue
 		}
 

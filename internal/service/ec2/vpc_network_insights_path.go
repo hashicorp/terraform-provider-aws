@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -35,10 +39,15 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination": {
+			"destination_arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
+			},
+			"destination": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			"destination_ip": {
 				Type:     schema.TypeString,
@@ -57,9 +66,14 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
 			"source": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
+			},
+			"source_arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"source_ip": {
 				Type:     schema.TypeString,
@@ -75,7 +89,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 }
 
 func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNetworkInsightsPathInput{
 		Destination:       aws.String(d.Get("destination").(string)),
@@ -96,7 +110,6 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		input.SourceIp = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network Insights Path: %s", input)
 	output, err := conn.CreateNetworkInsightsPathWithContext(ctx, input)
 
 	if err != nil {
@@ -109,7 +122,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	nip, err := FindNetworkInsightsPathByID(ctx, conn, d.Id())
 
@@ -125,13 +138,15 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("arn", nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
+	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("protocol", nip.Protocol)
 	d.Set("source", nip.Source)
+	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	SetTagsOut(ctx, nip.Tags)
+	setTagsOut(ctx, nip.Tags)
 
 	return nil
 }
@@ -142,12 +157,14 @@ func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Path: %s", d.Id())
-	_, err := conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
-		NetworkInsightsPathId: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
+			NetworkInsightsPathId: aws.String(d.Id()),
+		})
+	}, errCodeAnalysisExistsForNetworkInsightsPath)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
 		return nil
@@ -158,4 +175,17 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return nil
+}
+
+// idFromIDOrARN return a resource ID from an ID or ARN.
+func idFromIDOrARN(idOrARN string) string {
+	// e.g. "eni-02ae120b80627a68f" or
+	// "arn:aws:ec2:ap-southeast-2:123456789012:network-interface/eni-02ae120b80627a68f".
+	return idOrARN[strings.LastIndex(idOrARN, "/")+1:]
+}
+
+// suppressEquivalentIDOrARN provides custom difference suppression
+// for strings that represent equal resource IDs or ARNs.
+func suppressEquivalentIDOrARN(_, old, new string, _ *schema.ResourceData) bool {
+	return idFromIDOrARN(old) == idFromIDOrARN(new)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -45,13 +48,13 @@ func ResourceBucketMetric() *schema.Resource {
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							AtLeastOneOf: filterAtLeastOneOfKeys,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
-							AtLeastOneOf: filterAtLeastOneOfKeys,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 					},
 				},
@@ -68,7 +71,7 @@ func ResourceBucketMetric() *schema.Resource {
 
 func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -90,7 +93,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Putting S3 Bucket Metrics Configuration: %s", input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketMetricsConfigurationWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -119,7 +122,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
@@ -151,7 +154,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {

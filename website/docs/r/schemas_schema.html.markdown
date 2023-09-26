@@ -50,18 +50,18 @@ resource "aws_schemas_schema" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the schema. Maximum of 385 characters consisting of lower case letters, upper case letters, ., -, _, @.
 * `content` - (Required) The schema specification. Must be a valid Open API 3.0 spec.
 * `registry_name` - (Required) The name of the registry in which this schema belongs.
-* `type` - (Required) The type of the schema. Valid values: `OpenApi3`.
+* `type` - (Required) The type of the schema. Valid values: `OpenApi3` or `JSONSchemaDraft4`.
 * `description` - (Optional) The description of the schema. Maximum of 256 characters.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the discoverer.
 * `last_modified` - The last modified date of the schema.
@@ -71,8 +71,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge schema can be imported using the `name` and `registry_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge schema using the `name` and `registry_name`. For example:
+
+```terraform
+import {
+  to = aws_schemas_schema.test
+  id = "name/registry"
+}
+```
+
+Using `terraform import`, import EventBridge schema using the `name` and `registry_name`. For example:
 
 ```console
-$ terraform import aws_schemas_schema.test name/registry
+% terraform import aws_schemas_schema.test name/registry
 ```

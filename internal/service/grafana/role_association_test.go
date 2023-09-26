@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
@@ -296,7 +299,7 @@ func testAccCheckRoleAssociationExists(ctx context.Context, n string) resource.T
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
 		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
@@ -306,7 +309,7 @@ func testAccCheckRoleAssociationExists(ctx context.Context, n string) resource.T
 
 func testAccCheckRoleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_grafana_role_association" {

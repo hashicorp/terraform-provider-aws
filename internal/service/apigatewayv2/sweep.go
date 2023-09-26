@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -10,8 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -45,11 +47,11 @@ func init() {
 
 func sweepAPIs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := client.APIGatewayV2Conn(ctx)
 	input := &apigatewayv2.GetApisInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -78,7 +80,7 @@ func sweepAPIs(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 APIs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 APIs (%s): %w", region, err)
@@ -89,11 +91,11 @@ func sweepAPIs(region string) error {
 
 func sweepAPIMappings(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := client.APIGatewayV2Conn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -147,7 +149,7 @@ func sweepAPIMappings(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway v2 API Mappings (%s): %w", region, err))
@@ -158,11 +160,11 @@ func sweepAPIMappings(region string) error {
 
 func sweepDomainNames(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := client.APIGatewayV2Conn(ctx)
 	input := &apigatewayv2.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -191,7 +193,7 @@ func sweepDomainNames(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 Domain Names (%s): %w", region, err)
@@ -202,11 +204,11 @@ func sweepDomainNames(region string) error {
 
 func sweepVPCLinks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := client.APIGatewayV2Conn(ctx)
 	input := &apigatewayv2.GetVpcLinksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -235,7 +237,7 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 VPC Links (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 VPC Links (%s): %w", region, err)
