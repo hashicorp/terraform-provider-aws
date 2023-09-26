@@ -35,8 +35,8 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
-			Delete: schema.DefaultTimeout(1 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -216,7 +216,7 @@ func statusInboundConnection(ctx context.Context, conn *opensearchservice.OpenSe
 	}
 }
 
-func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
+func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{opensearchservice.InboundConnectionStatusCodeProvisioning, opensearchservice.InboundConnectionStatusCodeApproved},
 		Target:  []string{opensearchservice.InboundConnectionStatusCodeActive},
