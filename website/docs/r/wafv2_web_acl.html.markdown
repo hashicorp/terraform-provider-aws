@@ -885,7 +885,7 @@ The `cookie` block supports the following arguments:
 
 ### RateLimit `forwarded_ip` Block
 
-Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [Forwarded IP Config](#forwarded-ip-config) block.
+Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [`forwarded_ip_config`](#forwarded_ip_config-block) block.
 
 The `forwarded_ip` block is configured as an empty block `{}`.
 
