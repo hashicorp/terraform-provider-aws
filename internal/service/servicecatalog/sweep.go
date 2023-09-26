@@ -575,9 +575,7 @@ func sweepProvisioningArtifacts(region string) error {
 				output, err := conn.ListProvisioningArtifactsWithContext(ctx, artInput)
 
 				if err != nil {
-					err := fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err)
-					log.Printf("[ERROR] %s", err)
-					errs = multierror.Append(errs, err)
+					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err))
 					break
 				}
 
@@ -585,8 +583,7 @@ func sweepProvisioningArtifacts(region string) error {
 					r := ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
-					d.SetId(aws.StringValue(pad.Id))
-					d.Set("product_id", productID)
+					d.SetId(ProvisioningArtifactID(aws.StringValue(pad.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
