@@ -881,11 +881,11 @@ Use the value of a cookie in the request as an aggregate key. Each distinct valu
 The `cookie` block supports the following arguments:
 
 * `name`: The name of the cookie to use.
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ### RateLimit `forwarded_ip` Block
 
-Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [RateLimit `forwarded_ip_config`](#ratelimit-forwarded_ip_config-block) block.
+Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [Forwarded IP Config](#forwarded-ip-config) block.
 
 The `forwarded_ip` block is configured as an empty block `{}`.
 
@@ -902,7 +902,7 @@ Use the value of a header in the request as an aggregate key. Each distinct valu
 The `header` block supports the following arguments:
 
 * `name`: The name of the header to use.
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ### RateLimit `ip` Block
 
@@ -925,7 +925,7 @@ Use the specified query argument as an aggregate key. Each distinct value for th
 The `query_argument` block supports the following arguments:
 
 * `name`: The name of the query argument to use.
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ### RateLimit `query_string` Block
 
@@ -933,7 +933,7 @@ Use the request's query string as an aggregate key. Each distinct string contrib
 
 The `query_string` block supports the following arguments:
 
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ### RateLimit `uri_path` Block
 
@@ -941,7 +941,7 @@ Use the request's URI path as an aggregate key. Each distinct URI path contribut
 
 The `uri_path` block supports the following arguments:
 
-* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ## Attribute Reference
 
