@@ -205,6 +205,30 @@ func ResourceDataSource() *schema.Resource {
 									},
 								},
 							},
+							"databricks": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
+										},
+										"port": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"sql_endpoint_path": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
+										},
+									},
+								},
+							},
 							"jira": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -966,6 +990,26 @@ func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourcePara
 		}
 	}
 
+	if v := tfMap["databricks"].([]interface{}); ok && len(v) > 0 && v != nil {
+		m, ok := v[0].(map[string]interface{})
+
+		if ok {
+			ps := &quicksight.DatabricksParameters{}
+
+			if v, ok := m["host"].(string); ok && v != "" {
+				ps.Host = aws.String(v)
+			}
+			if v, ok := m["port"].(int); ok {
+				ps.Port = aws.Int64(int64(v))
+			}
+			if v, ok := m["sql_endpoint_path"].(string); ok && v != "" {
+				ps.SqlEndpointPath = aws.String(v)
+			}
+
+			dataSourceParams.DatabricksParameters = ps
+		}
+	}
+
 	if v := tfMap["jira"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		m, ok := v[0].(map[string]interface{})
 
@@ -1343,6 +1387,18 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 			"aws_iot_analytics": []interface{}{
 				map[string]interface{}{
 					"data_set_name": parameters.AwsIotAnalyticsParameters.DataSetName,
+				},
+			},
+		})
+	}
+
+	if parameters.DatabricksParameters != nil {
+		params = append(params, map[string]interface{}{
+			"databricks": []interface{}{
+				map[string]interface{}{
+					"host":              parameters.DatabricksParameters.Host,
+					"port":              parameters.DatabricksParameters.Port,
+					"sql_endpoint_path": parameters.DatabricksParameters.SqlEndpointPath,
 				},
 			},
 		})
