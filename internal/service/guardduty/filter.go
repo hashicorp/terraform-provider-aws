@@ -37,29 +37,27 @@ func ResourceFilter() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
+			"action": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(guardduty.FilterAction_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"detector_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -72,21 +70,15 @@ func ResourceFilter() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+									"field": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"greater_than": {
 										Type:         schema.TypeString,
@@ -108,24 +100,30 @@ func ResourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"action": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.FilterActionNoop,
-					guardduty.FilterActionArchive,
-				}, false),
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 64),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
