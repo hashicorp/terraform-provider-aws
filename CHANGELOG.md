@@ -1,5 +1,4 @@
 ## 5.19.0 (Unreleased)
-## 5.19.0 (September 26, 2023)
 
 FEATURES:
 
