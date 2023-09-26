@@ -1332,7 +1332,7 @@ func expandRateLimitQueryString(l []interface{}) *wafv2.RateLimitQueryString {
 	}
 }
 
-func expandRateLimitUriPath(l []interface{}) *wafv2.RateLimitUriPath {
+func expandRateLimitURIPath(l []interface{}) *wafv2.RateLimitUriPath {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1375,7 +1375,7 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []*wafv2.RateBasedState
 			r.QueryString = expandRateLimitQueryString(v.([]interface{}))
 		}
 		if v, ok := m["uri_path"]; ok {
-			r.UriPath = expandRateLimitUriPath(v.([]interface{}))
+			r.UriPath = expandRateLimitURIPath(v.([]interface{}))
 		}
 		out = append(out, r)
 	}
@@ -2592,7 +2592,7 @@ func flattenRateLimitQueryString(apiObject *wafv2.RateLimitQueryString) []interf
 	}
 }
 
-func flattenRateLimitUriPath(apiObject *wafv2.RateLimitUriPath) []interface{} {
+func flattenRateLimitURIPath(apiObject *wafv2.RateLimitUriPath) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2643,7 +2643,7 @@ func flattenRateBasedStatementCustomKeys(apiObject []*wafv2.RateBasedStatementCu
 			tfMap["query_string"] = flattenRateLimitQueryString(o.QueryString)
 		}
 		if o.UriPath != nil {
-			tfMap["uri_path"] = flattenRateLimitUriPath(o.UriPath)
+			tfMap["uri_path"] = flattenRateLimitURIPath(o.UriPath)
 		}
 		out[i] = tfMap
 	}
