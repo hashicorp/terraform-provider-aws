@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -113,10 +114,14 @@ func ResourceFilter() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 64),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
