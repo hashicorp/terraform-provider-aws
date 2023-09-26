@@ -982,7 +982,7 @@ func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.Noncurren
 	}
 
 	m := map[string]interface{}{
-		"newer_noncurrent_versions": expiration.NewerNoncurrentVersions,
+		"newer_noncurrent_versions": strconv.FormatInt(int64(expiration.NewerNoncurrentVersions), 10),
 		"noncurrent_days":           expiration.NoncurrentDays,
 	}
 
