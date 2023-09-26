@@ -137,6 +137,61 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPRiskConfiguration_takeover_without_notification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_risk_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRiskConfigurationConfig_takeover_without_notification(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
+					/*
+						resource "aws_cognito_risk_configuration" "test" {
+						  user_pool_id = aws_cognito_user_pool.test.id
+
+						  account_takeover_risk_configuration {
+						    actions {
+						      medium_action {
+						        event_action = "MFA_REQUIRED"
+						        notify 	      = false
+						      }
+						      high_action {
+						        event_action = "BLOCK"
+						        notify 	      = false
+						      }
+						    }
+						  }
+						}
+					*/
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.0.event_action", "MFA_REQUIRED"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.0.notify", "false"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.0.event_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.0.notify", "false"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPRiskConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -399,6 +454,31 @@ resource "aws_cognito_risk_configuration" "test" {
   risk_exception_configuration {
     blocked_ip_range_list = []
     skipped_ip_range_list = []
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccRiskConfigurationConfig_takeover_without_notification(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  account_takeover_risk_configuration {
+    actions {
+      medium_action {
+        event_action = "MFA_REQUIRED"
+        notify 	      = false
+      }
+      high_action {
+        event_action = "BLOCK"
+        notify 	      = false
+      }
+    }
   }
 }
 
