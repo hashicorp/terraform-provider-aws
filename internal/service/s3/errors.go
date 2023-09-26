@@ -17,7 +17,7 @@ const (
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
 	errCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	errCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
-	ErrCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
+	errCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
 	errCodeNoSuchKey                            = "NoSuchKey"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"

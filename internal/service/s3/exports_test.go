@@ -19,6 +19,7 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
+	FindLifecycleRules                    = findLifecycleRules
 	FindLoggingEnabled                    = findLoggingEnabled
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
@@ -29,4 +30,6 @@ var (
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
+	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
+	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
 )
