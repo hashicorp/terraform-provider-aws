@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -49,6 +50,10 @@ func init() {
 		Dependencies: []string{
 			"aws_quicksight_group",
 		},
+	})
+	resource.AddTestSweepers("aws_quicksight_vpc_connection", &resource.Sweeper{
+		Name: "aws_quicksight_vpc_connection",
+		F:    sweepVPCConnections,
 	})
 }
 
@@ -400,6 +405,47 @@ func sweepUsers(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVPCConnections(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &quicksight.ListVPCConnectionsInput{
+		AwsAccountId: aws.String(awsAccountId),
+	}
+
+	out, err := conn.ListVPCConnectionsWithContext(ctx, input)
+	for _, v := range out.VPCConnectionSummaries {
+		vpcConnectionID := aws.StringValue(v.VPCConnectionId)
+		sweepResources = append(sweepResources, framework.NewSweepResource(newResourceVPCConnection, client,
+			framework.NewAttribute("id", createVPCConnectionID(awsAccountId, vpcConnectionID)),
+			framework.NewAttribute("aws_account_id", awsAccountId),
+			framework.NewAttribute("vpc_connection_id", vpcConnectionID),
+		))
+	}
+
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight VPC Connection sweep for %s: %s", region, err)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight VPC Connections: %w", err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight VPC Connections for %s: %w", region, err)
 	}
 
 	return nil

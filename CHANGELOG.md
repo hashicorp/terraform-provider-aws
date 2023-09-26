@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_dms_replication_config` ([#32908](https://github.com/hashicorp/terraform-provider-aws/issues/32908))
 
+ENHANCEMENTS:
+
+* resource/aws_lightsail_bucket: Add `force_delete` argument ([#33586](https://github.com/hashicorp/terraform-provider-aws/issues/33586))
+
 BUG FIXES:
 
 * resource/aws_s3_bucket_policy: Fix intermittent `couldn't find resource` errors on resource Create ([#33537](https://github.com/hashicorp/terraform-provider-aws/issues/33537))

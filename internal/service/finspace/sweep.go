@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -31,39 +31,44 @@ func sweepKxEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.FinSpaceClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &finspace.ListKxEnvironmentsInput{}
-	pages := finspace.NewListKxEnvironmentsPaginator(conn, input)
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	pages := finspace.NewListKxEnvironmentsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping FinSpace Kx Environment sweep for %s: %s", region, err)
 			return nil
 		}
+
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing FinSpace Kx Environments (%s): %w", region, err))
+			return fmt.Errorf("error listing FinSpace Kx Environments (%s): %w", region, err)
 		}
 
-		for _, env := range page.Environments {
+		for _, v := range page.Environments {
+			id := aws.ToString(v.EnvironmentId)
+
+			if status := v.Status; status == types.EnvironmentStatusDeleted {
+				log.Printf("[INFO] Skipping FinSpace Kx Environment %s: Status=%s", id, status)
+				continue
+			}
+
 			r := ResourceKxEnvironment()
 			d := r.Data(nil)
-			id := aws.ToString(env.EnvironmentId)
 			d.SetId(id)
 
-			log.Printf("[INFO] Deleting FinSpace Kx Environment: %s", id)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping FinSpace Kx Environments (%s): %w", region, err))
+		return fmt.Errorf("error sweeping FinSpace Kx Environments (%s): %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }
