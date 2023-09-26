@@ -1,4 +1,10 @@
-## 5.18.0 (Unreleased)
+## 5.18.1 (Unreleased)
+
+NOTES:
+
+* documentation: Duplicate CDKTF guides with differing file extensions have been removed to resolve failures in the provider release workflow. ([#33630](https://github.com/hashicorp/terraform-provider-aws/issues/33630))
+
+## 5.18.0 (September 21, 2023)
 
 FEATURES:
 
