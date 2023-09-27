@@ -320,11 +320,7 @@ func DeleteCDP(ctx context.Context, conn *cloudfront.CloudFront, id string) erro
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
@@ -346,11 +342,7 @@ func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.Clo
 	}
 
 	_, err = conn.UpdateContinuousDeploymentPolicyWithContext(ctx, in)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func cdpETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (*string, error) {
