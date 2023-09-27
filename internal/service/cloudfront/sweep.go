@@ -160,23 +160,25 @@ func sweepCachePolicies(region string) error {
 }
 
 func sweepDistributions(region string) error {
+	var result *multierror.Error
+
 	// sweep:
 	// 1. Production Distributions
 	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
 	// 2. Continuous Deployment Policies
 	if err := sweepContinuousDeploymentPolicies(region); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
 	// 3. Staging Distributions
 	if err := sweepDistributionsByProductionStaging(region, true); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
-	return nil
+	return result.ErrorOrNil()
 }
 
 func sweepDistributionsByProductionStaging(region string, staging bool) error {
