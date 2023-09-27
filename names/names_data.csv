@@ -322,7 +322,7 @@ securitylake,securitylake,securitylake,securitylake,,securitylake,,,SecurityLake
 serverlessrepo,serverlessrepo,serverlessapplicationrepository,serverlessapplicationrepository,,serverlessrepo,,serverlessapprepo;serverlessapplicationrepository,ServerlessRepo,ServerlessApplicationRepository,,1,,aws_serverlessapplicationrepository_,aws_serverlessrepo_,,serverlessapplicationrepository_,Serverless Application Repository,AWS,,,,,,
 servicecatalog,servicecatalog,servicecatalog,servicecatalog,,servicecatalog,,,ServiceCatalog,ServiceCatalog,,1,,,aws_servicecatalog_,,servicecatalog_,Service Catalog,AWS,,,,,,
 servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,,appregistry,ServiceCatalogAppRegistry,AppRegistry,,1,,,aws_servicecatalogappregistry_,,servicecatalogappregistry_,Service Catalog AppRegistry,AWS,,x,,,,
-service-quotas,servicequotas,servicequotas,servicequotas,,servicequotas,,,ServiceQuotas,ServiceQuotas,,1,,,aws_servicequotas_,,servicequotas_,Service Quotas,,,,,,,
+service-quotas,servicequotas,servicequotas,servicequotas,,servicequotas,,,ServiceQuotas,ServiceQuotas,,,2,,aws_servicequotas_,,servicequotas_,Service Quotas,,,,,,,
 ses,ses,ses,ses,,ses,,,SES,SES,,1,,,aws_ses_,,ses_,SES (Simple Email),Amazon,,,,,,
 sesv2,sesv2,sesv2,sesv2,,sesv2,,,SESV2,SESV2,,,2,,aws_sesv2_,,sesv2_,SESv2 (Simple Email V2),Amazon,,,,,,
 stepfunctions,stepfunctions,sfn,sfn,,sfn,,stepfunctions,SFN,SFN,,1,,,aws_sfn_,,sfn_,SFN (Step Functions),AWS,,,,,,
