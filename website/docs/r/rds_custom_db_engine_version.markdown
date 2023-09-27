@@ -81,7 +81,7 @@ resource "aws_ami_copy" "example" {
   source_ami_id     = "ami-xxxxxxxx"
   source_ami_region = "us-east-1"
 }
-
+# CEV creation requires an AMI owned by the operator
 resource "aws_rds_custom_db_engine_version" "test" {
   engine          = "custom-sqlserver-se"
   engine_version  = "15.00.4249.2.cev-1"
