@@ -40,11 +40,16 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.0.version", "NFS3"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -84,6 +89,46 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v datasync.DescribeLocationFsxOntapOutput
+	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationFSxONTAPFileSystemConfig_smb(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.domain", "aws.mydomain.com"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mounts_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mounts_options.0.version", "SMB3"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.password", "MyPassw0rd1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.user", "datasyncsa"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
@@ -286,6 +331,28 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
       mount_options {
         version = "NFS3"
       }
+    }
+  }
+}
+`)
+}
+
+func testAccLocationFSxONTAPFileSystemConfig_smb(rName string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), `
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+
+  protocol {
+    smb {
+      domain = "aws.mydomain.com"
+
+      mount_options {
+        version = "SMB3"
+      }
+
+      password = "MyPassw0rd1"
+      user     = "datasyncsa"
     }
   }
 }
