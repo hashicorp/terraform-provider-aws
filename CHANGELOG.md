@@ -33,6 +33,12 @@ BUG FIXES:
 * resource/aws_transfer_access: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
 * resource/aws_transfer_user: Fail validation if duplicated keys are found in `policy` ([#33570](https://github.com/hashicorp/terraform-provider-aws/issues/33570))
 
+## 5.18.1 (September 26, 2023)
+
+NOTES:
+
+* documentation: Duplicate CDKTF guides with differing file extensions have been removed to resolve failures in the provider release workflow. ([#33630](https://github.com/hashicorp/terraform-provider-aws/issues/33630))
+
 ## 5.18.0 (September 21, 2023)
 
 FEATURES:
