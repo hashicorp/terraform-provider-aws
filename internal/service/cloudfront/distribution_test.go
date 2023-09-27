@@ -590,14 +590,6 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `""`)),
 				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
@@ -1640,7 +1632,7 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 
 func testAccCheckDistributionWaitForDeployment(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfcloudfront.DistributionWaitUntilDeployed(ctx, aws.StringValue(distribution.Id), acctest.Provider.Meta())
+		return tfcloudfront.WaitDistributionDeployed(ctx, acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx), aws.StringValue(distribution.Id))
 	}
 }
 
