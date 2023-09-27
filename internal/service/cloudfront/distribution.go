@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -935,7 +934,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return conn.UpdateDistributionWithContext(ctx, input)
-		}, cloudfront.ErrCodeInvalidViewerCertificate, cloudfront.ErrCodeIllegalUpdate)
+		}, cloudfront.ErrCodeInvalidViewerCertificate)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
@@ -1120,55 +1119,6 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 	}
 
 	return output, nil
-}
-
-// ListDistributionsByContinuousDeploymentPolicyID exists in the API but not sdk v1
-func UpdateDistributionsForNoContinuousDeploymentPolicyID(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
-	input := &cloudfront.ListDistributionsInput{}
-	var errs *multierror.Error
-
-	err := conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, d := range page.DistributionList.Items {
-			if d == nil {
-				continue
-			}
-
-			inGetCfg := &cloudfront.GetDistributionConfigInput{
-				Id: d.Id,
-			}
-
-			cfg, err := conn.GetDistributionConfigWithContext(ctx, inGetCfg)
-			if err != nil {
-				errs = multierror.Append(errs, err)
-			}
-
-			if cfg.DistributionConfig != nil && aws.StringValue(cfg.DistributionConfig.ContinuousDeploymentPolicyId) == id {
-				cfg.DistributionConfig.ContinuousDeploymentPolicyId = nil
-
-				updateDistroInput := &cloudfront.UpdateDistributionInput{
-					DistributionConfig: cfg.DistributionConfig,
-					Id:                 aws.String(id),
-					IfMatch:            cfg.ETag,
-				}
-
-				_, err = conn.UpdateDistributionWithContext(ctx, updateDistroInput)
-				if err != nil {
-					errs = multierror.Append(errs, err)
-				}
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		return err
-	}
-
-	return errs.ErrorOrNil()
 }
 
 func FindDistributionByDomainName(ctx context.Context, conn *cloudfront.CloudFront, name string) (*cloudfront.DistributionSummary, error) {

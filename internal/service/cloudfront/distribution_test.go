@@ -590,14 +590,6 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `""`)),
 				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
