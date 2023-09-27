@@ -4,7 +4,9 @@
 package datasync
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func expandProtocol(l []interface{}) *datasync.FsxProtocol {
@@ -25,7 +27,7 @@ func expandProtocol(l []interface{}) *datasync.FsxProtocol {
 	return protocol
 }
 
-func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
+func flattenProtocol(protocol *datasync.FsxProtocol, d *schema.ResourceData) []interface{} {
 	if protocol == nil {
 		return []interface{}{}
 	}
@@ -36,7 +38,7 @@ func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
 		m["nfs"] = flattenNFS(protocol.NFS)
 	}
 	if protocol.SMB != nil {
-		m["smb"] = flattenSMB(protocol.SMB)
+		m["smb"] = flattenSMB(protocol.SMB, d)
 	}
 
 	return []interface{}{m}
@@ -64,7 +66,10 @@ func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
 	m := l[0].(map[string]interface{})
 
 	protocol := &datasync.FsxProtocolSmb{
+		Domain:       aws.String(m["domain"].(string)),
 		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
+		Password:     aws.String(m["password"].(string)),
+		User:         aws.String(m["user"].(string)),
 	}
 
 	return protocol
@@ -83,13 +88,22 @@ func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenSMB(smb *datasync.FsxProtocolSmb) []interface{} {
+func flattenSMB(smb *datasync.FsxProtocolSmb, d *schema.ResourceData) []interface{} {
 	if smb == nil {
 		return []interface{}{}
 	}
 
+	// Need to store the value for "password" from config in the state since it is write-only in the Describe API
+	password := ""
+	if d != nil {
+		password = d.Get("protocol.0.smb.0.password").(string)
+	}
+
 	m := map[string]interface{}{
+		"domain":        smb.Domain,
 		"mount_options": flattenSMBMountOptions(smb.MountOptions),
+		"password":      password,
+		"user":          smb.User,
 	}
 
 	return []interface{}{m}
