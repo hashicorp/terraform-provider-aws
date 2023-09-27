@@ -401,7 +401,7 @@ argument should not be specified.
 ##### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
-* `origin_shield_region` (Required) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
+* `origin_shield_region` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
 ##### S3 Origin Config Arguments
 
