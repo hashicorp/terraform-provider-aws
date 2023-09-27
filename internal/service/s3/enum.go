@@ -4,3 +4,8 @@
 package s3
 
 const DefaultKMSKeyAlias = "alias/aws/s3"
+
+const (
+	LifecycleRuleStatusEnabled  = "Enabled"
+	LifecycleRuleStatusDisabled = "Disabled"
+)

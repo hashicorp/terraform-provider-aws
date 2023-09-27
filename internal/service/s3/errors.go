@@ -17,7 +17,7 @@ const (
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
 	errCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	errCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
-	errCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
+	ErrCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
 	errCodeNoSuchKey                            = "NoSuchKey"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
@@ -30,7 +30,7 @@ const (
 	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
 	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
-	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
+	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from Third Party S3 implementations
