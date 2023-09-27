@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -43,7 +44,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_init(),
+				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
@@ -97,7 +98,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_init(),
+				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
@@ -129,7 +130,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_init(),
+				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
@@ -215,6 +216,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
+	domain1 := fmt.Sprintf("%s.example.com", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	domain2 := fmt.Sprintf("%s.example.com", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -226,7 +229,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_init(),
+				Config: testAccContinuousDeploymentPolicyConfig_init(domain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
@@ -234,7 +237,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, defaultDomain),
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -247,15 +250,15 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": defaultDomain,
+						"domain_name": domain1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": defaultDomain,
+						"domain_name": domain1,
 					}),
 				),
 			},
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, "tf33338.example.com"),
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -268,10 +271,10 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": "tf33338.example.com",
+						"domain_name": domain2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": "tf33338.example.com",
+						"domain_name": domain2,
 					}),
 				),
 			},
@@ -482,10 +485,10 @@ resource "aws_cloudfront_distribution" "test" {
 //
 // ContinuousDeploymentPolicyInUse: The specified continuous deployment policy is
 // currently associated with a distribution.
-func testAccContinuousDeploymentPolicyConfig_init() string {
+func testAccContinuousDeploymentPolicyConfig_init(domain string) string {
 	return acctest.ConfigCompose(
-		testAccContinuousDeploymentPolicyConfigBase_staging(defaultDomain),
-		testAccContinuousDeploymentPolicyConfigBase_productionInit(defaultDomain),
+		testAccContinuousDeploymentPolicyConfigBase_staging(domain),
+		testAccContinuousDeploymentPolicyConfigBase_productionInit(domain),
 		`
 resource "aws_cloudfront_continuous_deployment_policy" "test" {
   enabled = false
