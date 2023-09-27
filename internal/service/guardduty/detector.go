@@ -41,12 +41,10 @@ func ResourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"datasources": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -54,20 +52,6 @@ func ResourceDetector() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enable": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
 						"kubernetes": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -123,34 +107,13 @@ func ResourceDetector() *schema.Resource {
 								},
 							},
 						},
-					},
-				},
-			},
-
-			"feature": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"enable": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"additional_configuration": {
+						"s3_logs": {
+							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Type:     schema.TypeList,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"enable": {
 										Type:     schema.TypeBool,
 										Required: true,
@@ -161,13 +124,45 @@ func ResourceDetector() *schema.Resource {
 					},
 				},
 			},
-
+			"feature": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_configuration": {
+							Optional: true,
+							Computed: true,
+							Type:     schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"enable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			// finding_publishing_frequency is marked as Computed:true since
 			// GuardDuty member accounts inherit setting from master account
 			"finding_publishing_frequency": {
@@ -175,7 +170,6 @@ func ResourceDetector() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
