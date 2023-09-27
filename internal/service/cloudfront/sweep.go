@@ -265,7 +265,7 @@ func sweepContinuousDeploymentPolicies(region string) error {
 		}
 
 		if output == nil || output.ContinuousDeploymentPolicyList == nil || len(output.ContinuousDeploymentPolicyList.Items) == 0 {
-			continue
+			break
 		}
 
 		for _, cdp := range output.ContinuousDeploymentPolicyList.Items {
