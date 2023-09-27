@@ -20,10 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+    "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -37,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,6 +74,16 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
+				// Type:                  schema.TypeString,
+				// Required:              true,
+				// ValidateFunc:          validation.StringIsJSON,
+				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				// DiffSuppressOnRefresh: true,
+				// StateFunc: func(v interface{}) string {
+					// json, _ := structure.NormalizeJsonString(v)
+					// return json
+				// },
+
 // TODO: Update this
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -79,11 +93,25 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"assume_role_policy": schema.StringAttribute{
 				Required: true,
+				// Validators: []validator.String{
+                    // // TODO: json validator
+                // },
 				// TODO: finish this, it get complicated
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
+            "description": schema.StringAttribute{
+                Optional: true,
+				Validators: []validator.String{
+                    stringvalidator.LengthBetween(0, 1000),
+                    // TODO: regex does not match?
+                    stringvalidator.RegexMatches(
+                        regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
+                        `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
+                    ),
+				},
+            },
 			"force_detach_policies": schema.BoolAttribute{
 				Optional: true,
 				Default:  booldefault.StaticBool(false),
@@ -95,6 +123,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Optional:    true,
 				ElementType: types.StringType,
+                // TODO: set validator for arn
 				// TODO: validate all elements of set are valid arns
 				// how to do this with helper lib terraform-plugin-framework-validators
 			},
@@ -108,24 +137,34 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				// TODO: ForceNew?
-				// TODO: ConflictsWith?
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name_prefix"),
+					),
 				},
 			},
 			"name_prefix": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				// TODO: ForceNew?
-				// TODO: ConflictsWith?
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
 				},
 			},
 			"path": schema.StringAttribute{
 				Optional: true,
-				// TODO: ForceNew
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
 				Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 512),
@@ -134,22 +173,28 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"permissions_boundary": schema.StringAttribute{
 				Optional:   true,
 				Validators: []validator.String{
-					// verify.ValidARN
+                    fwvalidators.ARN(),
 				},
 			},
 			"unique_id": schema.StringAttribute{
 				Computed: true,
 			},
-			// TODO: tags?
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
 // NOTE: current schema resource to convert
-// "unique_id": {
-// Type:     schema.TypeString,
-// Computed: true,
-// },
+			// "description": {
+				// Type:     schema.TypeString,
+				// Optional: true,
+				// ValidateFunc: validation.All(
+					// validation.StringLenBetween(0, 1000),
+					// validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+					// validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+				// ),
+			// },
 
 // TODO: Finish this
 func (r *resourceIamRole) createIamrole(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
