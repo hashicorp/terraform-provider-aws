@@ -114,6 +114,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		// trigger changes when a policy is removed from a production distribution.
 		d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	}
+	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))

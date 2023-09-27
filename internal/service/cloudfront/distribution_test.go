@@ -1640,7 +1640,7 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 
 func testAccCheckDistributionWaitForDeployment(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfcloudfront.DistributionWaitUntilDeployed(ctx, aws.StringValue(distribution.Id), acctest.Provider.Meta())
+		return tfcloudfront.WaitDistributionDeployed(ctx, acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx), aws.StringValue(distribution.Id))
 	}
 }
 
