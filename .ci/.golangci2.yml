@@ -88,6 +88,10 @@ issues:
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
+      path: "internal/service/s3"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
+    - linters:
+        - staticcheck
       path: internal/service/securityhub/
       text: "SA1019: \\w+.(\\w+) is deprecated:"
     - linters:

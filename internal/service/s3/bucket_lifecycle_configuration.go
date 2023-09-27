@@ -505,7 +505,7 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 	}
 }
 
-func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule, timeout time.Duration) ([]types.LifecycleRule, error) {
+func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule, timeout time.Duration) ([]types.LifecycleRule, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules),
