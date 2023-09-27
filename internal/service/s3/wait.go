@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -26,10 +25,6 @@ const (
 	// LifecycleConfigurationRulesStatusNotReady occurs when all configured rules have not reached their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusNotReady = "NOT_READY"
 )
-
-func retryWhenBucketNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, f, s3.ErrCodeNoSuchBucket)
-}
 
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {
 	stateConf := &retry.StateChangeConf{
