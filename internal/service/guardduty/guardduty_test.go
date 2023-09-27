@@ -110,3 +110,20 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 		t.Fatalf("listing GuardDuty Detectors: %s", err)
 	}
 }
+
+// testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
+func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+
+	_, err := tfguardduty.FindDetector(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		return
+	}
+
+	if err != nil {
+		t.Fatalf("listing GuardDuty Detectors: %s", err)
+	}
+
+	t.Skip("this AWS account has a GuardDuty Detector")
+}
