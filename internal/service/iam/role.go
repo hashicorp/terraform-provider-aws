@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-    "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -74,15 +74,15 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
-				// Type:                  schema.TypeString,
-				// Required:              true,
-				// ValidateFunc:          validation.StringIsJSON,
-				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				// DiffSuppressOnRefresh: true,
-				// StateFunc: func(v interface{}) string {
-					// json, _ := structure.NormalizeJsonString(v)
-					// return json
-				// },
+// Type:                  schema.TypeString,
+// Required:              true,
+// ValidateFunc:          validation.StringIsJSON,
+// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+// DiffSuppressOnRefresh: true,
+// StateFunc: func(v interface{}) string {
+// json, _ := structure.NormalizeJsonString(v)
+// return json
+// },
 
 // TODO: Update this
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -94,24 +94,24 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"assume_role_policy": schema.StringAttribute{
 				Required: true,
 				// Validators: []validator.String{
-                    // // TODO: json validator
-                // },
+				// // TODO: json validator
+				// },
 				// TODO: finish this, it get complicated
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-            "description": schema.StringAttribute{
-                Optional: true,
+			"description": schema.StringAttribute{
+				Optional: true,
 				Validators: []validator.String{
-                    stringvalidator.LengthBetween(0, 1000),
-                    // TODO: regex does not match?
-                    stringvalidator.RegexMatches(
-                        regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
-                        `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-                    ),
+					stringvalidator.LengthBetween(0, 1000),
+					// TODO: regex does not match?
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
+						`must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
+					),
 				},
-            },
+			},
 			"force_detach_policies": schema.BoolAttribute{
 				Optional: true,
 				Default:  booldefault.StaticBool(false),
@@ -123,7 +123,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Optional:    true,
 				ElementType: types.StringType,
-                // TODO: set validator for arn
+				// TODO: set validator for arn
 				// TODO: validate all elements of set are valid arns
 				// how to do this with helper lib terraform-plugin-framework-validators
 			},
@@ -137,9 +137,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
 					stringvalidator.ConflictsWith(
@@ -150,9 +150,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"name_prefix": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
 					stringvalidator.ConflictsWith(
@@ -162,18 +162,18 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"path": schema.StringAttribute{
 				Optional: true,
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 512),
 				},
 			},
 			"permissions_boundary": schema.StringAttribute{
-				Optional:   true,
+				Optional: true,
 				Validators: []validator.String{
-                    fwvalidators.ARN(),
+					fwvalidators.ARN(),
 				},
 			},
 			"unique_id": schema.StringAttribute{
@@ -185,155 +185,32 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-// NOTE: current schema resource to convert
-			// "description": {
-				// Type:     schema.TypeString,
-				// Optional: true,
-				// ValidateFunc: validation.All(
-					// validation.StringLenBetween(0, 1000),
-					// validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
-					// validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
-				// ),
-			// },
-
-// TODO: Finish this
-func (r *resourceIamRole) createIamrole(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	return "", nil
+type resourceIamRoleData struct {
+	// Uni
+	// ExportOnly           types.List     `tfsdk:"export_only"`
+	// ExportTaskIdentifier types.String   `tfsdk:"export_task_identifier"`
+	// FailureCause         types.String   `tfsdk:"failure_cause"`
+	// IAMRoleArn           types.String   `tfsdk:"iam_role_arn"`
+	// ID                   types.String   `tfsdk:"id"`
+	// KMSKeyID             types.String   `tfsdk:"kms_key_id"`
+	// PercentProgress      types.Int64    `tfsdk:"percent_progress"`
+	// S3BucketName         types.String   `tfsdk:"s3_bucket_name"`
+	// S3Prefix             types.String   `tfsdk:"s3_prefix"`
+	// SnapshotTime         types.String   `tfsdk:"snapshot_time"`
+	// SourceArn            types.String   `tfsdk:"source_arn"`
+	// SourceType           types.String   `tfsdk:"source_type"`
+	// Status               types.String   `tfsdk:"status"`
+	// TaskEndTime          types.String   `tfsdk:"task_end_time"`
+	// TaskStartTime        types.String   `tfsdk:"task_start_time"`
+	// Timeouts             timeouts.Value `tfsdk:"timeouts"`
+	// WarningMessage       types.String   `tfsdk:"warning_message"`
 }
 
-func ResourceRole() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceRoleCreate,
-		ReadWithoutTimeout:   resourceRoleRead,
-		UpdateWithoutTimeout: resourceRoleUpdate,
-		DeleteWithoutTimeout: resourceRoleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assume_role_policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1000),
-					validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
-					validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
-				),
-			},
-			"force_detach_policies": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"inline_policy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc: validation.All(
-								validation.StringIsNotEmpty,
-								validRolePolicyName,
-							),
-						},
-						"policy": {
-							Type:                  schema.TypeString,
-							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:          verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v interface{}) string {
-								json, _ := verify.LegacyPolicyNormalize(v)
-								return json
-							},
-						},
-					},
-				},
-				DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
-					if d.Id() == "" {
-						return false
-					}
-
-					return !inlinePoliciesActualDiff(d)
-				},
-			},
-			"managed_policy_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
-				},
-			},
-			"max_session_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(3600, 43200),
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validResourceName(roleNameMaxLen),
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
-			},
-			"path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-	}
+// TODO: Finish this
+func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().IAMConn(ctx)
+	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+	return
 }
 
 func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
