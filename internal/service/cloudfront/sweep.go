@@ -190,9 +190,9 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	if staging {
-		log.Printf("[INFO] Sweeping staging distributions", err)
+		log.Printf("[INFO] Sweeping staging distributions")
 	} else {
-		log.Printf("[INFO] Sweeping production distributions", err)
+		log.Printf("[INFO] Sweeping production distributions")
 	}
 
 	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
