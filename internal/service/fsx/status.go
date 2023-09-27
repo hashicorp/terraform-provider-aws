@@ -43,22 +43,6 @@ func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) retry.StateR
 	}
 }
 
-func statusVolume(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVolumeByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Lifecycle), nil
-	}
-}
-
 func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotByID(ctx, conn, id)

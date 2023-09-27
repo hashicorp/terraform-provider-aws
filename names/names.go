@@ -78,6 +78,7 @@ const (
 
 const (
 	USEast1RegionID = "us-east-1" // US East (N. Virginia).
+	USWest1RegionID = "us-west-1" // US West (N. California).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 
 	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).

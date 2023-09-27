@@ -135,13 +135,18 @@ func sweepInboundConnections(region string) error {
 		}
 
 		for _, v := range page.Connections {
-			if aws.StringValue(v.ConnectionStatus.StatusCode) != opensearchservice.InboundConnectionStatusCodeDeleted {
+			id := aws.StringValue(v.ConnectionId)
+
+			status := aws.StringValue(v.ConnectionStatus.StatusCode)
+			if status == opensearchservice.InboundConnectionStatusCodeDeleted || status == opensearchservice.InboundConnectionStatusCodeRejected {
+				log.Printf("[INFO] Skipping OpenSearch Inbound Connection %s: %s", id, status)
 				continue
 			}
 
 			r := ResourceInboundConnectionAccepter()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ConnectionId))
+			d.SetId(id)
+			d.Set("connection_status", status)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -183,13 +188,16 @@ func sweepOutboundConnections(region string) error {
 		}
 
 		for _, v := range page.Connections {
-			if aws.StringValue(v.ConnectionStatus.StatusCode) != opensearchservice.OutboundConnectionStatusCodeDeleted {
+			id := aws.StringValue(v.ConnectionId)
+
+			if status := aws.StringValue(v.ConnectionStatus.StatusCode); status == opensearchservice.InboundConnectionStatusCodeDeleted {
+				log.Printf("[INFO] Skipping OpenSearch Outbound Connection %s: %s", id, status)
 				continue
 			}
 
 			r := ResourceOutboundConnection()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ConnectionId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

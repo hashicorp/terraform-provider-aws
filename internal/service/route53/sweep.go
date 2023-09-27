@@ -340,16 +340,12 @@ func sweepTrafficPolicyInstances(region string) error {
 func sweepZones(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
 	conn := client.Route53Conn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &route53.ListHostedZonesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListHostedZonesPagesWithContext(ctx, input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
 		if page == nil {
@@ -357,25 +353,26 @@ func sweepZones(region string) error {
 		}
 
 	MAIN:
-		for _, detail := range page.HostedZones {
-			if detail == nil {
-				continue
-			}
-
-			id := aws.StringValue(detail.Id)
+		for _, v := range page.HostedZones {
+			id := aws.StringValue(v.Id)
 
 			for _, domain := range hostedZonesToPreserve() {
-				if strings.Contains(aws.StringValue(detail.Name), domain) {
-					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
+				if strings.Contains(aws.StringValue(v.Name), domain) {
+					log.Printf("[DEBUG] Skipping Route53 Hosted Zone %s: %s", id, domain)
 					continue MAIN
 				}
+			}
+
+			if v.LinkedService != nil {
+				log.Printf("[INFO] Skipping Route 53 Hosted Zone %s: %s", id, aws.StringValue(v.LinkedService.Description))
+				continue MAIN
 			}
 
 			r := ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("force_destroy", true)
-			d.Set("name", detail.Name)
+			d.Set("name", v.Name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -383,20 +380,22 @@ func sweepZones(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Hosted Zones for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Hosted Zones for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Route53 Hosted Zones sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Hosted Zone sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("listing Route 53 Hosted Zones (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Hosted Zones (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func hostedZonesToPreserve() []string {

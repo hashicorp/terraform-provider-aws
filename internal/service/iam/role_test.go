@@ -382,7 +382,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_badJSON(rName),
-				ExpectError: regexache.MustCompile(`.*contains an invalid JSON:.*`),
+				ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
 			},
 		},
 	})

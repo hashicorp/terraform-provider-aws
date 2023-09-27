@@ -31,6 +31,11 @@ func init() {
 			"aws_vpclattice_service",
 		},
 	})
+
+	resource.AddTestSweepers("aws_vpclattice_target_group", &resource.Sweeper{
+		Name: "aws_vpclattice_target_group",
+		F:    sweepTargetGroups,
+	})
 }
 
 func sweepServices(region string) error {
@@ -110,6 +115,47 @@ func sweepServiceNetworks(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping VPC Lattice Service Networks (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTargetGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListTargetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListTargetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
+			log.Printf("[WARN] Skipping VPC Lattice Target Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing VPC Lattice Target Groups (%s): %w", region, err)
+		}
+
+		for _, v := range page.Items {
+			r := ResourceTargetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping VPC Lattice Target Groups (%s): %w", region, err)
 	}
 
 	return nil

@@ -8,16 +8,16 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,16 +31,12 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketAnalyticsConfigurationRead,
 		UpdateWithoutTimeout: resourceBucketAnalyticsConfigurationPut,
 		DeleteWithoutTimeout: resourceBucketAnalyticsConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -55,16 +51,21 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							AtLeastOneOf: filterAtLeastOneOfKeys,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
-							AtLeastOneOf: filterAtLeastOneOfKeys,
 							Elem:         &schema.Schema{Type: schema.TypeString},
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"storage_class_analysis": {
 				Type:     schema.TypeList,
@@ -79,10 +80,10 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"output_schema_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      s3.StorageClassAnalysisSchemaVersionV1,
-										ValidateFunc: validation.StringInSlice([]string{s3.StorageClassAnalysisSchemaVersionV1}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          types.StorageClassAnalysisSchemaVersionV1,
+										ValidateDiagFunc: enum.Validate[types.StorageClassAnalysisSchemaVersion](),
 									},
 									"destination": {
 										Type:     schema.TypeList,
@@ -107,10 +108,10 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 																ValidateFunc: verify.ValidAccountID,
 															},
 															"format": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      s3.AnalyticsS3ExportFileFormatCsv,
-																ValidateFunc: validation.StringInSlice([]string{s3.AnalyticsS3ExportFileFormatCsv}, false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																Default:          types.AnalyticsS3ExportFileFormatCsv,
+																ValidateDiagFunc: enum.Validate[types.AnalyticsS3ExportFileFormat](),
 															},
 															"prefix": {
 																Type:     schema.TypeString,
@@ -132,101 +133,78 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 	}
 }
 
-var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
-
 func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
-
-	log.Printf("[DEBUG] S3 bucket %q, add analytics configuration %q", bucket, name)
-
-	analyticsConfiguration := &s3.AnalyticsConfiguration{
+	analyticsConfiguration := &types.AnalyticsConfiguration{
 		Id:                   aws.String(name),
-		Filter:               ExpandAnalyticsFilter(ctx, d.Get("filter").([]interface{})),
-		StorageClassAnalysis: ExpandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
+		StorageClassAnalysis: expandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
+	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		analyticsConfiguration.Filter = expandAnalyticsFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	bucket := d.Get("bucket").(string)
 	input := &s3.PutBucketAnalyticsConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		_, err := conn.PutBucketAnalyticsConfigurationWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketAnalyticsConfigurationWithContext(ctx, input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return conn.PutBucketAnalyticsConfiguration(ctx, input)
+	}, errCodeNoSuchBucket)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "adding S3 Bucket Analytics Configuration: %s", err)
+		return diag.Errorf("creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
+	if d.IsNewResource() {
+		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findAnalyticsConfiguration(ctx, conn, bucket, name)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Analytics Configuration (%s) create: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceBucketAnalyticsConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("bucket", bucket)
-	d.Set("name", name)
+	ac, err := findAnalyticsConfiguration(ctx, conn, bucket, name)
 
-	input := &s3.GetBucketAnalyticsConfigurationInput{
-		Bucket: aws.String(bucket),
-		Id:     aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
-	output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
-		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Analytics Configuration (%s): empty response", d.Id())
-	}
-
-	if err := d.Set("filter", FlattenAnalyticsFilter(ctx, output.AnalyticsConfiguration.Filter)); err != nil {
+	d.Set("bucket", bucket)
+	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
-
-	if err = d.Set("storage_class_analysis", FlattenStorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage class anyalytics: %s", err)
+	d.Set("name", name)
+	if err = d.Set("storage_class_analysis", flattenStorageClassAnalysis(ac.StorageClassAnalysis)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_class_analysis: %s", err)
 	}
 
 	return diags
@@ -234,30 +212,35 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 
 func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 analytics configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &s3.DeleteBucketAnalyticsConfigurationInput{
+	log.Printf("[DEBUG] Deleting S3 Bucket Analytics Configuration: %s", d.Id())
+	_, err = conn.DeleteBucketAnalyticsConfiguration(ctx, &s3.DeleteBucketAnalyticsConfigurationInput{
 		Bucket: aws.String(bucket),
 		Id:     aws.String(name),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting S3 bucket analytics configuration: %s", input)
-	_, err = conn.DeleteBucketAnalyticsConfigurationWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting S3 analytics configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitForDeleteBucketAnalyticsConfiguration(ctx, conn, bucket, name, 1*time.Minute); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 analytics configuration (%s): %s", d.Id(), err)
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findAnalyticsConfiguration(ctx, conn, bucket, name)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Analytics Configuration (%s) delete: %s", d.Id(), err)
 	}
+
 	return nil
 }
 
@@ -271,46 +254,50 @@ func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 	return bucket, name, nil
 }
 
-func ExpandAnalyticsFilter(ctx context.Context, l []interface{}) *s3.AnalyticsFilter {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
+func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.AnalyticsFilter {
 	var prefix string
 	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
 	}
 
-	var tags []*s3.Tag
+	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
 		return nil
 	}
-	analyticsFilter := &s3.AnalyticsFilter{}
+
+	var analyticsFilter types.AnalyticsFilter
+
 	if prefix != "" && len(tags) > 0 {
-		analyticsFilter.And = &s3.AnalyticsAndOperator{
-			Prefix: aws.String(prefix),
-			Tags:   tags,
+		analyticsFilter = &types.AnalyticsFilterMemberAnd{
+			Value: types.AnalyticsAndOperator{
+				Prefix: aws.String(prefix),
+				Tags:   tags,
+			},
 		}
 	} else if len(tags) > 1 {
-		analyticsFilter.And = &s3.AnalyticsAndOperator{
-			Tags: tags,
+		analyticsFilter = &types.AnalyticsFilterMemberAnd{
+			Value: types.AnalyticsAndOperator{
+				Tags: tags,
+			},
 		}
 	} else if len(tags) == 1 {
-		analyticsFilter.Tag = tags[0]
+		analyticsFilter = &types.AnalyticsFilterMemberTag{
+			Value: tags[0],
+		}
 	} else {
-		analyticsFilter.Prefix = aws.String(prefix)
+		analyticsFilter = &types.AnalyticsFilterMemberPrefix{
+			Value: prefix,
+		}
 	}
 	return analyticsFilter
 }
 
-func ExpandStorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
-	result := &s3.StorageClassAnalysis{}
+func expandStorageClassAnalysis(l []interface{}) *types.StorageClassAnalysis {
+	result := &types.StorageClassAnalysis{}
 
 	if len(l) == 0 || l[0] == nil {
 		return result
@@ -318,14 +305,14 @@ func ExpandStorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
 
 	m := l[0].(map[string]interface{})
 	if v, ok := m["data_export"]; ok {
-		dataExport := &s3.StorageClassAnalysisDataExport{}
+		dataExport := &types.StorageClassAnalysisDataExport{}
 		result.DataExport = dataExport
 
 		foo := v.([]interface{})
 		if len(foo) != 0 && foo[0] != nil {
 			bar := foo[0].(map[string]interface{})
 			if v, ok := bar["output_schema_version"]; ok {
-				dataExport.OutputSchemaVersion = aws.String(v.(string))
+				dataExport.OutputSchemaVersion = types.StorageClassAnalysisSchemaVersion(v.(string))
 			}
 
 			dataExport.Destination = expandAnalyticsExportDestination(bar["destination"].([]interface{}))
@@ -335,8 +322,8 @@ func ExpandStorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
 	return result
 }
 
-func expandAnalyticsExportDestination(edl []interface{}) *s3.AnalyticsExportDestination {
-	result := &s3.AnalyticsExportDestination{}
+func expandAnalyticsExportDestination(edl []interface{}) *types.AnalyticsExportDestination {
+	result := &types.AnalyticsExportDestination{}
 
 	if len(edl) != 0 && edl[0] != nil {
 		edm := edl[0].(map[string]interface{})
@@ -345,13 +332,13 @@ func expandAnalyticsExportDestination(edl []interface{}) *s3.AnalyticsExportDest
 	return result
 }
 
-func expandAnalyticsBucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDestination {
-	result := &s3.AnalyticsS3BucketDestination{}
+func expandAnalyticsBucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
+	result := &types.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
 		bdm := bdl[0].(map[string]interface{})
 		result.Bucket = aws.String(bdm["bucket_arn"].(string))
-		result.Format = aws.String(bdm["format"].(string))
+		result.Format = types.AnalyticsS3ExportFileFormat(bdm["format"].(string))
 
 		if v, ok := bdm["bucket_account_id"]; ok && v != "" {
 			result.BucketAccountId = aws.String(v.(string))
@@ -365,41 +352,39 @@ func expandAnalyticsBucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDe
 	return result
 }
 
-func FlattenAnalyticsFilter(ctx context.Context, analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
-	if analyticsFilter == nil {
+func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.AnalyticsFilter) []map[string]interface{} {
+	result := make(map[string]interface{})
+
+	switch v := analyticsFilter.(type) {
+	case *types.AnalyticsFilterMemberAnd:
+		if v := v.Value.Prefix; v != nil {
+			result["prefix"] = aws.ToString(v)
+		}
+		if v := v.Value.Tags; v != nil {
+			result["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		}
+	case *types.AnalyticsFilterMemberPrefix:
+		result["prefix"] = v.Value
+	case *types.AnalyticsFilterMemberTag:
+		tags := []types.Tag{
+			v.Value,
+		}
+		result["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+	default:
 		return nil
 	}
 
-	result := make(map[string]interface{})
-	if and := analyticsFilter.And; and != nil {
-		if and.Prefix != nil {
-			result["prefix"] = aws.StringValue(and.Prefix)
-		}
-		if and.Tags != nil {
-			result["tags"] = KeyValueTags(ctx, and.Tags).IgnoreAWS().Map()
-		}
-	} else if analyticsFilter.Prefix != nil {
-		result["prefix"] = aws.StringValue(analyticsFilter.Prefix)
-	} else if analyticsFilter.Tag != nil {
-		tags := []*s3.Tag{
-			analyticsFilter.Tag,
-		}
-		result["tags"] = KeyValueTags(ctx, tags).IgnoreAWS().Map()
-	} else {
-		return nil
-	}
 	return []map[string]interface{}{result}
 }
 
-func FlattenStorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) []map[string]interface{} {
+func flattenStorageClassAnalysis(storageClassAnalysis *types.StorageClassAnalysis) []map[string]interface{} {
 	if storageClassAnalysis == nil || storageClassAnalysis.DataExport == nil {
 		return []map[string]interface{}{}
 	}
 
 	dataExport := storageClassAnalysis.DataExport
-	de := make(map[string]interface{})
-	if dataExport.OutputSchemaVersion != nil {
-		de["output_schema_version"] = aws.StringValue(dataExport.OutputSchemaVersion)
+	de := map[string]interface{}{
+		"output_schema_version": dataExport.OutputSchemaVersion,
 	}
 	if dataExport.Destination != nil {
 		de["destination"] = flattenAnalyticsExportDestination(dataExport.Destination)
@@ -411,7 +396,7 @@ func FlattenStorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) 
 	return []map[string]interface{}{result}
 }
 
-func flattenAnalyticsExportDestination(destination *s3.AnalyticsExportDestination) []interface{} {
+func flattenAnalyticsExportDestination(destination *types.AnalyticsExportDestination) []interface{} {
 	if destination == nil || destination.S3BucketDestination == nil {
 		return []interface{}{}
 	}
@@ -423,56 +408,47 @@ func flattenAnalyticsExportDestination(destination *s3.AnalyticsExportDestinatio
 	}
 }
 
-func flattenAnalyticsBucketDestination(bucketDestination *s3.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
 	if bucketDestination == nil {
 		return nil
 	}
 
 	result := map[string]interface{}{
-		"bucket_arn": aws.StringValue(bucketDestination.Bucket),
-		"format":     aws.StringValue(bucketDestination.Format),
+		"bucket_arn": aws.ToString(bucketDestination.Bucket),
+		"format":     bucketDestination.Format,
 	}
 	if bucketDestination.BucketAccountId != nil {
-		result["bucket_account_id"] = aws.StringValue(bucketDestination.BucketAccountId)
+		result["bucket_account_id"] = aws.ToString(bucketDestination.BucketAccountId)
 	}
 	if bucketDestination.Prefix != nil {
-		result["prefix"] = aws.StringValue(bucketDestination.Prefix)
+		result["prefix"] = aws.ToString(bucketDestination.Prefix)
 	}
 
 	return []interface{}{result}
 }
 
-func WaitForDeleteBucketAnalyticsConfiguration(ctx context.Context, conn *s3.S3, bucket, name string, timeout time.Duration) error {
+func findAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket, id string) (*types.AnalyticsConfiguration, error) {
 	input := &s3.GetBucketAnalyticsConfigurationInput{
 		Bucket: aws.String(bucket),
-		Id:     aws.String(name),
+		Id:     aws.String(id),
 	}
 
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
-		output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, input)
+	output, err := conn.GetBucketAnalyticsConfiguration(ctx, input)
 
-		if err != nil {
-			return retry.NonRetryableError(err)
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		if output != nil && output.AnalyticsConfiguration != nil {
-			return retry.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.GetBucketAnalyticsConfigurationWithContext(ctx, input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting S3 Bucket Analytics Configuration \"%s:%s\": %w", bucket, name, err)
+		return nil, err
 	}
 
-	return nil
+	if output == nil || output.AnalyticsConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AnalyticsConfiguration, nil
 }

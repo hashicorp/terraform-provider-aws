@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -40,6 +41,10 @@ func init() {
 
 func sweepDirectoryConfigs(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream Directory Config sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -84,6 +89,10 @@ func sweepDirectoryConfigs(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream Fleet sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -128,6 +137,10 @@ func sweepFleets(region string) error {
 
 func sweepImageBuilders(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream Image Builder sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -172,6 +185,10 @@ func sweepImageBuilders(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream Stack sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
