@@ -52,7 +52,6 @@ This resource supports the following arguments:
 * `state_machine_version_arn` - (Required) The Amazon Resource Name (ARN) of the state machine version.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
