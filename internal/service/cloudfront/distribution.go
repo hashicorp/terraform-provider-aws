@@ -1014,7 +1014,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		}, cloudfront.ErrCodeDistributionNotDisabled)
 	}
@@ -1027,6 +1027,14 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return diags
+	}
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
+		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
+			return diag.Errorf("disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		}
+
+		err = deleteDistribution(ctx, conn, d.Id())
 	}
 
 	if err != nil {
@@ -1068,6 +1076,10 @@ func distroETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (st
 }
 
 func disableDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
+		return err
+	}
+
 	out, err := FindDistributionByID(ctx, conn, id)
 	if err != nil {
 		return err
