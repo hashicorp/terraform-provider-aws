@@ -192,7 +192,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("feature"); ok && len(v.([]interface{})) > 0 {
-		input.Features = expandFeaturesConfigurations(v.([]interface{}))
+		input.Features = expandDetectorFeatureConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -245,7 +245,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	if gdo.Features != nil {
-		if err := d.Set("feature", flattenFeaturesConfigurationsResult(gdo.Features)); err != nil {
+		if err := d.Set("feature", flattenDetectorFeatureConfigurationResults(gdo.Features)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting feature: %s", err)
 		}
 	} else {
@@ -274,7 +274,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("feature") {
-			input.Features = expandFeaturesConfigurations(d.Get("feature").([]interface{}))
+			input.Features = expandDetectorFeatureConfigurations(d.Get("feature").([]interface{}))
 		}
 
 		_, err := conn.UpdateDetectorWithContext(ctx, input)
@@ -316,27 +316,16 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 
 	apiObject := &guardduty.DataSourceConfigurations{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandS3LogsConfiguration(v[0].(map[string]interface{}))
-	}
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
+
 	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MalwareProtection = expandMalwareProtectionConfiguration(v[0].(map[string]interface{}))
 	}
-	return apiObject
-}
 
-func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &guardduty.S3LogsConfiguration{}
-
-	if v, ok := tfMap["enable"].(bool); ok {
-		apiObject.Enable = aws.Bool(v)
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -392,11 +381,11 @@ func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guarddu
 	}
 
 	return &guardduty.MalwareProtectionConfiguration{
-		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(m),
+		ScanEc2InstanceWithFindings: expandScanEc2InstanceWithFindings(m),
 	}
 }
 
-func expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
+func expandScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
 	if tfMap == nil {
 		return nil
 	}
@@ -414,6 +403,7 @@ func expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(tfMap map[s
 	apiObject := &guardduty.ScanEc2InstanceWithFindings{
 		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
 	}
+
 	return apiObject
 }
 
@@ -431,12 +421,27 @@ func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandFeaturesConfigurations(items []interface{}) []*guardduty.DetectorFeatureConfiguration {
+func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.S3LogsConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandDetectorFeatureConfigurations(items []interface{}) []*guardduty.DetectorFeatureConfiguration {
 	if items == nil {
 		return nil
 	}
 
 	detectorFeatureConfigurations := make([]*guardduty.DetectorFeatureConfiguration, 0, len(items))
+
 	for _, l := range items {
 		if l == nil {
 			continue
@@ -446,17 +451,17 @@ func expandFeaturesConfigurations(items []interface{}) []*guardduty.DetectorFeat
 		detectorFeatureConfiguration := &guardduty.DetectorFeatureConfiguration{
 			Name: aws.String(m["name"].(string)),
 		}
+
 		if v, ok := m["enable"].(bool); ok {
 			if v {
-				enabled := guardduty.FeatureStatusEnabled
-				detectorFeatureConfiguration.Status = &enabled
+				detectorFeatureConfiguration.Status = aws.String(guardduty.FeatureStatusEnabled)
 			} else {
-				disabled := guardduty.FeatureStatusDisabled
-				detectorFeatureConfiguration.Status = &disabled
+				detectorFeatureConfiguration.Status = aws.String(guardduty.FeatureStatusDisabled)
 			}
 		}
+
 		if a, ok := m["additional_configuration"].([]interface{}); ok {
-			detectorFeatureConfiguration.AdditionalConfiguration = expandFeaturesAdditionalConfigurations(a)
+			detectorFeatureConfiguration.AdditionalConfiguration = expandDetectorAdditionalConfigurations(a)
 		}
 
 		detectorFeatureConfigurations = append(detectorFeatureConfigurations, detectorFeatureConfiguration)
@@ -465,12 +470,13 @@ func expandFeaturesConfigurations(items []interface{}) []*guardduty.DetectorFeat
 	return detectorFeatureConfigurations
 }
 
-func expandFeaturesAdditionalConfigurations(items []interface{}) []*guardduty.DetectorAdditionalConfiguration {
+func expandDetectorAdditionalConfigurations(items []interface{}) []*guardduty.DetectorAdditionalConfiguration {
 	if items == nil {
 		return nil
 	}
 
 	detectorFeatureAdditionalConfigurations := make([]*guardduty.DetectorAdditionalConfiguration, 0, len(items))
+
 	for _, l := range items {
 		if l == nil {
 			continue
@@ -480,13 +486,12 @@ func expandFeaturesAdditionalConfigurations(items []interface{}) []*guardduty.De
 		detectorFeatureAdditionalConfiguration := &guardduty.DetectorAdditionalConfiguration{
 			Name: aws.String(m["name"].(string)),
 		}
+
 		if v, ok := m["enable"].(bool); ok {
 			if v {
-				enabled := guardduty.FeatureStatusEnabled
-				detectorFeatureAdditionalConfiguration.Status = &enabled
+				detectorFeatureAdditionalConfiguration.Status = aws.String(guardduty.FeatureStatusEnabled)
 			} else {
-				disabled := guardduty.FeatureStatusDisabled
-				detectorFeatureAdditionalConfiguration.Status = &disabled
+				detectorFeatureAdditionalConfiguration.Status = aws.String(guardduty.FeatureStatusDisabled)
 			}
 		}
 
@@ -503,10 +508,6 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenS3LogsConfigurationResult(v)}
-	}
-
 	if v := apiObject.Kubernetes; v != nil {
 		tfMap["kubernetes"] = []interface{}{flattenKubernetesConfiguration(v)}
 	}
@@ -515,18 +516,8 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 		tfMap["malware_protection"] = []interface{}{flattenMalwareProtectionConfiguration(v)}
 	}
 
-	return tfMap
-}
-
-func flattenS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Status; v != nil {
-		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenS3LogsConfigurationResult(v)}
 	}
 
 	return tfMap
@@ -568,13 +559,13 @@ func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectio
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenScanEc2InstanceWithFindingsResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenScanEc2InstanceWithFindingsResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -582,13 +573,13 @@ func flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(apiO
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEBSVolumesConfigurationResult(v)}
+		tfMap["ebs_volumes"] = []interface{}{flattenEbsVolumesResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
+func flattenEbsVolumesResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -602,24 +593,39 @@ func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.
 	return tfMap
 }
 
-func flattenFeaturesConfigurationsResult(detectorFeatureConfigurations []*guardduty.DetectorFeatureConfigurationResult) []interface{} {
+func flattenS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
+
+func flattenDetectorFeatureConfigurationResults(detectorFeatureConfigurations []*guardduty.DetectorFeatureConfigurationResult) []interface{} {
 	if len(detectorFeatureConfigurations) == 0 {
 		return []interface{}{}
 	}
 
 	result := make([]interface{}, len(detectorFeatureConfigurations))
+
 	for i, detectorFeatureConfiguration := range detectorFeatureConfigurations {
 		result[i] = map[string]interface{}{
 			"name":                     aws.StringValue(detectorFeatureConfiguration.Name),
 			"enable":                   aws.StringValue(detectorFeatureConfiguration.Status) == guardduty.FeatureStatusEnabled,
-			"additional_configuration": flattenFeaturesAdditionalConfigurationsResult(detectorFeatureConfiguration.AdditionalConfiguration),
+			"additional_configuration": flattenDetectorAdditionalConfigurationResults(detectorFeatureConfiguration.AdditionalConfiguration),
 		}
 	}
 
 	return result
 }
 
-func flattenFeaturesAdditionalConfigurationsResult(detectorAdditionalFeatureConfigurations []*guardduty.DetectorAdditionalConfigurationResult) []interface{} {
+func flattenDetectorAdditionalConfigurationResults(detectorAdditionalFeatureConfigurations []*guardduty.DetectorAdditionalConfigurationResult) []interface{} {
 	if len(detectorAdditionalFeatureConfigurations) == 0 {
 		return []interface{}{}
 	}

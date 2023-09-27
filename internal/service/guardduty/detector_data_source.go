@@ -117,7 +117,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("service_role_arn", getResp.ServiceRole)
 	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
 	if getResp.Features != nil {
-		if err := d.Set("features", flattenFeaturesConfigurationsResult(getResp.Features)); err != nil {
+		if err := d.Set("features", flattenDetectorFeatureConfigurationResults(getResp.Features)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
 		}
 	} else {
