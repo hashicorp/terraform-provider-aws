@@ -70,20 +70,18 @@ resource "aws_rds_custom_db_engine_version" "test" {
   engine_version  = "15.00.4249.2.cev-1"
   source_image_id = "ami-0aa12345678a12ab1"
 }
-
 ```
 
-## RDS Custom for SQL Server Usage with AMI from another region
+### RDS Custom for SQL Server Usage with AMI from another region
 
 ```terraform
-
 resource "aws_ami_copy" "example" {
   name              = "sqlserver-se-2019-15.00.4249.2"
   description       = "A copy of ami-xxxxxxxx"
   source_ami_id     = "ami-xxxxxxxx"
   source_ami_region = "us-east-1"
 }
-
+# CEV creation requires an AMI owned by the operator
 resource "aws_rds_custom_db_engine_version" "test" {
   engine          = "custom-sqlserver-se"
   engine_version  = "15.00.4249.2.cev-1"
