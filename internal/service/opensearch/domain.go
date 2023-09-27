@@ -593,6 +593,7 @@ func ResourceDomain() *schema.Resource {
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
