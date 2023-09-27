@@ -54,11 +54,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### Bot Members
 
-* `alias_id` (Required) - The alias ID of a bot that is a member of this network of bots.
-* `alias_name` (Required) - The alias ID of a bot that is a member of this network of bots.
-* `id` (Required) - The unique ID of a bot that is a member of this network of bots.
-* `name` (Required) - The unique name of a bot that is a member of this network of bots.
-* `version` (Required) - The version of a bot that is a member of this network of bots.
+* `alias_id` (Required) - Alias ID of a bot that is a member of this network of bots.
+* `alias_name` (Required) - Alias name of a bot that is a member of this network of bots.
+* `id` (Required) - Unique ID of a bot that is a member of this network of bots.
+* `name` (Required) - Unique name of a bot that is a member of this network of bots.
+* `version` (Required) - Version of a bot that is a member of this network of bots.
 
 ## Timeouts
 
