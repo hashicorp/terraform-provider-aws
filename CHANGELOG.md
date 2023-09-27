@@ -13,6 +13,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_cleanrooms_configured_table` ([#33602](https://github.com/hashicorp/terraform-provider-aws/issues/33602))
 * **New Resource:** `aws_dms_replication_config` ([#32908](https://github.com/hashicorp/terraform-provider-aws/issues/32908))
 * **New Resource:** `aws_rds_custom_db_engine_version` ([#33285](https://github.com/hashicorp/terraform-provider-aws/issues/33285))
 * **New Resource:** `aws_vpclattice_service_network` ([#30482](https://github.com/hashicorp/terraform-provider-aws/issues/30482))
@@ -32,6 +33,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_batch_job_queue: Correctly validates elements of `compute_environments` as ARNs ([#33577](https://github.com/hashicorp/terraform-provider-aws/issues/33577))
 * resource/aws_cloudfront_continuous_deployment_policy: Fix `IllegalUpdate` errors when updating a staging `aws_cloudfront_distribution` that is part of continuous deployment ([#33578](https://github.com/hashicorp/terraform-provider-aws/issues/33578))
 * resource/aws_cloudfront_distribution: Fix `IllegalUpdate` errors when updating a staging distribution associated with an `aws_cloudfront_continuous_deployment_policy` ([#33578](https://github.com/hashicorp/terraform-provider-aws/issues/33578))
 * resource/aws_cloudfront_distribution: Fix `PreconditionFailed` errors when destroying a distribution associated with an `aws_cloudfront_continuous_deployment_policy` ([#33578](https://github.com/hashicorp/terraform-provider-aws/issues/33578))
