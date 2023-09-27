@@ -182,13 +182,9 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	input := guardduty.CreateDetectorInput{
+	input := &guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
 		Tags:   getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
-		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -199,11 +195,16 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Features = expandFeaturesConfigurations(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
-	output, err := conn.CreateDetectorWithContext(ctx, &input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating GuardDuty Detector failed: %s", err)
+	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
+		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
+
+	output, err := conn.CreateDetectorWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Detector: %s", err)
+	}
+
 	d.SetId(aws.StringValue(output.DetectorId))
 
 	return append(diags, resourceDetectorRead(ctx, d, meta)...)
@@ -213,21 +214,19 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	input := guardduty.GetDetectorInput{
-		DetectorId: aws.String(d.Id()),
+	gdo, err := FindDetectorByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
-	gdo, err := conn.GetDetectorWithContext(ctx, &input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Reading GuardDuty Detector '%s' failed: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
+	d.Set("account_id", meta.(*conns.AWSClient).AccountID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -237,8 +236,6 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}.String()
 	d.Set("arn", arn)
 
-	d.Set("account_id", meta.(*conns.AWSClient).AccountID)
-
 	if gdo.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
@@ -246,7 +243,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("datasources", nil)
 	}
-
+	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	if gdo.Features != nil {
 		if err := d.Set("feature", flattenFeaturesConfigurationsResult(gdo.Features)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting feature: %s", err)
@@ -254,8 +251,6 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("feature", nil)
 	}
-
-	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
 	setTagsOut(ctx, gdo.Tags)
@@ -268,7 +263,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := guardduty.UpdateDetectorInput{
+		input := &guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
 			FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
@@ -282,8 +277,8 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Features = expandFeaturesConfigurations(d.Get("feature").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
-		_, err := conn.UpdateDetectorWithContext(ctx, &input)
+		_, err := conn.UpdateDetectorWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
 		}
@@ -296,26 +291,15 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	input := &guardduty.DeleteDetectorInput{
-		DetectorId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting GuardDuty Detector: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, membershipPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDetectorWithContext(ctx, &guardduty.DeleteDetectorInput{
+			DetectorId: aws.String(d.Id()),
+		})
+	}, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members")
 
-	err := retry.RetryContext(ctx, membershipPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteDetectorWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDetectorWithContext(ctx, input)
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return diags
 	}
 
 	if err != nil {
@@ -651,6 +635,28 @@ func flattenFeaturesAdditionalConfigurationsResult(detectorAdditionalFeatureConf
 	return result
 }
 
+func FindDetectorByID(ctx context.Context, conn *guardduty.GuardDuty, id string) (*guardduty.GetDetectorOutput, error) {
+	input := &guardduty.GetDetectorInput{
+		DetectorId: aws.String(id),
+	}
+
+	output, err := conn.GetDetectorWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// FindDetector returns the ID of the current account's active GuardDuty detector.
 func FindDetector(ctx context.Context, conn *guardduty.GuardDuty) (*string, error) {
 	output, err := findDetectors(ctx, conn)
 
