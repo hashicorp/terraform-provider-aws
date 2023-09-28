@@ -417,5 +417,11 @@ resource "aws_s3_object" "test" {
     Name = %[2]q
   }
 }
+
+# Ensure that we can GET throught the bucket.
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
 `, bucketName, multiRegionAccessPointName)
 }
