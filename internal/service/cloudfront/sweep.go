@@ -160,23 +160,24 @@ func sweepCachePolicies(region string) error {
 }
 
 func sweepDistributions(region string) error {
-	// sweep:
+	var result *multierror.Error
+
 	// 1. Production Distributions
 	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
 	// 2. Continuous Deployment Policies
 	if err := sweepContinuousDeploymentPolicies(region); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
 	// 3. Staging Distributions
 	if err := sweepDistributionsByProductionStaging(region, true); err != nil {
-		log.Printf("[WARN] %s", err)
+		result = multierror.Append(result, err)
 	}
 
-	return nil
+	return result.ErrorOrNil()
 }
 
 func sweepDistributionsByProductionStaging(region string, staging bool) error {
@@ -239,7 +240,6 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
 	}
@@ -257,12 +257,14 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
 
 	log.Printf("[INFO] Sweeping continuous deployment policies")
+	var result *multierror.Error
 
 	// ListContinuousDeploymentPolicies does not have a paginator
 	for {
 		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
 		if err != nil {
 			log.Printf("[WARN] %s", err)
+			result = multierror.Append(result, err)
 			break
 		}
 
@@ -272,7 +274,9 @@ func sweepContinuousDeploymentPolicies(region string) error {
 		}
 
 		for _, cdp := range output.ContinuousDeploymentPolicyList.Items {
-			DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id))
+			if err := DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id)); err != nil {
+				result = multierror.Append(result, err)
+			}
 		}
 
 		if output.ContinuousDeploymentPolicyList.NextMarker == nil {
@@ -282,7 +286,7 @@ func sweepContinuousDeploymentPolicies(region string) error {
 		input.Marker = output.ContinuousDeploymentPolicyList.NextMarker
 	}
 
-	return nil
+	return result.ErrorOrNil()
 }
 
 func sweepFunctions(region string) error {
