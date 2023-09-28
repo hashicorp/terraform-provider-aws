@@ -49,7 +49,7 @@ import (
 const (
 	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
-	ResNameIamRole = "IamRole"
+	ResNameIamRole = "IAM Role"
 )
 
 // TODO: finish this how does this work?
@@ -73,16 +73,6 @@ type resourceIamRole struct {
 func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_iam_role"
 }
-
-// Type:                  schema.TypeString,
-// Required:              true,
-// ValidateFunc:          validation.StringIsJSON,
-// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-// DiffSuppressOnRefresh: true,
-// StateFunc: func(v interface{}) string {
-// json, _ := structure.NormalizeJsonString(v)
-// return json
-// },
 
 // TODO: Update this
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -200,7 +190,8 @@ type resourceIamRoleData struct {
     Path types.String `tfsdk:"path"`
     PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
     UniqueId types.String `tfsdk:"unique_id"`
-    // TODO: tags???
+	Tags                       types.Map      `tfsdk:"tags"`
+	TagsAll                    types.Map      `tfsdk:"tags_all"`
 }
 
 // TODO: Finish this
@@ -287,10 +278,33 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
     // TODO: do something with this?
     // some resources have been created but not all attributes
 	// d.SetId(roleName)
+	// state := plan
+    // // TODO: do we need this?
+	// // state.refreshFromOutput(ctx, out)
+	// resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
-    // last steps
+    // For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := roleCreateTags(ctx, conn, name, tags)
+
+        // TODO: read errors or something
+		// If default tags only, continue. Otherwise, error.
+		// if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			// return append(diags, resourceRoleRead(ctx, d, meta)...)
+		// }
+
+		if err != nil {
+            resp.Diagnostics.AddError(
+                create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameIamRole), name, nil),
+                err.Error(),
+            )
+            return
+		}
+	}
+
+    // last steps?
 	state := plan
-    // TODO: do we need this?
+    // TODO: do we need something?this?
 	// state.refreshFromOutput(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
