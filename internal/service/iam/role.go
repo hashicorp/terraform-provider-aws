@@ -33,12 +33,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -139,7 +138,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
@@ -152,7 +151,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
@@ -164,7 +163,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"path": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
@@ -220,6 +219,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, plan.AssumeRolePolicy.String(), nil),
 			errors.New(fmt.Sprintf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)).Error(),
         )
+        return
 	}
 
 	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
@@ -243,7 +243,56 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	output, err := retryCreateRole(ctx, conn, input)
-	return
+
+    // TODO: So this needs tags... do we need on resourceIamRoleData?
+    // if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		// input.Tags = nil
+
+		// output, err = retryCreateRole(ctx, conn, input)
+	// }
+
+    if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+            err.Error(),
+        )
+        return
+	}
+
+    roleName := aws.StringValue(output.Role.RoleName)
+
+    // TODO: has to figure this out because typing of inline policies
+    // if !plan.InlinePolicy.IsNull() && len(plan.InlinePolicy.Elements()) > 0 {
+		// policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
+		// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
+            // resp.Diagnostics.AddError(
+                // create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+                // err.Error(),
+            // )
+            // return
+		// }
+	// }
+
+	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
+		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
+		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
+            resp.Diagnostics.AddError(
+                create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+                err.Error(),
+            )
+            return
+		}
+	}
+
+    // TODO: do something with this?
+    // some resources have been created but not all attributes
+	// d.SetId(roleName)
+
+    // last steps
+	state := plan
+    // TODO: do we need this?
+	// state.refreshFromOutput(ctx, out)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -936,8 +985,8 @@ func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInp
 	return errs.ErrorOrNil()
 }
 
-func addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+func (r resourceIamRole) addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string) error {
+	conn := r.Meta().IAMConn(ctx)
 
 	var errs *multierror.Error
 	for _, arn := range policies {
