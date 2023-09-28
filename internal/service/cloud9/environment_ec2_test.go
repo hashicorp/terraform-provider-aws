@@ -63,6 +63,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	imageID := "ubuntu-22.04-x86_64"
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,17 +73,17 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentEC2Config_allFields(rName, name1, description1),
+				Config: testAccEnvironmentEC2Config_allFields(rName, name1, description1, imageID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "automatic_stop_time_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
-					resource.TestCheckResourceAttr(resourceName, "image_id", "amazonlinux-2-x86_64"),
+					resource.TestCheckResourceAttr(resourceName, "image_id", imageID),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "aws_iam_user.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
 			},
@@ -93,7 +94,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"automatic_stop_time_minutes", "image_id", "instance_type", "subnet_id"},
 			},
 			{
-				Config: testAccEnvironmentEC2Config_allFields(rName, name2, description2),
+				Config: testAccEnvironmentEC2Config_allFields(rName, name2, description2, imageID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
@@ -228,26 +229,8 @@ func testAccCheckEnvironmentEC2Destroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccEnvironmentEC2BaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccEnvironmentEC2Config_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -265,40 +248,40 @@ resource "aws_route" "test" {
 }
 
 func testAccEnvironmentEC2Config_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentEC2Config_base(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
 }
 `, rName))
 }
 
-func testAccEnvironmentEC2Config_allFields(rName, name, description string) string {
-	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
+func testAccEnvironmentEC2Config_allFields(rName, name, description, imageID string) string {
+	return acctest.ConfigCompose(testAccEnvironmentEC2Config_base(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   automatic_stop_time_minutes = 60
   description                 = %[2]q
   instance_type               = "t2.micro"
   name                        = %[1]q
   owner_arn                   = aws_iam_user.test.arn
-  subnet_id                   = aws_subnet.test.id
+  subnet_id                   = aws_subnet.test[0].id
   connection_type             = "CONNECT_SSH"
-  image_id                    = "amazonlinux-2-x86_64"
+  image_id                    = %[4]q
 }
 
 resource "aws_iam_user" "test" {
   name = %[3]q
 }
-`, name, description, rName))
+`, name, description, rName, imageID))
 }
 
 func testAccEnvironmentEC2Config_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentEC2Config_base(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
     %[2]q = %[3]q
@@ -308,11 +291,11 @@ resource "aws_cloud9_environment_ec2" "test" {
 }
 
 func testAccEnvironmentEC2Config_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentEC2Config_base(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
     %[2]q = %[3]q
