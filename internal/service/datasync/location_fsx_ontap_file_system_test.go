@@ -128,10 +128,11 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"protocol.0.smb.0.password"}, // Not returned from API.
+				ImportStateIdFunc:       testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
