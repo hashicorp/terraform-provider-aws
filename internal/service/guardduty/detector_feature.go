@@ -163,54 +163,6 @@ func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.GuardD
 	}))
 }
 
-func expandDetectorFeatureConfiguration(tfMap map[string]interface{}) *guardduty.DetectorFeatureConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &guardduty.DetectorFeatureConfiguration{}
-
-	if v, ok := tfMap["additional_configuration"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v)
-	}
-
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		apiObject.Name = aws.String(v)
-	}
-
-	if v, ok := tfMap["status"].(string); ok && v != "" {
-		apiObject.Status = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandDetectorFeatureConfigurations(tfList []interface{}) []*guardduty.DetectorFeatureConfiguration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*guardduty.DetectorFeatureConfiguration
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandDetectorFeatureConfiguration(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
 func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) *guardduty.DetectorAdditionalConfiguration {
 	if tfMap == nil {
 		return nil

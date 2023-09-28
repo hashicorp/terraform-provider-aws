@@ -20,56 +20,54 @@ func DataSourceDetector() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"finding_publishing_frequency": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"features": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"enable": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"additional_configuration": {
-							Optional: true,
 							Computed: true,
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Computed: true,
 									},
-									"enable": {
-										Type:     schema.TypeBool,
-										Required: true,
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
 						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
+			},
+			"finding_publishing_frequency": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"service_role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
