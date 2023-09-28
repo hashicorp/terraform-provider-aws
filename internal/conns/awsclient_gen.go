@@ -19,6 +19,7 @@ import (
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -496,6 +497,10 @@ func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.
 
 func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
 	return errs.Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB))
+}
+
+func (c *AWSClient) DynamoDBClient(ctx context.Context) *dynamodb_sdkv2.Client {
+	return errs.Must(client[*dynamodb_sdkv2.Client](ctx, c, names.DynamoDB))
 }
 
 func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {

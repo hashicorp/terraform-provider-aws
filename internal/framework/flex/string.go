@@ -22,6 +22,14 @@ func StringFromFramework(ctx context.Context, v types.String) *string {
 	return output
 }
 
+func StringTypeFromFramework[T ~string](ctx context.Context, v types.String) T {
+	var output T
+
+	panicOnError(Expand(ctx, v, &output))
+
+	return output
+}
+
 // StringFromFramework converts a single Framework String value to a string pointer slice.
 // A null String is converted to a nil slice.
 func StringSliceFromFramework(ctx context.Context, v types.String) []*string {
