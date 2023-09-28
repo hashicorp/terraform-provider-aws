@@ -93,6 +93,76 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 	})
 }
 
+func testAccDetectorFeature_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource1Name := "aws_guardduty_detector_feature.test1"
+	resource2Name := "aws_guardduty_detector_feature.test2"
+	resource3Name := "aws_guardduty_detector_feature.test3"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_multiple("ENABLED", "DISABLED", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, "status", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDetectorFeatureConfig_multiple("DISABLED", "ENABLED", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, "status", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDetectorFeatureConfig_multiple("DISABLED", "DISABLED", "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, "status", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDetectorFeatureExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -139,4 +209,30 @@ resource "aws_guardduty_detector_feature" "test" {
   }
 }
 `, featureStatus, additionalConfigurationStatus)
+}
+
+func testAccDetectorFeatureConfig_multiple(status1, status2, status3 string) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+
+resource "aws_guardduty_detector_feature" "test1" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "EBS_MALWARE_PROTECTION"
+  status      = %[1]q
+}
+
+resource "aws_guardduty_detector_feature" "test2" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "LAMBDA_NETWORK_LOGS"
+  status      = %[2]q
+}
+
+resource "aws_guardduty_detector_feature" "test3" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "S3_DATA_EVENTS"
+  status      = %[3]q
+}
+`, status1, status2, status3)
 }
