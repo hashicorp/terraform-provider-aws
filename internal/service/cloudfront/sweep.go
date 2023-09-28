@@ -162,7 +162,6 @@ func sweepCachePolicies(region string) error {
 func sweepDistributions(region string) error {
 	var result *multierror.Error
 
-	// sweep:
 	// 1. Production Distributions
 	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
 		result = multierror.Append(result, err)
@@ -241,7 +240,6 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
 	}
@@ -258,29 +256,37 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
 
+	log.Printf("[INFO] Sweeping continuous deployment policies")
+	var result *multierror.Error
+
 	// ListContinuousDeploymentPolicies does not have a paginator
 	for {
 		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
 		if err != nil {
 			log.Printf("[WARN] %s", err)
+			result = multierror.Append(result, err)
 			break
 		}
 
-		if output == nil || output.ContinuousDeploymentPolicyList == nil || len(output.ContinuousDeploymentPolicyList.Items) == 0 {
+		if output == nil || output.ContinuousDeploymentPolicyList == nil {
+			log.Printf("[WARN] CloudFront ListContinuousDeploymentPolicies empty response")
 			break
 		}
 
 		for _, cdp := range output.ContinuousDeploymentPolicyList.Items {
-			DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id))
+			if err := DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id)); err != nil {
+				result = multierror.Append(result, err)
+			}
 		}
 
 		if output.ContinuousDeploymentPolicyList.NextMarker == nil {
 			break
 		}
+
 		input.Marker = output.ContinuousDeploymentPolicyList.NextMarker
 	}
 
-	return nil
+	return result.ErrorOrNil()
 }
 
 func sweepFunctions(region string) error {
