@@ -3,49 +3,16 @@ subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_detector"
 description: |-
-  Provides a resource to manage a GuardDuty detector
+  Provides a resource to manage an Amazon GuardDuty detector
 ---
 
 # Resource: aws_guardduty_detector
 
-Provides a resource to manage a GuardDuty detector.
+Provides a resource to manage an Amazon GuardDuty detector.
 
 ~> **NOTE:** Deleting this resource is equivalent to "disabling" GuardDuty for an AWS region, which removes all existing findings. You can set the `enable` attribute to `false` to instead "suspend" monitoring and feedback reporting while keeping existing data. See the [Suspending or Disabling Amazon GuardDuty documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_suspend-disable.html) for more information.
 
 ## Example Usage
-
-```terraform
-resource "aws_guardduty_detector" "MyDetector" {
-  enable = true
-
-  feature {
-    name   = "S3_DATA_EVENTS"
-    enable = true
-  }
-
-  feature {
-    name   = "EKS_AUDIT_LOGS"
-    enable = false
-  }
-
-  feature {
-    name   = "EBS_MALWARE_PROTECTION"
-    enable = true
-  }
-
-  feature {
-    name   = "EKS_RUNTIME_MONITORING"
-    enable = true
-
-    aditional_configuration {
-      name   = "EKS_ADDON_MANAGEMENT"
-      enable = true
-    }
-  }
-}
-```
-
-### Deprecated use of `datasources`
 
 ```terraform
 resource "aws_guardduty_detector" "MyDetector" {
@@ -77,8 +44,7 @@ This resource supports the following arguments:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
 * `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
-* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of `feature` blocks.
-* `feature` - (Optional) Describes which features will be enabled for the detector. See [Features](#features) below for more details.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_detector_feature` resources](guardduty_detector_feature.html).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Data Sources
@@ -135,21 +101,6 @@ The `ebs_volumes` block supports the following:
 
 * `enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) as data source for the detector.
   Defaults to `true`.
-
-### Features
-
-The `feature` block supports the following:
-
-* `name` - (Required) Name of the feature to configure. See the [AWS GuardDuty documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation) for the allowed feature names.
-* `enable` - (Required) If true, enables the feature, false to disable the feature.
-* `additional_configuration` - (Optional) Additional feature configuration block See [below](#additional-configuration).
-
-### Additional Configuration
-
-The `additional_configuration` block supports the following:
-
-* `name` - (Required) Name of the additional feature configuration.
-* `enable` - (Required) If true, enables the additional feature configuration, false to disable the feature.
 
 ## Attribute Reference
 
