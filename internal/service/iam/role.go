@@ -229,6 +229,20 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		RoleName:                 aws.String(name),
 		Tags:                     getTagsIn(ctx),
 	}
+
+    if !plan.Description.IsNull() {
+		input.Description = aws.String(plan.Description.ValueString())
+	}
+
+	if !plan.MaxSessionDuration.IsNull() {
+		input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
+	}
+
+	if !plan.PermissionsBoundary.IsNull() {
+		input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
+	}
+
+	output, err := retryCreateRole(ctx, conn, input)
 	return
 }
 
