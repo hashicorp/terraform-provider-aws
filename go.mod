@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.17
+	github.com/aws/aws-sdk-go v1.45.18
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.42
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/signer v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.17.0
