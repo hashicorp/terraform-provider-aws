@@ -37,8 +37,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,7 +49,7 @@ import (
 const (
 	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
-	ResNameIamRole = "IAM Role"
+	ResNameIamRole       = "IAM Role"
 )
 
 // TODO: finish this how does this work?
@@ -176,22 +176,22 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-    ARN types.String `tfsdk:"arn"`
-    AssumeRolePolicy types.String `tfsdk:"assume_role_policy"`
-    CreateDate types.String `tfsdk:"create_date"`
-    Description types.String `tfsdk:"description"`
-    ForceDetachPolicies types.Bool `tfsdk:"force_detach_policies"`
-    // TODO: still have to think this one out
-    InlinePolicy types.Map `tfsdk:"inline_policy"`
-    ManagedPolicyArns types.Set `tfsdk:"managed_policy_arns"`
-    MaxSessionDuration types.Int64 `tfsdk:"max_session_duration"`
-    Name types.String `tfsdk:"name"`
-    NamePrefix types.String `tfsdk:"name_prefix"`
-    Path types.String `tfsdk:"path"`
-    PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
-    UniqueId types.String `tfsdk:"unique_id"`
-	Tags                       types.Map      `tfsdk:"tags"`
-	TagsAll                    types.Map      `tfsdk:"tags_all"`
+	ARN                 types.String `tfsdk:"arn"`
+	AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
+	CreateDate          types.String `tfsdk:"create_date"`
+	Description         types.String `tfsdk:"description"`
+	ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
+	// TODO: still have to think this one out
+	InlinePolicy        types.Map    `tfsdk:"inline_policy"`
+	ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+	MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
+	Name                types.String `tfsdk:"name"`
+	NamePrefix          types.String `tfsdk:"name_prefix"`
+	Path                types.String `tfsdk:"path"`
+	PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
+	UniqueId            types.String `tfsdk:"unique_id"`
+	Tags                types.Map    `tfsdk:"tags"`
+	TagsAll             types.Map    `tfsdk:"tags_all"`
 }
 
 // TODO: Finish this
@@ -205,12 +205,12 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
 
-    if err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, plan.AssumeRolePolicy.String(), nil),
 			errors.New(fmt.Sprintf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)).Error(),
-        )
-        return
+		)
+		return
 	}
 
 	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
@@ -221,7 +221,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		Tags:                     getTagsIn(ctx),
 	}
 
-    if !plan.Description.IsNull() {
+	if !plan.Description.IsNull() {
 		input.Description = aws.String(plan.Description.ValueString())
 	}
 
@@ -235,76 +235,76 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := retryCreateRole(ctx, conn, input)
 
-    // TODO: So this needs tags... do we need on resourceIamRoleData?
-    // if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-		// input.Tags = nil
+	// TODO: So this needs tags... do we need on resourceIamRoleData?
+	// if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	// input.Tags = nil
 
-		// output, err = retryCreateRole(ctx, conn, input)
+	// output, err = retryCreateRole(ctx, conn, input)
 	// }
 
-    if err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-            err.Error(),
-        )
-        return
+			err.Error(),
+		)
+		return
 	}
 
-    roleName := aws.StringValue(output.Role.RoleName)
+	roleName := aws.StringValue(output.Role.RoleName)
 
-    // TODO: has to figure this out because typing of inline policies
-    // if !plan.InlinePolicy.IsNull() && len(plan.InlinePolicy.Elements()) > 0 {
-		// policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
-		// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
-            // resp.Diagnostics.AddError(
-                // create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-                // err.Error(),
-            // )
-            // return
-		// }
+	// TODO: has to figure this out because typing of inline policies
+	// if !plan.InlinePolicy.IsNull() && len(plan.InlinePolicy.Elements()) > 0 {
+	// policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
+	// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
+	// resp.Diagnostics.AddError(
+	// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+	// err.Error(),
+	// )
+	// return
+	// }
 	// }
 
 	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
 		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
 		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
-            resp.Diagnostics.AddError(
-                create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-                err.Error(),
-            )
-            return
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-    // TODO: do something with this?
-    // some resources have been created but not all attributes
+	// TODO: do something with this?
+	// some resources have been created but not all attributes
 	// d.SetId(roleName)
 	// state := plan
-    // // TODO: do we need this?
+	// // TODO: do we need this?
 	// // state.refreshFromOutput(ctx, out)
 	// resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
-    // For partitions not supporting tag-on-create, attempt tag after create.
+	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := roleCreateTags(ctx, conn, name, tags)
 
-        // TODO: read errors or something
+		// TODO: read errors or something
 		// If default tags only, continue. Otherwise, error.
 		// if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			// return append(diags, resourceRoleRead(ctx, d, meta)...)
+		// return append(diags, resourceRoleRead(ctx, d, meta)...)
 		// }
 
 		if err != nil {
-            resp.Diagnostics.AddError(
-                create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameIamRole), name, nil),
-                err.Error(),
-            )
-            return
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameIamRole), name, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-    // last steps?
+	// last steps?
 	state := plan
-    // TODO: do we need something?this?
+	// TODO: do we need something?this?
 	// state.refreshFromOutput(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
