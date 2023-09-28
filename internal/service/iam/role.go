@@ -50,6 +50,7 @@ import (
 const (
 	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
+	ResNameIamRole = "IamRole"
 )
 
 // TODO: finish this how does this work?
@@ -186,30 +187,48 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-	// Uni
-	// ExportOnly           types.List     `tfsdk:"export_only"`
-	// ExportTaskIdentifier types.String   `tfsdk:"export_task_identifier"`
-	// FailureCause         types.String   `tfsdk:"failure_cause"`
-	// IAMRoleArn           types.String   `tfsdk:"iam_role_arn"`
-	// ID                   types.String   `tfsdk:"id"`
-	// KMSKeyID             types.String   `tfsdk:"kms_key_id"`
-	// PercentProgress      types.Int64    `tfsdk:"percent_progress"`
-	// S3BucketName         types.String   `tfsdk:"s3_bucket_name"`
-	// S3Prefix             types.String   `tfsdk:"s3_prefix"`
-	// SnapshotTime         types.String   `tfsdk:"snapshot_time"`
-	// SourceArn            types.String   `tfsdk:"source_arn"`
-	// SourceType           types.String   `tfsdk:"source_type"`
-	// Status               types.String   `tfsdk:"status"`
-	// TaskEndTime          types.String   `tfsdk:"task_end_time"`
-	// TaskStartTime        types.String   `tfsdk:"task_start_time"`
-	// Timeouts             timeouts.Value `tfsdk:"timeouts"`
-	// WarningMessage       types.String   `tfsdk:"warning_message"`
+    ARN types.String `tfsdk:"arn"`
+    AssumeRolePolicy types.String `tfsdk:"assume_role_policy"`
+    CreateDate types.String `tfsdk:"create_date"`
+    Description types.String `tfsdk:"description"`
+    ForceDetachPolicies types.Bool `tfsdk:"force_detach_policies"`
+    // TODO: still have to think this one out
+    InlinePolicy types.Map `tfsdk:"inline_policy"`
+    ManagedPolicyArns types.Set `tfsdk:"managed_policy_arns"`
+    MaxSessionDuration types.Int64 `tfsdk:"max_session_duration"`
+    Name types.String `tfsdk:"name"`
+    NamePrefix types.String `tfsdk:"name_prefix"`
+    Path types.String `tfsdk:"path"`
+    PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
+    UniqueId types.String `tfsdk:"unique_id"`
+    // TODO: tags???
 }
 
 // TODO: Finish this
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().IAMConn(ctx)
-	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+
+	var plan resourceIamRoleData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
+
+    if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, plan.AssumeRolePolicy.String(), nil),
+			errors.New(fmt.Sprintf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)).Error(),
+        )
+	}
+
+	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+	input := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
+		Path:                     aws.String(plan.Path.ValueString()),
+		RoleName:                 aws.String(name),
+		Tags:                     getTagsIn(ctx),
+	}
 	return
 }
 
