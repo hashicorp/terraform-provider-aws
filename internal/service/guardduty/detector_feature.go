@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
@@ -83,12 +84,47 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]interface{}))
 	}
 
-	input := &guardduty.UpdateDetectorInput{
-		DetectorId: aws.String(detectorID),
-		Features:   []*guardduty.DetectorFeatureConfiguration{feature},
+	// Detector features must be updated as a full set, so use a mutex to ensure
+	// that multiple features being updated concurrently don't trample on each other.
+	conns.GlobalMutexKV.Lock(detectorID)
+	defer conns.GlobalMutexKV.Unlock(detectorID)
+
+	output, err := FindDetectorByID(ctx, conn, detectorID)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
 	}
 
-	_, err := conn.UpdateDetectorWithContext(ctx, input)
+	// Limit to those features supported on input, removing our feature.
+	// Also need to transform from output to input types.
+	features := tfslices.ApplyToAll(tfslices.Filter(output.Features, func(v *guardduty.DetectorFeatureConfigurationResult) bool {
+		return slices.Contains(tfslices.RemoveAll(guardduty.DetectorFeature_Values(), name), aws.StringValue(v.Name))
+	}), func(v *guardduty.DetectorFeatureConfigurationResult) *guardduty.DetectorFeatureConfiguration {
+		var additionalConfiguration []*guardduty.DetectorAdditionalConfiguration
+		if len(v.AdditionalConfiguration) > 0 {
+			additionalConfiguration = tfslices.ApplyToAll(v.AdditionalConfiguration, func(v *guardduty.DetectorAdditionalConfigurationResult) *guardduty.DetectorAdditionalConfiguration {
+				return &guardduty.DetectorAdditionalConfiguration{
+					Name:   v.Name,
+					Status: v.Status,
+				}
+			})
+		}
+
+		return &guardduty.DetectorFeatureConfiguration{
+			AdditionalConfiguration: additionalConfiguration,
+			Name:                    v.Name,
+			Status:                  v.Status,
+		}
+	})
+	// Append our feature.
+	features = append(features, feature)
+
+	input := &guardduty.UpdateDetectorInput{
+		DetectorId: aws.String(detectorID),
+		Features:   features,
+	}
+
+	_, err = conn.UpdateDetectorWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s) Feature (%s): %s", detectorID, name, err)
