@@ -108,7 +108,11 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			// TODO: inline policy goes crazy, have to figure what this type should look like
 			// also read article again
-			"inline_policy": schema.MapAttribute{},
+			"inline_policy": schema.MapAttribute{
+                ElementType: types.StringType,
+                Optional: true,
+                // TODO: maybe some validation?
+            },
 			"managed_policy_arns": schema.SetAttribute{
 				Computed:    true,
 				Optional:    true,
@@ -194,7 +198,6 @@ type resourceIamRoleData struct {
 	TagsAll             types.Map    `tfsdk:"tags_all"`
 }
 
-// TODO: Finish this
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().IAMConn(ctx)
 
@@ -253,16 +256,18 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	roleName := aws.StringValue(output.Role.RoleName)
 
 	// TODO: has to figure this out because typing of inline policies
-	// if !plan.InlinePolicy.IsNull() && len(plan.InlinePolicy.Elements()) > 0 {
-	// policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
-	// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
-	// resp.Diagnostics.AddError(
-	// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-	// err.Error(),
-	// )
-	// return
-	// }
-	// }
+    if !plan.InlinePolicy.IsNull() && !plan.InlinePolicy.IsUnknown() {
+        inline_policies_map := make(map[string]string)
+        plan.InlinePolicy.ElementsAs(ctx, inline_policies_map, false)
+		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
+		if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				err.Error(),
+			)
+			return
+		}
+	}
 
 	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
 		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
@@ -955,12 +960,14 @@ func expandRoleInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.
 	return apiObject
 }
 
-func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutRolePolicyInput {
-	if len(tfList) == 0 {
+func expandRoleInlinePolicies(roleName string, tfmap map[string]string) []*iam.PutRolePolicyInput {
+	if len(tfmap) == 0 {
 		return nil
 	}
 
 	var apiObjects []*iam.PutRolePolicyInput
+
+    // TODO: Loop through map, update lower function
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
