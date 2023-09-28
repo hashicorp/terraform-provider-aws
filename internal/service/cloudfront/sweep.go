@@ -160,25 +160,23 @@ func sweepCachePolicies(region string) error {
 }
 
 func sweepDistributions(region string) error {
-	var result *multierror.Error
-
 	// sweep:
 	// 1. Production Distributions
 	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
-		result = multierror.Append(result, err)
+		log.Printf("[WARN] %s", err)
 	}
 
 	// 2. Continuous Deployment Policies
 	if err := sweepContinuousDeploymentPolicies(region); err != nil {
-		result = multierror.Append(result, err)
+		log.Printf("[WARN] %s", err)
 	}
 
 	// 3. Staging Distributions
 	if err := sweepDistributionsByProductionStaging(region, true); err != nil {
-		result = multierror.Append(result, err)
+		log.Printf("[WARN] %s", err)
 	}
 
-	return result.ErrorOrNil()
+	return nil
 }
 
 func sweepDistributionsByProductionStaging(region string, staging bool) error {
@@ -258,6 +256,8 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
 
+	log.Printf("[INFO] Sweeping continuous deployment policies")
+
 	// ListContinuousDeploymentPolicies does not have a paginator
 	for {
 		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
@@ -266,7 +266,8 @@ func sweepContinuousDeploymentPolicies(region string) error {
 			break
 		}
 
-		if output == nil || output.ContinuousDeploymentPolicyList == nil || len(output.ContinuousDeploymentPolicyList.Items) == 0 {
+		if output == nil || output.ContinuousDeploymentPolicyList == nil {
+			log.Printf("[WARN] CloudFront ListContinuousDeploymentPolicies empty response")
 			break
 		}
 
@@ -277,6 +278,7 @@ func sweepContinuousDeploymentPolicies(region string) error {
 		if output.ContinuousDeploymentPolicyList.NextMarker == nil {
 			break
 		}
+
 		input.Marker = output.ContinuousDeploymentPolicyList.NextMarker
 	}
 

@@ -1199,6 +1199,10 @@ func distributionRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, i
 		}
 
 		resp, err := conn.GetDistributionWithContext(ctx, params)
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			log.Printf("[WARN] Error retrieving CloudFront Distribution %q details: %s", id, err)
 			return nil, "", err
