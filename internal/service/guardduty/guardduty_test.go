@@ -28,6 +28,9 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
+		"DetectorFeature": {
+			"basic": testAccDetectorFeature_basic,
+		},
 		"Filter": {
 			"basic":      testAccFilter_basic,
 			"update":     testAccFilter_update,
