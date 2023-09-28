@@ -45,7 +45,7 @@ This resource supports the following arguments:
 The `additional_configuration` block supports the following:
 
 * `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`.
-* `status` - (Required) The status of the detector feature. Valid values: `ENABLED`, `DISABLED`.
+* `status` - (Required) The status of the additional configuration. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
