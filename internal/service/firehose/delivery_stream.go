@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -68,8 +69,6 @@ func ResourceDeliveryStream() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  MigrateState,
@@ -1030,19 +1029,27 @@ func ResourceDeliveryStream() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if destination := d.Get("destination").(string); destination == destinationTypeExtendedS3 {
+					if _, ok := d.GetOk("extended_s3_configuration"); !ok {
+						return fmt.Errorf("when destination is '%s', extended_s3_configuration is required", destination)
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
 func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	sn := d.Get("name").(string)
-
-	if err := validateSchema(d); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
-	}
-
-	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 	input := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
 		Tags:               getTagsIn(ctx),
@@ -1185,14 +1192,9 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	sn := d.Get("name").(string)
-
-	if err := validateSchema(d); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
-	}
-
-	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &firehose.UpdateDestinationInput{
@@ -3073,30 +3075,16 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 	return []map[string]interface{}{m}
 }
 
-func validateSchema(d *schema.ResourceData) error {
-	_, extendedS3Exists := d.GetOk("extended_s3_configuration")
-
-	if d.Get("destination").(string) == destinationTypeExtendedS3 {
-		if !extendedS3Exists {
-			return fmt.Errorf(
-				"when destination is 'extended_s3', extended_s3_configuration is required",
-			)
-		}
-	}
-
-	return nil
-}
-
 func isDeliveryStreamOptionDisabled(v interface{}) bool {
-	options := v.([]interface{})
-	if len(options) == 0 || options[0] == nil {
+	tfList := v.([]interface{})
+	if len(tfList) == 0 || tfList[0] == nil {
 		return true
 	}
-	optionMap := options[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	var enabled bool
 
-	if v, ok := optionMap["enabled"]; ok {
+	if v, ok := tfMap["enabled"]; ok {
 		enabled = v.(bool)
 	}
 
