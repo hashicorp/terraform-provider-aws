@@ -599,6 +599,24 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketACL_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketACLConfig_directoryBucket(bucketName, s3.BucketCannedACLPrivate),
+				ExpectError: regexache.MustCompile(`NotImplemented`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -809,4 +827,17 @@ resource "aws_s3_bucket_acl" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketACLConfig_directoryBucket(rName, acl string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_directory_bucket.test.id
+  acl    = %[1]q
+}
+`, acl))
 }
