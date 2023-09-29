@@ -1506,6 +1506,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)beanstalk"
     severity: WARNING
+  - id: bedrock-in-func-name
+    languages:
+      - go
+    message: Do not use "Bedrock" in func name inside bedrock package
+    paths:
+      include:
+        - internal/service/bedrock
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Bedrock"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrock-in-test-name
+    languages:
+      - go
+    message: Include "Bedrock" in test name
+    paths:
+      include:
+        - internal/service/bedrock/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBedrock"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrock-in-const-name
+    languages:
+      - go
+    message: Do not use "Bedrock" in const name inside bedrock package
+    paths:
+      include:
+        - internal/service/bedrock
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Bedrock"
+    severity: WARNING
+  - id: bedrock-in-var-name
+    languages:
+      - go
+    message: Do not use "Bedrock" in var name inside bedrock package
+    paths:
+      include:
+        - internal/service/bedrock
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Bedrock"
+    severity: WARNING
   - id: budgets-in-func-name
     languages:
       - go
@@ -3419,47 +3477,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccComputeOptimizer"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: computeoptimizer-in-const-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-    severity: WARNING
-  - id: computeoptimizer-in-var-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-    severity: WARNING
-  - id: configservice-in-func-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in func name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-            - pattern-not-regex: ^TestAcc.*
     severity: WARNING
