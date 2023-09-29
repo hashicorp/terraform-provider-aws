@@ -5,11 +5,12 @@ package servicequotas_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -29,11 +30,11 @@ const (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.ListServicesInput{}
 
-	_, err := conn.ListServicesWithContext(ctx, input)
+	_, err := conn.ListServices(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -46,15 +47,16 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 // nosemgrep:ci.servicequotas-in-func-name
 func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	_, err := conn.GetServiceQuotaWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
+	_, err := conn.GetServiceQuota(ctx, input)
+	var nsr *types.NoSuchResourceException
+	if errors.As(err, &nsr) {
 		t.Fatalf("The Service Quota (%s/%s) has never been set. This test can only be run with a quota that has previously been set. Please update the test to check a new quota.", serviceCode, quotaCode)
 	}
 	if err != nil {
@@ -63,31 +65,32 @@ func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string,
 }
 
 func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	_, err := conn.GetServiceQuotaWithContext(ctx, input)
+	_, err := conn.GetServiceQuota(ctx, input)
 	if err == nil {
 		t.Fatalf("The Service Quota (%s/%s) has been set. This test can only be run with a quota that has never been set. Please update the test to check a new quota.", serviceCode, quotaCode)
 	}
-	if !tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
+	var nsr *types.NoSuchResourceException
+	if !errors.As(err, &nsr) {
 		t.Fatalf("unexpected PreCheck error getting Service Quota (%s/%s) : %s", serviceCode, quotaCode, err)
 	}
 }
 
 func preCheckServiceQuotaHasUsageMetric(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	quota, err := conn.GetAWSDefaultServiceQuotaWithContext(ctx, input)
+	quota, err := conn.GetAWSDefaultServiceQuota(ctx, input)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error getting Service Quota (%s/%s) : %s", serviceCode, quotaCode, err)
 	}
