@@ -6,9 +6,9 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +34,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				Config: testAccDirectoryBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3beta2022a", regexp.MustCompile(fmt.Sprintf(`bucket/%s--.*-d-s3`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3beta2022a", regexache.MustCompile(fmt.Sprintf(`bucket/%s--.*-d-s3`, rName))),
 				),
 			},
 			{
