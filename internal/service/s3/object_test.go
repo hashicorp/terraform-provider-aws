@@ -1508,6 +1508,66 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_directoryBucket(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "acl"),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "content"),
+					resource.TestCheckNoResourceAttr(resourceName, "content_base64"),
+					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
+					resource.TestCheckNoResourceAttr(resourceName, "source"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -2311,4 +2371,17 @@ resource "aws_s3_object" "object" {
   key    = "/a/b//c///d/////e/"
 }
 `, rName)
+}
+
+func testAccObjectConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  key    = "test-key"
+}
+`)
 }
