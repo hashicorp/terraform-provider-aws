@@ -186,6 +186,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tf-object-test",
 		"tf-test",
 		"tftest.applicationversion",
+		"terraform-remote-s3-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
