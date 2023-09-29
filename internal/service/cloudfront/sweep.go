@@ -260,14 +260,17 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	// ListContinuousDeploymentPolicies does not have a paginator
 	for {
 		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Continuous Deployment Policy sweep for %s: %s", region, err)
+			return result.ErrorOrNil()
+		}
 		if err != nil {
-			log.Printf("[WARN] %s", err)
-			result = multierror.Append(result, err)
+			result = multierror.Append(result, fmt.Errorf("listing CloudFront Continuous Deployment Policies: %w", err))
 			break
 		}
 
 		if output == nil || output.ContinuousDeploymentPolicyList == nil {
-			log.Printf("[WARN] CloudFront ListContinuousDeploymentPolicies empty response")
+			log.Printf("[WARN] CloudFront Continuous Deployment Policies: empty response")
 			break
 		}
 
