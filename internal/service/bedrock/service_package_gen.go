@@ -30,6 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_bedrock_custom_models",
 		},
 		{
+			Factory:  DataSourceFoundationModel,
+			TypeName: "aws_bedrock_foundation_model",
+		},
+		{
 			Factory:  DataSourceFoundationModels,
 			TypeName: "aws_bedrock_foundation_models",
 		},
