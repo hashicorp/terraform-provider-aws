@@ -91,7 +91,10 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `*** TODO ***`),
+				),
 			},
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
@@ -103,7 +106,9 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
