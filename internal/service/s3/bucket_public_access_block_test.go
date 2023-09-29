@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -271,6 +272,24 @@ func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketPublicAccessBlockConfig_directoryBucket(name, "false", "false", "false", "false"),
+				ExpectError: regexache.MustCompile(`NotImplemented`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, config *s3.PublicAccessBlockConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -378,4 +397,21 @@ resource "aws_s3_bucket_public_access_block" "bucket" {
   restrict_public_buckets = %[5]q
 }
 `, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets)
+}
+
+func testAccBucketPublicAccessBlockConfig_directoryBucket(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+}
+
+resource "aws_s3_bucket_public_access_block" "bucket" {
+  bucket = aws_s3_directory_bucket.test.bucket
+
+  block_public_acls       = %[2]q
+  block_public_policy     = %[3]q
+  ignore_public_acls      = %[4]q
+  restrict_public_buckets = %[5]q
+}
+`, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets))
 }
