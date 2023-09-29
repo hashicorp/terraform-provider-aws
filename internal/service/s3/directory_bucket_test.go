@@ -109,10 +109,18 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 	}
 }
 
-func testAccDirectoryBucketConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = "%[1]s--usw2-az2-d-s3"
+func testAccDirectoryBucketConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+locals {
+  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}-d-s3"
 }
-`, rName)
+`, rName))
+}
+
+func testAccDirectoryBucketConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+}
+`)
 }
