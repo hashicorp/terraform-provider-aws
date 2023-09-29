@@ -18,19 +18,15 @@ FEATURES:
 * **New Resource:** `aws_dms_replication_config` ([#32908](https://github.com/hashicorp/terraform-provider-aws/issues/32908))
 * **New Resource:** `aws_lexv2models_bot` ([#33475](https://github.com/hashicorp/terraform-provider-aws/issues/33475))
 * **New Resource:** `aws_rds_custom_db_engine_version` ([#33285](https://github.com/hashicorp/terraform-provider-aws/issues/33285))
-* **New Resource:** `aws_vpclattice_service_network` ([#30482](https://github.com/hashicorp/terraform-provider-aws/issues/30482))
 
 ENHANCEMENTS:
 
-* data-source/aws_opensearch_domain: Add `off_peak_window_options` attribute ([#30965](https://github.com/hashicorp/terraform-provider-aws/issues/30965))
 * resource/aws_cloud9_environment_ec2: Add `ubuntu-22.04-x86_64` and `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64` as valid values for `image_id` ([#33662](https://github.com/hashicorp/terraform-provider-aws/issues/33662))
 * resource/aws_fsx_ontap_volume: Add `bypass_snaplock_enterprise_retention` argument and `snaplock_configuration` configuration block to support [SnapLock](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/snaplock.html) ([#32530](https://github.com/hashicorp/terraform-provider-aws/issues/32530))
 * resource/aws_fsx_ontap_volume: Add `copy_tags_to_backups` and `snapshot_policy` arguments ([#32530](https://github.com/hashicorp/terraform-provider-aws/issues/32530))
 * resource/aws_fsx_openzfs_volume: Add `delete_volume_options` argument ([#32530](https://github.com/hashicorp/terraform-provider-aws/issues/32530))
 * resource/aws_lightsail_bucket: Add `force_delete` argument ([#33586](https://github.com/hashicorp/terraform-provider-aws/issues/33586))
-* resource/aws_opensearch_domain: Add `off_peak_window_options` configuration block ([#30965](https://github.com/hashicorp/terraform-provider-aws/issues/30965))
 * resource/aws_opensearch_outbound_connection: Add `connection_properties`, `connection_mode` and `accept_connection` arguments ([#32990](https://github.com/hashicorp/terraform-provider-aws/issues/32990))
-* resource/aws_schemas_schema: Add `JSONSchemaDraft4` schema type support ([#33442](https://github.com/hashicorp/terraform-provider-aws/issues/33442))
 * resource/aws_wafv2_rule_group: Add `rate_based_statement.custom_key` configuration block ([#33594](https://github.com/hashicorp/terraform-provider-aws/issues/33594))
 * resource/aws_wafv2_web_acl: Add `rate_based_statement.custom_key` configuration block ([#33594](https://github.com/hashicorp/terraform-provider-aws/issues/33594))
 
