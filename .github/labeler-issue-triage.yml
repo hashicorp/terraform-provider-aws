@@ -87,6 +87,8 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bedrock:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:

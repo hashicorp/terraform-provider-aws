@@ -31,6 +31,7 @@ variable "service_labels" {
     "backup",
     "backupgateway",
     "batch",
+    "bedrock",
     "billingconductor",
     "braket",
     "budgets",

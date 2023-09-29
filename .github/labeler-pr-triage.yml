@@ -155,6 +155,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bedrock:
+  - 'internal/service/bedrock/**/*'
+  - 'website/**/bedrock_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
