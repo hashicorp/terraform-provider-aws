@@ -93,7 +93,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(r.RegionalARN("s3beta2022a", data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
 	data.ID = data.Bucket
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -126,7 +126,7 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.RegionalARN("s3beta2022a", data.ID.ValueString()))
+	data.ARN = types.StringValue(r.arn(data.ID.ValueString()))
 	data.Bucket = data.ID
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -191,6 +191,11 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 
 		return
 	}
+}
+
+// arn returns the ARN of the specified bucket.
+func (r *resourceDirectoryBucket) arn(bucket string) string {
+	return r.RegionalARN("s3beta2022a", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type resourceDirectoryBucketData struct {

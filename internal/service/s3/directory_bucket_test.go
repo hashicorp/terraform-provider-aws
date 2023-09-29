@@ -34,7 +34,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				Config: testAccDirectoryBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3beta2022a", regexp.MustCompile(fmt.Sprintf(`%s--.*-d-s3`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3beta2022a", regexp.MustCompile(fmt.Sprintf(`bucket/%s--.*-d-s3`, rName))),
 				),
 			},
 			{
