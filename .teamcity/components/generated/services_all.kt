@@ -24,6 +24,7 @@ val services = mapOf(
     "autoscalingplans" to ServiceSpec("Auto Scaling Plans"),
     "backup" to ServiceSpec("Backup"),
     "batch" to ServiceSpec("Batch", vpcLock = true),
+    "bedrock" to ServiceSpec("Amazon Bedrock"),
     "budgets" to ServiceSpec("Web Services Budgets"),
     "ce" to ServiceSpec("CE (Cost Explorer)"),
     "chime" to ServiceSpec("Chime"),
