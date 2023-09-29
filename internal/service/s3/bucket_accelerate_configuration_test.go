@@ -181,7 +181,7 @@ func TestAccS3BucketAccelerateConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAccelerateConfigurationConfig_directoryBucket(bucketName, string(types.BucketAccelerateStatusEnabled)),
-				ExpectError: regexache.MustCompile(`floop`),
+				ExpectError: regexache.MustCompile(`NotImplemented`),
 			},
 		},
 	})
