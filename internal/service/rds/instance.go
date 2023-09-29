@@ -2179,6 +2179,14 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("storage_throughput") {
 		needsModify = true
 		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
+
+		if input.Iops == nil {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
+
+		if input.AllocatedStorage == nil {
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		}
 	}
 
 	if d.HasChange("storage_type") {
@@ -2208,6 +2216,10 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
 			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
 				return true, err
 			}
 

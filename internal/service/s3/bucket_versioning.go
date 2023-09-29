@@ -103,6 +103,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+
 	versioningConfiguration := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{}))
 
 	// To support migration from v3 to v4 of the provider, we need to support
@@ -135,6 +136,8 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	// Waiting for the versioning configuration to appear is done in resource Read.
+
 	return resourceBucketVersioningRead(ctx, d, meta)
 }
 
@@ -147,6 +150,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -154,7 +158,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("getting S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -234,6 +238,8 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return diag.Errorf("deleting S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
+
+	// Don't wait for the versioning configuration to disappear as it still exists after suspension.
 
 	return nil
 }
@@ -329,14 +335,11 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	const (
-		timeout = 1 * time.Minute
-	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   timeout,
+		Timeout:                   s3BucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
 		Delay:                     1 * time.Second,

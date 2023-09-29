@@ -680,7 +680,7 @@ service/marketplacemetering:
   - 'website/**/marketplacemetering_*'
 service/mediaconnect:
   - 'internal/service/mediaconnect/**/*'
-  - 'website/**/media_connect_*'
+  - 'website/**/mediaconnect_*'
 service/mediaconvert:
   - 'internal/service/mediaconvert/**/*'
   - 'website/**/media_convert_*'

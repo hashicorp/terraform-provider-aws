@@ -939,6 +939,101 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
 					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
+				"custom_key": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"forwarded_ip": emptySchema(),
+							"http_method":  emptySchema(),
+							"header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"ip": emptySchema(),
+							"label_namespace": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"namespace": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+											),
+										},
+									},
+								},
+							},
+							"query_argument": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"query_string": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+							"uri_path": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"text_transformation": textTransformationSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 				"limit": {
 					Type:         schema.TypeInt,

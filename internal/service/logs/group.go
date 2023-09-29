@@ -6,6 +6,7 @@ package logs
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -218,9 +219,11 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
-	_, err := conn.DeleteLogGroupWithContext(ctx, &cloudwatchlogs.DeleteLogGroupInput{
-		LogGroupName: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.DeleteLogGroupWithContext(ctx, &cloudwatchlogs.DeleteLogGroupInput{
+			LogGroupName: aws.String(d.Id()),
+		})
+	}, cloudwatchlogs.ErrCodeOperationAbortedException, "try again")
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 		return nil
