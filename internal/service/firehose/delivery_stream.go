@@ -37,208 +37,6 @@ const (
 	destinationTypeSplunk        = "splunk"
 )
 
-func cloudWatchLoggingOptionsSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				"log_group_name": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
-				"log_stream_name": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
-			},
-		},
-	}
-}
-
-func dynamicPartitioningConfigurationSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		ForceNew: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-					ForceNew: true,
-				},
-				"retry_duration": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      300,
-					ValidateFunc: validation.IntBetween(0, 7200),
-				},
-			},
-		},
-	}
-}
-
-func requestConfigurationSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"common_attributes": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"value": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-						},
-					},
-				},
-				"content_encoding": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      firehose.ContentEncodingNone,
-					ValidateFunc: validation.StringInSlice(firehose.ContentEncoding_Values(), false),
-				},
-			},
-		},
-	}
-}
-
-func s3BackupConfigurationSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		Elem:     s3ConfigurationElem(),
-	}
-}
-
-func s3ConfigurationSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Required: true,
-		Elem:     s3ConfigurationElem(),
-	}
-}
-
-func s3ConfigurationElem() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"bucket_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"buffering_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      300,
-				ValidateFunc: validation.IntAtLeast(60),
-			},
-			"buffering_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      5,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-			"compression_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      firehose.CompressionFormatUncompressed,
-				ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
-			},
-			"error_output_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-		},
-	}
-}
-
-func processingConfigurationSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:             schema.TypeList,
-		Optional:         true,
-		MaxItems:         1,
-		DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
-				},
-				"processors": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"parameters": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"parameter_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringInSlice(firehose.ProcessorParameterName_Values(), false),
-										},
-										"parameter_value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 5120),
-										},
-									},
-								},
-							},
-							"type": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(firehose.ProcessorType_Values(), false),
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
 func ResourceDeliveryStream() *schema.Resource {
@@ -275,139 +73,139 @@ func ResourceDeliveryStream() *schema.Resource {
 
 		SchemaVersion: 1,
 		MigrateState:  MigrateState,
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destination": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToLower(value)
-				},
-				ValidateFunc: validation.StringInSlice([]string{
-					destinationTypeExtendedS3,
-					destinationTypeRedshift,
-					destinationTypeElasticsearch,
-					destinationTypeOpenSearch,
-					destinationTypeSplunk,
-					destinationTypeHTTPEndpoint,
-				}, false),
-			},
-			"destination_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"elasticsearch_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"buffering_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(60, 900),
+		SchemaFunc: func() map[string]*schema.Schema {
+			cloudWatchLoggingOptionsSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"log_group_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"log_stream_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
-						"buffering_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntBetween(1, 100),
+					},
+				}
+			}
+			dynamicPartitioningConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+								ForceNew: true,
+							},
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
 						},
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"cluster_endpoint": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"elasticsearch_configuration.0.domain_arn"},
-						},
-						"domain_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  verify.ValidARN,
-							ConflictsWith: []string{"elasticsearch_configuration.0.cluster_endpoint"},
-						},
-						"index_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"index_rotation_period": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.ElasticsearchIndexRotationPeriodOneDay,
-							ValidateFunc: validation.StringInSlice(firehose.ElasticsearchIndexRotationPeriod_Values(), false),
-						},
-						"processing_configuration": processingConfigurationSchema(),
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							Default:      firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
-							ValidateFunc: validation.StringInSlice(firehose.ElasticsearchS3BackupMode_Values(), false),
-						},
-						"s3_configuration": s3ConfigurationSchema(),
-						"type_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 100),
-						},
-						"vpc_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"security_group_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"subnet_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"vpc_id": {
-										Type:     schema.TypeString,
-										Computed: true,
+					},
+				}
+			}
+			processingConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"processors": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"parameters": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"parameter_name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(firehose.ProcessorParameterName_Values(), false),
+													},
+													"parameter_value": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 5120),
+													},
+												},
+											},
+										},
+										"type": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(firehose.ProcessorType_Values(), false),
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			},
-			"extended_s3_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
+				}
+			}
+			requestConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"common_attributes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"value": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"content_encoding": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.ContentEncodingNone,
+								ValidateFunc: validation.StringInSlice(firehose.ContentEncoding_Values(), false),
+							},
+						},
+					},
+				}
+			}
+			s3ConfigurationElem := func() *schema.Resource {
+				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_arn": {
 							Type:         schema.TypeString,
@@ -415,14 +213,16 @@ func ResourceDeliveryStream() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"buffering_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  300,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntAtLeast(60),
 						},
 						"buffering_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  5,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      5,
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 						"compression_format": {
@@ -431,251 +231,6 @@ func ResourceDeliveryStream() *schema.Resource {
 							Default:      firehose.CompressionFormatUncompressed,
 							ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
 						},
-						"data_format_conversion_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"input_format_configuration": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"deserializer": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"hive_json_ser_de": {
-																Type:          schema.TypeList,
-																Optional:      true,
-																MaxItems:      1,
-																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de"},
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"timestamp_formats": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																	},
-																},
-															},
-															"open_x_json_ser_de": {
-																Type:          schema.TypeList,
-																Optional:      true,
-																MaxItems:      1,
-																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de"},
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"case_insensitive": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			Default:  true,
-																		},
-																		"column_to_json_key_mappings": {
-																			Type:     schema.TypeMap,
-																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		"convert_dots_in_json_keys_to_underscores": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			Default:  false,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"output_format_configuration": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"serializer": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"orc_ser_de": {
-																Type:          schema.TypeList,
-																Optional:      true,
-																MaxItems:      1,
-																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de"},
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"block_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			// 256 MiB
-																			Default: 268435456,
-																			// 64 MiB
-																			ValidateFunc: validation.IntAtLeast(67108864),
-																		},
-																		"bloom_filter_columns": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		"bloom_filter_false_positive_probability": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Default:  0.05,
-																		},
-																		"compression": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Default:      firehose.OrcCompressionSnappy,
-																			ValidateFunc: validation.StringInSlice(firehose.OrcCompression_Values(), false),
-																		},
-																		"dictionary_key_threshold": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Default:  0.0,
-																		},
-																		"enable_padding": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			Default:  false,
-																		},
-																		"format_version": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Default:      firehose.OrcFormatVersionV012,
-																			ValidateFunc: validation.StringInSlice(firehose.OrcFormatVersion_Values(), false),
-																		},
-																		"padding_tolerance": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Default:  0.05,
-																		},
-																		"row_index_stride": {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			Default:      10000,
-																			ValidateFunc: validation.IntAtLeast(1000),
-																		},
-																		"stripe_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			// 64 MiB
-																			Default: 67108864,
-																			// 8 MiB
-																			ValidateFunc: validation.IntAtLeast(8388608),
-																		},
-																	},
-																},
-															},
-															"parquet_ser_de": {
-																Type:          schema.TypeList,
-																Optional:      true,
-																MaxItems:      1,
-																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de"},
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"block_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			// 256 MiB
-																			Default: 268435456,
-																			// 64 MiB
-																			ValidateFunc: validation.IntAtLeast(67108864),
-																		},
-																		"compression": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Default:      firehose.ParquetCompressionSnappy,
-																			ValidateFunc: validation.StringInSlice(firehose.ParquetCompression_Values(), false),
-																		},
-																		"enable_dictionary_compression": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			Default:  false,
-																		},
-																		"max_padding_bytes": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Default:  0,
-																		},
-																		"page_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			// 1 MiB
-																			Default: 1048576,
-																			// 64 KiB
-																			ValidateFunc: validation.IntAtLeast(65536),
-																		},
-																		"writer_version": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Default:      firehose.ParquetWriterVersionV1,
-																			ValidateFunc: validation.StringInSlice(firehose.ParquetWriterVersion_Values(), false),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"schema_configuration": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"catalog_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"database_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"region": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"role_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"table_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"version_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "LATEST",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"dynamic_partitioning_configuration": dynamicPartitioningConfigurationSchema(),
 						"error_output_prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -690,349 +245,790 @@ func ResourceDeliveryStream() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"processing_configuration": processingConfigurationSchema(),
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_backup_configuration": s3BackupConfigurationSchema(),
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
-						},
-					},
-				},
-			},
-			"http_endpoint_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 4096),
-							Sensitive:    true,
-						},
-						"buffering_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(60, 900),
-						},
-						"buffering_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntBetween(1, 100),
-						},
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-							),
-						},
-						"processing_configuration": processingConfigurationSchema(),
-						"request_configuration":    requestConfigurationSchema(),
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.HttpEndpointS3BackupModeFailedDataOnly,
-							ValidateFunc: validation.StringInSlice(firehose.HttpEndpointS3BackupMode_Values(), false),
-						},
-						"s3_configuration": s3ConfigurationSchema(),
-						"url": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 1000),
-								validation.StringMatch(regexache.MustCompile(`^https://.*$`), ""),
-							),
-						},
-					},
-				},
-			},
-			"kinesis_source_configuration": {
-				Type:          schema.TypeList,
-				ForceNew:      true,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"server_side_encryption"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 					},
+				}
+			}
+			s3BackupConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem:     s3ConfigurationElem(),
+				}
+			}
+			s3ConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem:     s3ConfigurationElem(),
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"opensearch_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"buffering_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(60, 900),
-						},
-						"buffering_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntBetween(1, 100),
-						},
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"cluster_endpoint": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"opensearch_configuration.0.domain_arn"},
-						},
-						"domain_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  verify.ValidARN,
-							ConflictsWith: []string{"opensearch_configuration.0.cluster_endpoint"},
-						},
-						"index_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"index_rotation_period": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.AmazonopensearchserviceIndexRotationPeriodOneDay,
-							ValidateFunc: validation.StringInSlice(firehose.AmazonopensearchserviceIndexRotationPeriod_Values(), false),
-						},
-						"processing_configuration": processingConfigurationSchema(),
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							Default:      firehose.AmazonopensearchserviceS3BackupModeFailedDocumentsOnly,
-							ValidateFunc: validation.StringInSlice(firehose.AmazonopensearchserviceS3BackupMode_Values(), false),
-						},
-						"s3_configuration": s3ConfigurationSchema(),
-						"type_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 100),
-						},
-						"vpc_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"security_group_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"subnet_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"vpc_id": {
-										Type:     schema.TypeString,
-										Computed: true,
+				"destination": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v interface{}) string {
+						value := v.(string)
+						return strings.ToLower(value)
+					},
+					ValidateFunc: validation.StringInSlice([]string{
+						destinationTypeExtendedS3,
+						destinationTypeRedshift,
+						destinationTypeElasticsearch,
+						destinationTypeOpenSearch,
+						destinationTypeSplunk,
+						destinationTypeHTTPEndpoint,
+					}, false),
+				},
+				"destination_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"elasticsearch_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(60, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"cluster_endpoint": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"elasticsearch_configuration.0.domain_arn"},
+							},
+							"domain_arn": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  verify.ValidARN,
+								ConflictsWith: []string{"elasticsearch_configuration.0.cluster_endpoint"},
+							},
+							"index_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"index_rotation_period": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.ElasticsearchIndexRotationPeriodOneDay,
+								ValidateFunc: validation.StringInSlice(firehose.ElasticsearchIndexRotationPeriod_Values(), false),
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								Default:      firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
+								ValidateFunc: validation.StringInSlice(firehose.ElasticsearchS3BackupMode_Values(), false),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							"type_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 100),
+							},
+							"vpc_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"security_group_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"subnet_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"vpc_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"redshift_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"cluster_jdbcurl": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"copy_options": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"data_table_columns": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"data_table_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-						"processing_configuration": processingConfigurationSchema(),
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3600,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_backup_configuration": s3BackupConfigurationSchema(),
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
-						},
-						"s3_configuration": s3ConfigurationSchema(),
-						"username": {
-							Type:     schema.TypeString,
-							Required: true,
+				"extended_s3_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bucket_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"buffering_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  300,
+							},
+							"buffering_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  5,
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"compression_format": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.CompressionFormatUncompressed,
+								ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
+							},
+							"data_format_conversion_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"input_format_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"deserializer": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"hive_json_ser_de": {
+																	Type:          schema.TypeList,
+																	Optional:      true,
+																	MaxItems:      1,
+																	ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de"},
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"timestamp_formats": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																		},
+																	},
+																},
+																"open_x_json_ser_de": {
+																	Type:          schema.TypeList,
+																	Optional:      true,
+																	MaxItems:      1,
+																	ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de"},
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"case_insensitive": {
+																				Type:     schema.TypeBool,
+																				Optional: true,
+																				Default:  true,
+																			},
+																			"column_to_json_key_mappings": {
+																				Type:     schema.TypeMap,
+																				Optional: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			"convert_dots_in_json_keys_to_underscores": {
+																				Type:     schema.TypeBool,
+																				Optional: true,
+																				Default:  false,
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"output_format_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"serializer": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"orc_ser_de": {
+																	Type:          schema.TypeList,
+																	Optional:      true,
+																	MaxItems:      1,
+																	ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de"},
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"block_size_bytes": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																				// 256 MiB
+																				Default: 268435456,
+																				// 64 MiB
+																				ValidateFunc: validation.IntAtLeast(67108864),
+																			},
+																			"bloom_filter_columns": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			"bloom_filter_false_positive_probability": {
+																				Type:     schema.TypeFloat,
+																				Optional: true,
+																				Default:  0.05,
+																			},
+																			"compression": {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Default:      firehose.OrcCompressionSnappy,
+																				ValidateFunc: validation.StringInSlice(firehose.OrcCompression_Values(), false),
+																			},
+																			"dictionary_key_threshold": {
+																				Type:     schema.TypeFloat,
+																				Optional: true,
+																				Default:  0.0,
+																			},
+																			"enable_padding": {
+																				Type:     schema.TypeBool,
+																				Optional: true,
+																				Default:  false,
+																			},
+																			"format_version": {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Default:      firehose.OrcFormatVersionV012,
+																				ValidateFunc: validation.StringInSlice(firehose.OrcFormatVersion_Values(), false),
+																			},
+																			"padding_tolerance": {
+																				Type:     schema.TypeFloat,
+																				Optional: true,
+																				Default:  0.05,
+																			},
+																			"row_index_stride": {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				Default:      10000,
+																				ValidateFunc: validation.IntAtLeast(1000),
+																			},
+																			"stripe_size_bytes": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																				// 64 MiB
+																				Default: 67108864,
+																				// 8 MiB
+																				ValidateFunc: validation.IntAtLeast(8388608),
+																			},
+																		},
+																	},
+																},
+																"parquet_ser_de": {
+																	Type:          schema.TypeList,
+																	Optional:      true,
+																	MaxItems:      1,
+																	ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de"},
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"block_size_bytes": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																				// 256 MiB
+																				Default: 268435456,
+																				// 64 MiB
+																				ValidateFunc: validation.IntAtLeast(67108864),
+																			},
+																			"compression": {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Default:      firehose.ParquetCompressionSnappy,
+																				ValidateFunc: validation.StringInSlice(firehose.ParquetCompression_Values(), false),
+																			},
+																			"enable_dictionary_compression": {
+																				Type:     schema.TypeBool,
+																				Optional: true,
+																				Default:  false,
+																			},
+																			"max_padding_bytes": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																				Default:  0,
+																			},
+																			"page_size_bytes": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																				// 1 MiB
+																				Default: 1048576,
+																				// 64 KiB
+																				ValidateFunc: validation.IntAtLeast(65536),
+																			},
+																			"writer_version": {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Default:      firehose.ParquetWriterVersionV1,
+																				ValidateFunc: validation.StringInSlice(firehose.ParquetWriterVersion_Values(), false),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"schema_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"catalog_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"database_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"region": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"role_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"table_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"version_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Default:  "LATEST",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"dynamic_partitioning_configuration": dynamicPartitioningConfigurationSchema(),
+							"error_output_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"kms_key_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_configuration": s3BackupConfigurationSchema(),
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.S3BackupModeDisabled,
+								ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
+							},
 						},
 					},
 				},
-			},
-			"server_side_encryption": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				ConflictsWith:    []string{"kinesis_source_configuration"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-							RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
-						},
-						"key_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.KeyTypeAwsOwnedCmk,
-							ValidateFunc: validation.StringInSlice(firehose.KeyType_Values(), false),
-							RequiredWith: []string{"server_side_encryption.0.enabled"},
+				"http_endpoint_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_key": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 4096),
+								Sensitive:    true,
+							},
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(60, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+								),
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"request_configuration":    requestConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							"role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.HttpEndpointS3BackupModeFailedDataOnly,
+								ValidateFunc: validation.StringInSlice(firehose.HttpEndpointS3BackupMode_Values(), false),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							"url": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 1000),
+									validation.StringMatch(regexache.MustCompile(`^https://.*$`), ""),
+								),
+							},
 						},
 					},
 				},
-			},
-			"splunk_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"hec_acknowledgment_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      180,
-							ValidateFunc: validation.IntBetween(180, 600),
+				"kinesis_source_configuration": {
+					Type:          schema.TypeList,
+					ForceNew:      true,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"server_side_encryption"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_stream_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
-						"hec_endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"hec_endpoint_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.HECEndpointTypeRaw,
-							ValidateFunc: validation.StringInSlice(firehose.HECEndpointType_Values(), false),
-						},
-						"hec_token": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"processing_configuration": processingConfigurationSchema(),
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3600,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-						"s3_backup_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      firehose.SplunkS3BackupModeFailedEventsOnly,
-							ValidateFunc: validation.StringInSlice(firehose.SplunkS3BackupMode_Values(), false),
-						},
-						"s3_configuration": s3ConfigurationSchema(),
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"opensearch_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(60, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"cluster_endpoint": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"opensearch_configuration.0.domain_arn"},
+							},
+							"domain_arn": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  verify.ValidARN,
+								ConflictsWith: []string{"opensearch_configuration.0.cluster_endpoint"},
+							},
+							"index_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"index_rotation_period": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.AmazonopensearchserviceIndexRotationPeriodOneDay,
+								ValidateFunc: validation.StringInSlice(firehose.AmazonopensearchserviceIndexRotationPeriod_Values(), false),
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								Default:      firehose.AmazonopensearchserviceS3BackupModeFailedDocumentsOnly,
+								ValidateFunc: validation.StringInSlice(firehose.AmazonopensearchserviceS3BackupMode_Values(), false),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							"type_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 100),
+							},
+							"vpc_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"security_group_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"subnet_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"vpc_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"redshift_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"cluster_jdbcurl": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"copy_options": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"data_table_columns": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"data_table_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"password": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      3600,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_configuration": s3BackupConfigurationSchema(),
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.S3BackupModeDisabled,
+								ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							"username": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"server_side_encryption": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					ConflictsWith:    []string{"kinesis_source_configuration"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"key_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+								RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
+							},
+							"key_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.KeyTypeAwsOwnedCmk,
+								ValidateFunc: validation.StringInSlice(firehose.KeyType_Values(), false),
+								RequiredWith: []string{"server_side_encryption.0.enabled"},
+							},
+						},
+					},
+				},
+				"splunk_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"hec_acknowledgment_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      180,
+								ValidateFunc: validation.IntBetween(180, 600),
+							},
+							"hec_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"hec_endpoint_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.HECEndpointTypeRaw,
+								ValidateFunc: validation.StringInSlice(firehose.HECEndpointType_Values(), false),
+							},
+							"hec_token": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      3600,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							"s3_backup_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      firehose.SplunkS3BackupModeFailedEventsOnly,
+								ValidateFunc: validation.StringInSlice(firehose.SplunkS3BackupMode_Values(), false),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
