@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.18
+	github.com/aws/aws-sdk-go v1.45.19
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.42
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
@@ -25,14 +25,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.121.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.122.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.2
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.22.6
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.54.0
