@@ -1,4 +1,5 @@
-## 5.19.0 (Unreleased)
+## 5.20.0 (Unreleased)
+## 5.19.0 (September 29, 2023)
 
 BREAKING CHANGES:
 
