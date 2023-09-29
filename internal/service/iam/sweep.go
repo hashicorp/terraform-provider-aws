@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -553,7 +552,7 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 	// include generic service role names created by:
 	// TestAccIAMServiceLinkedRole_basic
 	// TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc
-	customSuffixRegex := regexp.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
+	customSuffixRegex := regexache.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
 	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
