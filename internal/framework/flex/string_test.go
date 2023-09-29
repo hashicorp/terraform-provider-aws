@@ -58,6 +58,48 @@ func TestStringFromFramework(t *testing.T) {
 	}
 }
 
+func TestStringTypeFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testType string
+
+	type testCase struct {
+		input    types.String
+		expected testType
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    types.StringValue("TEST"),
+			expected: testType("TEST"),
+		},
+		"empty string": {
+			input:    types.StringValue(""),
+			expected: testType(""),
+		},
+		"null string": {
+			input:    types.StringNull(),
+			expected: testType(""),
+		},
+		"unknown string": {
+			input:    types.StringUnknown(),
+			expected: testType(""),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringTypeFromFramework[testType](context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 
