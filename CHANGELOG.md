@@ -1,4 +1,14 @@
 ## 5.20.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_guardduty_detector_feature` ([#31463](https://github.com/hashicorp/terraform-provider-aws/issues/31463))
+
+ENHANCEMENTS:
+
+* data-source/aws_guardduty_detector: Add `features` attribute ([#31463](https://github.com/hashicorp/terraform-provider-aws/issues/31463))
+* resource/aws_guardduty_filter: Add plan-time validation of `name` ([#21030](https://github.com/hashicorp/terraform-provider-aws/issues/21030))
+
 ## 5.19.0 (September 29, 2023)
 
 BREAKING CHANGES:
