@@ -1526,7 +1526,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -1551,7 +1551,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, "source"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "s3beta2022a"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
@@ -1562,7 +1562,14 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not Found: %s", resourceName)
+					}
+
+					return fmt.Sprintf("s3://%s/test-key", rs.Primary.Attributes["bucket"]), nil
+				},
 			},
 		},
 	})
