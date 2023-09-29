@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -389,6 +390,24 @@ func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLogging_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketLoggingConfig_directoryBucket(rName),
+				ExpectError: regexache.MustCompile(`NotImplemented`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -580,6 +599,21 @@ resource "aws_s3_bucket_logging" "test" {
   bucket = aws_s3_bucket.test.id
 
   expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+`)
+}
+
+func testAccBucketLoggingConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_base(rName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+}
+
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
 
   target_bucket = aws_s3_bucket.log_bucket.id
   target_prefix = "log/"
