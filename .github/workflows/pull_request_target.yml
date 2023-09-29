@@ -84,7 +84,7 @@ jobs:
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: 'Apply Labels'
-        uses: actions/labeler@0967ca812e7fdc8f5f71402a1b486d5bd061fe20 # v4.2.0
+        uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add comment to add helpful context for new contributors'
-        uses: actions/first-interaction@1dbfe1ba5525b8257e1f259b09745bee346d62d8 # v1.2.0
+        uses: actions/first-interaction@1d8459ca65b335265f1285568221e229d45a995e # v1.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-
