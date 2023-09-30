@@ -68,7 +68,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
+					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
 					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
 					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
