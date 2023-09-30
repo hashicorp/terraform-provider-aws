@@ -1052,15 +1052,13 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	sn := d.Get("name").(string)
 	input := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
+		DeliveryStreamType: aws.String(firehose.DeliveryStreamTypeDirectPut),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
-		sourceConfig := expandKinesisStreamSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
-		input.KinesisStreamSourceConfiguration = sourceConfig
 		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
-	} else {
-		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
+		input.KinesisStreamSourceConfiguration = expandKinesisStreamSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if d.Get("destination").(string) == destinationTypeExtendedS3 {
@@ -1100,59 +1098,48 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateDeliveryStreamWithContext(ctx, input)
-		if err != nil {
-			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
-				return retry.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
-				return retry.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
-				return retry.RetryableError(err)
-			}
-
-			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
-				return retry.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateDeliveryStreamWithContext(ctx, input)
+	}, func(err error) (bool, error) {
+		// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
+			return true, err
 		}
-
-		return nil
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+			return true, err
+		}
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
+			return true, err
+		}
+		// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
+			return true, err
+		}
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+			return true, err
+		}
+		return false, err
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateDeliveryStreamWithContext(ctx, input)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	s, err := waitDeliveryStreamCreated(ctx, conn, sn, d.Timeout(schema.TimeoutCreate))
+	output, err := waitDeliveryStreamCreated(ctx, conn, sn, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): waiting for completion: %s", sn, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Firehose Delivery Stream (%s) create: %s", sn, err)
 	}
 
-	d.SetId(aws.StringValue(s.DeliveryStreamARN))
-	d.Set("arn", s.DeliveryStreamARN)
+	d.SetId(aws.StringValue(output.DeliveryStreamARN))
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && !isDeliveryStreamOptionDisabled(v) {
-		startInput := &firehose.StartDeliveryStreamEncryptionInput{
+		input := &firehose.StartDeliveryStreamEncryptionInput{
 			DeliveryStreamName:                         aws.String(sn),
 			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
 		}
 
-		_, err := conn.StartDeliveryStreamEncryptionWithContext(ctx, startInput)
+		_, err := conn.StartDeliveryStreamEncryptionWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1183,8 +1170,70 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	if err := flattenDeliveryStreamDescription(d, s); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+	d.Set("arn", s.DeliveryStreamARN)
+	if s.Source != nil {
+		if err := d.Set("kinesis_source_configuration", flattenKinesisStreamSourceDescription(s.Source.KinesisStreamSourceDescription)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kinesis_source_configuration: %s", err)
+		}
+	}
+	d.Set("name", s.DeliveryStreamName)
+	d.Set("version_id", s.VersionId)
+
+	sseOptions := map[string]interface{}{
+		"enabled":  false,
+		"key_type": firehose.KeyTypeAwsOwnedCmk,
+	}
+	if s.DeliveryStreamEncryptionConfiguration != nil && aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
+		sseOptions["enabled"] = true
+
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyARN; v != nil {
+			sseOptions["key_arn"] = aws.StringValue(v)
+		}
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyType; v != nil {
+			sseOptions["key_type"] = aws.StringValue(v)
+		}
+	}
+	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting server_side_encryption: %s", err)
+	}
+
+	if len(s.Destinations) > 0 {
+		destination := s.Destinations[0]
+		switch {
+		case destination.ElasticsearchDestinationDescription != nil:
+			d.Set("destination", destinationTypeElasticsearch)
+			if err := d.Set("elasticsearch_configuration", flattenElasticsearchDestinationDescription(destination.ElasticsearchDestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting elasticsearch_configuration: %s", err)
+			}
+		case destination.HttpEndpointDestinationDescription != nil:
+			d.Set("destination", destinationTypeHTTPEndpoint)
+			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
+			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointDestinationDescription(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting http_endpoint_configuration: %s", err)
+			}
+		case destination.AmazonopensearchserviceDestinationDescription != nil:
+			d.Set("destination", destinationTypeOpenSearch)
+			if err := d.Set("opensearch_configuration", flattenAmazonopensearchserviceDestinationDescription(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting opensearch_configuration: %s", err)
+			}
+		case destination.RedshiftDestinationDescription != nil:
+			d.Set("destination", destinationTypeRedshift)
+			configuredPassword := d.Get("redshift_configuration.0.password").(string)
+			if err := d.Set("redshift_configuration", flattenRedshiftDestinationDescription(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting redshift_configuration: %s", err)
+			}
+		case destination.SplunkDestinationDescription != nil:
+			d.Set("destination", destinationTypeSplunk)
+			if err := d.Set("splunk_configuration", flattenSplunkDestinationDescription(destination.SplunkDestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting splunk_configuration: %s", err)
+			}
+		default:
+			d.Set("destination", destinationTypeExtendedS3)
+			if err := d.Set("extended_s3_configuration", flattenExtendedS3DestinationDescription(destination.ExtendedS3DestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting extended_s3_configuration: %s", err)
+			}
+		}
+		d.Set("destination_id", destination.DestinationId)
 	}
 
 	return diags
@@ -2968,78 +3017,6 @@ func flattenKinesisStreamSourceDescription(desc *firehose.KinesisStreamSourceDes
 	}
 
 	return []interface{}{mDesc}
-}
-
-func flattenDeliveryStreamDescription(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
-	d.Set("version_id", s.VersionId)
-	d.Set("arn", s.DeliveryStreamARN)
-	d.Set("name", s.DeliveryStreamName)
-
-	sseOptions := map[string]interface{}{
-		"enabled":  false,
-		"key_type": firehose.KeyTypeAwsOwnedCmk,
-	}
-	if s.DeliveryStreamEncryptionConfiguration != nil &&
-		aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
-		sseOptions["enabled"] = true
-
-		if v := s.DeliveryStreamEncryptionConfiguration.KeyARN; v != nil {
-			sseOptions["key_arn"] = aws.StringValue(v)
-		}
-		if v := s.DeliveryStreamEncryptionConfiguration.KeyType; v != nil {
-			sseOptions["key_type"] = aws.StringValue(v)
-		}
-	}
-
-	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
-		return fmt.Errorf("setting server_side_encryption: %s", err)
-	}
-
-	if s.Source != nil {
-		if err := d.Set("kinesis_source_configuration", flattenKinesisStreamSourceDescription(s.Source.KinesisStreamSourceDescription)); err != nil {
-			return fmt.Errorf("setting kinesis_source_configuration: %s", err)
-		}
-	}
-
-	if len(s.Destinations) > 0 {
-		destination := s.Destinations[0]
-		if destination.RedshiftDestinationDescription != nil {
-			d.Set("destination", destinationTypeRedshift)
-			configuredPassword := d.Get("redshift_configuration.0.password").(string)
-			if err := d.Set("redshift_configuration", flattenRedshiftDestinationDescription(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
-				return fmt.Errorf("setting redshift_configuration: %s", err)
-			}
-		} else if destination.ElasticsearchDestinationDescription != nil {
-			d.Set("destination", destinationTypeElasticsearch)
-			if err := d.Set("elasticsearch_configuration", flattenElasticsearchDestinationDescription(destination.ElasticsearchDestinationDescription)); err != nil {
-				return fmt.Errorf("setting elasticsearch_configuration: %s", err)
-			}
-		} else if destination.AmazonopensearchserviceDestinationDescription != nil {
-			d.Set("destination", destinationTypeOpenSearch)
-			if err := d.Set("opensearch_configuration", flattenAmazonopensearchserviceDestinationDescription(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
-				return fmt.Errorf("setting opensearch_configuration: %s", err)
-			}
-		} else if destination.SplunkDestinationDescription != nil {
-			d.Set("destination", destinationTypeSplunk)
-			if err := d.Set("splunk_configuration", flattenSplunkDestinationDescription(destination.SplunkDestinationDescription)); err != nil {
-				return fmt.Errorf("setting splunk_configuration: %s", err)
-			}
-		} else if destination.HttpEndpointDestinationDescription != nil {
-			d.Set("destination", destinationTypeHTTPEndpoint)
-			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
-			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointDestinationDescription(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
-				return fmt.Errorf("setting http_endpoint_configuration: %s", err)
-			}
-		} else {
-			d.Set("destination", destinationTypeExtendedS3)
-			if err := d.Set("extended_s3_configuration", flattenExtendedS3DestinationDescription(destination.ExtendedS3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting extended_s3_configuration: %s", err)
-			}
-		}
-		d.Set("destination_id", destination.DestinationId)
-	}
-
-	return nil
 }
 
 func flattenHTTPEndpointDestinationDescription(description *firehose.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
