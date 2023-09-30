@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -380,13 +381,11 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+		setTagsOut(ctx, Tags(tags))
+	} else if !tfawserr.ErrCodeEquals(err, errCodeNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
