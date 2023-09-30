@@ -1070,17 +1070,29 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 
 	switch d.Get("destination").(string) {
 	case destinationTypeElasticsearch:
-		input.ElasticsearchDestinationConfiguration = expandElasticsearchDestinationConfiguration(d)
+		if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ElasticsearchDestinationConfiguration = expandElasticsearchDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	case destinationTypeExtendedS3:
-		input.ExtendedS3DestinationConfiguration = expandExtendedS3DestinationConfiguration(d)
+		if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ExtendedS3DestinationConfiguration = expandExtendedS3DestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	case destinationTypeHTTPEndpoint:
-		input.HttpEndpointDestinationConfiguration = expandHTTPEndpointDestinationConfiguration(d)
+		if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.HttpEndpointDestinationConfiguration = expandHTTPEndpointDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	case destinationTypeOpenSearch:
-		input.AmazonopensearchserviceDestinationConfiguration = expandAmazonopensearchserviceDestinationConfiguration(d)
+		if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.AmazonopensearchserviceDestinationConfiguration = expandAmazonopensearchserviceDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	case destinationTypeRedshift:
-		input.RedshiftDestinationConfiguration = expandRedshiftDestinationConfiguration(d)
+		if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.RedshiftDestinationConfiguration = expandRedshiftDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	case destinationTypeSplunk:
-		input.SplunkDestinationConfiguration = expandSplunkDestinationConfiguration(d)
+		if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.SplunkDestinationConfiguration = expandSplunkDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
 	}
 
 	_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
@@ -1220,17 +1232,29 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		switch d.Get("destination").(string) {
 		case destinationTypeElasticsearch:
-			input.ElasticsearchDestinationUpdate = expandElasticsearchDestinationUpdate(d)
+			if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ElasticsearchDestinationUpdate = expandElasticsearchDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		case destinationTypeExtendedS3:
-			input.ExtendedS3DestinationUpdate = expandExtendedS3DestinationUpdate(d)
+			if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ExtendedS3DestinationUpdate = expandExtendedS3DestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		case destinationTypeHTTPEndpoint:
-			input.HttpEndpointDestinationUpdate = expandHTTPEndpointDestinationUpdate(d)
+			if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.HttpEndpointDestinationUpdate = expandHTTPEndpointDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		case destinationTypeOpenSearch:
-			input.AmazonopensearchserviceDestinationUpdate = expandAmazonopensearchserviceDestinationUpdate(d)
+			if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.AmazonopensearchserviceDestinationUpdate = expandAmazonopensearchserviceDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		case destinationTypeRedshift:
-			input.RedshiftDestinationUpdate = expandRedshiftDestinationUpdate(d)
+			if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.RedshiftDestinationUpdate = expandRedshiftDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		case destinationTypeSplunk:
-			input.SplunkDestinationUpdate = expandSplunkDestinationUpdate(d)
+			if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.SplunkDestinationUpdate = expandSplunkDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
@@ -1397,9 +1421,7 @@ func expandS3DestinationConfigurationBackup(d map[string]interface{}) *firehose.
 	return configuration
 }
 
-func expandExtendedS3DestinationConfiguration(d *schema.ResourceData) *firehose.ExtendedS3DestinationConfiguration {
-	s3 := d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{})
-
+func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *firehose.ExtendedS3DestinationConfiguration {
 	configuration := &firehose.ExtendedS3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
@@ -1431,7 +1453,7 @@ func expandExtendedS3DestinationConfiguration(d *schema.ResourceData) *firehose.
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{}))
+		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(s3)
 	}
 
 	return configuration
@@ -1439,7 +1461,6 @@ func expandExtendedS3DestinationConfiguration(d *schema.ResourceData) *firehose.
 
 func expandS3DestinationUpdate(tfList []interface{}) *firehose.S3DestinationUpdate {
 	s3 := tfList[0].(map[string]interface{})
-
 	configuration := &firehose.S3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
@@ -1490,9 +1511,7 @@ func expandS3DestinationUpdateBackup(d map[string]interface{}) *firehose.S3Desti
 	return configuration
 }
 
-func expandExtendedS3DestinationUpdate(d *schema.ResourceData) *firehose.ExtendedS3DestinationUpdate {
-	s3 := d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{})
-
+func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *firehose.ExtendedS3DestinationUpdate {
 	configuration := &firehose.ExtendedS3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
@@ -1519,7 +1538,7 @@ func expandExtendedS3DestinationUpdate(d *schema.ResourceData) *firehose.Extende
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{}))
+		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(s3)
 	}
 
 	return configuration
@@ -1845,8 +1864,7 @@ func expandPrefix(s3 map[string]interface{}) *string {
 	return nil
 }
 
-func expandRedshiftDestinationConfiguration(d *schema.ResourceData) *firehose.RedshiftDestinationConfiguration {
-	redshift := d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{})
+func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *firehose.RedshiftDestinationConfiguration {
 	configuration := &firehose.RedshiftDestinationConfiguration{
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    expandRedshiftRetryOptions(redshift),
@@ -1865,14 +1883,13 @@ func expandRedshiftDestinationConfiguration(d *schema.ResourceData) *firehose.Re
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(redshift)
 	}
 
 	return configuration
 }
 
-func expandRedshiftDestinationUpdate(d *schema.ResourceData) *firehose.RedshiftDestinationUpdate {
-	redshift := d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{})
+func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *firehose.RedshiftDestinationUpdate {
 	configuration := &firehose.RedshiftDestinationUpdate{
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   expandRedshiftRetryOptions(redshift),
@@ -1897,7 +1914,7 @@ func expandRedshiftDestinationUpdate(d *schema.ResourceData) *firehose.RedshiftD
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
-		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(redshift)
 		if configuration.S3BackupUpdate != nil {
 			// Redshift does not currently support ErrorOutputPrefix,
 			// which is set to the empty string within "updateS3BackupConfig",
@@ -1909,8 +1926,7 @@ func expandRedshiftDestinationUpdate(d *schema.ResourceData) *firehose.RedshiftD
 	return configuration
 }
 
-func expandElasticsearchDestinationConfiguration(d *schema.ResourceData) *firehose.ElasticsearchDestinationConfiguration {
-	es := d.Get("elasticsearch_configuration").([]interface{})[0].(map[string]interface{})
+func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *firehose.ElasticsearchDestinationConfiguration {
 	config := &firehose.ElasticsearchDestinationConfiguration{
 		BufferingHints:  expandElasticsearchBufferingHints(es),
 		IndexName:       aws.String(es["index_name"].(string)),
@@ -1950,8 +1966,7 @@ func expandElasticsearchDestinationConfiguration(d *schema.ResourceData) *fireho
 	return config
 }
 
-func expandElasticsearchDestinationUpdate(d *schema.ResourceData) *firehose.ElasticsearchDestinationUpdate {
-	es := d.Get("elasticsearch_configuration").([]interface{})[0].(map[string]interface{})
+func expandElasticsearchDestinationUpdate(es map[string]interface{}) *firehose.ElasticsearchDestinationUpdate {
 	update := &firehose.ElasticsearchDestinationUpdate{
 		BufferingHints: expandElasticsearchBufferingHints(es),
 		IndexName:      aws.String(es["index_name"].(string)),
@@ -1984,8 +1999,7 @@ func expandElasticsearchDestinationUpdate(d *schema.ResourceData) *firehose.Elas
 	return update
 }
 
-func expandAmazonopensearchserviceDestinationConfiguration(d *schema.ResourceData) *firehose.AmazonopensearchserviceDestinationConfiguration {
-	es := d.Get("opensearch_configuration").([]interface{})[0].(map[string]interface{})
+func expandAmazonopensearchserviceDestinationConfiguration(es map[string]interface{}) *firehose.AmazonopensearchserviceDestinationConfiguration {
 	config := &firehose.AmazonopensearchserviceDestinationConfiguration{
 		BufferingHints:  expandAmazonopensearchserviceBufferingHints(es),
 		IndexName:       aws.String(es["index_name"].(string)),
@@ -2025,8 +2039,7 @@ func expandAmazonopensearchserviceDestinationConfiguration(d *schema.ResourceDat
 	return config
 }
 
-func expandAmazonopensearchserviceDestinationUpdate(d *schema.ResourceData) *firehose.AmazonopensearchserviceDestinationUpdate {
-	es := d.Get("opensearch_configuration").([]interface{})[0].(map[string]interface{})
+func expandAmazonopensearchserviceDestinationUpdate(es map[string]interface{}) *firehose.AmazonopensearchserviceDestinationUpdate {
 	update := &firehose.AmazonopensearchserviceDestinationUpdate{
 		BufferingHints: expandAmazonopensearchserviceBufferingHints(es),
 		IndexName:      aws.String(es["index_name"].(string)),
@@ -2059,8 +2072,7 @@ func expandAmazonopensearchserviceDestinationUpdate(d *schema.ResourceData) *fir
 	return update
 }
 
-func expandSplunkDestinationConfiguration(d *schema.ResourceData) *firehose.SplunkDestinationConfiguration {
-	splunk := d.Get("splunk_configuration").([]interface{})[0].(map[string]interface{})
+func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *firehose.SplunkDestinationConfiguration {
 	configuration := &firehose.SplunkDestinationConfiguration{
 		HECToken:                          aws.String(splunk["hec_token"].(string)),
 		HECEndpointType:                   aws.String(splunk["hec_endpoint_type"].(string)),
@@ -2084,8 +2096,7 @@ func expandSplunkDestinationConfiguration(d *schema.ResourceData) *firehose.Splu
 	return configuration
 }
 
-func expandSplunkDestinationUpdate(d *schema.ResourceData) *firehose.SplunkDestinationUpdate {
-	splunk := d.Get("splunk_configuration").([]interface{})[0].(map[string]interface{})
+func expandSplunkDestinationUpdate(splunk map[string]interface{}) *firehose.SplunkDestinationUpdate {
 	configuration := &firehose.SplunkDestinationUpdate{
 		HECToken:                          aws.String(splunk["hec_token"].(string)),
 		HECEndpointType:                   aws.String(splunk["hec_endpoint_type"].(string)),
@@ -2109,8 +2120,7 @@ func expandSplunkDestinationUpdate(d *schema.ResourceData) *firehose.SplunkDesti
 	return configuration
 }
 
-func expandHTTPEndpointDestinationConfiguration(d *schema.ResourceData) *firehose.HttpEndpointDestinationConfiguration {
-	HttpEndpoint := d.Get("http_endpoint_configuration").([]interface{})[0].(map[string]interface{})
+func expandHTTPEndpointDestinationConfiguration(HttpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationConfiguration {
 	configuration := &firehose.HttpEndpointDestinationConfiguration{
 		RetryOptions:    expandHTTPEndpointRetryOptions(HttpEndpoint),
 		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
@@ -2147,8 +2157,7 @@ func expandHTTPEndpointDestinationConfiguration(d *schema.ResourceData) *firehos
 	return configuration
 }
 
-func expandHTTPEndpointDestinationUpdate(d *schema.ResourceData) *firehose.HttpEndpointDestinationUpdate {
-	HttpEndpoint := d.Get("http_endpoint_configuration").([]interface{})[0].(map[string]interface{})
+func expandHTTPEndpointDestinationUpdate(HttpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationUpdate {
 	configuration := &firehose.HttpEndpointDestinationUpdate{
 		RetryOptions: expandHTTPEndpointRetryOptions(HttpEndpoint),
 		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
