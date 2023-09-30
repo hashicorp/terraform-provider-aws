@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1098,27 +1097,8 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
 		return conn.CreateDeliveryStreamWithContext(ctx, input)
-	}, func(err error) (bool, error) {
-		// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
-		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
-			return true, err
-		}
-		// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
-		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
-			return true, err
-		}
-		return false, err
 	})
 
 	if err != nil {
@@ -1135,8 +1115,8 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && !isDeliveryStreamOptionDisabled(v) {
 		input := &firehose.StartDeliveryStreamEncryptionInput{
-			DeliveryStreamName:                         aws.String(sn),
 			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
+			DeliveryStreamName:                         aws.String(sn),
 		}
 
 		_, err := conn.StartDeliveryStreamEncryptionWithContext(ctx, input)
@@ -1246,83 +1226,52 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 	sn := d.Get("name").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		updateInput := &firehose.UpdateDestinationInput{
-			DeliveryStreamName:             aws.String(sn),
+		input := &firehose.UpdateDestinationInput{
 			CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
+			DeliveryStreamName:             aws.String(sn),
 			DestinationId:                  aws.String(d.Get("destination_id").(string)),
 		}
 
 		if d.Get("destination").(string) == destinationTypeExtendedS3 {
 			extendedS3Config := expandExtendedS3DestinationUpdate(d)
-			updateInput.ExtendedS3DestinationUpdate = extendedS3Config
+			input.ExtendedS3DestinationUpdate = extendedS3Config
 		} else {
 			if d.Get("destination").(string) == destinationTypeElasticsearch {
 				esUpdate, err := expandElasticsearchDestinationUpdate(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
-				updateInput.ElasticsearchDestinationUpdate = esUpdate
+				input.ElasticsearchDestinationUpdate = esUpdate
 			} else if d.Get("destination").(string) == destinationTypeOpenSearch {
 				esUpdate, err := expandAmazonopensearchserviceDestinationUpdate(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
-				updateInput.AmazonopensearchserviceDestinationUpdate = esUpdate
+				input.AmazonopensearchserviceDestinationUpdate = esUpdate
 			} else if d.Get("destination").(string) == destinationTypeRedshift {
 				rc, err := expandRedshiftDestinationUpdate(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
-				updateInput.RedshiftDestinationUpdate = rc
+				input.RedshiftDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeSplunk {
 				rc, err := expandSplunkDestinationUpdate(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
-				updateInput.SplunkDestinationUpdate = rc
+				input.SplunkDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 				rc, err := expandHTTPEndpointDestinationUpdate(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
-				updateInput.HttpEndpointDestinationUpdate = rc
+				input.HttpEndpointDestinationUpdate = rc
 			}
 		}
 
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			_, err := conn.UpdateDestinationWithContext(ctx, updateInput)
-			if err != nil {
-				// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
-				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
-					return retry.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
-					return retry.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
-					return retry.RetryableError(err)
-				}
-
-				// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
-				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
-					return retry.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
-					return retry.RetryableError(err)
-				}
-
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
+		_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
+			return conn.UpdateDestinationWithContext(ctx, input)
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDestinationWithContext(ctx, updateInput)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
@@ -1330,11 +1279,13 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("server_side_encryption") {
-		_, n := d.GetChange("server_side_encryption")
-		if isDeliveryStreamOptionDisabled(n) {
-			_, err := conn.StopDeliveryStreamEncryptionWithContext(ctx, &firehose.StopDeliveryStreamEncryptionInput{
+		v := d.Get("server_side_encryption")
+		if isDeliveryStreamOptionDisabled(v) {
+			input := &firehose.StopDeliveryStreamEncryptionInput{
 				DeliveryStreamName: aws.String(sn),
-			})
+			}
+
+			_, err := conn.StopDeliveryStreamEncryptionWithContext(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1344,12 +1295,12 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Firehose Delivery Stream (%s) encryption disable: %s", sn, err)
 			}
 		} else {
-			startInput := &firehose.StartDeliveryStreamEncryptionInput{
+			input := &firehose.StartDeliveryStreamEncryptionInput{
+				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
 				DeliveryStreamName:                         aws.String(sn),
-				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(n.([]interface{})),
 			}
 
-			_, err := conn.StartDeliveryStreamEncryptionWithContext(ctx, startInput)
+			_, err := conn.StartDeliveryStreamEncryptionWithContext(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1388,6 +1339,32 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func retryDeliveryStreamOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
+	return tfresource.RetryWhen(ctx, propagationTimeout,
+		f,
+		func(err error) (bool, error) {
+			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
+				return true, err
+			}
+			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+				return true, err
+			}
+			return false, err
+		},
+	)
 }
 
 func expandKinesisStreamSourceConfiguration(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
