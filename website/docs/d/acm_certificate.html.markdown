@@ -36,8 +36,8 @@ data "aws_acm_certificate" "rsa_4096" {
 
 # Find a certificate that is issued by using domain and tags
 data "aws_acm_certificate" "issued" {
-  domain    = "tf.example.com"
-  tags      = {
+  domain = "tf.example.com"
+  tags   = {
     FOO = "BAR"
   }
   statuses = ["ISSUED"]
