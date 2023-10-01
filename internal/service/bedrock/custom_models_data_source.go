@@ -76,16 +76,14 @@ func flattenCustomModelSummaries(models []*bedrock.CustomModelSummary) []map[str
 
 	for _, model := range models {
 		m := map[string]interface{}{
-			"base_model_arn": aws.StringValue(model.BaseModelArn),
+			"base_model_arn":  aws.StringValue(model.BaseModelArn),
 			"base_model_name": aws.StringValue(model.BaseModelName),
-			"model_arn": aws.StringValue(model.ModelArn),
-			"model_name": aws.StringValue(model.ModelName),
-			"creation_time": aws.TimeValue(model.CreationTime).Format(time.RFC3339),
+			"model_arn":       aws.StringValue(model.ModelArn),
+			"model_name":      aws.StringValue(model.ModelName),
+			"creation_time":   aws.TimeValue(model.CreationTime).Format(time.RFC3339),
 		}
 		l = append(l, m)
 	}
 
 	return l
 }
-
-

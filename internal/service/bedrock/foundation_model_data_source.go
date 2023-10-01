@@ -65,10 +65,9 @@ func DataSourceFoundationModel() *schema.Resource {
 func dataSourceFoundationModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
-
 	modelId := d.Get("model_id").(string)
 	input := &bedrock.GetFoundationModelInput{
-		ModelIdentifier:   &modelId,
+		ModelIdentifier: &modelId,
 	}
 
 	model, err := conn.GetFoundationModelWithContext(ctx, input)
