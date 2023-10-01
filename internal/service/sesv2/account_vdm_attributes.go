@@ -146,7 +146,6 @@ func resourceAccountVDMAttributesDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[INFO] Deleting SESV2 AccountVDMAttributes %s", d.Id())
 
-	// TIP: -- 3. Call the AWS delete function
 	_, err := conn.PutAccountVdmAttributes(ctx, &sesv2.PutAccountVdmAttributesInput{
 		VdmAttributes: &types.VdmAttributes{
 			VdmEnabled: "DISABLED",
