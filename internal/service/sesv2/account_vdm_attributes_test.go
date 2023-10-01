@@ -24,16 +24,16 @@ func TestAccSESV2AccountVdmAttributes_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                   testAccSESV2AccountVdmAttributes_basic,
-		"disappears":              testAccSESV2AccountVdmAttributes_disappears,
-		"engagementMetrics":       testAccSESV2AccountVdmAttributes_engagementMetrics,
-		"optimizedSharedDelivery": testAccSESV2AccountVdmAttributes_optimizedSharedDelivery,
+		"basic":                   testAccAccountVdmAttributes_basic,
+		"disappears":              testAccAccountVdmAttributes_disappears,
+		"engagementMetrics":       testAccAccountVdmAttributes_engagementMetrics,
+		"optimizedSharedDelivery": testAccAccountVdmAttributes_optimizedSharedDelivery,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSESV2AccountVdmAttributes_basic(t *testing.T) {
+func testAccAccountVdmAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
@@ -58,7 +58,7 @@ func testAccSESV2AccountVdmAttributes_basic(t *testing.T) {
 	})
 }
 
-func testAccSESV2AccountVdmAttributes_disappears(t *testing.T) {
+func testAccAccountVdmAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
@@ -79,7 +79,7 @@ func testAccSESV2AccountVdmAttributes_disappears(t *testing.T) {
 	})
 }
 
-func testAccSESV2AccountVdmAttributes_engagementMetrics(t *testing.T) {
+func testAccAccountVdmAttributes_engagementMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
@@ -112,7 +112,7 @@ func testAccSESV2AccountVdmAttributes_engagementMetrics(t *testing.T) {
 	})
 }
 
-func testAccSESV2AccountVdmAttributes_optimizedSharedDelivery(t *testing.T) {
+func testAccAccountVdmAttributes_optimizedSharedDelivery(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
