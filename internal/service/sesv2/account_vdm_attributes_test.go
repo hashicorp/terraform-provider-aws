@@ -173,7 +173,7 @@ func testAccCheckAccountVDMAttributesDestroy(ctx context.Context) resource.TestC
 func testAccAccountVDMAttributesConfig_basic() string {
 	return `
 resource "aws_sesv2_account_vdm_attributes" "test" {
-	vdm_enabled = "ENABLED"
+  vdm_enabled = "ENABLED"
 }
 `
 }
@@ -181,11 +181,11 @@ resource "aws_sesv2_account_vdm_attributes" "test" {
 func testAccAccountVDMAttributesConfig_engagementMetrics(engagementMetrics string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_account_vdm_attributes" "test" {
-	vdm_enabled = "ENABLED"
+  vdm_enabled = "ENABLED"
 
-	dashboard_attributes {
-		engagement_metrics = %[1]q
-	}
+  dashboard_attributes {
+    engagement_metrics = %[1]q
+  }
 }
 `, engagementMetrics)
 }
@@ -193,11 +193,11 @@ resource "aws_sesv2_account_vdm_attributes" "test" {
 func testAccAccountVDMAttributesConfig_optimizedSharedDelivery(optimizedSharedDelivery string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_account_vdm_attributes" "test" {
-	vdm_enabled = "ENABLED"
+  vdm_enabled = "ENABLED"
 
-	guardian_attributes {
-		optimized_shared_delivery = %[1]q
-	}
+  guardian_attributes {
+    optimized_shared_delivery = %[1]q
+  }
 }
 `, optimizedSharedDelivery)
 }
