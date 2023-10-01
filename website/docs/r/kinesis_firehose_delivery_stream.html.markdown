@@ -360,7 +360,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 ```
 
-### Opensearch Destination
+### OpenSearch Destination
 
 ```terraform
 resource "aws_opensearch_domain" "test_cluster" {
@@ -400,7 +400,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
-### Opensearch Destination With VPC
+### OpenSearch Destination With VPC
 
 ```terraform
 resource "aws_opensearch_domain" "test_cluster" {
@@ -486,7 +486,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 ```
 
-### Opensearch Serverless Destination
+### OpenSearch Serverless Destination
 
 ```terraform
 resource "aws_opensearchserverless_collection" "test_collection" {
@@ -603,15 +603,13 @@ This resource supports the following arguments:
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
 is redshift). More details are given below.
+* `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
-* `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
-Using `redshift_configuration` requires the user to also specify a
-`s3_configuration` block. More details are given below.
-* `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
-* `opensearch_configuration` - (Optional) Configuration options if opensearch is the destination. More details are given below.
-* `opensearchserverless_configuration` - (Optional) Configuration options if opensearchserverless is the destination. More details are given below.
-* `splunk_configuration` - (Optional) Configuration options if splunk is the destination. More details are given below.
-* `http_endpoint_configuration` - (Optional) Configuration options if http_endpoint is the destination. requires the user to also specify a `s3_configuration` block.  More details are given below.
+* `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  More details are given below.
+* `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. More details are given below.
+* `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. More details are given below.
+* `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. More details are given below.
+* `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. More details are given below.
 
 The `kinesis_source_configuration` object supports the following:
 
@@ -671,8 +669,8 @@ The `opensearch_configuration` object supports the following:
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
 * `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
 * `cluster_endpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
-* `index_name` - (Required) The Opensearch index name.
-* `index_rotation_period` - (Optional) The Opensearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
+* `index_name` - (Required) The OpenSearch index name.
+* `index_rotation_period` - (Optional) The OpenSearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Amazon OpenSearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeDomain`, `DescribeDomains`, and `DescribeDomainConfig`.  The pattern needs to be `arn:.*`.
 * `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
