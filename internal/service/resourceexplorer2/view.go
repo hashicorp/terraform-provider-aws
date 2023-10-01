@@ -6,9 +6,9 @@ package resourceexplorer2
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -73,7 +73,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

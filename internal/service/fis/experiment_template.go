@@ -6,9 +6,9 @@ package fis
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/fis/types"
@@ -62,7 +62,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(0, 128),
-								validation.StringMatch(regexp.MustCompile(`^aws:[a-z0-9-]+:[a-zA-Z0-9/-]+$`), "must be in the format of aws:service-name:action-name"),
+								validation.StringMatch(regexache.MustCompile(`^aws:[0-9a-z-]+:[0-9A-Za-z/-]+$`), "must be in the format of aws:service-name:action-name"),
 							),
 						},
 						"description": {
@@ -271,7 +271,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(0, 64),
-								validation.StringMatch(regexp.MustCompile(`^(ALL|COUNT\(\d+\)|PERCENT\(\d+\))$`), "must be one of ALL, COUNT(number), PERCENT(number)"),
+								validation.StringMatch(regexache.MustCompile(`^(ALL|COUNT\(\d+\)|PERCENT\(\d+\))$`), "must be one of ALL, COUNT(number), PERCENT(number)"),
 							),
 						},
 					},

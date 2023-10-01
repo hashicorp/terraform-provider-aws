@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -48,8 +48,8 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, nil),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-idp", regexp.MustCompile(`userpool/.+`)),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-idp", regexache.MustCompile(`userpool/.+`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -1356,7 +1356,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesRemoved(t *testing.T) {
 			},
 			{
 				Config:      testAccUserPoolConfig_schemaAttributes(rName),
-				ExpectError: regexp.MustCompile("cannot modify or remove schema items"),
+				ExpectError: regexache.MustCompile("cannot modify or remove schema items"),
 			},
 		},
 	})
@@ -1377,7 +1377,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 			},
 			{
 				Config:      testAccUserPoolConfig_schemaAttributesUpdated(rName, "mybool2"),
-				ExpectError: regexp.MustCompile("cannot modify or remove schema items"),
+				ExpectError: regexache.MustCompile("cannot modify or remove schema items"),
 			},
 		},
 	})
@@ -1408,7 +1408,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesStringAttributeConstraints(t *tes
 				// Attempting to explicitly set constraints to non-default values after creation
 				// should trigger an error
 				Config:      testAccUserPoolConfig_schemaAttributes(rName),
-				ExpectError: regexp.MustCompile("cannot modify or remove schema items"),
+				ExpectError: regexache.MustCompile("cannot modify or remove schema items"),
 			},
 		},
 	})
@@ -1595,7 +1595,7 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserPoolConfig_userAttributeUpdateSettings(rName, "invalid_value"),
-				ExpectError: regexp.MustCompile("expected user_attribute_update_settings.0.attributes_require_verification_before_update.0 to be one of"),
+				ExpectError: regexache.MustCompile("expected user_attribute_update_settings.0.attributes_require_verification_before_update.0 to be one of"),
 			},
 			{
 				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName, cognitoidentityprovider.VerifiedAttributeTypeEmail),

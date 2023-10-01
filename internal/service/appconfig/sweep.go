@@ -9,8 +9,8 @@ package appconfig
 import (
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/go-multierror"
@@ -210,7 +210,7 @@ func sweepDeploymentStrategies(region string) error {
 			id := aws.StringValue(item.Id)
 
 			// Deleting AppConfig Predefined Strategies is not supported; returns BadRequestException
-			if regexp.MustCompile(`^AppConfig\.[A-Za-z0-9]{9,40}$`).MatchString(id) {
+			if regexache.MustCompile(`^AppConfig\.[0-9A-Za-z]{9,40}$`).MatchString(id) {
 				log.Printf("[DEBUG] Skipping AppConfig Deployment Strategy (%s): predefined strategy cannot be deleted", id)
 				continue
 			}

@@ -5,13 +5,14 @@ package events
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/YakDriver/regexache"
 )
 
 var (
-	eventBusARNPattern     = regexp.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[\.\-_A-Za-z0-9]+$`)
-	partnerEventBusPattern = regexp.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
+	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
 const permissionResourceIDSeparator = "/"

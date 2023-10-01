@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -192,7 +192,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
 			},
 			"customer_owned_ip_enabled": {
 				Type:     schema.TypeBool,
@@ -264,10 +264,10 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
 			"hosted_zone_id": {
@@ -2179,6 +2179,14 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("storage_throughput") {
 		needsModify = true
 		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
+
+		if input.Iops == nil {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
+
+		if input.AllocatedStorage == nil {
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		}
 	}
 
 	if d.HasChange("storage_type") {
@@ -2208,6 +2216,10 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
 			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
 				return true, err
 			}
 
@@ -2354,7 +2366,7 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 		ARN: arn,
 	}
 
-	re := regexp.MustCompile(`^db:([0-9a-z-]+)$`)
+	re := regexache.MustCompile(`^db:([0-9a-z-]+)$`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if matches == nil || len(matches) != 2 {
 		return dbInstanceARN{}, errors.New("DB Instance ARN: invalid resource section")
@@ -2368,7 +2380,7 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
 func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	idLooksLikeDbiResourceId := regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id)
+	idLooksLikeDbiResourceId := regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id)
 	input := &rds.DescribeDBInstancesInput{}
 
 	if idLooksLikeDbiResourceId {
@@ -2447,7 +2459,7 @@ func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.Describ
 func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
 	input := &rds_sdkv2.DescribeDBInstancesInput{}
 
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
 		input.Filters = []types.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
@@ -2461,7 +2473,7 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 	output, err := conn.DescribeDBInstances(ctx, input)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
+	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
 		input = &rds_sdkv2.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}

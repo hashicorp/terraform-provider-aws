@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -222,7 +222,7 @@ func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_originRequestPolicyDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexp.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-z]+")),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_originRequestPolicyOrdered(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexp.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-Za-z]+")),
 				),
 			},
 			{
@@ -380,7 +380,7 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -417,7 +417,7 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -475,7 +475,7 @@ func TestAccCloudFrontDistribution_Origin_emptyDomainName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originEmptyDomainName(),
-				ExpectError: regexp.MustCompile(`domain_name must not be empty`),
+				ExpectError: regexache.MustCompile(`domain_name must not be empty`),
 			},
 		},
 	})
@@ -491,7 +491,7 @@ func TestAccCloudFrontDistribution_Origin_emptyOriginID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originEmptyOriginID(),
-				ExpectError: regexp.MustCompile(`origin.0.origin_id must not be empty`),
+				ExpectError: regexache.MustCompile(`origin.0.origin_id must not be empty`),
 			},
 		},
 	})
@@ -515,11 +515,11 @@ func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_attempts = 0`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_attempts to be in the range`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_attempts to be in the range`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_attempts = 4`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_attempts to be in the range`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_attempts to be in the range`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, `connection_attempts = 2`),
@@ -551,11 +551,11 @@ func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_timeout = 0`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_timeout to be in the range`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_timeout to be in the range`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_timeout = 11`),
-				ExpectError: regexp.MustCompile(`expected origin.0.connection_timeout to be in the range`),
+				ExpectError: regexache.MustCompile(`expected origin.0.connection_timeout to be in the range`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, `connection_timeout = 6`),
@@ -587,23 +587,15 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.name`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
-			},
-			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `null`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
-			},
-			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `null`)),
-				ExpectError: regexp.MustCompile(`Missing required argument`),
+				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `""`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `"US East (Ohio)"`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `"us-east-1"`)), //lintignore:AWSAT003
@@ -685,7 +677,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
@@ -706,9 +698,9 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
-					resource.TestMatchResourceAttr(resourceName, "domain_name", regexp.MustCompile(`^[a-z0-9]+\.cloudfront\.net$`)),
+					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "etag", regexp.MustCompile(`^[A-Z0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
@@ -1640,7 +1632,7 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 
 func testAccCheckDistributionWaitForDeployment(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfcloudfront.DistributionWaitUntilDeployed(ctx, aws.StringValue(distribution.Id), acctest.Provider.Meta())
+		return tfcloudfront.WaitDistributionDeployed(ctx, acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx), aws.StringValue(distribution.Id))
 	}
 }
 

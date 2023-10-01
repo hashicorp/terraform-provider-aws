@@ -88,6 +88,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
+* `checksumMode` - (Optional) To retrieve the object's checksum, this argument must be `enabled`. If you enable `checksumMode` and the object is encrypted with KMS, you must have permission to use the `kms:decrypt` action. Valid values: `enabled`
 * `key` - (Required) Full path to the object inside the bucket
 * `versionId` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -98,6 +99,10 @@ This data source exports the following attributes in addition to the arguments a
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucketKeyEnabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cacheControl` - Caching behavior along the request/reply chain.
+* `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
+* `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
+* `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `contentDisposition` - Presentational information for the object.
 * `contentEncoding` - What content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
 * `contentLanguage` - Language the content is in.
@@ -120,4 +125,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/indexHtml` and `indexHtml` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.18.0 input-477721cf0e0f258fb25290372ff7c82e99e64abe0db5f6d2d1810585782fefa3 -->
+<!-- cache-key: cdktf-0.18.0 input-f6813404555c591c091c57ceeb02b67c45bce6c37883802a92bc234b580fffab -->

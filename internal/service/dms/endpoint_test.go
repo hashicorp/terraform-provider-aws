@@ -6,9 +6,9 @@ package dms_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -144,7 +144,7 @@ func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`EventsPollInterval=40;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`EventsPollInterval=40;`)),
 				),
 			},
 			{
@@ -240,7 +240,7 @@ func TestAccDMSEndpoint_AuroraPostgreSQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`ExecuteTimeout=1000;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`ExecuteTimeout=1000;`)),
 				),
 			},
 			{
@@ -336,7 +336,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet`)),
+					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet`)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -355,7 +355,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -369,7 +369,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet=true`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=true`)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -399,7 +399,7 @@ func TestAccDMSEndpoint_S3_key(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointConfig_s3ConnParamKey(rName),
-				ExpectError: regexp.MustCompile(`kms_key_arn must not be set when engine is "s3". Use s3_settings.server_side_encryption_kms_key_id instead`),
+				ExpectError: regexache.MustCompile(`kms_key_arn must not be set when engine is "s3". Use s3_settings.server_side_encryption_kms_key_id instead`),
 			},
 		},
 	})
@@ -421,7 +421,7 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "", ","),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
+					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`dataFormat=parquet;`)),
 				),
 			},
 			{
@@ -445,7 +445,7 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "dataFormat=parquet;", "."),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`dataFormat=parquet;`)),
 				),
 			},
 			{
@@ -1012,7 +1012,7 @@ func TestAccDMSEndpoint_MariaDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`EventsPollInterval=30;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`EventsPollInterval=30;`)),
 				),
 			},
 			{
@@ -1108,7 +1108,7 @@ func TestAccDMSEndpoint_MySQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`CleanSrcMetadataOnMismatch=false;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`CleanSrcMetadataOnMismatch=false;`)),
 				),
 			},
 			{
@@ -1212,7 +1212,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`charLengthSemantics=CHAR;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`charLengthSemantics=CHAR;`)),
 				),
 			},
 			{
@@ -1308,7 +1308,7 @@ func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`HeartbeatFrequency=180;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`HeartbeatFrequency=180;`)),
 				),
 			},
 			{
@@ -1428,7 +1428,7 @@ func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`TlogAccessMode=PreferTlog;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`TlogAccessMode=PreferTlog;`)),
 				),
 			},
 			{
@@ -1997,7 +1997,7 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`acceptanydate=true`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`acceptanydate=true`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),

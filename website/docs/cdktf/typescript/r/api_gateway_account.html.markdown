@@ -93,7 +93,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `apiKeyVersion` - The version of the API keys used for the account.
 * `throttleSettings` - Account-Level throttle settings. See exported fields below.
+* `features` - A list of features supported for the account.
 
 `throttleSettings` block exports the following:
 
@@ -122,4 +124,4 @@ Using `terraform import`, import API Gateway Accounts using the word `apiGateway
 % terraform import aws_api_gateway_account.demo api-gateway-account
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-02f02ceb418e59bf40de80884d8e2a3bd15bb9b23749876cb83b8d0bde96a2e1 -->
+<!-- cache-key: cdktf-0.18.0 input-2c3031685ea1cacb5723c6c52399155d732bc5bb2d7fcfa71a3cc55a2bf24db5 -->

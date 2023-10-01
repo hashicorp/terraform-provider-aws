@@ -14,6 +14,8 @@ For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aw
 
 ## Example Usage
 
+### ActiveMQ
+
 ```terraform
 resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
@@ -34,11 +36,27 @@ DATA
 }
 ```
 
+### RabbitMQ
+
+```terraform
+resource "aws_mq_configuration" "example" {
+  description    = "Example Configuration"
+  name           = "example"
+  engine_type    = "RabbitMQ"
+  engine_version = "3.11.16"
+
+  data = <<DATA
+# Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds
+consumer_timeout = 1800000
+DATA
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `data` - (Required) Broker configuration in XML format. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
+* `data` - (Required) Broker configuration in XML format for `ActiveMQ` or [Cuttlefish](https://github.com/Kyorai/cuttlefish) format for `RabbitMQ`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine.
 * `name` - (Required) Name of the configuration.

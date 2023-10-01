@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -161,8 +161,8 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -892,7 +892,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
-				ExpectError: regexp.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
+				ExpectError: regexache.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
 			},
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
