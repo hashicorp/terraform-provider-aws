@@ -600,18 +600,9 @@ resource "aws_acm_certificate" "test" {
   }
 }
 
-provider "time" {}
-
-resource "time_sleep" "wait_1_seconds" {
-  depends_on = [aws_acm_certificate.test]
-
-  create_duration = "1s"
-}
-
 data "aws_acm_certificate" "test" {
-  domain     = aws_acm_certificate.test.domain_name
-  key_types  = ["RSA_4096"]
-  depends_on = [time_sleep.wait_1_seconds]
+  domain    = aws_acm_certificate.test.domain_name
+  key_types = ["RSA_4096"]
 }
 `, certificate, key, rName)
 }
