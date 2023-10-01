@@ -636,8 +636,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_basicTags(key, value string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  tags   = {
-	%[1]q = %[2]q
+  tags = {
+    %[1]q = %[2]q
   }
 }
 `, key, value)
@@ -647,8 +647,8 @@ func testAccCertificateDataSourceConfig_TagsAndStatus(status, key, value string)
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   statuses = [%[1]q]
-  tags     = {
-	%[2]q = %[3]q
+  tags = {
+    %[2]q = %[3]q
   }
 }
 `, status, key, value)
@@ -657,10 +657,10 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_TagsAndTypes(certType, key, value string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  tags   = {
-	%[2]q = %[3]q
+  tags = {
+    %[2]q = %[3]q
   }
-  types  = [%[1]q]
+  types = [%[1]q]
 }
 `, certType, key, value)
 }
@@ -669,8 +669,8 @@ func testAccCertificateDataSourceConfig_TagsAndMostRecent(key, value string, mos
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   most_recent = %[1]t
-  tags        = {
-	%[2]q = %[3]q
+  tags = {
+    %[2]q = %[3]q
   }
 }
 `, mostRecent, key, value)
@@ -681,8 +681,8 @@ func testAccCertificateDataSourceConfig_TagsAndMostRecentAndStatus(status, key, 
 data "aws_acm_certificate" "test" {
   statuses    = [%[1]q]
   most_recent = %[2]t
-  tags 		  = {
-	%[3]q = %[4]q
+  tags = {
+    %[3]q = %[4]q
   }
 }
 `, status, mostRecent, key, value)
@@ -693,8 +693,8 @@ func testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, key,
 data "aws_acm_certificate" "test" {
   types       = [%[1]q]
   most_recent = %[2]t
-  tags 		  = {
-	%[3]q = %[4]q
+  tags = {
+    %[3]q = %[4]q
   }
 }
 `, certType, mostRecent, key, value)
@@ -704,8 +704,8 @@ func testAccCertificateDataSourceConfig_basicAndTags(domain, key, value string) 
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain = %[1]q
-  tags   = {
-	%[2]q = %[3]q
+  tags = {
+    %[2]q = %[3]q
   }
 }
 `, domain, key, value)
@@ -716,8 +716,8 @@ func testAccCertificateDataSourceConfig_statusAndTags(domain, status, key, value
 data "aws_acm_certificate" "test" {
   domain   = %[1]q
   statuses = [%[2]q]
-  tags     = {
-	%[3]q = %[4]q
+  tags = {
+    %[3]q = %[4]q
   }
 }
 `, domain, status, key, value)
@@ -728,8 +728,8 @@ func testAccCertificateDataSourceConfig_typesAndTags(domain, certType, key, valu
 data "aws_acm_certificate" "test" {
   domain = %[1]q
   types  = [%[2]q]
-  tags   = {
-	%[3]q = %[4]q
+  tags = {
+    %[3]q = %[4]q
   }
 }
 `, domain, certType, key, value)
@@ -740,8 +740,8 @@ func testAccCertificateDataSourceConfig_mostRecentAndTags(domain, key, value str
 data "aws_acm_certificate" "test" {
   domain      = %[1]q
   most_recent = %[2]t
-  tags        = {
-	%[3]q = %[4]q
+  tags = {
+    %[3]q = %[4]q
   }
 }
 `, domain, mostRecent, key, value)
@@ -753,8 +753,8 @@ data "aws_acm_certificate" "test" {
   domain      = %[1]q
   statuses    = [%[2]q]
   most_recent = %[3]t
-  tags 		  = {
-	%[4]q = %[5]q
+  tags = {
+    %[4]q = %[5]q
   }
 }
 `, domain, status, mostRecent, key, value)
@@ -766,8 +766,8 @@ data "aws_acm_certificate" "test" {
   domain      = %[1]q
   types       = [%[2]q]
   most_recent = %[3]t
-  tags 		  = {
-	%[4]q = %[5]q
+  tags = {
+    %[4]q = %[5]q
   }
 }
 `, domain, certType, mostRecent, key, value)

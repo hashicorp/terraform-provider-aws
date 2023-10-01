@@ -147,7 +147,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if tagsOk {
-			certificateTags, err := ListTags(ctx, conn, aws.ToString(certificate.CertificateArn))
+			certificateTags, err := listTags(ctx, conn, aws.ToString(certificate.CertificateArn))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", aws.ToString(certificate.CertificateArn), err)
 			}
