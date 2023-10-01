@@ -26,6 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceCustomModel,
+			TypeName: "aws_bedrock_custom_model",
+		},
+		{
 			Factory:  DataSourceCustomModels,
 			TypeName: "aws_bedrock_custom_models",
 		},
@@ -41,7 +45,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCustomModel,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom-Model",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

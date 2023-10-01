@@ -95,14 +95,14 @@ func flattenFoundationModelSummaries(models []*bedrock.FoundationModelSummary) [
 
 	for _, model := range models {
 		m := map[string]interface{}{
-			"model_arn": aws.StringValue(model.ModelArn),
-			"model_id": aws.StringValue(model.ModelId),
-			"model_name": aws.StringValue(model.ModelName),
-			"provider_name": aws.StringValue(model.ProviderName),
-			"customizations_supported": aws.StringValueSlice(model.CustomizationsSupported),
-			"inference_types_supported": aws.StringValueSlice(model.InferenceTypesSupported),
-			"input_modalities": aws.StringValueSlice(model.InputModalities),
-			"output_modalities": aws.StringValueSlice(model.OutputModalities),
+			"model_arn":                    aws.StringValue(model.ModelArn),
+			"model_id":                     aws.StringValue(model.ModelId),
+			"model_name":                   aws.StringValue(model.ModelName),
+			"provider_name":                aws.StringValue(model.ProviderName),
+			"customizations_supported":     aws.StringValueSlice(model.CustomizationsSupported),
+			"inference_types_supported":    aws.StringValueSlice(model.InferenceTypesSupported),
+			"input_modalities":             aws.StringValueSlice(model.InputModalities),
+			"output_modalities":            aws.StringValueSlice(model.OutputModalities),
 			"response_streaming_supported": aws.BoolValue(model.ResponseStreamingSupported),
 		}
 
