@@ -86,11 +86,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
-				Config: testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
-=======
 				Config: testAccCertificateDataSourceConfig_types(domain, certType),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -117,11 +113,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
-=======
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -299,13 +291,8 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-<<<<<<< HEAD
-				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
-				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
-=======
 				Config:      testAccCertificateDataSourceConfig_types(domain, certType),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -322,11 +309,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
-=======
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -334,15 +317,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicAndTags(domain, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_statusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
@@ -367,15 +350,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicTags(tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndStatus(acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching search criteria`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
@@ -435,7 +418,7 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -447,67 +430,67 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicAndTags(domain, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_statusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicTags(tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndStatus(acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecentAndStatus(acm.CertificateStatusIssued, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_certTypes(certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_certStatus(acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_certStatusTypes(acm.CertificateStatusIssued, certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
 			},
 		},
 	})
