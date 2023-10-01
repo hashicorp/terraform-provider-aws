@@ -11,7 +11,7 @@ import (
 
 func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[0-9A-Za-z-.]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
