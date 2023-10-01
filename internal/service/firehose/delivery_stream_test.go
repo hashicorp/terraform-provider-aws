@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
@@ -1589,6 +1590,142 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_openSearchServerlessBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination", "opensearchserverless"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.collection_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.index_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_backup_mode", "FailedDocumentsOnly"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.compression_format", "UNCOMPRESSED"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_openSearchServerlessUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination", "opensearchserverless"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_interval", "500"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.collection_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.index_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_name", "LambdaArn"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_value"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_name", "BufferSizeInMBs"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_name", "BufferIntervalInSeconds"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_value", "70"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_backup_mode", "FailedDocumentsOnly"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.compression_format", "UNCOMPRESSED"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 				),
 			},
 		},
@@ -3936,6 +4073,120 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 }`, rName))
+}
+
+func testAccDeliveryStreamConfig_baseOpenSearchServerless(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_opensearchserverless_security_policy" "test" {
+  name = %[1]q
+  type = "encryption"
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/%[1]s"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+
+resource "aws_iam_role_policy" "firehose-aoss" {
+  name   = "%[1]s-aoss"
+  role   = aws_iam_role.firehose.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "aoss:*"
+      ],
+      "Resource": [
+        "${aws_opensearchserverless_collection.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_openSearchServerlessBasic(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_baseOpenSearchServerless(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-aoss]
+
+  name        = %[1]q
+  destination = "opensearchserverless"
+
+  opensearchserverless_configuration {
+    collection_endpoint = aws_opensearchserverless_collection.test.collection_endpoint
+    role_arn            = aws_iam_role.firehose.arn
+    index_name          = "test"
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_openSearchServerlessUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_baseOpenSearchServerless(rName), testAccDeliveryStreamConfig_baseLambda(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-aoss]
+
+  name        = %[1]q
+  destination = "opensearchserverless"
+
+  opensearchserverless_configuration {
+    collection_endpoint = aws_opensearchserverless_collection.test.collection_endpoint
+    role_arn            = aws_iam_role.firehose.arn
+    index_name          = "test"
+    buffering_interval  = 500
+    buffering_size      = 10
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+
+    processing_configuration {
+		enabled = false
+  
+		processors {
+		  type = "Lambda"
+  
+		  parameters {
+			parameter_name  = "LambdaArn"
+			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+		  }
+		  parameters {
+			parameter_name  = "BufferSizeInMBs"
+			parameter_value = "1"
+		  }
+		  parameters {
+			parameter_name  = "BufferIntervalInSeconds"
+			parameter_value = "70"
+		  }
+		}
+	  }
+  }
+}
+`, rName))
 }
 
 func testAccDeliveryStreamConfig_missingProcessingConfiguration(rName string) string {
