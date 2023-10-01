@@ -125,6 +125,10 @@ func TestValidParamGroupName(t *testing.T) {
 		ErrCount int
 	}{
 		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
+		{
 			Value:    "tEsting123",
 			ErrCount: 1,
 		},
