@@ -43,7 +43,7 @@ The following arguments are optional:
 
 * `engagement_metrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
-### guardian_options
+### guardian_attributes
 
 * `optimized_shared_delivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
