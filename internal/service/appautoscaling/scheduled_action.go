@@ -112,12 +112,16 @@ func ResourceScheduledAction() *schema.Resource {
 func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
+	currentStartTime, _ := time.Parse(time.RFC3339, d.Get("start_time").(string))
+	currentEndTime, _ := time.Parse(time.RFC3339, d.Get("end_time").(string))
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
 		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
 		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
+		StartTime:           aws.Time(currentStartTime),
+		EndTime:             aws.Time(currentEndTime),
 	}
 
 	needsPut := true
