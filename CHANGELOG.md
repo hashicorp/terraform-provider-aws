@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_guardduty_detector_feature` ([#31463](https://github.com/hashicorp/terraform-provider-aws/issues/31463))
+* **New Resource:** `aws_servicequotas_template` ([#33688](https://github.com/hashicorp/terraform-provider-aws/issues/33688))
 
 ENHANCEMENTS:
 
