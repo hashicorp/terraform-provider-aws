@@ -14,8 +14,8 @@ Provides information for a Service Catalog Portfolio.
 
 ```terraform
 data "aws_servicecatalog_portfolio_share" "example" {
-      portfolio_id = "port-00000000"
-      type = "ACCOUNT"
+  portfolio_id = "port-00000000"
+  type         = "ACCOUNT"
 }
 ```
 
