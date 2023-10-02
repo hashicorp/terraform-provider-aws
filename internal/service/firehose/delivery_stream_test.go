@@ -4165,25 +4165,25 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
 
     processing_configuration {
-		enabled = false
+      enabled = false
   
-		processors {
-		  type = "Lambda"
+      processors {
+        type = "Lambda"
   
-		  parameters {
-			parameter_name  = "LambdaArn"
-			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-		  }
-		  parameters {
-			parameter_name  = "BufferSizeInMBs"
-			parameter_value = "1"
-		  }
-		  parameters {
-			parameter_name  = "BufferIntervalInSeconds"
-			parameter_value = "70"
-		  }
-		}
-	  }
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
+    }
   }
 }
 `, rName))
