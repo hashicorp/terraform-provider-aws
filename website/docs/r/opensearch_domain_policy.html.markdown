@@ -19,20 +19,22 @@ resource "aws_opensearch_domain" "example" {
 }
 
 data "aws_iam_policy_document" "main" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "*"
-    identifiers = ["*"]
-  }
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
 
-  actions   = ["es:*"]
-  resources = ["${aws_opensearch_domain.example.arn}/*"]
+    actions   = ["es:*"]
+    resources = ["${aws_opensearch_domain.example.arn}/*"]
 
-  condition {
-    test     = "IpAddress"
-    variable = "aws:SourceIp"
-    values   = "127.0.0.1/32"
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["127.0.0.1/32"]
+    }
   }
 }
 
