@@ -35,13 +35,13 @@ const (
 	lambdaENIValueUpdated = "300"        // Default is 250
 )
 
-func TestAccServiceQuotasTemplate_basic(t *testing.T) {
+func testAccTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template types.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
@@ -53,7 +53,6 @@ func TestAccServiceQuotasTemplate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Use a distinct quota code for each test to ensure parallel tests run safely
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
@@ -72,12 +71,12 @@ func TestAccServiceQuotasTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccServiceQuotasTemplate_disappears(t *testing.T) {
+func testAccTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template types.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
@@ -89,7 +88,6 @@ func TestAccServiceQuotasTemplate_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Use a distinct quota code for each test to ensure parallel tests run safely
 				Config: testAccTemplateConfig_basic(lambdaConcurrentExecQuotaCode, lambdaServiceCode, lambdaConcurrentExecValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
@@ -101,13 +99,13 @@ func TestAccServiceQuotasTemplate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccServiceQuotasTemplate_value(t *testing.T) {
+func testAccTemplate_value(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template types.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
@@ -119,7 +117,6 @@ func TestAccServiceQuotasTemplate_value(t *testing.T) {
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Use a distinct quota code for each test to ensure parallel tests run safely
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),

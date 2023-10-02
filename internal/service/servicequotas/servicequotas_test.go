@@ -13,6 +13,11 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Template": {
+			"basic":      testAccTemplate_basic,
+			"disappears": testAccTemplate_disappears,
+			"value":      testAccTemplate_value,
+		},
 		"TemplateAssociation": {
 			"basic":       testAccTemplateAssociation_basic,
 			"disappears":  testAccTemplateAssociation_disappears,
