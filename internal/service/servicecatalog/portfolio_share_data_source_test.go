@@ -217,8 +217,8 @@ resource "aws_servicecatalog_portfolio_share" "test" {
 }
 
 data "aws_servicecatalog_portfolio_share" "test" {
-	portfolio_id = aws_servicecatalog_portfolio_share.test.id
-	type = aws_servicecatalog_portfolio_share.test.type
+  portfolio_id = aws_servicecatalog_portfolio_share.test.id
+  type = aws_servicecatalog_portfolio_share.test.type
 }
 `, rName, share))
 }
