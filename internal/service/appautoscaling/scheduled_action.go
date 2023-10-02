@@ -112,16 +112,21 @@ func ResourceScheduledAction() *schema.Resource {
 func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
-	currentStartTime, _ := time.Parse(time.RFC3339, d.Get("start_time").(string))
-	currentEndTime, _ := time.Parse(time.RFC3339, d.Get("end_time").(string))
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
 		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
 		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
-		StartTime:           aws.Time(currentStartTime),
-		EndTime:             aws.Time(currentEndTime),
+	}
+
+	currentStartTime := getTimeIfExist(d, "start_time")
+	if currentStartTime != nil {
+		input.StartTime = aws.Time(currentStartTime.(time.Time))
+	}
+	currentEndTime := getTimeIfExist(d, "end_time")
+	if currentEndTime != nil {
+		input.EndTime = aws.Time(currentEndTime.(time.Time))
 	}
 
 	needsPut := true
@@ -299,4 +304,13 @@ func flattenScalableTargetAction(cfg *applicationautoscaling.ScalableTargetActio
 	}
 
 	return []interface{}{m}
+}
+
+func getTimeIfExist(d *schema.ResourceData, timeKey string) interface{} {
+	val, ok := d.GetOk(timeKey)
+	if !ok {
+		return nil
+	}
+	timeVal, _ := time.Parse(time.RFC3339, val.(string))
+	return timeVal
 }
