@@ -95,7 +95,7 @@ resource aws_s3_bucket output_data {
 }
 
 resource "aws_iam_role" "bedrock_fine_tuning" {
-	name = "examplerole"
+	name = "bedrock-fine-tuning-%[1]s"
   
 	assume_role_policy = <<EOF
 {
@@ -182,13 +182,11 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 	role       = aws_iam_role.bedrock_fine_tuning.name
 	policy_arn = aws_iam_policy.BedrockAccessOutputS3Policy.arn
 }
-  
-data "aws_bedrock_foundation_models" "test" {}
 
 resource "aws_bedrock_custom_model" "test" {
 	custom_model_name = %[1]q
 	job_name = %[1]q
-	base_model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
+	base_model_id = "amazon.titan-embed-text-v1"
 	hyper_parameters = {
 	  "epochCount" = "1"
 	  "batchSize" = "1"
