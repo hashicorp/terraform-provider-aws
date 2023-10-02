@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_servicecatalog_portfolio")
+// @SDKDataSource("aws_servicecatalog_portfolio_share")
 func DataSourceSharePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioShareRead,
