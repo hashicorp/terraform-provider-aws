@@ -61,7 +61,7 @@ func dataSourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, m
 		Type:        aws.String(d.Get("type").(string)),
 	}
 
-	output, err := conn.DescribePortfolioShares(input)
+	output, err := conn.DescribePortfolioSharesWithContext(ctx, input)
 
 	detail := output.PortfolioShareDetails
 
@@ -69,7 +69,7 @@ func dataSourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio %s: %s", *detail[1].PrincipalId, err) // d.Get("portfolio_id"), err)
 	}
 
-	if output == nil { // || output.PortfolioShareDetails == nil {
+	if output == nil || output.PortfolioShareDetails == nil {
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get("portfolio_id").(string))
 	}
 
@@ -90,13 +90,11 @@ func dataSourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, m
 	SharePrincipals := strings.Join(sharePrincipals, ",")
 	AccountType := strings.Join(accountType, ",")
 
-	// return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio %s: %s", AccountType, err) // d.Get("portfolio_id"), err)
-
 	d.SetId(PortfolioId[0])
 	d.Set("type", AccountType)
 	d.Set("accepted", Accepted)
 	d.Set("share_principals", SharePrincipals)
 	d.Set("principal_ids", PrincipalIds)
 	d.Set("wait_for_acceptance", false)
-	return diags // sdkdiag.AppendErrorf(diags, detail)
+	return diags
 }
