@@ -38,10 +38,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_servicecatalog_portfolio",
 		},
 		{
-			Factory:  DataSourceSharePortfolio,
-			TypeName: "aws_servicecatalog_portfolio_share",
-		},
-		{
 			Factory:  DataSourcePortfolioConstraints,
 			TypeName: "aws_servicecatalog_portfolio_constraints",
 		},
