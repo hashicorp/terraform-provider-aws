@@ -22,7 +22,7 @@ func TestAccFoundationModelsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFoundationModelsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_custom_models.test", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
 				),
 			},

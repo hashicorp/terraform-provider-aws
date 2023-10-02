@@ -28,6 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCustomModel,
 			TypeName: "aws_bedrock_custom_model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "model_id",
+			},
 		},
 		{
 			Factory:  DataSourceCustomModels,

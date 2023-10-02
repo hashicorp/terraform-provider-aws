@@ -11,11 +11,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/bedrock"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // @SDKResource("aws_bedrock_custom_model", name="Custom-Model")
@@ -134,21 +136,44 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	customModelName := d.Get("custom_model_name").(string)
 	jobName := d.Get("job_name").(string)
 	roleArn := d.Get("role_arn").(string)
-	// hyperParameters := expandHyperParameters(d.Get("hyper_parameters").(*schema.Set))
+	outputDataConfig := d.Get("output_data_config").(string)
+	trainingDataConfig := d.Get("training_data_config").(string)
 
 	input := &bedrock.CreateModelCustomizationJobInput{
 		BaseModelIdentifier: aws.String(baseModelId),
 		CustomModelName:     aws.String(customModelName),
 		JobName:             aws.String(jobName),
 		RoleArn:             aws.String(roleArn),
+		OutputDataConfig: &bedrock.OutputDataConfig{
+			S3Uri: aws.String(outputDataConfig),
+		},
+		TrainingDataConfig: &bedrock.TrainingDataConfig{
+			S3Uri: aws.String(trainingDataConfig),
+		},
 	}
 
+	if v, ok := d.GetOk("hyper_parameters"); ok && len(v.(map[string]interface{})) > 0 {
+		input.HyperParameters = flex.ExpandStringMap(v.(map[string]interface{}))
+	}
 	if v, ok := d.GetOk("client_request_token"); ok {
 		input.ClientRequestToken = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("custom_model_kms_key_id"); ok {
 		input.CustomModelKmsKeyId = aws.String(v.(string))
 	}
+
+	// if v, ok := d.GetOk("hyper_parameters"); ok && v.(*schema.Set).Len() > 0 {
+	// 	input.HyperParameters = expandHyperParameters(v.(*schema.Set).List())
+	// }
+
+	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
+		"BaseModelIdentifier": baseModelId,
+		"CustomModelName":     customModelName,
+		"JobName":             jobName,
+		"RoleArn":             roleArn,
+		"OutputDataConfig":    outputDataConfig,
+		"TrainingDataConfig":  trainingDataConfig,
+	})
 
 	output, err := conn.CreateModelCustomizationJobWithContext(ctx, input)
 	// _, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -251,3 +276,15 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	return diags
 }
+
+// func expandHyperParameters(data []interface{}) []*bedrock. {
+// 	var streamingTargets []*chimesdkvoice.StreamingNotificationTarget
+
+// 	for _, item := range data {
+// 		streamingTargets = append(streamingTargets, &chimesdkvoice.StreamingNotificationTarget{
+// 			NotificationTarget: aws.String(item.(string)),
+// 		})
+// 	}
+
+// 	return streamingTargets
+// }
