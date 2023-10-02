@@ -36,7 +36,7 @@ func testAccPortfolioShareData_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPortfolioShareConfig_basic(rName, true),
+				Config: testAccPortfolioShareDataConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
@@ -57,7 +57,7 @@ func testAccPortfolioShareData_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccPortfolioShareConfig_basic(rName, false),
+				Config: testAccPortfolioShareDataConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
