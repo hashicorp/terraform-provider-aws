@@ -1,0 +1,3 @@
+```release-note:bug
+resource/opensearch_domain_policy: Correct the syntax of the aws_iam_policy_document data source it the provided example
+```
