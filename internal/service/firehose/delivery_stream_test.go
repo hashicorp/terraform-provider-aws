@@ -4166,10 +4166,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
     processing_configuration {
       enabled = false
-  
+
       processors {
         type = "Lambda"
-  
+
         parameters {
           parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
