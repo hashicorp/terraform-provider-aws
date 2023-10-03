@@ -20,6 +20,7 @@ Auto Scaling
 Auto Scaling Plans
 Backup
 Batch
+Bedrock
 CE (Cost Explorer)
 Chime
 Chime SDK Media Pipelines

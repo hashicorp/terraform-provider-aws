@@ -54,6 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0 h1:bRmFz6sBl9wp0PHlhcZnEd
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0/go.mod h1:zk3+CYtLFK+Yo83oc+rARhvajxgM3rmxPRmoFpHTsNw=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5 h1:nAZnFygNPs3I3LR9AR7rud21ESTiTTHXuLQ4KW4tO+0=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5/go.mod h1:EwlbwoKCPpH81bmlIVk6XD91fh9fF7CKQlp8uxlndXE=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.1.0 h1:+FjQltrNsIfuXt3aY4tQ6kzOqh1PLrH4UjBY5qfe+O4=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.1.0/go.mod h1:yyyJfF13r8ldkS9NaWcIiRZi14Z6jzSVx0al0kDWpkA=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0 h1:wDRpDU1x+xSKfezFyMUA96wzwXDVN/TbBKr6EED6Muo=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0/go.mod h1:MrKI9BOSn2qulUfYxligb7ZKrYB1FtxjP5kcK3VxFoY=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5 h1:u0OiSC//5remFN6t5U9iYPemlKsEQ9qeC9bzF0JaJHo=
