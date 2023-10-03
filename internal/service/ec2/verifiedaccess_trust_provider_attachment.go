@@ -6,10 +6,14 @@ package ec2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -19,7 +23,8 @@ import (
 // @SDKResource("aws_verifiedaccess_trust_provider_attachment", name="Verified Access Trust Provider Attachment")
 func ResourceTrustProviderAttachment() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceTrustProviderAttachmentRead,
+		CreateWithoutTimeout: resourceTrustProviderAttachmentCreate,
+		ReadWithoutTimeout:   resourceTrustProviderAttachmentRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -38,6 +43,30 @@ func ResourceTrustProviderAttachment() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceTrustProviderAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	instanceId := d.Get("instance_id").(string)
+	trustProviderId := d.Get("trust_provider_id").(string)
+
+	input := &ec2.AttachVerifiedAccessTrustProviderInput{
+		ClientToken:                   aws.String(id.UniqueId()),
+		VerifiedAccessInstanceId:      aws.String(instanceId),
+		VerifiedAccessTrustProviderId: aws.String(trustProviderId),
+	}
+
+	output, err := conn.AttachVerifiedAccessTrustProvider(ctx, input)
+
+	if err != nil || output == nil {
+		return sdkdiag.AppendErrorf(diags, "creating Verified Access Trust Provider Attachment: %s", err)
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s", instanceId, trustProviderId))
+
+	return append(diags, resourceTrustProviderAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceTrustProviderAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
