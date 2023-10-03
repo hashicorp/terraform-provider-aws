@@ -1431,7 +1431,7 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func retryDeliveryStreamOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
+func retryDeliveryStreamOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
 	return tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
