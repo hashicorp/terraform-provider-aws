@@ -960,6 +960,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceTrustProviderAttachment,
+			TypeName: "aws_verifiedaccess_trust_provider_attachment",
+			Name:     "Verified Access Trust Provider Attachment",
+		},
+		{
 			Factory:  ResourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
 		},
