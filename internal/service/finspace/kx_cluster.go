@@ -125,7 +125,7 @@ func ResourceKxCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(8, 10),
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
@@ -210,11 +210,6 @@ func ResourceKxCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"CACHE_1000",
-											"CACHE_250",
-											"CACHE_12",
-										}, true),
 									},
 									"db_paths": {
 										Type: schema.TypeSet,
