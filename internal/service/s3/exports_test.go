@@ -11,12 +11,19 @@ var (
 	FindBucket                            = findBucket
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
+	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
 	FindBucketPolicy                      = findBucketPolicy
+	FindBucketRequestPayment              = findBucketRequestPayment
 	FindBucketVersioning                  = findBucketVersioning
 	FindBucketWebsite                     = findBucketWebsite
 	FindCORSRules                         = findCORSRules
+	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
+	FindInventoryConfiguration            = findInventoryConfiguration
+	FindLoggingEnabled                    = findLoggingEnabled
+	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
+	FindOwnershipControls                 = findOwnershipControls
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 

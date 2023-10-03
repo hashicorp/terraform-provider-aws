@@ -53,6 +53,7 @@ import (
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -201,7 +202,6 @@ import (
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
-	servicequotas_sdkv1 "github.com/aws/aws-sdk-go/service/servicequotas"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
@@ -1010,8 +1010,8 @@ func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_
 	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
 }
 
-func (c *AWSClient) ServiceQuotasConn(ctx context.Context) *servicequotas_sdkv1.ServiceQuotas {
-	return errs.Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
+func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
+	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas))
 }
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {

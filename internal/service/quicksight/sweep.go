@@ -459,6 +459,9 @@ func skipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Directory information for account") {
 		return true
 	}
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Account information for account") {
+		return true
+	}
 
 	return sweep.SkipSweepError(err)
 }

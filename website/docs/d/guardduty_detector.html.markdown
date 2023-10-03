@@ -24,6 +24,12 @@ data "aws_guardduty_detector" "example" {}
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `features` - Current configuration of the detector features.
+    * `additional_configuration` - Additional feature configuration.
+        * `name` - The name of the additional configuration.
+        * `status` - The status of the additional configuration.
+    * `name` - The name of the detector feature.
+    * `status` - The status of the detector feature.
 * `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `service_role_arn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.

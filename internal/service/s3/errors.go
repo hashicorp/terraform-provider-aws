@@ -29,6 +29,7 @@ const (
 	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
 	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
+	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
