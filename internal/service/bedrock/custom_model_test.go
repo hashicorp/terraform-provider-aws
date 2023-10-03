@@ -89,9 +89,24 @@ resource aws_s3_bucket validation_data {
 
 resource aws_s3_bucket output_data {
 	bucket = "bedrock-output-data-%[1]s"
+	force_destroy = true
 	tags = {
 		"CreatorName" = "richard.weerasinghe@slalom.com"
 	}
+}
+
+resource "aws_s3_bucket_object" "training_data" {
+	bucket = aws_s3_bucket.training_data.id
+	key    = "myfolder/training_data.jsonl"
+	source = "./testdata/training_data.jsonl"
+	etag = filemd5("./testdata/training_data.jsonl")
+}
+
+resource "aws_s3_bucket_object" "validation_data" {
+	bucket = aws_s3_bucket.validation_data.id
+	key    = "myfolder/validation_data.jsonl"
+	source = "./testdata/validation_data.jsonl"
+	etag = filemd5("./testdata/validation_data.jsonl")
 }
 
 resource "aws_iam_role" "bedrock_fine_tuning" {
@@ -138,6 +153,7 @@ resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
 					"s3:ListObjects"
 				],
 				"Resource": [
+					"${aws_s3_bucket.training_data.arn}",
 					"${aws_s3_bucket.training_data.arn}/myfolder",
 					"${aws_s3_bucket.training_data.arn}/myfolder/*",
 					"${aws_s3_bucket.validation_data.arn}/myfolder",
@@ -186,7 +202,7 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 resource "aws_bedrock_custom_model" "test" {
 	custom_model_name = %[1]q
 	job_name = %[1]q
-	base_model_id = "amazon.titan-embed-text-v1"
+	base_model_id = "amazon.titan-text-express-v1"
 	hyper_parameters = {
 	  "epochCount" = "1"
 	  "batchSize" = "1"
@@ -195,7 +211,7 @@ resource "aws_bedrock_custom_model" "test" {
 	}
 	output_data_config = "s3://${aws_s3_bucket.output_data.id}/myfolder/"
 	role_arn = aws_iam_role.bedrock_fine_tuning.arn
-	training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/"
+	training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/training_data.jsonl"
   }
 `, rName)
 }
