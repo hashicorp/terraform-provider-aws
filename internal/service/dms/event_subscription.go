@@ -79,7 +79,7 @@ func ResourceEventSubscription() *schema.Resource {
 			},
 			"source_type": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				// The API suppors modification but doing so loses all source_ids
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
