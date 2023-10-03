@@ -598,7 +598,8 @@ This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. More details are given below.
+* `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. More details are given below.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
@@ -613,8 +614,19 @@ is redshift). More details are given below.
 
 The `kinesis_source_configuration` object supports the following:
 
-* `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
-* `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
+* `kinesis_stream_arn` - (Required) The kinesis stream used as the source of the firehose delivery stream.
+* `role_arn` - (Required) The ARN of the role that provides access to the source Kinesis stream.
+
+The `msk_source_configuration` object supports the following:
+
+* `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. More details are given below.
+* `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
+* `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+
+The `authentication_configuration` object supports the following:
+
+* `connectivity` - (Required) The type of connectivity used to access the Amazon MSK cluster. Valid values: `PUBLIC`, `PRIVATE`.
+* `role_arn` - (Required) The ARN of the role used to access the Amazon MSK cluster.
 
 The `server_side_encryption` object supports the following:
 

@@ -773,7 +773,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					ForceNew:      true,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"server_side_encryption"},
+					ConflictsWith: []string{"msk_source_configuration", "server_side_encryption"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"kinesis_stream_arn": {
@@ -787,6 +787,50 @@ func ResourceDeliveryStream() *schema.Resource {
 								Required:     true,
 								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"msk_source_configuration": {
+					Type:          schema.TypeList,
+					ForceNew:      true,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"kinesis_source_configuration", "server_side_encryption"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_configuration": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"connectivity": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringInSlice(firehose.Connectivity_Values(), false),
+										},
+										"role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"msk_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"topic_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
 							},
 						},
 					},
@@ -1039,7 +1083,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					Optional:         true,
 					MaxItems:         1,
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-					ConflictsWith:    []string{"kinesis_source_configuration"},
+					ConflictsWith:    []string{"kinesis_source_configuration", "msk_source_configuration"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"enabled": {
@@ -1155,6 +1199,9 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
 		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
 		input.KinesisStreamSourceConfiguration = expandKinesisStreamSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeMskasSource)
+		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	switch d.Get("destination").(string) {
@@ -1242,9 +1289,16 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("arn", s.DeliveryStreamARN)
-	if s.Source != nil {
-		if err := d.Set("kinesis_source_configuration", flattenKinesisStreamSourceDescription(s.Source.KinesisStreamSourceDescription)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting kinesis_source_configuration: %s", err)
+	if v := s.Source; v != nil {
+		if v := v.KinesisStreamSourceDescription; v != nil {
+			if err := d.Set("kinesis_source_configuration", flattenKinesisStreamSourceDescription(v)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting kinesis_source_configuration: %s", err)
+			}
+		}
+		if v := v.MSKSourceDescription; v != nil {
+			if err := d.Set("msk_source_configuration", []interface{}{flattenMSKSourceDescription(v)}); err != nil {
+				return diag.Errorf("setting msk_source_configuration: %s", err)
+			}
 		}
 	}
 	d.Set("name", s.DeliveryStreamName)
@@ -2539,6 +2593,86 @@ func expandDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *fir
 	}
 
 	return apiObject
+}
+
+func expandMSKSourceConfiguration(tfMap map[string]interface{}) *firehose.MSKSourceConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &firehose.MSKSourceConfiguration{}
+
+	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AuthenticationConfiguration = expandAuthenticationConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
+		apiObject.MSKClusterARN = aws.String(v)
+	}
+
+	if v, ok := tfMap["topic_name"].(string); ok && v != "" {
+		apiObject.TopicName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandAuthenticationConfiguration(tfMap map[string]interface{}) *firehose.AuthenticationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &firehose.AuthenticationConfiguration{}
+
+	if v, ok := tfMap["connectivity"].(string); ok && v != "" {
+		apiObject.Connectivity = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleARN = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenMSKSourceDescription(apiObject *firehose.MSKSourceDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthenticationConfiguration; v != nil {
+		tfMap["authentication_configuration"] = []interface{}{flattenAuthenticationConfiguration(v)}
+	}
+
+	if v := apiObject.MSKClusterARN; v != nil {
+		tfMap["msk_cluster_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TopicName; v != nil {
+		tfMap["topic_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenAuthenticationConfiguration(apiObject *firehose.AuthenticationConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Connectivity; v != nil {
+		tfMap["connectivity"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RoleARN; v != nil {
+		tfMap["role_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenCloudWatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
