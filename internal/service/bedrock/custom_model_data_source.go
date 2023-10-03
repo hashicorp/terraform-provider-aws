@@ -15,7 +15,6 @@ import (
 )
 
 // @SDKDataSource("aws_bedrock_custom_model")
-// @Tags(identifierAttribute="model_id")
 func DataSourceCustomModel() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomModelRead,

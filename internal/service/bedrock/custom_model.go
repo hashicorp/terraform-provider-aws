@@ -5,6 +5,7 @@ package bedrock
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -162,10 +164,6 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CustomModelKmsKeyId = aws.String(v.(string))
 	}
 
-	// if v, ok := d.GetOk("hyper_parameters"); ok && v.(*schema.Set).Len() > 0 {
-	// 	input.HyperParameters = expandHyperParameters(v.(*schema.Set).List())
-	// }
-
 	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
 		"BaseModelIdentifier": baseModelId,
 		"CustomModelName":     customModelName,
@@ -175,42 +173,39 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		"TrainingDataConfig":  trainingDataConfig,
 	})
 
-	output, err := conn.CreateModelCustomizationJobWithContext(ctx, input)
-	// _, err := tfresource.RetryWhen(ctx, propagationTimeout,
-	// 	func() (interface{}, error) {
-	// 		return conn.CreateAddonWithContext(ctx, input)
-	// 	},
-	// 	func(err error) (bool, error) {
-	// 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
-	// 			return true, err
-	// 		}
-
-	// 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
-	// 			return true, err
-	// 		}
-
-	// 		return false, err
-	// 	},
-	// )
+	jobStart, err := conn.CreateModelCustomizationJobWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Bedrock Custom Model Customization Job: %s", err)
 	}
 
-	d.SetId(*output.JobArn)
+	var jobEnd *bedrock.GetModelCustomizationJobOutput
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+		jobEnd, err = conn.GetModelCustomizationJobWithContext(ctx, &bedrock.GetModelCustomizationJobInput{
+			JobIdentifier: jobStart.JobArn,
+		})
+		if err != nil {
+			return retry.NonRetryableError(fmt.Errorf("error getting model customization job: %s", err))
+		}
 
-	// if _, err := waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate)); err != nil {
-	// 	// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
-	// 	// might result in a failed creation, if unmanaged version of addon is already deployed
-	// 	// and there are configuration conflicts:
-	// 	// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-	// 	//
-	// 	// Addon resource is tainted after failed creation, thus will be deleted and created again.
-	// 	// Re-creating like this will resolve the error, but it will also purge any
-	// 	// configurations that were applied by the user (that were conflicting). This might we an unwanted
-	// 	// side effect and should be left for the user to decide how to handle it.
-	// 	diags = sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) create: %s", d.Id(), err)
-	// 	return sdkdiag.AppendWarningf(diags, "Running terraform apply again will remove the kubernetes add-on and attempt to create it again effectively purging previous add-on configuration")
-	// }
+		tflog.Info(ctx, "GetModelCustomizationJobOuput:", map[string]any{
+			"Status": jobEnd.Status,
+		})
+
+		switch *jobEnd.Status {
+		case "InProgress":
+			return retry.RetryableError(fmt.Errorf("expected instance to be Completed but was in state %s", *jobEnd.Status))
+		case "Completed":
+			return nil
+		default:
+			return retry.NonRetryableError(fmt.Errorf(*jobEnd.FailureMessage))
+		}
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "failed to complete model customisation job: %s", err)
+	}
+
+	d.SetId(*jobEnd.OutputModelArn)
+	d.Set("model_id", *jobEnd.OutputModelArn)
 
 	return append(diags, resourceCustomModelRead(ctx, d, meta)...)
 }
@@ -249,12 +244,6 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting validation_metrics: %s", err)
 	}
 
-	// "base_model_arn": aws.StringValue(model.BaseModelArn),
-	// 		"base_model_name": aws.StringValue(model.BaseModelName),
-	// 		"model_arn": aws.StringValue(model.ModelArn),
-	// 		"model_name": aws.StringValue(model.ModelName),
-	// 		"creation_time": aws.TimeValue(model.CreationTime).Format(time.RFC3339),
-
 	return diags
 }
 
@@ -276,15 +265,3 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	return diags
 }
-
-// func expandHyperParameters(data []interface{}) []*bedrock. {
-// 	var streamingTargets []*chimesdkvoice.StreamingNotificationTarget
-
-// 	for _, item := range data {
-// 		streamingTargets = append(streamingTargets, &chimesdkvoice.StreamingNotificationTarget{
-// 			NotificationTarget: aws.String(item.(string)),
-// 		})
-// 	}
-
-// 	return streamingTargets
-// }
