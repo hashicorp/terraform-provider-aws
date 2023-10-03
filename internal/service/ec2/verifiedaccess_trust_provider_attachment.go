@@ -25,6 +25,7 @@ func ResourceTrustProviderAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustProviderAttachmentCreate,
 		ReadWithoutTimeout:   resourceTrustProviderAttachmentRead,
+		DeleteWithoutTimeout: resourceTrustProviderAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -93,6 +94,27 @@ func resourceTrustProviderAttachmentRead(ctx context.Context, d *schema.Resource
 
 	d.Set("instance_id", instanceId)
 	d.Set("trust_provider_id", trustProviderId)
+
+	return diags
+}
+
+func resourceTrustProviderAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	instanceId := d.Get("instance_id").(string)
+	trustProviderId := d.Get("trust_provider_id").(string)
+
+	log.Printf("[INFO] Deleting Verified Access Trust Provider Attachment: %s", d.Id())
+	_, err := conn.DetachVerifiedAccessTrustProvider(ctx, &ec2.DetachVerifiedAccessTrustProviderInput{
+		ClientToken:                   aws.String(id.UniqueId()),
+		VerifiedAccessInstanceId:      aws.String(instanceId),
+		VerifiedAccessTrustProviderId: aws.String(trustProviderId),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Trust Provider Attachment (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
