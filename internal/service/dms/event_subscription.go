@@ -75,7 +75,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				ForceNew: true,
-				Optional: true,
+				Required: true,
 			},
 			"source_type": {
 				Type:     schema.TypeString,
