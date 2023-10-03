@@ -7075,6 +7075,40 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client,
 	return output, nil
 }
 
+func FindVerifiedAccessTrustProviderAttachmentByID(ctx context.Context, conn *ec2_sdkv2.Client, instanceId, trustProviderId string) (*awstypes.VerifiedAccessInstance, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessInstancesInput{
+		VerifiedAccessInstanceIds: []string{instanceId},
+	}
+	output, err := FindVerifiedAccessInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessInstanceId) != instanceId {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	// Check for trust provider id match
+	entryExists := false
+
+	for _, n := range output.VerifiedAccessTrustProviders {
+		if trustProviderId == aws_sdkv2.ToString(n.VerifiedAccessTrustProviderId) {
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
 	output, err := FindVerifiedAccessTrustProviders(ctx, conn, input)
 
