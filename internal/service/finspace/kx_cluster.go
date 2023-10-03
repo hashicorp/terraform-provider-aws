@@ -117,10 +117,9 @@ func ResourceKxCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1200, 33600),
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
 						},
 						"type": {
 							Type:         schema.TypeString,
