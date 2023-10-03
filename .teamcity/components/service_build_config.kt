@@ -6,6 +6,8 @@ import jetbrains.buildServer.configs.kotlin.ParameterDisplay
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.failureConditions.failOnText
+import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnText
 import java.io.File
 
 data class ServiceSpec(
@@ -69,6 +71,17 @@ class Service(name: String, spec: ServiceSpec) {
                     name = "Run Acceptance Tests"
                     workingDir = serviceDir
                     scriptContent = File("./scripts/service_tests/acceptance_tests.sh").readText()
+                }
+            }
+
+            failureConditions {
+                failOnText {
+                    conditionType = BuildFailureOnText.ConditionType.REGEXP
+                    pattern = """(?i)build canceled"""
+                    failureMessage = "build canceled when agent unregistered"
+                    reverse = false
+                    stopBuildOnFailure = true
+                    reportOnlyFirstMatch = false
                 }
             }
 

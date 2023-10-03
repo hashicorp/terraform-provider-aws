@@ -7,16 +7,17 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -865,7 +866,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.RedshiftSettings = settings
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.MicrosoftSQLServerSettings = &dms.MicrosoftSQLServerSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -959,10 +960,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = resourceEndpointSetState(d, endpoint)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
+	if err := resourceEndpointSetState(d, endpoint); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -1201,7 +1200,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					}
 				}
 			}
-		case engineNameSQLServer:
+		case engineNameSQLServer, engineNameBabelfish:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1527,7 +1526,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
 			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if endpoint.MicrosoftSQLServerSettings != nil {
 			d.Set("username", endpoint.MicrosoftSQLServerSettings.Username)
 			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)
@@ -2235,7 +2234,7 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 		// normalize key, from camelCase to snake_case,
 		// and value where hyphens maybe used in a config
 		// but the API returns with underscores
-		matchAllCap := regexp.MustCompile("([a-z])([A-Z])")
+		matchAllCap := regexache.MustCompile("([a-z])([A-Z])")
 		key := matchAllCap.ReplaceAllString(k, "${1}_${2}")
 		normalizedVal := strings.Replace(strings.ToLower(v), "-", "_", -1)
 
@@ -2301,4 +2300,87 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *dms.Endpoin
 	d.Set("server_name", endpoint.ServerName)
 	d.Set("port", endpoint.Port)
 	d.Set("database_name", endpoint.DatabaseName)
+}
+
+func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+	input := &dms.DescribeEndpointsInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("endpoint-id"),
+				Values: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	return findEndpoint(ctx, conn, input)
+}
+
+func findEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) (*dms.Endpoint, error) {
+	output, err := findEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEndpoints(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) ([]*dms.Endpoint, error) {
+	var output []*dms.Endpoint
+
+	err := conn.DescribeEndpointsPagesWithContext(ctx, input, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Endpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{endpointStatusDeleting},
+		Target:  []string{},
+		Refresh: statusEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

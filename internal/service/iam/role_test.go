@@ -6,9 +6,9 @@ package iam_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -382,7 +382,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_badJSON(rName),
-				ExpectError: regexp.MustCompile(`.*contains an invalid JSON:.*`),
+				ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
 			},
 		},
 	})
@@ -456,11 +456,11 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 3599),
-				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 43201),
-				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
 				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),

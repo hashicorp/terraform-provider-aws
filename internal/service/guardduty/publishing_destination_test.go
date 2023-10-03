@@ -27,7 +27,10 @@ func testAccPublishingDestination_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.gd_key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx),
@@ -56,7 +59,10 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx),
@@ -159,11 +165,6 @@ resource "aws_guardduty_detector" "test_gd" {
 resource "aws_s3_bucket" "gd_bucket" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "gd_bucket_acl" {
-  bucket = aws_s3_bucket.gd_bucket.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "gd_bucket_policy" {

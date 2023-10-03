@@ -4597,7 +4597,7 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 	return output, nil
 }
 
-func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"type": ec2.TransitGatewayRouteTypeStatic,
@@ -4605,24 +4605,13 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	output, err := conn.SearchTransitGatewayRoutesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+	output, err := FindTransitGatewayRoutes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Routes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, route := range output.Routes {
+	for _, route := range output {
 		if route == nil {
 			continue
 		}
@@ -4642,6 +4631,27 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 	}
 
 	return nil, &retry.NotFoundError{}
+}
+
+func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.SearchTransitGatewayRoutesInput) ([]*ec2.TransitGatewayRoute, error) {
+	output, err := conn.SearchTransitGatewayRoutesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Routes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Routes, err
 }
 
 func FindTransitGatewayPolicyTable(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*ec2.TransitGatewayPolicyTable, error) {
@@ -7003,6 +7013,114 @@ func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client
 
 	// Eventual consistency check.
 	if aws_sdkv2.ToString(output.InstanceConnectEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstance(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstancesInput) (*awstypes.VerifiedAccessInstance, error) {
+	output, err := FindVerifiedAccessInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessInstances(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstancesInput) ([]awstypes.VerifiedAccessInstance, error) {
+	var output []awstypes.VerifiedAccessInstance
+	paginator := ec2_sdkv2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessInstances...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessInstance, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessInstancesInput{
+		VerifiedAccessInstanceIds: []string{id},
+	}
+	output, err := FindVerifiedAccessInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessInstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
+	output, err := FindVerifiedAccessTrustProviders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessTrustProviders(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) ([]awstypes.VerifiedAccessTrustProvider, error) {
+	var output []awstypes.VerifiedAccessTrustProvider
+	paginator := ec2_sdkv2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessTrustProviders...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessTrustProvider, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput{
+		VerifiedAccessTrustProviderIds: []string{id},
+	}
+	output, err := FindVerifiedAccessTrustProvider(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessTrustProviderId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}

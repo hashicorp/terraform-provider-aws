@@ -6,9 +6,9 @@ package appconfig_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -35,8 +35,8 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "extension_arn", "appconfig", regexp.MustCompile(`extension/*`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "appconfig", regexp.MustCompile(`application/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "extension_arn", "appconfig", regexache.MustCompile(`extension/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "appconfig", regexache.MustCompile(`application/*`)),
 				),
 			},
 			{

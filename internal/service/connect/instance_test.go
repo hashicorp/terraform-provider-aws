@@ -6,9 +6,9 @@ package connect_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/connect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func testAccInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexache.MustCompile(`instance/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "true"), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "false"),       //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),             //verified default result from ListInstanceAttributes()
@@ -43,10 +43,10 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "true"), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
 			},
@@ -59,14 +59,14 @@ func testAccInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexache.MustCompile(`instance/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
-					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),

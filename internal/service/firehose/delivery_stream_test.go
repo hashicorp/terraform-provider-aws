@@ -6,10 +6,10 @@ package firehose_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -51,13 +51,13 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "just-a-name",
-				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+				ExpectError:   regexache.MustCompile(`Expected ID in format`),
 			},
 			{
 				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", //lintignore:AWSAT003,AWSAT005
-				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+				ExpectError:   regexache.MustCompile(`Expected ID in format`),
 			},
 		},
 	})

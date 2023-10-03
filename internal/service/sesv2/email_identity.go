@@ -64,6 +64,7 @@ func ResourceEmailIdentity() *schema.Resource {
 						"domain_signing_private_key": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Sensitive:    true,
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 20480),

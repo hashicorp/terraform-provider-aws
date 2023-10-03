@@ -6,9 +6,9 @@ package ecs_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -83,16 +83,16 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
@@ -1121,7 +1121,7 @@ func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
-				ExpectError: regexp.MustCompile(`invalid container definition supplied at index \(1\)`),
+				ExpectError: regexache.MustCompile(`invalid container definition supplied at index \(1\)`),
 			},
 		},
 	})

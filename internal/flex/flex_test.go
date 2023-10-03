@@ -39,6 +39,37 @@ func TestExpandStringList(t *testing.T) {
 	}
 }
 
+func TestExpandStringListEmpty(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		configured []interface{}
+		want       []*string
+	}{
+		{
+			configured: []interface{}{"abc", "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"abc", 123, "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String(""), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", "", "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", nil, "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := ExpandStringListEmpty(testCase.configured), testCase.want; !cmp.Equal(got, want) {
+			t.Errorf("ExpandStringListEmpty(%v) = %v, want %v", testCase.configured, got, want)
+		}
+	}
+}
+
 func TestExpandStringTimeList(t *testing.T) {
 	t.Parallel()
 

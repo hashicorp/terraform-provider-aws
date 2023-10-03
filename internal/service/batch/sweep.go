@@ -18,6 +18,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
@@ -228,12 +229,11 @@ func sweepJobQueues(region string) error {
 		}
 
 		for _, v := range page.JobQueues {
-			r := ResourceJobQueue()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.JobQueueArn))
-			d.Set("name", v.JobQueueName)
+			id := aws.StringValue(v.JobQueueArn)
 
-			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceJobQueue, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 
 		return !lastPage

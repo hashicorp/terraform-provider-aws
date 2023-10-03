@@ -51,6 +51,7 @@ resource "aws_iot_provisioning_template" "fleet" {
   name                  = "FleetTemplate"
   description           = "My provisioning template"
   provisioning_role_arn = aws_iam_role.iot_fleet_provisioning.arn
+  enabled               = true
 
   template_body = jsonencode({
     Parameters = {

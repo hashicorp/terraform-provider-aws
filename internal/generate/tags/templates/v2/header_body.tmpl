@@ -10,7 +10,9 @@ import (
 	"time"
 	{{- end }}
 
+	{{ if not .SkipAWSImp }}
 	"github.com/aws/aws-sdk-go-v2/aws"
+	{{- end }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
 		{{- if not .SkipServiceImp }}
@@ -27,8 +29,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	{{- end }}
+	{{- if .TfLogPkg }}
+    "github.com/hashicorp/terraform-plugin-log/tflog"
+	{{- end }}
 	{{- if .ConnsPkg }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	{{- end }}
+	{{- if .LoggingPkg }}
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
