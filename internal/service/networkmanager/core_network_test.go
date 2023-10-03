@@ -314,7 +314,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_policy_policy_document", "create_base_policy"},
+				ImportStateVerifyIgnore: []string{"base_policy_document", "create_base_policy"},
 			},
 		},
 	})
@@ -519,9 +519,9 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 
 resource "aws_networkmanager_core_network" "test" {
-  global_network_id           = aws_networkmanager_global_network.test.id
-  create_base_policy          = true
-  base_policy_policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+  global_network_id    = aws_networkmanager_global_network.test.id
+  create_base_policy   = true
+  base_policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.AlternateRegion(), edgeAsn1, acctest.Region(), edgeAsn2)
 }

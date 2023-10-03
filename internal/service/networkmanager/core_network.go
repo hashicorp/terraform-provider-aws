@@ -65,7 +65,7 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"base_policy_policy_document": {
+			"base_policy_document": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -85,7 +85,7 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  verify.ValidRegionName,
-				ConflictsWith: []string{"base_policy_policy_document", "base_policy_regions"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_regions"},
 			},
 			"base_policy_regions": {
 				Type:     schema.TypeSet,
@@ -94,7 +94,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidRegionName,
 				},
-				ConflictsWith: []string{"base_policy_policy_document", "base_policy_region"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_region"},
 			},
 			"create_base_policy": {
 				Type:     schema.TypeBool,
@@ -187,9 +187,9 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	// this creates the core network with a starting policy document set to LIVE
 	// this is required for the first terraform apply if there attachments to the core network
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		// if user supplies a full base_policy_policy_document for maximum flexibility, use it. Otherwise, use regions list
+		// if user supplies a full base_policy_document for maximum flexibility, use it. Otherwise, use regions list
 		// var policyDocumentTarget string
-		if v, ok := d.GetOk("base_policy_policy_document"); ok {
+		if v, ok := d.GetOk("base_policy_document"); ok {
 			input.PolicyDocument = aws.String(v.(string))
 		} else {
 			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
