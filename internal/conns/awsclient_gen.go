@@ -40,6 +40,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
@@ -821,6 +822,10 @@ func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.
 
 func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
 	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts))
+}
+
+func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {
+	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD))
 }
 
 func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {

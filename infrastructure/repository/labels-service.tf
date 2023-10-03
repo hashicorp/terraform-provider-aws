@@ -226,6 +226,7 @@ variable "service_labels" {
     "organizations",
     "outposts",
     "panorama",
+    "pcaconnectorad",
     "personalize",
     "personalizeevents",
     "personalizeruntime",

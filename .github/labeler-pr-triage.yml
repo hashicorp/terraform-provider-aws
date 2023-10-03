@@ -781,6 +781,9 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/pcaconnectorad:
+  - 'internal/service/pcaconnectorad/**/*'
+  - 'website/**/pcaconnectorad_*'
 service/personalize:
   - 'internal/service/personalize/**/*'
   - 'website/**/personalize_*'

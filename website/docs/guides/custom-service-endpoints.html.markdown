@@ -214,6 +214,7 @@ provider "aws" {
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
   <li><code>outposts</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
   <li><code>pricing</code></li>

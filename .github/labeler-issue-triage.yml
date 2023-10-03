@@ -477,6 +477,8 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/pcaconnectorad:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:

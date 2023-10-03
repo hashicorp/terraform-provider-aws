@@ -146,6 +146,7 @@ const (
 	OpsWorks                     = "opsworks"
 	Organizations                = "organizations"
 	Outposts                     = "outposts"
+	PCAConnectorAD               = "pcaconnectorad"
 	Pinpoint                     = "pinpoint"
 	Pipes                        = "pipes"
 	Pricing                      = "pricing"
