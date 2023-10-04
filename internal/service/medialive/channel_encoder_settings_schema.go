@@ -1011,6 +1011,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
+													"segmentation_mode": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.HlsSegmentationMode](),
+													},
 													"segments_per_subdirectory": {
 														Type:     schema.TypeInt,
 														Optional: true,
@@ -3778,6 +3784,9 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["segment_length"].(int); ok {
 		out.SegmentLength = int32(v)
 	}
+	if v, ok := m["segmentation_mode"].(string); ok {
+		out.SegmentationMode = types.HlsSegmentationMode(v)
+	}
 	if v, ok := m["segments_per_subdirectory"].(int); ok {
 		out.SegmentsPerSubdirectory = int32(v)
 	}
@@ -6309,6 +6318,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"program_date_time_period":     int(in.ProgramDateTimePeriod),
 		"redundant_manifest":           string(in.RedundantManifest),
 		"segment_length":               int(in.SegmentLength),
+		"segmentation_mode":            string(in.SegmentationMode),
 		"segments_per_subdirectory":    int(in.SegmentsPerSubdirectory),
 		"stream_inf_resolution":        string(in.StreamInfResolution),
 		"timed_metadata_id3_frame":     string(in.TimedMetadataId3Frame),
