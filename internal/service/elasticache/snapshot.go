@@ -1,27 +1,31 @@
 package elasticache
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_elasticache_snapshot", name="Snapshot")
+// @Tags(identifierAttribute="arn")
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSnapshotCreate,
-		Read:   resourceSnapshotRead,
-		Update: resourceSnapshotUpdate,
-		Delete: resourceSnapshotDelete,
+		CreateWithoutTimeout: resourceSnapshotCreate,
+		ReadWithoutTimeout:   resourceSnapshotRead,
+		DeleteWithoutTimeout: resourceSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -29,7 +33,7 @@ func ResourceSnapshot() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			// Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -113,8 +117,8 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -125,22 +129,22 @@ const (
 	ResNameSnapshot = "Snapshot"
 )
 
-func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	snapshotName := d.Get("snapshot_name").(string)
 
 	replicationGroupId, replicationGroupIdOk := d.GetOk("replication_group_id")
 	cacheClusterId, cacheClusterIdOk := d.GetOk("cluster_id")
+
 	if !replicationGroupIdOk && !cacheClusterIdOk {
-		return fmt.Errorf("Only one of cluster_id or replication_group_id must be specified")
+		return sdkdiag.AppendErrorf(diags, "Only one of cluster_id or replication_group_id must be specified")
 	}
 
 	in := &elasticache.CreateSnapshotInput{
 		SnapshotName: aws.String(snapshotName),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if cacheClusterIdOk {
@@ -149,32 +153,34 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	if replicationGroupIdOk {
 		in.ReplicationGroupId = aws.String(replicationGroupId.(string))
 	}
-	out, err := conn.CreateSnapshot(in)
+	out, err := conn.CreateSnapshotWithContext(ctx, in)
+
 	if err != nil {
-		return fmt.Errorf("Error creating AWS Elasticache Snapshot %s: %s", snapshotName, err)
+		return sdkdiag.AppendErrorf(diags, "Error creating AWS Elasticache Snapshot %s: %s", snapshotName, err)
 	}
 	d.SetId(aws.StringValue(out.Snapshot.SnapshotName))
 
-	if _, err := waitSnapshotCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("Error waiting for AWS Elasticache Snapshot creation %s: %s", snapshotName, err)
+	if _, err := waitSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "Error waiting for AWS Elasticache Snapshot creation %s: %s", snapshotName, err)
 	}
 
-	return resourceSnapshotRead(d, meta)
+	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	snapshot, err := findSnapshotByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Unable to read Elasticace Snapshot %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Unable to read Elasticace Snapshot %s: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(snapshot.ARN)
@@ -199,42 +205,12 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("snapshot_status", snapshot.SnapshotStatus)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("Error listing tags for Elasticache Snapshot %s: %s", arn, err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Elasticache Snapshot (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return nil
-}
-
-func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	log.Printf("[INFO] Deleting ElastiCache Snapshot %s", d.Id())
 
@@ -243,18 +219,14 @@ func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeSnapshotNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Elasticache Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting Elasticache Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitSnapshotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("Error while waiting for Elasticache Snapshot %s deletion: %s", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
 const (
@@ -263,8 +235,8 @@ const (
 	statusNormal        = "available"
 )
 
-func waitSnapshotCreated(conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+func waitSnapshotCreated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusSnapshot(conn, id),
@@ -273,7 +245,7 @@ func waitSnapshotCreated(conn *elasticache.ElastiCache, id string, timeout time.
 		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*elasticache.Snapshot); ok {
 		return out, err
 	}
@@ -281,23 +253,7 @@ func waitSnapshotCreated(conn *elasticache.ElastiCache, id string, timeout time.
 	return nil, err
 }
 
-func waitSnapshotDeleted(conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusSnapshot(conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-	if out, ok := outputRaw.(*elasticache.Snapshot); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusSnapshot(conn *elasticache.ElastiCache, id string) resource.StateRefreshFunc {
+func statusSnapshot(conn *elasticache.ElastiCache, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findSnapshotByID(conn, id)
 		if tfresource.NotFound(err) {
@@ -318,7 +274,7 @@ func findSnapshotByID(conn *elasticache.ElastiCache, id string) (*elasticache.Sn
 	}
 	out, err := conn.DescribeSnapshots(in)
 	if len(out.Snapshots) == 0 {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

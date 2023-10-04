@@ -1,6 +1,7 @@
 package elasticache_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -8,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -19,6 +20,7 @@ import (
 )
 
 func TestAccElastiCacheSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -28,15 +30,15 @@ func TestAccElastiCacheSnapshot_basic(t *testing.T) {
 	resourceName := "aws_elasticache_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy,
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`snapshot:+.`)),
 				),
@@ -51,6 +53,7 @@ func TestAccElastiCacheSnapshot_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheSnapshot_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -60,15 +63,15 @@ func TestAccElastiCacheSnapshot_tags(t *testing.T) {
 	resourceName := "aws_elasticache_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy,
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -81,7 +84,7 @@ func TestAccElastiCacheSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -90,7 +93,7 @@ func TestAccElastiCacheSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,6 +103,7 @@ func TestAccElastiCacheSnapshot_tags(t *testing.T) {
 }
 
 func TestAccElastiCacheSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -109,16 +113,16 @@ func TestAccElastiCacheSnapshot_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy,
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceSnapshot(), resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,28 +130,30 @@ func TestAccElastiCacheSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elasticache_snapshot" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elasticache_snapshot" {
+				continue
+			}
 
-		resp, err := conn.DescribeSnapshots(&elasticache.DescribeSnapshotsInput{
-			SnapshotName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			if len(resp.Snapshots) != 0 && aws.StringValue(resp.Snapshots[0].SnapshotName) == rs.Primary.ID {
-				return create.Error(names.ElastiCache, create.ErrActionCheckingDestroyed, tfelasticache.ResNameSnapshot, rs.Primary.ID, errors.New("not destroyed"))
+			resp, err := conn.DescribeSnapshots(&elasticache.DescribeSnapshotsInput{
+				SnapshotName: aws.String(rs.Primary.ID),
+			})
+			if err == nil {
+				if len(resp.Snapshots) != 0 && aws.StringValue(resp.Snapshots[0].SnapshotName) == rs.Primary.ID {
+					return create.Error(names.ElastiCache, create.ErrActionCheckingDestroyed, tfelasticache.ResNameSnapshot, rs.Primary.ID, errors.New("not destroyed"))
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckSnapshotExists(name string, snapshot *elasticache.Snapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotExists(ctx context.Context, name string, snapshot *elasticache.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -158,7 +164,7 @@ func testAccCheckSnapshotExists(name string, snapshot *elasticache.Snapshot) res
 			return create.Error(names.ElastiCache, create.ErrActionCheckingExistence, tfelasticache.ResNameSnapshot, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 		resp, err := conn.DescribeSnapshots(&elasticache.DescribeSnapshotsInput{
 			SnapshotName: aws.String(rs.Primary.ID),
 		})

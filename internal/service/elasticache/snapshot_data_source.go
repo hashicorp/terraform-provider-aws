@@ -1,20 +1,23 @@
 package elasticache
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_elasticache_snapshot")
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSnapshotRead,
+		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -102,15 +105,16 @@ func DataSourceSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	snapshotName, snapshotNameOk := d.GetOk("snapshot_name")
 	replicationGroupId, replicationGroupIdOk := d.GetOk("replication_group_id")
 	cacheClusterId, cacheClusterIdOk := d.GetOk("cluster_id")
 
 	if !snapshotNameOk && !replicationGroupIdOk && !cacheClusterIdOk {
-		return fmt.Errorf("One of snapshot_name, cluster_id or replication_group_id must be specified")
+		return sdkdiag.AppendErrorf(diags, "One of snapshot_name, cluster_id or replication_group_id must be specified")
 	}
 
 	params := &elasticache.DescribeSnapshotsInput{}
@@ -132,11 +136,11 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Elasticache Snapshot: %s", params)
 	resp, err := conn.DescribeSnapshots(params)
 	if err != nil {
-		return fmt.Errorf("Error retrieving snapshot details: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error retrieving snapshot details: %s", err)
 	}
 
 	if len(resp.Snapshots) < 1 {
-		return fmt.Errorf("Your query returned no results")
+		return sdkdiag.AppendErrorf(diags, "No snapshots found matching the specified criteria")
 	}
 
 	var snapshot *elasticache.Snapshot
@@ -146,13 +150,13 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		if recent {
 			snapshot = mostRecentSnapshot(resp.Snapshots)
 		} else {
-			return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
 		snapshot = resp.Snapshots[0]
 	}
 
-	return snapshotDescriptionAttributes(d, snapshot)
+	return snapshotDescriptionAttributes(diags, d, snapshot)
 }
 
 type elasticacheSnapshotSort []*elasticache.Snapshot
@@ -176,7 +180,7 @@ func mostRecentSnapshot(snapshots []*elasticache.Snapshot) *elasticache.Snapshot
 	return sortedSnapshots[len(sortedSnapshots)-1]
 }
 
-func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *elasticache.Snapshot) error {
+func snapshotDescriptionAttributes(diags diag.Diagnostics, d *schema.ResourceData, snapshot *elasticache.Snapshot) diag.Diagnostics {
 	d.SetId(aws.StringValue(snapshot.SnapshotName))
 	d.Set("arn", snapshot.ARN)
 	d.Set("automatic_failover", snapshot.AutomaticFailover)
@@ -199,5 +203,5 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *elasticache
 	d.Set("snapshot_status", snapshot.SnapshotStatus)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	return nil
+	return diags
 }
