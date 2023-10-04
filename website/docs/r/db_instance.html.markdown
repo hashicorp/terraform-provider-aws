@@ -132,7 +132,7 @@ resource "aws_db_instance" "test-replica" {
 # Lookup the available instance classes for the custom engine for the region being operated in
 data "aws_rds_orderable_db_instance" "custom-sqlserver" {
   engine                     = "custom-sqlserver-se" # CEV engine to be used
-  engine_version             = "15.00.4249.2.v1" # CEV engine version to be used
+  engine_version             = "15.00.4249.2.v1"     # CEV engine version to be used
   storage_type               = "gp3"
   preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
 }
