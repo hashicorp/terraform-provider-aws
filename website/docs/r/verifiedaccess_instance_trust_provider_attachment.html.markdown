@@ -46,17 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Access Trust Provider Attachments using the `verifiedaccess_instance_id` and `verifiedaccess_trust_provider_id` separated by a forward slash (`/`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Access Instance Trust Provider Attachments using the `verifiedaccess_instance_id` and `verifiedaccess_trust_provider_id` separated by a forward slash (`/`). For example:
 
 ```terraform
 import {
-  to = aws_verifiedaccess_trust_provider_attachment.example
+  to = aws_verifiedaccess_instance_trust_provider_attachment.example
   id = "vai-1234567890abcdef0/vatp-8012925589"
 }
 ```
 
-Using `terraform import`, import Verified Access Trust Provider Attachments using the `verifiedaccess_instance_id` and `verifiedaccess_trust_provider_id` separated by a forward slash (`/`). For example:
+Using `terraform import`, import Verified Access Instance Trust Provider Attachments using the `verifiedaccess_instance_id` and `verifiedaccess_trust_provider_id` separated by a forward slash (`/`). For example:
 
 ```console
-% terraform import aws_verifiedaccess_trust_provider_attachment.example vai-1234567890abcdef0/vatp-8012925589
+% terraform import aws_verifiedaccess_instance_trust_provider_attachment.example vai-1234567890abcdef0/vatp-8012925589
 ```
