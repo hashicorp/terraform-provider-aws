@@ -4601,7 +4601,7 @@ func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGa
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"type": ec2.TransitGatewayRouteTypeStatic,
-			"route-search.exact-match": *aws.String(destination),
+			"route-search.exact-match": destination,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
