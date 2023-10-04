@@ -194,6 +194,80 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	})
 }
 
+func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_cache250Configurations(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
+						"size": "1200",
+						"type": "CACHE_250",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
+						"cache_type": "CACHE_250",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_cache12Configurations(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
+						"size": "6000",
+						"type": "CACHE_12",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
+						"cache_type": "CACHE_12",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -839,6 +913,96 @@ resource "aws_finspace_kx_cluster" "test" {
     database_name = aws_finspace_kx_database.test.name
     cache_configurations {
       cache_type = "CACHE_1000"
+      db_paths   = ["/"]
+    }
+  }
+
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName))
+}
+
+func testAccKxClusterConfig_cache250Configurations(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_database" "test" {
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  cache_storage_configurations {
+    type = "CACHE_250"
+    size = 1200
+  }
+
+  database {
+    database_name = aws_finspace_kx_database.test.name
+    cache_configurations {
+      cache_type = "CACHE_250"
+      db_paths   = ["/"]
+    }
+  }
+
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName))
+}
+
+func testAccKxClusterConfig_cache12Configurations(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_database" "test" {
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  cache_storage_configurations {
+    type = "CACHE_12"
+    size = 6000
+  }
+
+  database {
+    database_name = aws_finspace_kx_database.test.name
+    cache_configurations {
+      cache_type = "CACHE_12"
       db_paths   = ["/"]
     }
   }
