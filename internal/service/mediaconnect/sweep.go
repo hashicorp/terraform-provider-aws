@@ -31,18 +31,16 @@ func sweepFlows(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.MediaConnectClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
 	in := &mediaconnect.ListFlowsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := mediaconnect.NewListFlowsPaginator(conn, in)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaConnect Flows sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaConnect Flows sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -54,7 +52,7 @@ func sweepFlows(region string) error {
 			id := aws.ToString(flow.FlowArn)
 			log.Printf("[INFO] Deleting MediaConnect Flows: %s", id)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(newResourceFlow, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFlow, client,
 				framework.NewAttribute("id", aws.ToString(flow.FlowArn)),
 			))
 		}
