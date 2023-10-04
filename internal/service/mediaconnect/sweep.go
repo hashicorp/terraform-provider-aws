@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -46,18 +47,16 @@ func sweepFlows(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving MediaConnect Flows: %w", err)
+			return fmt.Errorf("error retrieving MediaConnect Flows (%s): %w", region, err)
 		}
 
 		for _, flow := range page.Flows {
 			id := aws.ToString(flow.FlowArn)
 			log.Printf("[INFO] Deleting MediaConnect Flows: %s", id)
 
-			r := ResourceFlow()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(newResourceFlow, client,
+				framework.NewAttribute("id", aws.ToString(flow.FlowArn)),
+			))
 		}
 	}
 

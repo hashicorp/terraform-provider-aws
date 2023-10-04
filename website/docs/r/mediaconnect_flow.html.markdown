@@ -15,8 +15,8 @@ Terraform resource for managing an AWS Elemental MediaConnect Flow.
 
 ```terraform
 resource "aws_mediaconnect_flow" "example" {
-  name              = "example-flow"
-  availability_zone = "us-west-2c"
+  name        = "example-flow"
+  description = "description for example flow"
 
   source {
     description    = "A MediaConnect Flow"
@@ -50,7 +50,6 @@ The following arguments are optional:
 
 * `decryption` - (Optional) The type of encryption that is used on the content ingested from this source. Allowable encryption types: static-key. See [Encryption](#encryption) for more details.
 * `description` - (Required) A description for the source. This value is not used or seen outside of the current AWS Elemental MediaConnect account.
-* `entitlement_arn` - (Optional) The ARN of the entitlement that allows you to subscribe to this flow. The entitlement is set by the flow originator, and the ARN is generated as part of the originator's flow.
 * `gateway_bridge_source` - (Optional) The source configuration for cloud flows receiving a stream from a bridge. See [Gateway Bridge Source](#gateway-bridge-source) for more details.
 * `ingest_port` - (Optional) The port that the flow will be listening on for incoming content.
 * `max_bitrate` - (Optional) The smoothing max bitrate (in bps) for RIST, RTP, and RTP-FEC streams.
@@ -111,7 +110,7 @@ The following arguments are optional:
 
 ### Maintenance
 
-* `day` - (Optional) The day of the week to use for maintenance.
+* `day` - (Required) The day of the week to use for maintenance.
 * `start_time` - (Optional) The hour maintenance will start.
 
 ### Media Streams
@@ -127,7 +126,7 @@ The following arguments are optional:
 ### Media Stream Attributes
 
 * `fmtp` - (Optional) The settings that you want to use to define the media stream. See [Fmtp](#fmtp) for more details.
-* `lang` - (Optional} The audio language, in a format that is recognized by the receiver.
+* `lang` - (Optional) The audio language, in a format that is recognized by the receiver.
 
 ### Fmtp
 
@@ -166,8 +165,8 @@ The following arguments are optional:
 
 ### Destination Configurations
 
-* `destination_ip` - (Required) The IP address where you want MediaConnect to send contents of the media stream.
-* `destination_port` - (Required) The port that you want MediaConnect to use when it distributes the media stream to the output.
+* `ip` - (Required) The IP address where you want MediaConnect to send contents of the media stream.
+* `port` - (Required) The port that you want MediaConnect to use when it distributes the media stream to the output.
 * `interface` - (Required) The VPC interface that you want to use for the media stream associated with the output. See [VPC Interface](#vpc-interface) for more details.
 
 ### VPC Interfaces

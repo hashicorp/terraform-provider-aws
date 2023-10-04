@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
@@ -82,4 +84,18 @@ func FlattenFrameworkStringValueSetLegacy(_ context.Context, vs []string) types.
 	}
 
 	return types.SetValueMust(types.StringType, elems)
+}
+
+func ExpandFrameworkSetNestedBlock[T any, U any](ctx context.Context, tfSet types.Set, f FrameworkElementExpanderFunc[T, U]) []U {
+	if tfSet.IsNull() || tfSet.IsUnknown() {
+		return nil
+	}
+
+	var data []T
+
+	_ = fwdiag.Must(0, tfSet.ElementsAs(ctx, &data, false))
+
+	return slices.ApplyToAll(data, func(t T) U {
+		return f(ctx, t)
+	})
 }
