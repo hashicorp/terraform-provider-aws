@@ -222,7 +222,7 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 						"size": "1200",
 						"type": "CACHE_250",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.cache_configurations.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
 						"cache_type": "CACHE_250",
 					}),
 				),
@@ -259,7 +259,7 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 						"size": "6000",
 						"type": "CACHE_12",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.cache_configurations.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
 						"cache_type": "CACHE_12",
 					}),
 				),
