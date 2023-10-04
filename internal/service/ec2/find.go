@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -3256,7 +3256,7 @@ func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, servic
 		return nil, err
 	}
 
-	allowedPrincipals = slices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
+	allowedPrincipals = tfslices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
 		return aws.StringValue(v.Principal) == principalARN
 	})
 
@@ -7075,38 +7075,22 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client,
 	return output, nil
 }
 
-func FindVerifiedAccessTrustProviderAttachmentByID(ctx context.Context, conn *ec2_sdkv2.Client, instanceId, trustProviderId string) (*awstypes.VerifiedAccessInstance, error) {
-	input := &ec2_sdkv2.DescribeVerifiedAccessInstancesInput{
-		VerifiedAccessInstanceIds: []string{instanceId},
-	}
-	output, err := FindVerifiedAccessInstance(ctx, conn, input)
+func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2_sdkv2.Client, vaiID, vatpID string) error {
+	output, err := FindVerifiedAccessInstanceByID(ctx, conn, vaiID)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Eventual consistency check.
-	if aws_sdkv2.ToString(output.VerifiedAccessInstanceId) != instanceId {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
+	for _, v := range output.VerifiedAccessTrustProviders {
+		if aws_sdkv2.ToString(v.VerifiedAccessTrustProviderId) == vatpID {
+			return nil
 		}
 	}
 
-	// Check for trust provider id match
-	entryExists := false
-
-	for _, n := range output.VerifiedAccessTrustProviders {
-		if trustProviderId == aws_sdkv2.ToString(n.VerifiedAccessTrustProviderId) {
-			entryExists = true
-			break
-		}
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Association not found", vaiID, vatpID),
 	}
-
-	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }
 
 func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
