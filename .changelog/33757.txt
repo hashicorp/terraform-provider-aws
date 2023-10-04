@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_medialive_channel: Added segmentation_mode for hls_group_settings.
+```
