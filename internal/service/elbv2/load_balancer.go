@@ -160,6 +160,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringInSlice(elbv2.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum_Values(), false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+			},
 			"idle_timeout": {
 				Type:             schema.TypeInt,
 				Optional:         true,
@@ -574,13 +581,20 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChanges("security_groups", "enforce_security_group_inbound_rules_on_private_link_traffic") {
 		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 			SecurityGroups:  sgs,
 		}
+
+		if v := d.Get("load_balancer_type"); v == elbv2.LoadBalancerTypeEnumNetwork {
+			if v, ok := d.GetOk("enforce_security_group_inbound_rules_on_private_link_traffic"); ok {
+				params.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic = aws.String(v.(string))
+			}
+		}
+
 		_, err := conn.SetSecurityGroupsWithContext(ctx, params)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "failure Setting LB Security Groups: %s", err)
@@ -918,6 +932,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)

@@ -102,6 +102,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -247,6 +251,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
