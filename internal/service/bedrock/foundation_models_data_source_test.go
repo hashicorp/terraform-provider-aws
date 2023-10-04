@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFoundationModelsDataSource_basic(t *testing.T) {
+func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -20,7 +20,7 @@ func TestAccFoundationModelsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFoundationModelsDataSourceConfig_basic(),
+				Config: testAccBedrockFoundationModelsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
@@ -30,7 +30,7 @@ func TestAccFoundationModelsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFoundationModelsDataSourceConfig_basic() string {
+func testAccBedrockFoundationModelsDataSourceConfig_basic() string {
 	return `
 data "aws_bedrock_foundation_models" "test" {
 }
