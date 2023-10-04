@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCustomModel_basic(t *testing.T) {
+func TestAccBedrockCustomModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	// customModelResourceName := "aws_bedrock_custom_model.test"
@@ -24,7 +24,7 @@ func TestAccCustomModel_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomModelConfig_basic(rName),
+				Config: testAccBedrockCustomModelConfig_basic(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// testAccCheckAddonExists(ctx, customModelResourceName, &addon),
 				// resource.TestCheckResourceAttr(customModelResourceName, "addon_name", addonName),
@@ -44,32 +44,7 @@ func TestAccCustomModel_basic(t *testing.T) {
 	})
 }
 
-// func TestAccCustomModel_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var addon eks.Addon
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_eks_addon.test"
-// 	addonName := "vpc-cni"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomModelConfig_basic(rName, addonName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAddonExists(ctx, resourceName, &addon),
-// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAddon(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
-
-func testAccCustomModelConfig_basic(rName string) string {
+func testAccBedrockCustomModelConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
