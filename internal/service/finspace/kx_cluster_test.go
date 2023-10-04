@@ -163,7 +163,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
+func TestAccFinSpaceKxClusterSKIP_cacheConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,6 +218,13 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
+						"size": "1200",
+						"type": "CACHE_250",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.cache_configurations.*", map[string]string{
+						"cache_type": "CACHE_250",
+					}),
 				),
 			},
 		},
@@ -248,6 +255,13 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
+						"size": "6000",
+						"type": "CACHE_12",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.cache_configurations.*", map[string]string{
+						"cache_type": "CACHE_12",
+					}),
 				),
 			},
 		},
