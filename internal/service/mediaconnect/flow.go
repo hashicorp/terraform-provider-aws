@@ -1023,9 +1023,7 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	if !plan.Maintenance.Equal(state.Maintenance) ||
-		!plan.SourceFailoverConfig.Equal(state.SourceFailoverConfig) {
-
+	if !plan.Maintenance.Equal(state.Maintenance) || !plan.SourceFailoverConfig.Equal(state.SourceFailoverConfig) {
 		in := &mediaconnect.UpdateFlowInput{
 			FlowArn: aws.String(plan.FlowArn.ValueString()),
 		}
