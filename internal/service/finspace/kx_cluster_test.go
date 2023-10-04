@@ -163,7 +163,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxClusterSKIP_cacheConfigurations(t *testing.T) {
+func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
