@@ -49,6 +49,31 @@ func TestAccVerifiedAccessInstanceTrustProviderAttachment_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessInstanceTrustProviderAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_verifiedaccess_instance_trust_provider_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceTrustProviderAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceTrustProviderAttachmentConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceTrustProviderAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
