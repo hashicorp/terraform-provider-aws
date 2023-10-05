@@ -461,6 +461,10 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},

@@ -642,6 +642,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -2061,6 +2066,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	}
 	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
 		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
+	}
+	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
+		apiObject.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	return apiObject

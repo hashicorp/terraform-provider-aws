@@ -288,6 +288,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", "false"),
 				),
 			},
 			{

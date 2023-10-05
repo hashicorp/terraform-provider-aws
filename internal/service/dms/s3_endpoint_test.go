@@ -67,6 +67,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "true"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 				),
 			},
 			{
@@ -131,6 +132,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "true"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 				),
 			},
 			{
@@ -176,6 +178,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time2"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 				),
 			},
 		},
@@ -236,6 +239,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 				),
 			},
 			{
@@ -302,7 +306,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value"},
+				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value", "glue_catalog_generation"},
 			},
 		},
 	})
@@ -562,6 +566,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time"
   use_csv_no_sup_value                        = false
   use_task_start_time_for_full_load_timestamp = true
+  glue_catalog_generation                     = true
 
   depends_on = [aws_iam_role_policy.test]
 }
@@ -640,6 +645,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time2"
   use_csv_no_sup_value                        = true
   use_task_start_time_for_full_load_timestamp = false
+  glue_catalog_generation                     = false
 
   depends_on = [aws_iam_role_policy.test]
 }
