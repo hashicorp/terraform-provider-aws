@@ -1090,9 +1090,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 			}
 		}
-
 	}
-
 	// Update if we need to
 	return append(diags, resourceInstanceUpdate(ctx, d, meta)...)
 }
@@ -1495,7 +1493,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("root_block_device.0.tags") {
-
 		tagSpecifications := getTagSpecificationsIn(ctx, ec2.ResourceTypeInstance)
 
 		// Declare the map outside the loops so values aren't overwritten
@@ -2664,7 +2661,6 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			}
 		}
 	}
-
 	return blockDevices, nil
 }
 
