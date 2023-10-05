@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5
