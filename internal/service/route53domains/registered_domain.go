@@ -5,11 +5,9 @@ package route53domains
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -610,99 +607,6 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 	}
 
 	return nil
-}
-
-func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
-	input := &route53domains.GetDomainDetailInput{
-		DomainName: aws.String(name),
-	}
-
-	output, err := conn.GetDomainDetail(ctx, input)
-
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, id string) (*route53domains.GetOperationDetailOutput, error) {
-	input := &route53domains.GetOperationDetailInput{
-		OperationId: aws.String(id),
-	}
-
-	output, err := conn.GetOperationDetail(ctx, input)
-
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findOperationDetailByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
-
-func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  enum.Slice(types.OperationStatusSuccessful),
-		Timeout: timeout,
-		Refresh: statusOperation(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*route53domains.GetOperationDetailOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
-
-		return output, err
-	}
-
-	return nil, err
 }
 
 func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{} {
