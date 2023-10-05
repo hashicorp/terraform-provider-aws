@@ -1035,8 +1035,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		// Iterate over each tag within the current tagSpecification
 		for j := 0; j < len(tagSpecifications[i].Tags); j++ {
 			// Extract the key and value from the current tag
-			key := *tagSpecifications[i].Tags[j].Key
-			value := *tagSpecifications[i].Tags[j].Value
+			key := aws.StringValue(tagSpecifications[i].Tags[j].Key)
+			value := aws.StringValue(tagSpecifications[i].Tags[j].Value)
 			// Add the key-value pair to the map
 			tagValues[key] = value //value
 		}
@@ -1501,7 +1501,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
-	// if d.HasChange("root_block_device.0.tags") && !d.IsNewResource() {
 	tagSpecifications := getTagSpecificationsIn(ctx, ec2.ResourceTypeInstance)
 
 	// Declare the map outside the loops so values aren't overwritten
@@ -1511,8 +1510,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Iterate over each tag within the current tagSpecification
 		for j := 0; j < len(tagSpecifications[i].Tags); j++ {
 			// Extract the key and value from the current tag
-			key := *tagSpecifications[i].Tags[j].Key
-			value := *tagSpecifications[i].Tags[j].Value
+			key := aws.StringValue(tagSpecifications[i].Tags[j].Key)
+			value := aws.StringValue(tagSpecifications[i].Tags[j].Value)
 			// Add the key-value pair to the map
 			tagValues[key] = value //value
 		}
