@@ -109,7 +109,7 @@ The following arguments are optional:
 * `role_arn` - (Optional) Concise argument description.
 * `start_channel` - (Optional) Whether to start/stop channel. Default: `false`
 * `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Settings for the VPC outputs.
+* `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
 
@@ -760,6 +760,12 @@ The following arguments are optional:
 * `column_depth` - (Optional) The height of the FEC protection matrix.
 * `include_fec` - (Optional) Enables column only or column and row based FEC.
 * `row_length` - (Optional) The width of the FEC protection matrix.
+
+### VPC
+
+* `subnet_ids` - (Required) A list of VPC subnet IDs from the same VPC. If STANDARD channel, subnet IDs must be mapped to two unique availability zones (AZ).
+* `public_address_allocation_ids` - (Required) List of public address allocation ids to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
+* `security_group_ids` - (Optional) A list of up to 5 EC2 VPC security group IDs to attach to the Output VPC network interfaces. If none are specified then the VPC default security group will be used.
 
 ## Attribute Reference
 
