@@ -37,7 +37,7 @@ data "aws_bedrock_foundation_models" "test" {
 }
 
 data "aws_bedrock_foundation_model" "test" {
-	model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
+  model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
 }
 `
 }

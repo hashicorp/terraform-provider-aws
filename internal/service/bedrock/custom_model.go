@@ -214,7 +214,7 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
-	modelId := d.Get("model_id").(string)
+	modelId := d.Id()
 	input := &bedrock.GetCustomModelInput{
 		ModelIdentifier: &modelId,
 	}
