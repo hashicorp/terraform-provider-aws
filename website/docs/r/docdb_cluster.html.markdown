@@ -42,6 +42,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This argument supports the following arguments:
 
+* `allow_major_version_upgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.

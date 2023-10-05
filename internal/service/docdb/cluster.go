@@ -47,6 +47,10 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -625,6 +629,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	req := &docdb.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		req.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 	}
 
 	if d.HasChange("master_password") {
