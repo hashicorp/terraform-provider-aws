@@ -4600,7 +4600,7 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
-			"type": ec2.TransitGatewayRouteTypeStatic,
+			"type":                     ec2.TransitGatewayRouteTypeStatic,
 			"route-search.exact-match": destination,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
