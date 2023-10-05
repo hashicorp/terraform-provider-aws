@@ -231,6 +231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_role_association",
 		},
 		{
+			Factory:  ResourceCustomDBEngineVersion,
+			TypeName: "aws_rds_custom_db_engine_version",
+			Name:     "Custom DB Engine Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 		},

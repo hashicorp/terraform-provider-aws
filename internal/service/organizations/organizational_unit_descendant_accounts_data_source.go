@@ -88,7 +88,7 @@ func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.O
 
 	output = append(output, accounts...)
 
-	ous, err := findOrganizationalUnitsForParent(ctx, conn, id)
+	ous, err := findOrganizationalUnitsForParentByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err

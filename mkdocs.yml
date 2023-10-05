@@ -40,6 +40,7 @@ nav:
       - Provider Scaffolding (skaff): skaff.md
       - Naming Standards: naming.md
       - Retries and Waiters: retries-and-waiters.md
+      - Regular Expressions: regular-expressions.md
   - Submit an Issue: issue-reporting-and-lifecycle.md
   - FAQ: faq.md
 
@@ -57,6 +58,7 @@ theme:
   features:
     - navigation.instant
     - content.tabs.link
+    - content.code.copy
 
 plugins:
   - search:
@@ -66,6 +68,8 @@ plugins:
 markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.inlinehilite
   - toc:
       permalink: "#"

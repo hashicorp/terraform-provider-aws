@@ -118,7 +118,7 @@ The following arguments are required:
 
 * `serviceIdentifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service.
 * `listenerIdentifier` - (Required) The ID or Amazon Resource Name (ARN) of the listener.
-* `action` - (Required) The action for the default rule.
+* `action` - (Required) The action for the listener rule.
 * `match` - (Required) The rule match.
 * `name` - (Required) The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `priority` - (Required) The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
@@ -178,8 +178,8 @@ path match match (`match`) supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the target group.
-* `ruleId` - Unique identifier for the target group.
+* `arn` - The ARN for the listener rule.
+* `ruleId` - Unique identifier for the listener rule.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -212,4 +212,4 @@ Using `terraform import`, import VPC Lattice Listener Rule using the `exampleIdA
 % terraform import aws_vpclattice_listener_rule.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-54fc0a8821eb0179f2e7b01ac88df452e38f0c0a4aa7f7c7c49a304bf5ff3942 -->
+<!-- cache-key: cdktf-0.18.0 input-18c4d701108689bcdef68a561bb727fff88960c4bf3c3a870cba068fc4e67f93 -->

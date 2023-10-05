@@ -30,10 +30,11 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.APP_ID }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
 
       - name: 'Add needs-triage for non-maintainers'
@@ -80,10 +81,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: 'Apply Labels'
-        uses: actions/labeler@0967ca812e7fdc8f5f71402a1b486d5bd061fe20 # v4.2.0
+        uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -122,10 +123,11 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.APP_ID }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
 
       - name: 'Maintainer Pull Requests'
@@ -185,7 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: 'Get Current Milestone Name'
         id: get-current-milestone
@@ -229,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add comment to add helpful context for new contributors'
-        uses: actions/first-interaction@1d8459ca65b335265f1285568221e229d45a995e # v1.1.1
+        uses: actions/first-interaction@1dbfe1ba5525b8257e1f259b09745bee346d62d8 # v1.2.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-

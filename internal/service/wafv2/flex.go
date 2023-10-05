@@ -1279,6 +1279,109 @@ func expandStatusCode(tfList []interface{}) *wafv2.ResponseInspectionStatusCode 
 	return &out
 }
 
+func expandRateLimitCookie(l []interface{}) *wafv2.RateLimitCookie {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitCookie{
+		Name:                aws.String(m["name"].(string)),
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandRateLimitHeader(l []interface{}) *wafv2.RateLimitHeader {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitHeader{
+		Name:                aws.String(m["name"].(string)),
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandRateLimitLabelNamespace(l []interface{}) *wafv2.RateLimitLabelNamespace {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitLabelNamespace{
+		Namespace: aws.String(m["namespace"].(string)),
+	}
+}
+
+func expandRateLimitQueryArgument(l []interface{}) *wafv2.RateLimitQueryArgument {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitQueryArgument{
+		Name:                aws.String(m["name"].(string)),
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandRateLimitQueryString(l []interface{}) *wafv2.RateLimitQueryString {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitQueryString{
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandRateLimitURIPath(l []interface{}) *wafv2.RateLimitUriPath {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &wafv2.RateLimitUriPath{
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandRateBasedStatementCustomKeys(l []interface{}) []*wafv2.RateBasedStatementCustomKey {
+	if len(l) == 0 {
+		return nil
+	}
+	out := make([]*wafv2.RateBasedStatementCustomKey, 0)
+	for _, ck := range l {
+		r := &wafv2.RateBasedStatementCustomKey{}
+		m := ck.(map[string]interface{})
+		if v, ok := m["cookie"]; ok {
+			r.Cookie = expandRateLimitCookie(v.([]interface{}))
+		}
+		if v, ok := m["forwarded_ip"]; ok && len(v.([]interface{})) > 0 {
+			r.ForwardedIP = &wafv2.RateLimitForwardedIP{}
+		}
+		if v, ok := m["http_method"]; ok && len(v.([]interface{})) > 0 {
+			r.HTTPMethod = &wafv2.RateLimitHTTPMethod{}
+		}
+		if v, ok := m["header"]; ok {
+			r.Header = expandRateLimitHeader(v.([]interface{}))
+		}
+		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
+			r.IP = &wafv2.RateLimitIP{}
+		}
+		if v, ok := m["label_namespace"]; ok {
+			r.LabelNamespace = expandRateLimitLabelNamespace(v.([]interface{}))
+		}
+		if v, ok := m["query_argument"]; ok {
+			r.QueryArgument = expandRateLimitQueryArgument(v.([]interface{}))
+		}
+		if v, ok := m["query_string"]; ok {
+			r.QueryString = expandRateLimitQueryString(v.([]interface{}))
+		}
+		if v, ok := m["uri_path"]; ok {
+			r.UriPath = expandRateLimitURIPath(v.([]interface{}))
+		}
+		out = append(out, r)
+	}
+	return out
+}
+
 func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1292,6 +1395,10 @@ func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 
 	if v, ok := m["forwarded_ip_config"]; ok {
 		r.ForwardedIPConfig = expandForwardedIPConfig(v.([]interface{}))
+	}
+
+	if v, ok := m["custom_key"]; ok {
+		r.CustomKeys = expandRateBasedStatementCustomKeys(v.([]interface{}))
 	}
 
 	s := m["scope_down_statement"].([]interface{})
@@ -2427,6 +2534,122 @@ func flattenStatusCode(apiObject *wafv2.ResponseInspectionStatusCode) []interfac
 	return []interface{}{m}
 }
 
+func flattenRateLimitCookie(apiObject *wafv2.RateLimitCookie) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitHeader(apiObject *wafv2.RateLimitHeader) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitLabelNamespace(apiObject *wafv2.RateLimitLabelNamespace) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"namespace": aws.StringValue(apiObject.Namespace),
+		},
+	}
+}
+
+func flattenRateLimitQueryArgument(apiObject *wafv2.RateLimitQueryArgument) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitQueryString(apiObject *wafv2.RateLimitQueryString) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitURIPath(apiObject *wafv2.RateLimitUriPath) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateBasedStatementCustomKeys(apiObject []*wafv2.RateBasedStatementCustomKey) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	out := make([]interface{}, len(apiObject))
+	for i, o := range apiObject {
+		tfMap := map[string]interface{}{}
+
+		if o.Cookie != nil {
+			tfMap["cookie"] = flattenRateLimitCookie(o.Cookie)
+		}
+		if o.ForwardedIP != nil {
+			tfMap["forwarded_ip"] = []interface{}{
+				map[string]interface{}{},
+			}
+		}
+		if o.HTTPMethod != nil {
+			tfMap["http_method"] = []interface{}{
+				map[string]interface{}{},
+			}
+		}
+		if o.Header != nil {
+			tfMap["header"] = flattenRateLimitHeader(o.Header)
+		}
+		if o.IP != nil {
+			tfMap["ip"] = []interface{}{
+				map[string]interface{}{},
+			}
+		}
+		if o.LabelNamespace != nil {
+			tfMap["label_namespace"] = flattenRateLimitLabelNamespace(o.LabelNamespace)
+		}
+		if o.QueryArgument != nil {
+			tfMap["query_argument"] = flattenRateLimitQueryArgument(o.QueryArgument)
+		}
+		if o.QueryString != nil {
+			tfMap["query_string"] = flattenRateLimitQueryString(o.QueryString)
+		}
+		if o.UriPath != nil {
+			tfMap["uri_path"] = flattenRateLimitURIPath(o.UriPath)
+		}
+		out[i] = tfMap
+	}
+	return out
+}
+
 func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} {
 	if apiObject == nil {
 		return []interface{}{}
@@ -2440,6 +2663,10 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 
 	if apiObject.ForwardedIPConfig != nil {
 		tfMap["forwarded_ip_config"] = flattenForwardedIPConfig(apiObject.ForwardedIPConfig)
+	}
+
+	if apiObject.CustomKeys != nil {
+		tfMap["custom_key"] = flattenRateBasedStatementCustomKeys(apiObject.CustomKeys)
 	}
 
 	if apiObject.Limit != nil {

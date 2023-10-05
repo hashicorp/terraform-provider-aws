@@ -98,7 +98,7 @@ func ResourceDatabase() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-]+[A-Za-z0-9]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z-]+[0-9A-Za-z]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 				),
 			},
 			"master_database_name": {
@@ -165,7 +165,7 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[^._\-]+[0-9A-Za-z-]+[^._\-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[^_.-]+[0-9A-Za-z-]+[^_.-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 				),
 			},
 			"secondary_availability_zone": {

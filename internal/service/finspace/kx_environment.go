@@ -43,7 +43,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(45 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -330,11 +330,11 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
-
+	log.Printf("[INFO] Deleting FinSpace Kx Environment: %s", d.Id())
 	_, err := conn.DeleteKxEnvironment(ctx, &finspace.DeleteKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
 	})
+
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.ValidationException](err, "The Environment is in DELETED state") {
 		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())

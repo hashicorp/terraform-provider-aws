@@ -5,6 +5,7 @@ package fsx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -491,11 +492,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		waitAdminAction := false
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
-			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 			FileSystemId:        aws.String(d.Id()),
+			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 		}
 
 		if d.HasChange("auto_import_policy") {
@@ -516,12 +516,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
-			waitAdminAction = true
 		}
 
 		if d.HasChange("root_squash_configuration") {
 			input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(d.Get("root_squash_configuration").([]interface{}))
-			waitAdminAction = true
 		}
 
 		if d.HasChange("storage_capacity") {
@@ -532,20 +530,19 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
 
+		startTime := time.Now()
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSX for Lustre File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) update: %s", d.Id(), err)
 		}
 
-		if waitAdminAction {
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action complete: %s", d.Id(), err)
-			}
+		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 
@@ -661,45 +658,6 @@ func logStateFunc(v interface{}) string {
 	return value
 }
 
-func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	input := &fsx.DescribeFileSystemsInput{
-		FileSystemIds: []*string{aws.String(id)},
-	}
-
-	var filesystems []*fsx.FileSystem
-
-	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		filesystems = append(filesystems, page.FileSystems...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(filesystems) == 0 || filesystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(filesystems); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return filesystems[0], nil
-}
-
 func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeLustre)
 
@@ -712,6 +670,14 @@ func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*f
 	}
 
 	return output, nil
+}
+
+func findFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	input := &fsx.DescribeFileSystemsInput{
+		FileSystemIds: aws.StringSlice([]string{id}),
+	}
+
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*fsx.FileSystem]())
 }
 
 func findFileSystemByIDAndType(ctx context.Context, conn *fsx.FSx, fsID, fsType string) (*fsx.FileSystem, error) {
@@ -764,4 +730,163 @@ func findFileSystems(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeFile
 	}
 
 	return output, nil
+}
+
+func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFileSystemByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Lifecycle), nil
+	}
+}
+
+func waitFileSystemCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.FileSystemLifecycleCreating},
+		Target:  []string{fsx.FileSystemLifecycleAvailable},
+		Refresh: statusFileSystem(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(details.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFileSystemUpdated(ctx context.Context, conn *fsx.FSx, id string, startTime time.Time, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.FileSystemLifecycleUpdating},
+		Target:  []string{fsx.FileSystemLifecycleAvailable},
+		Refresh: statusFileSystem(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		switch status := aws.StringValue(output.Lifecycle); status {
+		case fsx.FileSystemLifecycleFailed, fsx.FileSystemLifecycleMisconfigured, fsx.FileSystemLifecycleMisconfiguredUnavailable:
+			// Report any failed non-FILE_SYSTEM_UPDATE administrative actions.
+			// See https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#FSx-Type-AdministrativeAction-AdministrativeActionType.
+			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v *fsx.AdministrativeAction) bool {
+				return v != nil && aws.StringValue(v.Status) == fsx.StatusFailed && aws.StringValue(v.AdministrativeActionType) != fsx.AdministrativeActionTypeFileSystemUpdate && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
+			})
+			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v *fsx.AdministrativeAction) error {
+				return fmt.Errorf("%s: %s", aws.StringValue(v.AdministrativeActionType), aws.StringValue(v.FailureDetails.Message))
+			})...)
+
+			if details := output.FailureDetails; details != nil {
+				if message := aws.StringValue(details.Message); administrativeActionsError != nil {
+					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+				} else {
+					tfresource.SetLastError(err, errors.New(message))
+				}
+			} else {
+				tfresource.SetLastError(err, administrativeActionsError)
+			}
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFileSystemDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.FileSystemLifecycleAvailable, fsx.FileSystemLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusFileSystem(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(details.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
+	output, err := findFileSystemByID(ctx, conn, fsID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.AdministrativeActions {
+		if v == nil {
+			continue
+		}
+
+		if aws.StringValue(v.AdministrativeActionType) == actionType {
+			return v, nil
+		}
+	}
+
+	// If the administrative action isn't found, assume it's complete.
+	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
+}
+
+func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFileSystemAdministrativeAction(ctx, conn, fsID, actionType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.StatusInProgress, fsx.StatusPending},
+		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
+		Refresh: statusFileSystemAdministrativeAction(ctx, conn, fsID, actionType),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.AdministrativeAction); ok {
+		if status, details := aws.StringValue(output.Status), output.FailureDetails; status == fsx.StatusFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

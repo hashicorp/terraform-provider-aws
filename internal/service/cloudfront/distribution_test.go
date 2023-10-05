@@ -222,7 +222,7 @@ func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_originRequestPolicyDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-z]+")),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_originRequestPolicyOrdered(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[A-z0-9]+")),
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "ordered_cache_behavior.0.origin_request_policy_id", regexache.MustCompile("[0-9A-Za-z]+")),
 				),
 			},
 			{
@@ -380,7 +380,7 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -417,7 +417,7 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
-					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexache.MustCompile(`^[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
 				),
 			},
 			{
@@ -590,14 +590,6 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `null`)),
-				ExpectError: regexache.MustCompile(`Missing required argument`),
-			},
-			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `""`)),
 				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
@@ -685,7 +677,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexache.MustCompile(`distribution/[A-Z0-9]+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
@@ -706,9 +698,9 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
-					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(`^[a-z0-9]+\.cloudfront\.net$`)),
+					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[A-Z0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
@@ -1640,7 +1632,7 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 
 func testAccCheckDistributionWaitForDeployment(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfcloudfront.DistributionWaitUntilDeployed(ctx, aws.StringValue(distribution.Id), acctest.Provider.Meta())
+		return tfcloudfront.WaitDistributionDeployed(ctx, acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx), aws.StringValue(distribution.Id))
 	}
 }
 

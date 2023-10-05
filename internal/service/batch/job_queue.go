@@ -65,7 +65,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
-				ElementType: types.StringType,
+				ElementType: fwtypes.ARNType,
 				Required:    true,
 			},
 			"id": framework.IDAttribute(),
@@ -75,7 +75,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z]{1}[0-9A-Za-z_-]{0,127}$`),
 						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
 				},
 			},
@@ -365,6 +365,7 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 
 	return diags
 }
+
 func expandComputeEnvironmentOrder(order []string) (envs []*batch.ComputeEnvironmentOrder) {
 	for i, env := range order {
 		envs = append(envs, &batch.ComputeEnvironmentOrder{

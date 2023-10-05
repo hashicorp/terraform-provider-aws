@@ -51,7 +51,7 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 256),
-											validation.StringMatch(regexache.MustCompile(`^[a-z0-9*](?:[._\-/a-z0-9*]?[a-z0-9*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
 										),
 									},
 									"filter_type": {

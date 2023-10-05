@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -2550,7 +2552,7 @@ func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket" {
@@ -2589,7 +2591,7 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).S3Conn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).S3Client(ctx)
 
 		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 	}
@@ -2598,12 +2600,12 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, key := range keys {
-			_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
-				Bucket: aws.String(rs.Primary.ID),
-				Key:    aws.String(key),
+			_, err := conn.PutObject(ctx, &s3_sdkv2.PutObjectInput{
+				Bucket: aws_sdkv2.String(rs.Primary.ID),
+				Key:    aws_sdkv2.String(key),
 			})
 
 			if err != nil {
@@ -2630,6 +2632,25 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 			if err != nil {
 				return fmt.Errorf("PutObject error: %s", err)
 			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckBucketAddObjectWithMetadata(ctx context.Context, n string, key string, metadata map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+
+		_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
+			Bucket:   aws.String(rs.Primary.ID),
+			Key:      aws.String(key),
+			Metadata: aws.StringMap(metadata),
+		})
+
+		if err != nil {
+			return fmt.Errorf("PutObject error: %s", err)
 		}
 
 		return nil

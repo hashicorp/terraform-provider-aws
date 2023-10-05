@@ -41,7 +41,7 @@ func DataSourceSecurityPolicy() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 32),
-					validation.StringMatch(regexache.MustCompile(`^[a-z][a-z0-9-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
+					validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
 				),
 			},
 			"policy": {

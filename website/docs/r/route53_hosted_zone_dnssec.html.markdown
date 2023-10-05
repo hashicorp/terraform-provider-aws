@@ -12,6 +12,8 @@ Manages Route 53 Hosted Zone Domain Name System Security Extensions (DNSSEC). Fo
 
 !> **WARNING:** If you disable DNSSEC signing for your hosted zone before the DNS changes have propagated, your domain could become unavailable on the internet. When you remove the DS records, you must wait until the longest TTL for the DS records that you remove has expired before you complete the step to disable DNSSEC signing. Please refer to the [Route 53 Developer Guide - Disable DNSSEC](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-disable.html) for a detailed breakdown on the steps required to disable DNSSEC safely for a hosted zone.
 
+~> **Note:** Route53 hosted zones are global resources, and as such any `aws_kms_key` that you use as part of a signing key needs to be located in the `us-east-1` region. In the example below, the main AWS provider declaration is for `us-east-1`, however if you are provisioning your AWS resources in a different region, you will need to specify a provider alias and use that attached to the `aws_kms_key` resource as described in the [provider alias documentation](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations).
+
 ## Example Usage
 
 ```terraform

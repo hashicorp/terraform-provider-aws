@@ -2179,6 +2179,14 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("storage_throughput") {
 		needsModify = true
 		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
+
+		if input.Iops == nil {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
+
+		if input.AllocatedStorage == nil {
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		}
 	}
 
 	if d.HasChange("storage_type") {
@@ -2208,6 +2216,10 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
 			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
 				return true, err
 			}
 
@@ -2368,7 +2380,7 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
 func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	idLooksLikeDbiResourceId := regexache.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id)
+	idLooksLikeDbiResourceId := regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id)
 	input := &rds.DescribeDBInstancesInput{}
 
 	if idLooksLikeDbiResourceId {
@@ -2447,7 +2459,7 @@ func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.Describ
 func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
 	input := &rds_sdkv2.DescribeDBInstancesInput{}
 
-	if regexache.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
 		input.Filters = []types.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
@@ -2461,7 +2473,7 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 	output, err := conn.DescribeDBInstances(ctx, input)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if regexache.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
+	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
 		input = &rds_sdkv2.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}

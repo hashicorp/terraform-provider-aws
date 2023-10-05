@@ -13,8 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,7 +27,7 @@ var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
-var servicePrincipalRegexp = regexache.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
+var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -188,6 +187,8 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
+	} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
 	}
 
 	return //nolint:nakedret // Just a long function.
@@ -290,7 +291,7 @@ func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
 	} else if len(value) > 255 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
-	} else if !regexache.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
 	}
@@ -305,7 +306,7 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 99 characters, name is limited to 125", k))
 	} else if !strings.HasSuffix(k, "prefix") && len(value) > 125 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 125 characters", k))
-	} else if !regexache.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^[0-9A-Za-z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
 	return
@@ -454,32 +455,6 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 		}
 
 		return
-	}
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			results = append(results, validator(i, path)...)
-		}
-		return results
-	}
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			diags := validator(i, path)
-			if len(diags) == 0 {
-				return diag.Diagnostics{}
-			}
-			results = append(results, diags...)
-		}
-		return results
 	}
 }
 

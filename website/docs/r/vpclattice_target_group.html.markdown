@@ -18,10 +18,12 @@ Terraform resource for managing an AWS VPC Lattice Target Group.
 resource "aws_vpclattice_target_group" "example" {
   name = "example"
   type = "INSTANCE"
+
   config {
-    port           = 443
-    protocol       = "HTTPS"
     vpc_identifier = aws_vpc.example.id
+
+    port     = 443
+    protocol = "HTTPS"
   }
 }
 ```
@@ -31,12 +33,14 @@ resource "aws_vpclattice_target_group" "example" {
 ```terraform
 resource "aws_vpclattice_target_group" "example" {
   name = "example"
-  type = "ALB"
+  type = "IP"
 
   config {
+    vpc_identifier = aws_vpc.example.id
+
+    ip_address_type  = "IPV4"
     port             = 443
     protocol         = "HTTPS"
-    vpc_identifier   = aws_vpc.example.id
     protocol_version = "HTTP1"
 
     health_check {
@@ -55,6 +59,25 @@ resource "aws_vpclattice_target_group" "example" {
       protocol         = "HTTP"
       protocol_version = "HTTP1"
     }
+  }
+}
+```
+
+### ALB
+
+If the type is ALB, `health_check` block is not supported.
+
+```terraform
+resource "aws_vpclattice_target_group" "example" {
+  name = "example"
+  type = "ALB"
+
+  config {
+    vpc_identifier = aws_vpc.example.id
+
+    port             = 443
+    protocol         = "HTTPS"
+    protocol_version = "HTTP1"
   }
 }
 ```

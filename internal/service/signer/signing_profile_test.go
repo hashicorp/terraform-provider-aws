@@ -43,7 +43,7 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name",
-						regexache.MustCompile("^[a-zA-Z0-9_]{0,64}$")),
+						regexache.MustCompile("^[0-9A-Za-z_]{0,64}$")),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 				),
 			},
