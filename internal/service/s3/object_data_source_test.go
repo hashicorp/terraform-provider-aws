@@ -42,9 +42,11 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -401,6 +403,65 @@ func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectDataSource_metadata(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_object.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_metadata(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := fmt.Sprintf("%[1]s-key", rName)
+	bucketResourceName := "aws_s3_bucket.test"
+	dataSourceName := "data.aws_s3_object.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_metadataBucketOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketAddObjectWithMetadata(ctx, bucketResourceName, key, map[string]string{
+						"key1": "value1",
+						"Key2": "Value2",
+					}),
+				),
+			},
+			{
+				Config: testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#HeadObjectOutput
+					// Map keys will be normalized to lower-case.
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccObjectDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -733,4 +794,51 @@ data "aws_s3_object" "test" {
   checksum_mode = "ENABLED"
 }
 `, rName)
+}
+
+func testAccObjectDataSourceConfig_metadata(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-key"
+  content = "Hello World"
+
+  metadata = {
+    key1 = "value1"
+    key2 = "Value2"
+  }
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
+`, rName)
+}
+
+func testAccObjectDataSourceConfig_metadataBucketOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
+}
+
+func testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = %[2]q
+}
+`, rName, key)
 }

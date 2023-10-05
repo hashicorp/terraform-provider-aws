@@ -42,6 +42,14 @@ type AWSClient struct {
 	stsRegion                 string                                    // From provider configuration.
 }
 
+// CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
+func (client *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
+	if client.awsConfig == nil {
+		return nil
+	}
+	return client.awsConfig.Credentials
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.

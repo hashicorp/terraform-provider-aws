@@ -291,9 +291,10 @@ func sweepONTAPVolumes(region string) error {
 				continue
 			}
 
-			r := ResourceOntapVolume()
+			r := ResourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
+			d.Set("bypass_snaplock_enterprise_retention", true)
 			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -393,7 +394,7 @@ func sweepOpenZFSVolume(region string) error {
 				continue
 			}
 
-			r := ResourceOpenzfsVolume()
+			r := ResourceOpenZFSVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 

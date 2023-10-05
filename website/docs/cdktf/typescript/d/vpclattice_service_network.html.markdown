@@ -29,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsVpclatticeServiceNetwork(this, "example", {
-      serviceNetworkIdentifier: "",
+      serviceNetworkIdentifier: "snsa-01112223334445556",
     });
   }
 }
@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `serviceNetworkIdentifier` - (Required) Identifier of the network service.
+* `serviceNetworkIdentifier` - (Required) Identifier of the service network.
 
 ## Attribute Reference
 
@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfAssociatedServices` - Number of services associated with this service network.
 * `numberOfAssociatedVpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.18.0 input-c539f91d88b5096cbf562c14cc4bb30e227fb9632cb22b7e29fdfe584d5c8b9b -->
+<!-- cache-key: cdktf-0.18.0 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->

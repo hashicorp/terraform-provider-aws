@@ -136,9 +136,12 @@ This resource supports the following arguments:
     * `amazonlinux1X8664`
     * `amazonlinux2X8664`
     * `ubuntu1804X8664`
+    * `ubuntu2204X8664`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux1X8664`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux2X8664`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu1804X8664`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu2204X8664`
+
 * `ownerArn` - (Optional) The ARN of the environment owner. This can be ARN of any AWS IAM principal. Defaults to the environment's creator.
 * `subnetId` - (Optional) The ID of the subnet in Amazon VPC that AWS Cloud9 will use to communicate with the Amazon EC2 instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -152,4 +155,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`)
 
-<!-- cache-key: cdktf-0.18.0 input-2a58beb0c3fd4ea15dc0631954b304204f380a8a3544afa37851d017826b09cc -->
+<!-- cache-key: cdktf-0.18.0 input-0a7b7bb4db1f7b69891ee6f0c3a4d079fd3d0b45f3d6b81be48656fbea075db1 -->
