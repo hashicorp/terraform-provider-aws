@@ -266,6 +266,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
+						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
 						"throughput": {
 							Type:             schema.TypeInt,
 							Optional:         true,
