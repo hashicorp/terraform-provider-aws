@@ -16,7 +16,7 @@ Terraform resource for managing a Verified Access Group.
 
 ```terraform
 resource "aws_verifiedaccess_group" "example" {
-  verifiedaccess_instance_id = ""
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.example.id
 }
 ```
 
