@@ -203,6 +203,7 @@ Optional arguments:
 * `type` - (Required) Attribute type. Valid values are `S` (string), `N` (number), `B` (binary).
 
 ### `import_table`
+
 * `input_format` - (Required) The format of the source data. Valid values are `CSV`, `DYNAMODB_JSON` and `ION`.
 * `s3_bucket_source` - (Required) Values for the S3 bucket the source file is imported from. See below.
 * `client_token` - (Optional) Makes the import idempotent, meaning that multiple identical calls have the same effect as one single call (8 hours validity).
@@ -210,11 +211,13 @@ Optional arguments:
 * `input_format_options` - (Optional) Describe the format options for the data that was imported into the target table. There is one value, `csv`. See below.
 
 #### `input_format_options`
+
 * `csv` - (Optional) This block contains the processing options for the CSV file being imported:
   * `delimiter` - (Optional) The delimiter used for separating items in the CSV file being imported.
   * `header_list` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
 
 #### `s3_bucket_source`
+
 * `s3_bucket` - (Required) The S3 bucket that is being imported from. 
 * `s3_bucket_owner`- (Optional) The account number of the S3 bucket that is being imported from.
 * `s3_key_prefix` - (Optional) The key prefix shared by all S3 Objects that are being imported.

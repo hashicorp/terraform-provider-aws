@@ -331,8 +331,9 @@ func ResourceTable() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"csv": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"delimiter": {
@@ -340,7 +341,7 @@ func ResourceTable() *schema.Resource {
 													Optional: true,
 												},
 												"header_list": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -2170,8 +2171,8 @@ func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 		a.InputFormat = aws.String(v)
 	}
 
-	if v, ok := data["input_format_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.InputFormatOptions = expandInputFormatOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := data["input_format_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.InputFormatOptions = expandInputFormatOptions(v)
 	}
 
 	if v, ok := data["s3_bucket_source"].([]interface{}); ok && len(v) > 0 {
@@ -2271,22 +2272,25 @@ func expandEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecificati
 	return options
 }
 
-func expandInputFormatOptions(data map[string]interface{}) *dynamodb.InputFormatOptions {
+func expandInputFormatOptions(data []interface{}) *dynamodb.InputFormatOptions {
 	if data == nil {
 		return nil
 	}
 
+	m := data[0].(map[string]interface{})
 	var a *dynamodb.InputFormatOptions
 
-	if v, ok := data["csv"].(map[string]interface{}); ok && v != nil {
+	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
 		a.Csv = &dynamodb.CsvOptions{}
 
-		if s, ok := v["delimiter"].(string); ok && s != "" {
+		csv := v[0].(map[string]interface{})
+
+		if s, ok := csv["delimiter"].(string); ok && s != "" {
 			a.Csv.Delimiter = aws.String(s)
 		}
 
-		if s, ok := v["header_list"].([]interface{}); ok && s != nil {
-			a.Csv.HeaderList = flex.ExpandStringList(s)
+		if s, ok := csv["header_list"].(*schema.Set); ok && s.Len() > 0 {
+			a.Csv.HeaderList = flex.ExpandStringSet(s)
 		}
 	}
 

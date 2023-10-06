@@ -2547,6 +2547,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
 func TestAccDynamoDBTable_importTable(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4460,7 +4461,6 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
   import_table {
-    client_token           = %[1]q
     input_compression_type = "NONE"
     input_format           = "DYNAMODB_JSON"
     s3_bucket_source {
