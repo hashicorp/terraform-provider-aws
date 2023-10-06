@@ -330,7 +330,12 @@ func resourceLifecyclePolicy() *schema.Resource {
 												},
 												names.AttrTarget: {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
+													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+												},
+												"target_region": {
+													Type:         schema.TypeString,
+													Optional:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
 												},
 											},
@@ -951,6 +956,9 @@ func expandCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyRule 
 		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
 			rule.Target = aws.String(v)
 		}
+		if v, ok := m["target_region"].(string); ok && v != "" {
+			rule.TargetRegion = aws.String(v)
+		}
 
 		rules = append(rules, rule)
 	}
@@ -973,6 +981,7 @@ func flattenCrossRegionCopyRules(rules []awstypes.CrossRegionCopyRule) []interfa
 			names.AttrEncrypted: aws.ToBool(rule.Encrypted),
 			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
 			names.AttrTarget:    aws.ToString(rule.Target),
+			"target_region":     aws.ToString(rule.TargetRegion),
 		}
 
 		result = append(result, m)
