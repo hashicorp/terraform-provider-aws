@@ -213,12 +213,12 @@ Optional arguments:
 #### `input_format_options`
 
 * `csv` - (Optional) This block contains the processing options for the CSV file being imported:
-  * `delimiter` - (Optional) The delimiter used for separating items in the CSV file being imported.
-  * `header_list` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
+    * `delimiter` - (Optional) The delimiter used for separating items in the CSV file being imported.
+    * `header_list` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
 
 #### `s3_bucket_source`
 
-* `s3_bucket` - (Required) The S3 bucket that is being imported from. 
+* `s3_bucket` - (Required) The S3 bucket that is being imported from.
 * `s3_bucket_owner`- (Optional) The account number of the S3 bucket that is being imported from.
 * `s3_key_prefix` - (Optional) The key prefix shared by all S3 Objects that are being imported.
 

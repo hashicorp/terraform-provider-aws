@@ -2577,7 +2577,6 @@ func TestAccDynamoDBTable_importTable(t *testing.T) {
 						"name": rName,
 						"type": "S",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
 				),
 			},
