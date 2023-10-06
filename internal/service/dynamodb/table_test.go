@@ -4450,15 +4450,27 @@ resource "aws_dynamodb_table" "test" {
 
 func testAccTableConfig_import(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "data/somedoc.json"
+  content = "{\"Item\":{\"%[1]s\":{\"S\":\"test\"},\"field\":{\"S\":\"test\"}}}"
+}
+
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = %[1]q
+
   attribute {
     name = %[1]q
     type = "S"
   }
+
   import_table {
     input_compression_type = "NONE"
     input_format           = "DYNAMODB_JSON"
@@ -4467,14 +4479,6 @@ resource "aws_dynamodb_table" "test" {
       key_prefix = "data"
     }
   }
-}
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-resource "aws_s3_bucket_object" "test" {
-  bucket  = aws_s3_bucket.test.id
-  key     = "data/somedoc.json"
-  content = "{\"Item\":{\"%[1]s\":{\"S\":\"test\"},\"field\":{\"S\":\"test\"}}}"
 }
 `, rName)
 }
