@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpclattice_target_group: Add `config.lambda_event_structure_version` argument
+```

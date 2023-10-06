@@ -146,6 +146,13 @@ func ResourceTargetGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 						},
+						"lambda_event_structure_version": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
+						},
 						"port": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -438,9 +445,10 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"ip_address_type":  apiObject.IpAddressType,
-		"protocol":         apiObject.Protocol,
-		"protocol_version": apiObject.ProtocolVersion,
+		"ip_address_type":                apiObject.IpAddressType,
+		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
+		"protocol":                       apiObject.Protocol,
+		"protocol_version":               apiObject.ProtocolVersion,
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
@@ -530,6 +538,10 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 
+	if v, ok := tfMap["lambda_event_structure_version"].(string); ok && v != "" {
+		apiObject.LambdaEventStructureVersion = types.LambdaEventStructureVersion(v)
+	}
+
 	if v, ok := tfMap["port"].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
@@ -538,12 +550,12 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
-	if v, ok := tfMap["vpc_identifier"].(string); ok && v != "" {
-		apiObject.VpcIdentifier = aws.String(v)
-	}
-
 	if v, ok := tfMap["protocol_version"].(string); ok && v != "" {
 		apiObject.ProtocolVersion = types.TargetGroupProtocolVersion(v)
+	}
+
+	if v, ok := tfMap["vpc_identifier"].(string); ok && v != "" {
+		apiObject.VpcIdentifier = aws.String(v)
 	}
 
 	return apiObject
