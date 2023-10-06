@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -310,14 +311,9 @@ func ResourceTable() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ForceNew:      false,
 				ConflictsWith: []string{"restore_source_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_token": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"input_compression_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -355,19 +351,20 @@ func ResourceTable() *schema.Resource {
 							},
 						},
 						"s3_bucket_source": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket": {
+									"bucket": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"s3_bucket_owner": {
+									"bucket_owner": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"s3_key_prefix": {
+									"key_prefix": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -562,7 +559,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input := expandImportTable(vit.([]interface{})[0].(map[string]interface{}))
 
 		tcp := &dynamodb.TableCreationParameters{
-			TableName:   aws.String(d.Get("name").(string)),
+			TableName:   aws.String(tableName),
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
 		}
@@ -2161,10 +2158,8 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 }
 
 func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
-	a := &dynamodb.ImportTableInput{}
-
-	if v, ok := data["client_token"].(string); ok {
-		a.ClientToken = aws.String(v)
+	a := &dynamodb.ImportTableInput{
+		ClientToken: aws.String(id.UniqueId()),
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
@@ -2179,9 +2174,8 @@ func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 		a.InputFormatOptions = expandInputFormatOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := data["s3_bucket_source"]; ok {
-		s3bSet := v.(*schema.Set)
-		a.S3BucketSource = expandS3BucketSource(s3bSet.List()[0].(map[string]interface{}))
+	if v, ok := data["s3_bucket_source"].([]interface{}); ok && len(v) > 0 {
+		a.S3BucketSource = expandS3BucketSource(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -2282,7 +2276,7 @@ func expandInputFormatOptions(data map[string]interface{}) *dynamodb.InputFormat
 		return nil
 	}
 
-	a := &dynamodb.InputFormatOptions{}
+	var a *dynamodb.InputFormatOptions
 
 	if v, ok := data["csv"].(map[string]interface{}); ok && v != nil {
 		a.Csv = &dynamodb.CsvOptions{}
@@ -2304,17 +2298,17 @@ func expandS3BucketSource(data map[string]interface{}) *dynamodb.S3BucketSource 
 		return nil
 	}
 
-	a := &dynamodb.S3BucketSource{}
+	var a *dynamodb.S3BucketSource
 
-	if s, ok := data["s3_bucket"].(string); ok && s != "" {
+	if s, ok := data["bucket"].(string); ok && s != "" {
 		a.S3Bucket = aws.String(s)
 	}
 
-	if s, ok := data["s3_bucket_owner"].(string); ok && s != "" {
+	if s, ok := data["bucket_owner"].(string); ok && s != "" {
 		a.S3BucketOwner = aws.String(s)
 	}
 
-	if s, ok := data["s3_key_prefix"].(string); ok && s != "" {
+	if s, ok := data["key_prefix"].(string); ok && s != "" {
 		a.S3KeyPrefix = aws.String(s)
 	}
 
