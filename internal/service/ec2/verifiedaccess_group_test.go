@@ -226,9 +226,9 @@ resource "aws_verifiedaccess_instance" "test" {
 }
 
 resource "aws_verifiedaccess_trust_provider" "test" {
-  policy_reference_name      = "test"
-  trust_provider_type        = "user"
-  user_trust_provider_type   = "oidc"
+  policy_reference_name    = "test"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
 
   oidc_options {
     authorization_endpoint = "https://example.com/authorization_endpoint"
