@@ -172,7 +172,7 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

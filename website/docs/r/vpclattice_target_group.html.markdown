@@ -110,10 +110,10 @@ Config (`config`) supports the following:
 * `health_check` - (Optional) The health check configuration.
 * `ip_address_type` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`.
 * `lambda_event_structure_version` - (Optional) The version of the event structure that the Lambda function receives. Supported only if `type` is `LAMBDA`. Valid Values are `V1` | `V2`.
-* `port` - (Required) The port on which the targets are listening.
-* `protocol` - (Required) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`.
+* `port` - (Optional) The port on which the targets are listening.
+* `protocol` - (Optional) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`.
 * `protocol_version` - (Optional) The protocol version. Valid Values are `HTTP1` | `HTTP2` | `GRPC`. Default value is `HTTP1`.
-* `vpc_identifier` - (Required) The ID of the VPC.
+* `vpc_identifier` - (Optional) The ID of the VPC.
 
 Health Check (`health_check`) supports the following:
 
