@@ -69,6 +69,7 @@ func resourceCertificate() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 			"certificate_authority_arn": {
 				Type:          schema.TypeString,
@@ -322,6 +323,22 @@ func resourceCertificate() *schema.Resource {
 
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				if certificateType := diff.Get("type").(string); types.CertificateType(certificateType) != types.CertificateTypeAmazonIssued {
+					return nil
+				}
+
+				if status := diff.Get("status").(string); types.CertificateStatus(status) == types.CertificateStatusExpired {
+					return diff.SetNewComputed("arn")
+				}
+
+				return nil
+			},
+
 			verify.SetTagsDiff,
 		),
 	}
