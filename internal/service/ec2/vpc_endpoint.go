@@ -89,6 +89,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 						"dns_record_ip_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.DnsRecordIpType_Values(), false),
 						},
 						"private_dns_only_for_inbound_resolver_endpoint": {
