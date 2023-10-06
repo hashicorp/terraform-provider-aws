@@ -218,9 +218,9 @@ Optional arguments:
 
 #### `s3_bucket_source`
 
-* `s3_bucket` - (Required) The S3 bucket that is being imported from.
-* `s3_bucket_owner`- (Optional) The account number of the S3 bucket that is being imported from.
-* `s3_key_prefix` - (Optional) The key prefix shared by all S3 Objects that are being imported.
+* `bucket` - (Required) The S3 bucket that is being imported from.
+* `bucket_owner`- (Optional) The account number of the S3 bucket that is being imported from.
+* `key_prefix` - (Optional) The key prefix shared by all S3 Objects that are being imported.
 
 ### `global_secondary_index`
 
