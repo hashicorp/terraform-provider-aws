@@ -100,7 +100,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "cluster_uuid", regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-\d+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),

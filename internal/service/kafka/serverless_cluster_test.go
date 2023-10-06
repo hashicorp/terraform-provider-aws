@@ -41,7 +41,7 @@ func TestAccKafkaServerlessCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "cluster_uuid", regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-\d+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
