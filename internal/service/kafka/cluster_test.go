@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	uuid "github.com/hashicorp/go-uuid"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -101,10 +100,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttrWith(resourceName, "cluster_uuid", func(value string) error {
-						_, err := uuid.ParseUUID(value)
-						return err
-					}),
+					resource.TestMatchResourceAttr(resourceName, "cluster_uuid", regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),
