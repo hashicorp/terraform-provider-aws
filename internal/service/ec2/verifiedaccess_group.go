@@ -3,7 +3,6 @@ package ec2
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -30,12 +29,6 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -154,7 +147,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy", "tags", "tags_all") {
+	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}

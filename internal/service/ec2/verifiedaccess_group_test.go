@@ -56,13 +56,90 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccVerifiedAccessGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVerifiedAccessGroup_policy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandString(100)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
-	rName := "test"
-	resourceName := "aws_verifiedaccess_group." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -79,43 +156,6 @@ func TestAccVerifiedAccessGroup_policy(t *testing.T) {
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-
-func TestAccVerifiedAccessGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
-	description := sdkacctest.RandString(100)
-	rName := "test"
-	resourceName := "aws_verifiedaccess_group." + rName
-	tag1 := sdkacctest.RandString(10)
-	value1 := sdkacctest.RandString(10)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccess(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessGroupConfig_tags(rName, description, tag1, value1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tag1, value1),
 				),
 			},
 			{
@@ -174,7 +214,7 @@ func testAccCheckVerifiedAccessGroupDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccVerifiedAccessGroupConfig_basic(rName string) string {
+func testAccVerifiedAccessGroupConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_instance" "test" {
   tags = {
@@ -182,30 +222,76 @@ resource "aws_verifiedaccess_instance" "test" {
   }
 }
 
-resource "aws_verifiedaccess_group" "test" {
-  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name      = "test"
+  trust_provider_type        = "user"
+  user_trust_provider_type   = "oidc"
+
+  oidc_options {
+    authorization_endpoint = "https://example.com/authorization_endpoint"
+    client_id              = "s6BhdRkqt3"
+    client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+    issuer                 = "https://example.com"
+    scope                  = "test"
+    token_endpoint         = "https://example.com/token_endpoint"
+    user_info_endpoint     = "https://example.com/user_info_endpoint"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
 }
 `, rName)
 }
 
-func testAccVerifiedAccessGroupConfig_tags(rName, description, tag1, val1 string) string {
-	return fmt.Sprintf(`
-resource "aws_verifiedaccess_group" %[1]q {
-  description                = %[2]q
-  verifiedaccess_instance_id = "vai-014ba03ba2d7c6a6f"
+func testAccVerifiedAccessGroupConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), `
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+`)
+}
+
+func testAccVerifiedAccessGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
   tags = {
-	%[3]q = %[4]q
+    %[1]q = %[2]q
   }
 }
-`, rName, description, tag1, val1)
+`, tagKey1, tagValue1))
+}
+
+func testAccVerifiedAccessGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccVerifiedAccessGroupConfig_policy(rName, description, policy string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(`
-resource "aws_verifiedaccess_group" %[1]q {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
   description                = %[2]q
-  verifiedaccess_instance_id = "vai-014ba03ba2d7c6a6f"
   policy_document            = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, description, policy))
 }
