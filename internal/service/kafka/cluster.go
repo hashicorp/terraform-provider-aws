@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -303,6 +305,10 @@ func ResourceCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"configuration_info": {
 				Type:             schema.TypeList,
@@ -638,7 +644,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
-	d.Set("arn", cluster.ClusterArn)
+	clusterARN := aws.StringValue(cluster.ClusterArn)
+	d.Set("arn", clusterARN)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslIam)))
 	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslScram)))
@@ -664,6 +671,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("client_authentication", nil)
 	}
 	d.Set("cluster_name", cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
 		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
 			return diag.Errorf("setting configuration_info: %s", err)
@@ -1876,4 +1885,18 @@ func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("current_version", cluster.CurrentVersion)
 
 	return nil
+}
+
+func clusterUUIDFromARN(clusterARN string) (string, error) {
+	parsedARN, err := arn.Parse(clusterARN)
+	if err != nil {
+		return "", err
+	}
+
+	// arn:${Partition}:kafka:${Region}:${Account}:cluster/${ClusterName}/${Uuid}
+	parts := strings.Split(parsedARN.Resource, "/")
+	if len(parts) != 3 || parts[0] != "cluster" || parts[1] == "" || parts[2] == "" {
+		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
+	}
+	return parts[2], nil
 }
