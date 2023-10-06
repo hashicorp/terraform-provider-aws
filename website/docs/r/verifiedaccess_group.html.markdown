@@ -32,9 +32,9 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `policy_docment` - (Optional) The policy document that is associated with this resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `creation_time` - Timestamp when the access group was created.
 * `deletion_time` - Timestamp when the access group was deleted.
