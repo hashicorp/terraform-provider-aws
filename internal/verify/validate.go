@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -186,6 +187,8 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
+	} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
 	}
 
 	return //nolint:nakedret // Just a long function.

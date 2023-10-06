@@ -49,6 +49,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAccountVDMAttributes,
+			TypeName: "aws_sesv2_account_vdm_attributes",
+			Name:     "Account VDM Attributes",
+		},
+		{
 			Factory:  ResourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
 			Name:     "Configuration Set",

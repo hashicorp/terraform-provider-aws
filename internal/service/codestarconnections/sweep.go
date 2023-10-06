@@ -14,6 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -33,6 +35,10 @@ func init() {
 
 func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping CodeStar Connections Connection sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -45,7 +51,7 @@ func sweepConnections(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CodeStar Connections Connection sweep for %s: %s", region, err)
 			return nil
 		}
@@ -74,6 +80,10 @@ func sweepConnections(region string) error {
 
 func sweepHosts(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping CodeStar Connections Host sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -86,7 +96,7 @@ func sweepHosts(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CodeStar Connections Host sweep for %s: %s", region, err)
 			return nil
 		}

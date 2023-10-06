@@ -695,7 +695,12 @@ func ResourceChannel() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_zones": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"network_interface_ids": {
+								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
@@ -705,14 +710,14 @@ func ResourceChannel() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"security_group_ids": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
 								Optional: true,
 								Computed: true,
 								MaxItems: 5,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"subnet_ids": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
@@ -2418,14 +2423,14 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].([]string); ok && len(v) > 0 {
-		settings.SecurityGroupIds = v
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["subnet_ids"].([]string); ok && len(v) > 0 {
-		settings.SubnetIds = v
+	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SubnetIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
-		settings.PublicAddressAllocationIds = v
+	if v, ok := m["public_address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.PublicAddressAllocationIds = flex.ExpandStringValueSet(v)
 	}
 
 	return settings
@@ -2437,8 +2442,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueList(apiObject.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringValueList(apiObject.SubnetIds),
+		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		"subnet_ids":            flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

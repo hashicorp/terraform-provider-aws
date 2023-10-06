@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -3256,7 +3256,7 @@ func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, servic
 		return nil, err
 	}
 
-	allowedPrincipals = slices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
+	allowedPrincipals = tfslices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
 		return aws.StringValue(v.Principal) == principalARN
 	})
 
@@ -4600,7 +4600,8 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
-			"type": ec2.TransitGatewayRouteTypeStatic,
+			"type":                     ec2.TransitGatewayRouteTypeStatic,
+			"route-search.exact-match": destination,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
@@ -7151,6 +7152,24 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client,
 	}
 
 	return output, nil
+}
+
+func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2_sdkv2.Client, vaiID, vatpID string) error {
+	output, err := FindVerifiedAccessInstanceByID(ctx, conn, vaiID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range output.VerifiedAccessTrustProviders {
+		if aws_sdkv2.ToString(v.VerifiedAccessTrustProviderId) == vatpID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Association not found", vaiID, vatpID),
+	}
 }
 
 func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {

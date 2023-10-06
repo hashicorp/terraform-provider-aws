@@ -78,7 +78,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
 				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 			},
 			"arn": {
@@ -875,7 +875,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -906,7 +906,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil && !tfawserr.ErrCodeEquals(err,
 		errCodeMethodNotAllowed,
 		errCodeNotImplemented,
-		ErrCodeNoSuchWebsiteConfiguration,
+		errCodeNoSuchWebsiteConfiguration,
 		errCodeXNotImplemented,
 	) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket website configuration: %s", err)

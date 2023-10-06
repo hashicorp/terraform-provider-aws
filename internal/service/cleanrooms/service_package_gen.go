@@ -35,6 +35,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceConfiguredTable,
+			TypeName: "aws_cleanrooms_configured_table",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
