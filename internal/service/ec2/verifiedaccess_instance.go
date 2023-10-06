@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -173,6 +174,10 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Instance (%s): %s", d.Id(), err)
