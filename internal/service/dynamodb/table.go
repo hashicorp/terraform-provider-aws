@@ -355,6 +355,7 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"bucket": {
@@ -2278,7 +2279,7 @@ func expandInputFormatOptions(data []interface{}) *dynamodb.InputFormatOptions {
 	}
 
 	m := data[0].(map[string]interface{})
-	var a *dynamodb.InputFormatOptions
+	a := &dynamodb.InputFormatOptions{}
 
 	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
 		a.Csv = &dynamodb.CsvOptions{}
@@ -2302,7 +2303,7 @@ func expandS3BucketSource(data map[string]interface{}) *dynamodb.S3BucketSource 
 		return nil
 	}
 
-	var a *dynamodb.S3BucketSource
+	a := &dynamodb.S3BucketSource{}
 
 	if s, ok := data["bucket"].(string); ok && s != "" {
 		a.S3Bucket = aws.String(s)

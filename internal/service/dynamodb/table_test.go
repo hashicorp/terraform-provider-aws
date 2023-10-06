@@ -2577,7 +2577,7 @@ func TestAccDynamoDBTable_importTable(t *testing.T) {
 						"name": rName,
 						"type": "S",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 				),
 			},
 		},
@@ -4463,8 +4463,8 @@ resource "aws_dynamodb_table" "test" {
     input_compression_type = "NONE"
     input_format           = "DYNAMODB_JSON"
     s3_bucket_source {
-      s3_bucket     = aws_s3_bucket.test.bucket
-      s3_key_prefix = "data"
+      bucket     = aws_s3_bucket.test.bucket
+      key_prefix = "data"
     }
   }
 }
