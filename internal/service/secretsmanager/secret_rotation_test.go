@@ -158,6 +158,52 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretRotation_switchToScheduleExpressionAfterAutomaticallyAfterDaysHasBeenSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_rotation.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test1"
+	scheduleExpression := "cron(0 0 10,20,30 * ? *)"
+	automaticallyAfterDays := 10
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creating secret rotation resource
+			{
+				Config: testAccSecretRotationConfig_basic(rName, automaticallyAfterDays),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(automaticallyAfterDays)),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", ""),
+				),
+			},
+			// Test importing secret rotation
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput

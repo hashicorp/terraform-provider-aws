@@ -237,6 +237,8 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 
 	if v := rules.ScheduleExpression; v != nil {
 		m["schedule_expression"] = aws.StringValue(v)
+		// Clear out automatically_after_days in case there was a value left over from running under a version lower than 5.7.0 and updating the provider later
+		m["automatically_after_days"] = nil
 	}
 
 	return []interface{}{m}
