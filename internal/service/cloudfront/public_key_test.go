@@ -9,22 +9,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudfront_public_key.example"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_public_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
@@ -33,12 +31,14 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicKeyExistence(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
-					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
-					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
+				Config: testAccPublicKeyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "caller_reference"),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "encoded_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -52,8 +52,8 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 
 func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudfront_public_key.example"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_public_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
@@ -62,9 +62,9 @@ func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig_basic(rInt),
+				Config: testAccPublicKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicKeyExistence(ctx, resourceName),
+					testAccCheckPublicKeyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,7 +87,7 @@ func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 			{
 				Config: testAccPublicKeyConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicKeyExistence(ctx, resourceName),
+					testAccCheckPublicKeyExists(ctx, resourceName),
 					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "name", startsWithPrefix),
 				),
 			},
@@ -105,8 +105,8 @@ func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 
 func TestAccCloudFrontPublicKey_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudfront_public_key.example"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_public_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
@@ -115,10 +115,10 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig_basic(rInt),
+				Config: testAccPublicKeyConfig_comment(rName, "comment 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicKeyExistence(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "comment 1"),
 				),
 			},
 			{
@@ -127,37 +127,28 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPublicKeyConfig_update(rInt),
+				Config: testAccPublicKeyConfig_comment(rName, "comment 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicKeyExistence(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key1"),
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "comment 2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPublicKeyExistence(ctx context.Context, r string) resource.TestCheckFunc {
+func testAccCheckPublicKeyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[r]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", r)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Id is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
-		params := &cloudfront.GetPublicKeyInput{
-			Id: aws.String(rs.Primary.ID),
-		}
+		_, err := tfcloudfront.FindPublicKeyByID(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetPublicKeyWithContext(ctx, params)
-		if err != nil {
-			return fmt.Errorf("Error retrieving CloudFront PublicKey: %s", err)
-		}
-		return nil
+		return err
 	}
 }
 
@@ -170,32 +161,30 @@ func testAccCheckPublicKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			params := &cloudfront.GetPublicKeyInput{
-				Id: aws.String(rs.Primary.ID),
-			}
+			_, err := tfcloudfront.FindPublicKeyByID(ctx, conn, rs.Primary.ID)
 
-			_, err := conn.GetPublicKeyWithContext(ctx, params)
-			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
-			return fmt.Errorf("CloudFront PublicKey (%s) was not deleted", rs.Primary.ID)
+
+			return fmt.Errorf("CloudFront Public Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccPublicKeyConfig_basic(rInt int) string {
+func testAccPublicKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_public_key" "example" {
-  comment     = "test key"
+resource "aws_cloudfront_public_key" "test" {
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
-  name        = "tf-acc-test-%d"
+  name        = %[1]q
 }
-`, rInt)
+`, rName)
 }
 
 func testAccPublicKeyConfig_namePrefix() string {
@@ -208,12 +197,12 @@ resource "aws_cloudfront_public_key" "example" {
 `
 }
 
-func testAccPublicKeyConfig_update(rInt int) string {
+func testAccPublicKeyConfig_comment(rName, comment string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_public_key" "example" {
-  comment     = "test key1"
+resource "aws_cloudfront_public_key" "test" {
+  comment     = %[2]q
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
-  name        = "tf-acc-test-%d"
+  name        = %[1]q
 }
-`, rInt)
+`, rName, comment)
 }
