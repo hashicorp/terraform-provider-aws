@@ -6,7 +6,6 @@ package cloudfront
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -81,18 +80,32 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("name", id.PrefixedUniqueId("tf-"))
 	}
 
-	request := &cloudfront.CreatePublicKeyInput{
-		PublicKeyConfig: expandPublicKeyConfig(d),
+	name := d.Get("name").(string)
+	input := &cloudfront.CreatePublicKeyInput{
+		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			Name:       aws.String(name),
+		},
 	}
 
-	log.Println("[DEBUG] Create CloudFront PublicKey:", request)
+	if v, ok := d.GetOk("caller_reference"); ok {
+		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
+	} else {
+		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+	}
 
-	output, err := conn.CreatePublicKeyWithContext(ctx, request)
+	if v, ok := d.GetOk("comment"); ok {
+		input.PublicKeyConfig.Comment = aws.String(v.(string))
+	}
+
+	output, err := conn.CreatePublicKeyWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront PublicKey: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Public Key (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.PublicKey.Id))
+
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
