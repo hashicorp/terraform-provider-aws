@@ -6,6 +6,7 @@ package cloudfront
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -183,17 +184,18 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	request := &cloudfront.DeletePublicKeyInput{
+	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
+	_, err := conn.DeletePublicKeyWithContext(ctx, &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+		return diags
 	}
 
-	_, err := conn.DeletePublicKeyWithContext(ctx, request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFront PublicKey (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Public Key (%s): %s", d.Id(), err)
 	}
 
 	return diags
