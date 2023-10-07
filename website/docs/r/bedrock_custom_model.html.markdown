@@ -134,7 +134,7 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 resource "aws_bedrock_custom_model" "test" {
   custom_model_name = %[1]q
   job_name          = %[1]q
-  base_model_id     = "amazon.titan-text-express-v1"
+  base_model_arn    = "amazon.titan-text-express-v1"
   hyper_parameters = {
     "epochCount"              = "1"
     "batchSize"               = "1"

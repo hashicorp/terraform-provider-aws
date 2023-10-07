@@ -14,13 +14,13 @@ Get the properties associated with a Bedrock custom model that you have created.
 
 ```terraform
 data "aws_bedrock_custom_model" "test" {
-  model_id = "<arn of model>"
+  model_arn = "<arn of model>"
 }
 ```
 
 ## Argument Reference
 
-* `model_id` – (Required) Name or ARN of the custom model.
+* `model_arn` – (Required) Name or ARN of the custom model.
 
 ## Attribute Reference
 
@@ -31,7 +31,6 @@ This data source exports the following attributes in addition to the arguments a
 * `hyper_parameters` - Hyperparameter values associated with this model.
 * `job_arn` - Job ARN associated with this model.
 * `job_name` - Job name associated with this model.
-* `model_arn` - ARN associated with this model.
 * `model_kms_key_arn` - The custom model is encrypted at rest using this key.
 * `model_name` - Model name associated with this model.
 * `output_data_config` - Output data configuration associated with this custom model.
