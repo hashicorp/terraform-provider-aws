@@ -5,7 +5,6 @@ package bedrock
 
 import (
 	"context"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/bedrock"
@@ -26,10 +25,6 @@ func ResourceModelInvocationLoggingConfiguration() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
