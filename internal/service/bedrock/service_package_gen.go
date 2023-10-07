@@ -51,6 +51,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom-Model",
 		},
+		{
+			Factory:  ResourceModelInvocationLoggingConfiguration,
+			TypeName: "aws_bedrock_model_invocation_logging_configuration",
+		},
 	}
 }
 
