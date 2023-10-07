@@ -5,10 +5,7 @@ package bedrock
 
 import (
 	"context"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +33,7 @@ func DataSourceCustomModels() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"model_id": {
+						"model_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,7 +53,7 @@ func dataSourceCustomModelsRead(ctx context.Context, d *schema.ResourceData, met
 
 	models, err := conn.ListCustomModelsWithContext(ctx, nil)
 	if err != nil {
-		return diag.Errorf("reading Bedrock Foundation Models: %s", err)
+		return diag.Errorf("reading Bedrock Custom Models: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -65,25 +62,4 @@ func dataSourceCustomModelsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return nil
-}
-
-func flattenCustomModelSummaries(models []*bedrock.CustomModelSummary) []map[string]interface{} {
-	if len(models) == 0 {
-		return []map[string]interface{}{}
-	}
-
-	l := make([]map[string]interface{}, 0, len(models))
-
-	for _, model := range models {
-		m := map[string]interface{}{
-			"base_model_arn":  aws.StringValue(model.BaseModelArn),
-			"base_model_name": aws.StringValue(model.BaseModelName),
-			"model_arn":       aws.StringValue(model.ModelArn),
-			"model_name":      aws.StringValue(model.ModelName),
-			"creation_time":   aws.TimeValue(model.CreationTime).Format(time.RFC3339),
-		}
-		l = append(l, m)
-	}
-
-	return l
 }

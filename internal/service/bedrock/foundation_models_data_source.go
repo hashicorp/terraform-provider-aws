@@ -6,8 +6,6 @@ package bedrock
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -84,30 +82,4 @@ func dataSourceFoundationModelsRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-func flattenFoundationModelSummaries(models []*bedrock.FoundationModelSummary) []map[string]interface{} {
-	if len(models) == 0 {
-		return []map[string]interface{}{}
-	}
-
-	l := make([]map[string]interface{}, 0, len(models))
-
-	for _, model := range models {
-		m := map[string]interface{}{
-			"model_arn":                    aws.StringValue(model.ModelArn),
-			"model_id":                     aws.StringValue(model.ModelId),
-			"model_name":                   aws.StringValue(model.ModelName),
-			"provider_name":                aws.StringValue(model.ProviderName),
-			"customizations_supported":     aws.StringValueSlice(model.CustomizationsSupported),
-			"inference_types_supported":    aws.StringValueSlice(model.InferenceTypesSupported),
-			"input_modalities":             aws.StringValueSlice(model.InputModalities),
-			"output_modalities":            aws.StringValueSlice(model.OutputModalities),
-			"response_streaming_supported": aws.BoolValue(model.ResponseStreamingSupported),
-		}
-
-		l = append(l, m)
-	}
-
-	return l
 }

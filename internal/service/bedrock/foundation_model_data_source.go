@@ -18,13 +18,13 @@ func DataSourceFoundationModel() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFoundationModelRead,
 		Schema: map[string]*schema.Schema{
-			"model_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"model_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"model_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"model_name": {
 				Type:     schema.TypeString,
@@ -75,7 +75,7 @@ func dataSourceFoundationModelRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("reading Bedrock Foundation Model: %s", err)
 	}
 
-	d.SetId(d.Get("model_id").(string))
+	d.SetId(modelId)
 	d.Set("model_arn", aws.StringValue(model.ModelDetails.ModelArn))
 	d.Set("model_id", aws.StringValue(model.ModelDetails.ModelId))
 	d.Set("model_name", aws.StringValue(model.ModelDetails.ModelName))

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,7 +18,6 @@ func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, bedrock.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +163,7 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 resource "aws_bedrock_custom_model" "test" {
   custom_model_name = %[1]q
   job_name          = %[1]q
-  base_model_id     = "amazon.titan-text-express-v1"
+  base_model_arn     = "amazon.titan-text-express-v1"
   hyper_parameters = {
     "epochCount"              = "1"
     "batchSize"               = "1"
@@ -178,6 +176,7 @@ resource "aws_bedrock_custom_model" "test" {
 }
 
 data "aws_bedrock_custom_model" "test" {
+	model_id = aws_bedrock_custom_model.test.model_arn
 }
 `, rName)
 }

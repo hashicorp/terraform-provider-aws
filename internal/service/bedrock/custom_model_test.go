@@ -19,8 +19,7 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 	// customModelResourceName := "aws_bedrock_custom_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(ctx, t) },
-		// ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -178,6 +177,7 @@ resource "aws_bedrock_custom_model" "test" {
   custom_model_name = %[1]q
   job_name          = %[1]q
   base_model_id     = "amazon.titan-text-express-v1"
+  role_arn          = aws_iam_role.bedrock_fine_tuning.arn
   hyper_parameters = {
     "epochCount"              = "1"
     "batchSize"               = "1"
@@ -185,7 +185,6 @@ resource "aws_bedrock_custom_model" "test" {
     "learningRateWarmupSteps" = "0"
   }
   output_data_config   = "s3://${aws_s3_bucket.output_data.id}/myfolder/"
-  role_arn             = aws_iam_role.bedrock_fine_tuning.arn
   training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/training_data.jsonl"
 }
 `, rName)

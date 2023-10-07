@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_bedrock_custom_model")
@@ -27,7 +28,7 @@ func DataSourceCustomModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"createion_time": {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,6 +45,7 @@ func DataSourceCustomModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"job_tags": tftags.TagsSchemaComputed(),
 			"model_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -56,6 +58,7 @@ func DataSourceCustomModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"model_tags": tftags.TagsSchemaComputed(),
 			"output_data_config": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -113,7 +116,7 @@ func dataSourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	model, err := conn.GetCustomModelWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("reading Bedrock Foundation Models: %s", err)
+		return diag.Errorf("reading Bedrock Custom Model: %s", err)
 	}
 
 	d.SetId(modelId)
@@ -137,66 +140,17 @@ func dataSourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting validation_metrics: %s", err)
 	}
 
-	// "base_model_arn": aws.StringValue(model.BaseModelArn),
-	// 		"base_model_name": aws.StringValue(model.BaseModelName),
-	// 		"model_arn": aws.StringValue(model.ModelArn),
-	// 		"model_name": aws.StringValue(model.ModelName),
-	// 		"creation_time": aws.TimeValue(model.CreationTime).Format(time.RFC3339),
+	jobTags, err := listTags(ctx, conn, *model.JobArn)
+	if err != nil {
+		return diag.Errorf("reading Tags for Job: %s", err)
+	}
+	d.Set("job_tags", jobTags)
+
+	modelTags, err := listTags(ctx, conn, *model.ModelArn)
+	if err != nil {
+		return diag.Errorf("reading Tags for Model: %s", err)
+	}
+	d.Set("model_tags", modelTags)
 
 	return nil
-}
-
-// func flattenHyperParameters(hyperParams *schema.Schema) map[string]string {
-// 	result := make(map[string]string)
-// 	for _, t := range tags {
-// 		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
-// 	}
-
-// 	return result
-// }
-
-func flattenTrainingMetrics(metrics *bedrock.TrainingMetrics) []map[string]interface{} {
-	if metrics == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"training_loss": aws.Float64Value(metrics.TrainingLoss),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenValidationDataConfig(config *bedrock.ValidationDataConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
-	}
-
-	l := make([]map[string]interface{}, 0, len(config.Validators))
-
-	for _, validator := range config.Validators {
-		m := map[string]interface{}{
-			"validator": aws.StringValue(validator.S3Uri),
-		}
-		l = append(l, m)
-	}
-
-	return l
-}
-
-func flattenValidationMetrics(metrics []*bedrock.ValidatorMetric) []map[string]interface{} {
-	if metrics == nil {
-		return []map[string]interface{}{}
-	}
-
-	l := make([]map[string]interface{}, 0, len(metrics))
-
-	for _, metric := range metrics {
-		m := map[string]interface{}{
-			"validation_loss": aws.Float64Value(metric.ValidationLoss),
-		}
-		l = append(l, m)
-	}
-
-	return l
 }

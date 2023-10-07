@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKResource("aws_bedrock_custom_model", name="Custom-Model")
@@ -35,15 +36,9 @@ func ResourceCustomModel() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
-			// Update: schema.DefaultTimeout(20 * time.Minute),
-			// Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"base_model_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -68,6 +63,7 @@ func ResourceCustomModel() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9a-zA-Z][_-]?)+$`), "minimum length of 1. Maximum length of 63."),
 			},
+			"custom_model_tags": tftags.TagsSchemaForceNew(),
 			"hyper_parameters": {
 				Type:     schema.TypeMap,
 				Required: true,
@@ -79,6 +75,7 @@ func ResourceCustomModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"job_tags": tftags.TagsSchemaForceNew(),
 			"output_data_config": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -97,36 +94,12 @@ func ResourceCustomModel() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$`), "minimum length of 1. Maximum length of 1024."),
 			},
-			"training_metrics": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"training_loss": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
 			"validation_data_config": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				ForceNew: true,
 				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$`), "minimum length of 1. Maximum length of 1024."),
-			},
-			"validation_metrics": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"validation_loss": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
@@ -148,8 +121,50 @@ func ResourceCustomModel() *schema.Resource {
 					},
 				},
 			},
-			// names.AttrTags:    tftags.TagsSchema(),
-			// names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"base_model_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creation_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"model_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"model_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"training_metrics": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"training_loss": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"validation_metrics": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"validation_loss": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -187,10 +202,18 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("custom_model_kms_key_id"); ok {
 		input.CustomModelKmsKeyId = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("job_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.JobTags = Tags(tftags.New(ctx, v))
+	}
+	if v, ok := d.GetOk("custom_model_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.CustomModelTags = Tags(tftags.New(ctx, v))
+	}
 
 	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
-		"BaseModelIdentifier": baseModelId,
-		"CustomModelName":     customModelName,
+		"BaseModelIdentifier": input.BaseModelIdentifier,
+		"ClientRequestToken":  input.ClientRequestToken,
+		"CustomModelName":     input.CustomModelName,
+		"CustomModelKmsKeyId": input.CustomModelKmsKeyId,
 		"JobName":             jobName,
 		"RoleArn":             roleArn,
 		"OutputDataConfig":    outputDataConfig,
@@ -229,7 +252,6 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(*jobEnd.OutputModelArn)
-	d.Set("model_id", *jobEnd.OutputModelArn)
 
 	return append(diags, resourceCustomModelRead(ctx, d, meta)...)
 }
@@ -244,7 +266,7 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	model, err := conn.GetCustomModelWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("reading Bedrock Foundation Models: %s", err)
+		return diag.Errorf("reading Bedrock Custom Model: %s", err)
 	}
 
 	d.SetId(modelId)
@@ -267,6 +289,18 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("validation_metrics", flattenValidationMetrics(model.ValidationMetrics)); err != nil {
 		return diag.Errorf("setting validation_metrics: %s", err)
 	}
+
+	jobTags, err := listTags(ctx, conn, *model.JobArn)
+	if err != nil {
+		return diag.Errorf("reading Tags for Job: %s", err)
+	}
+	d.Set("job_tags", jobTags)
+
+	modelTags, err := listTags(ctx, conn, *model.ModelArn)
+	if err != nil {
+		return diag.Errorf("reading Tags for Model: %s", err)
+	}
+	d.Set("custom_model_tags", modelTags)
 
 	return diags
 }
