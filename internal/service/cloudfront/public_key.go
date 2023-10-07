@@ -151,15 +151,29 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	request := &cloudfront.UpdatePublicKeyInput{
-		Id:              aws.String(d.Id()),
-		PublicKeyConfig: expandPublicKeyConfig(d),
-		IfMatch:         aws.String(d.Get("etag").(string)),
+	input := &cloudfront.UpdatePublicKeyInput{
+		Id:      aws.String(d.Id()),
+		IfMatch: aws.String(d.Get("etag").(string)),
+		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			Name:       aws.String(d.Get("name").(string)),
+		},
 	}
 
-	_, err := conn.UpdatePublicKeyWithContext(ctx, request)
+	if v, ok := d.GetOk("caller_reference"); ok {
+		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
+	} else {
+		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		input.PublicKeyConfig.Comment = aws.String(v.(string))
+	}
+
+	_, err := conn.UpdatePublicKeyWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CloudFront PublicKey (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Public Key (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
@@ -183,23 +197,4 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
-}
-
-func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
-	publicKeyConfig := &cloudfront.PublicKeyConfig{
-		EncodedKey: aws.String(d.Get("encoded_key").(string)),
-		Name:       aws.String(d.Get("name").(string)),
-	}
-
-	if v, ok := d.GetOk("comment"); ok {
-		publicKeyConfig.Comment = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("caller_reference"); ok {
-		publicKeyConfig.CallerReference = aws.String(v.(string))
-	} else {
-		publicKeyConfig.CallerReference = aws.String(id.UniqueId())
-	}
-
-	return publicKeyConfig
 }
