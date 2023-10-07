@@ -4,15 +4,18 @@
 package bedrock_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/bedrock"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -20,7 +23,7 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockCustomModelsDataSourceConfig_basic(),
+				Config: testAccBedrockCustomModelsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_bedrock_custom_models.test", "id"),
 				),
@@ -29,8 +32,8 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModelsDataSourceConfig_basic() string {
-	return `
+func testAccBedrockCustomModelsDataSourceConfig_basic(rName string) string {
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource aws_s3_bucket training_data {
@@ -162,19 +165,19 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 resource "aws_bedrock_custom_model" "test" {
 	custom_model_name = %[1]q
 	job_name          = %[1]q
-	base_model_arn     = "amazon.titan-text-express-v1"
+	base_model_id     = "amazon.titan-text-express-v1"
+	role_arn          = aws_iam_role.bedrock_fine_tuning.arn
 	hyper_parameters = {
-	"epochCount"              = "1"
-	"batchSize"               = "1"
-	"learningRate"            = "0.005"
-	"learningRateWarmupSteps" = "0"
+	  "epochCount"              = "1"
+	  "batchSize"               = "1"
+	  "learningRate"            = "0.005"
+	  "learningRateWarmupSteps" = "0"
 	}
 	output_data_config   = "s3://${aws_s3_bucket.output_data.id}/myfolder/"
-	role_arn             = aws_iam_role.bedrock_fine_tuning.arn
 	training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/training_data.jsonl"
-}
+  }
 
 data "aws_bedrock_custom_models" "test" {
 }
-`
+`, rName)
 }
