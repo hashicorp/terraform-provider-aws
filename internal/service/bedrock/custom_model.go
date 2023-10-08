@@ -6,7 +6,6 @@ package bedrock
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -107,7 +106,8 @@ func ResourceCustomModel() *schema.Resource {
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_group_ids": {
@@ -197,11 +197,11 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		CustomModelName:     aws.String(customModelName),
 		JobName:             aws.String(jobName),
 		RoleArn:             aws.String(roleArn),
-		OutputDataConfig: &bedrock.OutputDataConfig{
-			S3Uri: aws.String(outputDataConfig),
-		},
 		TrainingDataConfig: &bedrock.TrainingDataConfig{
 			S3Uri: aws.String(trainingDataConfig),
+		},
+		OutputDataConfig: &bedrock.OutputDataConfig{
+			S3Uri: aws.String(outputDataConfig),
 		},
 		CustomModelTags: getTagsIn(ctx),
 	}
@@ -235,6 +235,11 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Bedrock Custom Model Customization Job: %s", err)
 	}
 
+	// Successfully started job. Save the name as the id of the custom model.
+	d.SetId(customModelName)
+	// also store the job arn now incase we need to cancel and destroy.
+	d.Set("job_arn", aws.StringValue(jobStart.JobArn))
+
 	var jobEnd *bedrock.GetModelCustomizationJobOutput
 	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
 		jobEnd, err = conn.GetModelCustomizationJobWithContext(ctx, &bedrock.GetModelCustomizationJobInput{
@@ -261,8 +266,6 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "failed to complete model customisation job: %s", err)
 	}
 
-	d.SetId(*jobEnd.OutputModelArn)
-
 	return append(diags, resourceCustomModelRead(ctx, d, meta)...)
 }
 
@@ -279,12 +282,13 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading Bedrock Custom Model: %s", err)
 	}
 
-	d.SetId(modelId)
 	d.Set("base_model_arn", aws.StringValue(model.BaseModelArn))
 	d.Set("creation_time", aws.TimeValue(model.CreationTime).Format(time.RFC3339))
 	d.Set("hyper_parameters", model.HyperParameters)
 	d.Set("job_arn", aws.StringValue(model.JobArn))
-	d.Set("job_name", aws.StringValue(model.JobName))
+	// This is nil in the model object - could be a bug
+	// However this is already in state so we can skip setting this here and avoid a forced update.
+	// d.Set("job_name", aws.StringValue(model.JobName))
 	d.Set("model_arn", aws.StringValue(model.ModelArn))
 	d.Set("model_kms_key_arn", aws.StringValue(model.ModelKmsKeyArn))
 	d.Set("model_name", aws.StringValue(model.ModelName))
@@ -314,13 +318,24 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
 	modelId := d.Id()
-
-	input := &bedrock.DeleteCustomModelInput{
-		ModelIdentifier: &modelId,
+	jobArn := d.Get("job_arn").(string)
+	tflog.Info(ctx, fmt.Sprintf("Cancelling Bedrock customization job %s", jobArn))
+	_, err := conn.StopModelCustomizationJobWithContext(ctx, &bedrock.StopModelCustomizationJobInput{
+		JobIdentifier: &jobArn,
+	})
+	if err != nil {
+		if err != nil {
+			// ignore validatin errors - eg. already complete
+			if _, ok := err.(*bedrock.ValidationException); !ok {
+				return sdkdiag.AppendErrorf(diags, "stopping Bedrock Customization Job ID(%s): %s", jobArn, err)
+			}
+		}
 	}
 
-	log.Printf("[DEBUG] Deleting Bedrock Custom Model: %s", d.Id())
-	_, err := conn.DeleteCustomModelWithContext(ctx, input)
+	tflog.Info(ctx, fmt.Sprintf("Deleting Bedrock Custom Model: %s", d.Id()))
+	_, err = conn.DeleteCustomModelWithContext(ctx, &bedrock.DeleteCustomModelInput{
+		ModelIdentifier: &modelId,
+	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Bedrock Custom Model ID(%s): %s", d.Id(), err)
 	}
