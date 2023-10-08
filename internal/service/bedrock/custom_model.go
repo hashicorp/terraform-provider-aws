@@ -137,6 +137,10 @@ func ResourceCustomModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"model_kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"model_name": {
 				Type:     schema.TypeString,
 				Computed: true,
