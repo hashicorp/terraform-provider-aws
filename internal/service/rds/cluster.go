@@ -1279,7 +1279,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		"tags", "tags_all") {
-
 		input := &rds.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
@@ -1294,7 +1293,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			},
 		})
 
-		if d.Get("blue_green_update.0.enabled").(bool) == true {
+		if d.Get("blue_green_update.0.enabled").(bool) {
 			if err == nil {
 				bluegreen := &rds.CreateBlueGreenDeploymentInput{
 					BlueGreenDeploymentName:           aws.String(d.Get("blue_green_update.0.target_name").(string)), // input.DBClusterIdentifier,
@@ -1302,7 +1301,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
 				}
 
-				_, err := conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
+				conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
 
 				createBlueGreen, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
 					Filters: []*rds.Filter{
@@ -1321,7 +1320,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				defer func() {
 					tflog.Info(ctx, "Updating RDS DB Instance: Creating Blue/Green Deployment")
 				}()
-
 			} else {
 				log.Printf("[INFO] Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", err, blueGreenDescribe.BlueGreenDeployments)
 				tflog.Info(ctx, "Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", map[string]interface{}{
@@ -1331,9 +1329,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.Get("blue_green_update.0.enabled").(bool) == false {
+		if !d.Get("blue_green_update.0.enabled").(bool) {
 			if len(blueGreenDescribe.BlueGreenDeployments) > 0 {
-
 				blueGreenDelete := &rds.DeleteBlueGreenDeploymentInput{
 					DeleteTarget:                  aws.Bool(d.Get("blue_green_update.0.cleanup_on_delete").(bool)),
 					BlueGreenDeploymentIdentifier: blueGreenDescribe.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier,
@@ -1363,7 +1360,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				tflog.Error(ctx, "No Blue Green Deployment Found")
 			}
 		}
-
 		if d.HasChange("allocated_storage") {
 			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
