@@ -37,7 +37,7 @@ func ResourceCustomModel() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
+			Create: schema.DefaultTimeout(24 * time.Hour),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -240,28 +240,7 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	// also store the job arn now incase we need to cancel and destroy.
 	d.Set("job_arn", aws.StringValue(jobStart.JobArn))
 
-	var jobEnd *bedrock.GetModelCustomizationJobOutput
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
-		jobEnd, err = conn.GetModelCustomizationJobWithContext(ctx, &bedrock.GetModelCustomizationJobInput{
-			JobIdentifier: jobStart.JobArn,
-		})
-		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error getting model customization job: %s", err))
-		}
-
-		tflog.Info(ctx, "GetModelCustomizationJobOuput:", map[string]any{
-			"Status": jobEnd.Status,
-		})
-
-		switch *jobEnd.Status {
-		case "InProgress":
-			return retry.RetryableError(fmt.Errorf("expected instance to be Completed but was in state %s", *jobEnd.Status))
-		case "Completed":
-			return nil
-		default:
-			return retry.NonRetryableError(fmt.Errorf(*jobEnd.FailureMessage))
-		}
-	})
+	err = waitForModelCustomizationJob(ctx, conn, *jobStart.JobArn, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to complete model customisation job: %s", err)
 	}
@@ -273,13 +252,18 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
+	tflog.Info(ctx, "resourceCustomModelRead: Getting Custom Model...")
 	modelId := d.Id()
 	input := &bedrock.GetCustomModelInput{
 		ModelIdentifier: &modelId,
 	}
 	model, err := conn.GetCustomModelWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("reading Bedrock Custom Model: %s", err)
+		// If we got here, the state has the model name and the job arn.
+		// Should we check for tainted state instead?
+		tflog.Info(ctx, "resourceCustomModelRead: Error reading Bedrock Custom Model. Ignoring to allow destroy to attempt to cleanup.")
+		//return diag.Errorf("reading Bedrock Custom Model: %s", err)
+		return diags
 	}
 
 	d.Set("base_model_arn", aws.StringValue(model.BaseModelArn))
@@ -341,4 +325,28 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func waitForModelCustomizationJob(ctx context.Context, conn *bedrock.Bedrock, jobArn string, timeout time.Duration) error {
+	return retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		jobEnd, err := conn.GetModelCustomizationJobWithContext(ctx, &bedrock.GetModelCustomizationJobInput{
+			JobIdentifier: &jobArn,
+		})
+		if err != nil {
+			return retry.NonRetryableError(fmt.Errorf("error getting model customization job: %s", err))
+		}
+
+		tflog.Info(ctx, "GetModelCustomizationJobOuput:", map[string]any{
+			"Status": jobEnd.Status,
+		})
+
+		switch *jobEnd.Status {
+		case "InProgress":
+			return retry.RetryableError(fmt.Errorf("expected instance to be Completed but was in state %s", *jobEnd.Status))
+		case "Completed":
+			return nil
+		default:
+			return retry.NonRetryableError(fmt.Errorf(*jobEnd.FailureMessage))
+		}
+	})
 }
