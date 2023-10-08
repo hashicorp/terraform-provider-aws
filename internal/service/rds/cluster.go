@@ -1525,23 +1525,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 
-		/*
-			if d.Get("blue_green_update.0.enabled").(bool) == true {
-				input := &rds.CreateBlueGreenDeploymentInput{
-					BlueGreenDeploymentName:           aws.String(d.Get("blue_green_update.0.target_name").(string)), // input.DBClusterIdentifier,
-					Source:                            aws.String(d.Get("arn").(string)),
-					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
-				}
-
-				if _, err := conn.CreateBlueGreenDeployment(input); err != nil {
-					return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (blue green) %s, %s", err)
-				}
-
-				if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
-				}
-			}*/
-
 		if d.HasChange("global_cluster_identifier") {
 			oRaw, nRaw := d.GetChange("global_cluster_identifier")
 			o := oRaw.(string)
