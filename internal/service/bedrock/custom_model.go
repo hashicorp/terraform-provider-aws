@@ -21,9 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_bedrock_custom_model", name="Custom-Model")
+// @Tags(identifierAttribute="model_arn")
 func ResourceCustomModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomModelCreate,
@@ -37,6 +40,8 @@ func ResourceCustomModel() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"base_model_id": {
@@ -63,7 +68,6 @@ func ResourceCustomModel() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9a-zA-Z][_-]?)+$`), "minimum length of 1. Maximum length of 63."),
 			},
-			"custom_model_tags": tftags.TagsSchemaForceNew(),
 			"hyper_parameters": {
 				Type:     schema.TypeMap,
 				Required: true,
@@ -169,6 +173,8 @@ func ResourceCustomModel() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -176,6 +182,8 @@ func ResourceCustomModel() *schema.Resource {
 func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	job_tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("job_tags").(map[string]interface{})))
 
 	baseModelId := d.Get("base_model_id").(string)
 	customModelName := d.Get("custom_model_name").(string)
@@ -195,6 +203,7 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 		TrainingDataConfig: &bedrock.TrainingDataConfig{
 			S3Uri: aws.String(trainingDataConfig),
 		},
+		CustomModelTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("hyper_parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -206,11 +215,8 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("custom_model_kms_key_id"); ok {
 		input.CustomModelKmsKeyId = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("job_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.JobTags = Tags(tftags.New(ctx, v))
-	}
-	if v, ok := d.GetOk("custom_model_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.CustomModelTags = Tags(tftags.New(ctx, v))
+	if len(job_tags) > 0 {
+		input.JobTags = Tags(tftags.New(ctx, job_tags.IgnoreAWS()))
 	}
 
 	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
@@ -299,12 +305,6 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading Tags for Job: %s", err)
 	}
 	d.Set("job_tags", jobTags)
-
-	modelTags, err := listTags(ctx, conn, *model.ModelArn)
-	if err != nil {
-		return diag.Errorf("reading Tags for Model: %s", err)
-	}
-	d.Set("custom_model_tags", modelTags)
 
 	return diags
 }

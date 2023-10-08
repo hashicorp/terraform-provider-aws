@@ -163,8 +163,10 @@ The following arguments are optional:
 * `client_request_token` - Unique token value that you can provide. The GetModelCustomizationJob response includes the same token value. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 256. Pattern: ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$
 * `custom_model_kms_key_id` - The custom model is encrypted at rest using this key. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: ^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$
 * `validation_data_config` - Information about the validation dataset. Type: string. Required: No.
-* `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No
-`
+* `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No.
+* `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job. 
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### VpcConfig Object
 

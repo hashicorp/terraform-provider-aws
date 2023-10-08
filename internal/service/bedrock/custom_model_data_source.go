@@ -13,12 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_bedrock_custom_model")
+// @Tags(identifierAttribute="model_arn")
 func DataSourceCustomModel() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomModelRead,
+		CustomizeDiff:      verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"model_id": {
 				Type:     schema.TypeString,
@@ -58,7 +62,6 @@ func DataSourceCustomModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"model_tags": tftags.TagsSchemaComputed(),
 			"output_data_config": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -103,6 +106,8 @@ func DataSourceCustomModel() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -145,12 +150,6 @@ func dataSourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("reading Tags for Job: %s", err)
 	}
 	d.Set("job_tags", jobTags)
-
-	modelTags, err := listTags(ctx, conn, *model.ModelArn)
-	if err != nil {
-		return diag.Errorf("reading Tags for Model: %s", err)
-	}
-	d.Set("model_tags", modelTags)
 
 	return nil
 }

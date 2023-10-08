@@ -28,6 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCustomModel,
 			TypeName: "aws_bedrock_custom_model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "model_arn",
+			},
 		},
 		{
 			Factory:  DataSourceCustomModels,
@@ -50,6 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceCustomModel,
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom-Model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "model_arn",
+			},
 		},
 		{
 			Factory:  ResourceModelInvocationLoggingConfiguration,
