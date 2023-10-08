@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -29,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -94,6 +97,31 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
+			},
+			"blue_green_update": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"parameter_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"source_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"cluster_identifier": {
 				Type:          schema.TypeString,
@@ -521,10 +549,24 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if !d.Get("blue_green_update.0.enabled").(bool) {
+					return nil
+				}
+
+				engine := d.Get("engine").(string)
+				if !slices.Contains(dbClusterValidBlueGreenEngines(), engine) {
+					return fmt.Errorf(`"blue_green_update.enabled" cannot be set when "engine" is %q.`, engine)
+				}
+				return nil
+			},
+
 			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
 				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
 			}),
+
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {
 					return nil
@@ -541,6 +583,12 @@ func ResourceCluster() *schema.Resource {
 				return nil
 			},
 		),
+	}
+}
+
+func dbClusterValidBlueGreenEngines() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
 	}
 }
 
@@ -1218,6 +1266,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	connv2 := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1227,9 +1276,91 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		"tags", "tags_all") {
+
 		input := &rds.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
+		}
+
+		blueGreenDescribe, err := conn.DescribeBlueGreenDeployments(&rds.DescribeBlueGreenDeploymentsInput{
+			Filters: []*rds.Filter{
+				{
+					Name:   aws.String("blue-green-deployment-name"),
+					Values: []*string{aws.String(d.Get("blue_green_update.0.source_name").(string))},
+				},
+			},
+		})
+
+		if d.Get("blue_green_update.0.enabled").(bool) == true {
+			if err == nil {
+
+				input := &rds.CreateBlueGreenDeploymentInput{
+					BlueGreenDeploymentName:           aws.String(d.Get("blue_green_update.0.target_name").(string)), // input.DBClusterIdentifier,
+					Source:                            aws.String(d.Get("arn").(string)),
+					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
+				}
+
+				if dep, err := conn.CreateBlueGreenDeployment(input); err != nil {
+					d.SetId(*dep.BlueGreenDeployment.Target)
+					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						log.Println(sdkdiag.AppendErrorf(diags, "waiting for blue/green cluster (%s) to be deleted: %s", d.Id(), err))
+
+						defer func() {
+							log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creatomng Blue/Green Deployment", *blueGreenDescribe.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier)
+						}()
+
+						if err != nil {
+							diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: %s", d.Get("identifier").(string), err)
+						}
+					}
+					defer func() {
+						tflog.Info(ctx, "Updating RDS DB Instance: Creating Blue/Green Deployment", map[string]interface{}{
+							"err":         err,
+							"Deployments": blueGreenDescribe.BlueGreenDeployments,
+						})
+					}()
+					return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (blue green) %s, %s", err)
+				}
+			} else {
+				log.Printf("[INFO] Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", err, blueGreenDescribe.BlueGreenDeployments)
+				tflog.Info(ctx, "Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", map[string]interface{}{
+					"err":         err,
+					"Deployments": blueGreenDescribe.BlueGreenDeployments,
+				})
+			}
+		}
+
+		if d.Get("blue_green_update.0.enabled").(bool) == false {
+			if len(blueGreenDescribe.BlueGreenDeployments) > 0 {
+
+				blueGreenDelete := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+					DeleteTarget:                  aws.Bool(true),
+					BlueGreenDeploymentIdentifier: blueGreenDescribe.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier,
+				}
+
+				dep, err := connv2.DeleteBlueGreenDeployment(ctx, blueGreenDelete)
+				d.SetId(*dep.BlueGreenDeployment.Source)
+				tflog.Info(ctx, "Deleting blue/green RDS Cluster...", map[string]interface{}{
+					"Status": dep,
+					"err":    err,
+				})
+
+				// return sdkdiag.AppendErrorf("deleting RDS Cluster (blue/green) %s, %s", err)
+				log.Println(sdkdiag.AppendErrorf(diags, "[FOO] deleting RDS Cluster (blue/green)"))
+				if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					log.Println(sdkdiag.AppendErrorf(diags, "waiting for blue/green cluster (%s) to be deleted: %s", d.Id(), err))
+
+					defer func() {
+						log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Get("identifier").(string))
+					}()
+
+					if err != nil {
+						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: %s", d.Get("identifier").(string), err)
+					}
+				}
+			} else {
+				tflog.Error(ctx, "No Blue Green Deployment Found")
+			}
 		}
 
 		if d.HasChange("allocated_storage") {
@@ -1365,7 +1496,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+		_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBClusterWithContext(ctx, input)
 			},
@@ -1393,55 +1524,72 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
-	}
 
-	if d.HasChange("global_cluster_identifier") {
-		oRaw, nRaw := d.GetChange("global_cluster_identifier")
-		o := oRaw.(string)
-		n := nRaw.(string)
+		/*
+			if d.Get("blue_green_update.0.enabled").(bool) == true {
+				input := &rds.CreateBlueGreenDeploymentInput{
+					BlueGreenDeploymentName:           aws.String(d.Get("blue_green_update.0.target_name").(string)), // input.DBClusterIdentifier,
+					Source:                            aws.String(d.Get("arn").(string)),
+					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
+				}
 
-		if o == "" {
-			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
-		}
+				if _, err := conn.CreateBlueGreenDeployment(input); err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (blue green) %s, %s", err)
+				}
 
-		if n != "" {
-			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
-		}
+				if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+				}
+			}*/
 
-		clusterARN := d.Get("arn").(string)
-		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(clusterARN),
-			GlobalClusterIdentifier: aws.String(o),
-		}
+		if d.HasChange("global_cluster_identifier") {
+			oRaw, nRaw := d.GetChange("global_cluster_identifier")
+			o := oRaw.(string)
+			n := nRaw.(string)
 
-		log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, o)
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+			if o == "" {
+				return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
+			}
 
-		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
-		}
-	}
+			if n != "" {
+				return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
+			}
 
-	if d.HasChange("iam_roles") {
-		oraw, nraw := d.GetChange("iam_roles")
-		if oraw == nil {
-			oraw = new(schema.Set)
-		}
-		if nraw == nil {
-			nraw = new(schema.Set)
-		}
-		os := oraw.(*schema.Set)
-		ns := nraw.(*schema.Set)
+			clusterARN := d.Get("arn").(string)
+			input := &rds.RemoveFromGlobalClusterInput{
+				DbClusterIdentifier:     aws.String(clusterARN),
+				GlobalClusterIdentifier: aws.String(o),
+			}
 
-		for _, v := range ns.Difference(os).List() {
-			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+			log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, o)
+			_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+			if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+				return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 			}
 		}
 
-		for _, v := range os.Difference(ns).List() {
-			if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
+		if d.HasChange("iam_roles") {
+			oraw, nraw := d.GetChange("iam_roles")
+			if oraw == nil {
+				oraw = new(schema.Set)
+			}
+			if nraw == nil {
+				nraw = new(schema.Set)
+			}
+			os := oraw.(*schema.Set)
+			ns := nraw.(*schema.Set)
+
+			for _, v := range ns.Difference(os).List() {
+				if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+				}
+			}
+
+			for _, v := range os.Difference(ns).List() {
+				if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v.(string)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
+				}
 			}
 		}
 	}
