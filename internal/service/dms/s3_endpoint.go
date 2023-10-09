@@ -245,6 +245,11 @@ func ResourceS3Endpoint() *schema.Resource {
 					return json
 				},
 			},
+			"glue_catalog_generation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ignore_header_rows": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -306,11 +311,6 @@ func ResourceS3Endpoint() *schema.Resource {
 				Default:  false,
 			},
 			"use_task_start_time_for_full_load_timestamp": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"glue_catalog_generation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -465,12 +465,12 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
 		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
 		d.Set("encryption_mode", s3settings.EncryptionMode)
+		d.Set("glue_catalog_generation", s3settings.GlueCatalogGeneration)
 		d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
 		d.Set("parquet_version", s3settings.ParquetVersion)
 		d.Set("preserve_transactions", s3settings.PreserveTransactions)
 		d.Set("server_side_encryption_kms_key_id", s3settings.ServerSideEncryptionKmsKeyId)
 		d.Set("use_csv_no_sup_value", s3settings.UseCsvNoSupValue)
-		d.Set("glue_catalog_generation", s3settings.GlueCatalogGeneration)
 	}
 
 	p, err := structure.NormalizeJsonString(aws.StringValue(s3settings.ExternalTableDefinition))
@@ -680,6 +680,10 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.ExternalTableDefinition = aws.String(v.(string))
 	}
 
+	if v, ok := d.Get("glue_catalog_generation").(bool); ok { // target
+		s3s.GlueCatalogGeneration = aws.Bool(v)
+	}
+
 	if v, ok := d.GetOk("ignore_header_rows"); ok {
 		s3s.IgnoreHeaderRows = aws.Int64(int64(v.(int)))
 	}
@@ -730,10 +734,6 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 
 	if v, ok := d.Get("use_task_start_time_for_full_load_timestamp").(bool); ok { // likely only useful for target
 		s3s.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
-	}
-
-	if v, ok := d.Get("glue_catalog_generation").(bool); ok { // target
-		s3s.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	return s3s

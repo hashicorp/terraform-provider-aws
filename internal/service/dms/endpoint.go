@@ -571,6 +571,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -638,11 +643,6 @@ func ResourceEndpoint() *schema.Resource {
 							Default:  false,
 						},
 						"use_task_start_time_for_full_load_timestamp": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"glue_catalog_generation": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -2028,6 +2028,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["external_table_definition"].(string); ok {
 		apiObject.ExternalTableDefinition = aws.String(v)
 	}
+	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
+		apiObject.GlueCatalogGeneration = aws.Bool(v)
+	}
 	if v, ok := tfMap["ignore_header_rows"].(int); ok {
 		apiObject.IgnoreHeaderRows = aws.Int64(int64(v))
 	}
@@ -2066,9 +2069,6 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	}
 	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
 		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
-	}
-	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
-		apiObject.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	return apiObject
@@ -2152,6 +2152,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.ExternalTableDefinition; v != nil {
 		tfMap["external_table_definition"] = aws.StringValue(v)
+	}
+	if v := apiObject.GlueCatalogGeneration; v != nil {
+		tfMap["glue_catalog_generation"] = aws.BoolValue(v)
 	}
 	if v := apiObject.IgnoreHeaderRows; v != nil {
 		tfMap["ignore_header_rows"] = aws.Int64Value(v)

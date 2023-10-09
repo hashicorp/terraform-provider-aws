@@ -405,6 +405,10 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"ignore_headers_row": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -458,10 +462,6 @@ func DataSourceEndpoint() *schema.Resource {
 							Computed: true,
 						},
 						"use_task_start_time_for_full_load_timestamp": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"glue_catalog_generation": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
