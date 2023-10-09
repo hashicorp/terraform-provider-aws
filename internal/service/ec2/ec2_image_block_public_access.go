@@ -2,14 +2,15 @@ package ec2
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"log"
-	"time"
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
@@ -21,7 +22,6 @@ func ResourceEC2ImageBlockPublicAccess() *schema.Resource {
 		DeleteWithoutTimeout: resourceEC2ImageBlockPublicAccessDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Create: schema.DefaultTimeout(10 * time.Minute),
