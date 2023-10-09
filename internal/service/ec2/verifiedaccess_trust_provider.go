@@ -231,11 +231,11 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
-		if d.HasChanges("description") {
+		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		if d.HasChanges("oidc_options") {
+		if d.HasChange("oidc_options") {
 			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
 			}
