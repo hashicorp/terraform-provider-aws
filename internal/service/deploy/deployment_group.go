@@ -485,6 +485,13 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTriggerHashConfig,
 			},
+
+			"outdated_instances_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      codedeploy.OutdatedInstancesStrategyUpdate,
+				ValidateFunc: validation.StringInSlice(codedeploy.OutdatedInstancesStrategy_Values(), false),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -555,6 +562,10 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if attr, ok := d.GetOk("blue_green_deployment_config"); ok {
 		input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(attr.([]interface{}))
+	}
+
+	if attr, ok := d.GetOk("outdated_instances_strategy"); ok {
+		input.OutdatedInstancesStrategy = aws.String(attr.(string))
 	}
 
 	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
@@ -629,6 +640,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("deployment_group_id", group.DeploymentGroupId)
 	d.Set("compute_platform", group.ComputePlatform)
 	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
 
 	autoScalingGroups := make([]string, len(group.AutoScalingGroups))
 	for i, autoScalingGroup := range group.AutoScalingGroups {
@@ -766,6 +778,15 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		if d.HasChange("blue_green_deployment_config") {
 			_, n := d.GetChange("blue_green_deployment_config")
 			input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(n.([]interface{}))
+		}
+
+		if d.HasChange("outdated_instances_strategy") {
+			o, n := d.GetChange("outdated_instances_strategy")
+			if n.(string) == "" && o.(string) == codedeploy.OutdatedInstancesStrategyIgnore { // if the user is trying to remove the strategy, set it to update (the default)
+				input.OutdatedInstancesStrategy = aws.String(codedeploy.OutdatedInstancesStrategyUpdate)
+			} else if n.(string) != "" { //
+				input.OutdatedInstancesStrategy = aws.String(n.(string))
+			}
 		}
 
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
