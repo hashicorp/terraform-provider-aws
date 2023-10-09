@@ -13,7 +13,7 @@ Manages Bedrock model invocation logging configuration.
 ## Example Usage
 
 ```terraform
-  data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource aws_s3_bucket bedrock_logging {
   bucket        = "bedrock-logging-%[1]s"
@@ -60,11 +60,11 @@ EOF
 resource "aws_bedrock_model_invocation_logging_configuration" "test" {
   logging_config {
     embedding_data_delivery_enabled = true
-    image_data_delivery_enabled = true
-    text_data_delivery_enabled = true
+    image_data_delivery_enabled     = true
+    text_data_delivery_enabled      = true
     s3_config {
       bucket_name = aws_s3_bucket.bedrock_logging.id
-      key_prefix = "bedrock"
+      key_prefix  = "bedrock"
     }
   }
   depends_on = [

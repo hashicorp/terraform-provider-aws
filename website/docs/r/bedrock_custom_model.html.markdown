@@ -13,18 +13,22 @@ Manages a Bedrock custom model.
 ## Example Usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
+resource "random_id" "id" {
+  byte_length = 8
+}
+
+data aws_caller_identity current {}
 
 resource aws_s3_bucket training_data {
-  bucket = "bedrock-training-data-%[1]s"
+  bucket = "bedrock-training-data-${random_id.id.hex}"
 }
 
 resource aws_s3_bucket validation_data {
-  bucket = "bedrock-validation-data-%[1]s"
+  bucket = "bedrock-validation-data-${random_id.id.hex}"
 }
 
 resource aws_s3_bucket output_data {
-  bucket        = "bedrock-output-data-%[1]s"
+  bucket = "bedrock-output-data-${random_id.id.hex}"
 }
 
 resource "aws_s3_bucket_object" "training_data" {
@@ -42,7 +46,7 @@ resource "aws_s3_bucket_object" "validation_data" {
 }
 
 resource "aws_iam_role" "bedrock_fine_tuning" {
-  name = "bedrock-fine-tuning-%[1]s"
+  name = "bedrock-fine-tuning-${random_id.id.hex}"
 
   assume_role_policy = <<EOF
 {
@@ -69,7 +73,7 @@ EOF
 }
 
 resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
-  name        = "BedrockAccessTrainingValidationS3Policy_%[1]s"
+  name        = "BedrockAccessTrainingValidationS3Policy_${random_id.id.hex}"
   path        = "/"
   description = "BedrockAccessTrainingValidationS3Policy"
 
@@ -97,7 +101,7 @@ resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
 }
 
 resource "aws_iam_policy" "BedrockAccessOutputS3Policy" {
-  name        = "BedrockAccessOutputS3Policy_%[1]s"
+  name        = "BedrockAccessOutputS3Policy_${random_id.id.hex}"
   path        = "/"
   description = "BedrockAccessOutputS3Policy"
 
@@ -132,8 +136,8 @@ resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
 }
 
 resource "aws_bedrock_custom_model" "test" {
-  custom_model_name = %[1]q
-  job_name          = %[1]q
+  custom_model_name = "tf-test-${random_id.id.hex}"
+  job_name          = "tf-test-${random_id.id.hex}"
   base_model_arn    = "amazon.titan-text-express-v1"
   hyper_parameters = {
     "epochCount"              = "1"
@@ -164,7 +168,7 @@ The following arguments are optional:
 * `custom_model_kms_key_id` - The custom model is encrypted at rest using this key. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: ^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$
 * `validation_data_config` - Information about the validation dataset. Type: string. Required: No.
 * `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No.
-* `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job. 
+* `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
@@ -186,7 +190,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_bedrock_custom_model.my_model
+  to       = aws_bedrock_custom_model.my_model
   model_id = "my_model_arn"
 }
 ```
