@@ -11,8 +11,8 @@ import (
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
-func Name(name string, namePrefix string) string {
-	return NameWithSuffix(name, namePrefix, "")
+func Name(name string, prefix string) string {
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(prefix)).Generate()
 }
 
 // NameWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
@@ -61,4 +61,72 @@ func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
 	namePrefix := name[:namePrefixIndex]
 
 	return &namePrefix
+}
+
+type nameGenerator struct {
+	configuredName   string
+	configuredPrefix string
+	defaultPrefix    string
+	suffix           string
+}
+
+// nameGeneratorOptionsFunc is a type alias for a name generator functional option.
+type nameGeneratorOptionsFunc func(*nameGenerator)
+
+// WithConfiguredName is a helper function to construct functional options
+// that set a name generator's configured name value.
+// An empty ("") configured name inidicates that no name was configured.
+func WithConfiguredName(name string) nameGeneratorOptionsFunc {
+	return func(g *nameGenerator) {
+		g.configuredName = name
+	}
+}
+
+// WithConfiguredPrefix is a helper function to construct functional options
+// that set a name generator's configured prefix value.
+// An empty ("") configured prefix inidicates that no prefix was configured.
+func WithConfiguredPrefix(prefix string) nameGeneratorOptionsFunc {
+	return func(g *nameGenerator) {
+		g.configuredPrefix = prefix
+	}
+}
+
+// WithDefaultPrefix is a helper function to construct functional options
+// that set a name generator's default prefix value.
+func WithDefaultPrefix(prefix string) nameGeneratorOptionsFunc {
+	return func(g *nameGenerator) {
+		g.defaultPrefix = prefix
+	}
+}
+
+// WithSuffix is a helper function to construct functional options
+// that set a name generator's suffix value.
+func WithSuffix(suffix string) nameGeneratorOptionsFunc {
+	return func(g *nameGenerator) {
+		g.suffix = suffix
+	}
+}
+
+// NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
+func NewNameGenerator(optFns ...nameGeneratorOptionsFunc) *nameGenerator {
+	g := &nameGenerator{defaultPrefix: id.UniqueIdPrefix}
+
+	for _, optFn := range optFns {
+		optFn(g)
+	}
+
+	return g
+}
+
+// Generate generates a new name.
+func (g *nameGenerator) Generate() string {
+	if g.configuredName != "" {
+		return g.configuredName
+	}
+
+	prefix := g.defaultPrefix
+	if g.configuredPrefix != "" {
+		prefix = g.configuredPrefix
+	}
+	return id.PrefixedUniqueId(prefix) + g.suffix
 }
