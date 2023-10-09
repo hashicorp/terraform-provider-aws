@@ -1794,6 +1794,66 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 	})
 }
 
+func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName, "UPDATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "UPDATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName, "IGNORE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "UPDATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 	t.Parallel()
 
@@ -3714,4 +3774,15 @@ resource "aws_codedeploy_deployment_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName string, outdatedInstancesStrategy string) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = "tf-acc-test-%[1]s"
+  service_role_arn      = aws_iam_role.test.arn
+  outdated_instances_strategy = "%[2]s"
+}
+`, rName, outdatedInstancesStrategy) + testAccDeploymentGroupConfig_base(rName)
 }
