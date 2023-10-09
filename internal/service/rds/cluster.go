@@ -1298,38 +1298,28 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
 				}
 
-				_, err := conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
+				_, err = conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
 
-				if err == nil {
-					blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-						Filters: []rdstypes.Filter{{
-							Name:   aws.String("blue-green-deployment-name"),
-							Values: []string{d.Get("cluster_identifier").(string)},
-						}},
-					})
+				blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+					Filters: []rdstypes.Filter{{
+						Name:   aws.String("blue-green-deployment-name"),
+						Values: []string{d.Get("cluster_identifier").(string)},
+					}},
+				})
 
-					target := aws.StringValue(blueGreenDesc.BlueGreenDeployments[0].Target)
+				target := aws.StringValue(blueGreenDesc.BlueGreenDeployments[0].Target)
 
-					if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
-							"err": err,
-						})
-					}
-
-					if err != nil {
-						tflog.Error(ctx, "Blue/Green Cluster Error: Error Creating Blue/Green Deployment", map[string]interface{}{
-							"Info": err,
-						})
-					}
-				} else {
-					tflog.Info(ctx, "Blue/Green Cluster Initiated: Creating Blue/Green Deployment", map[string]interface{}{
-						"Info": err,
+				if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
+						"err": err,
 					})
 				}
 
-				defer func() {
-					tflog.Info(ctx, "Updating RDS DB Instance: Creating Blue/Green Deployment")
-				}()
+				if err != nil {
+					tflog.Error(ctx, "Blue/Green Cluster Error: Error Creating Blue/Green Deployment", map[string]interface{}{
+						"Info": err,
+					})
+				}
 			} else {
 				blueGreenDesc, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
 					Filters: []*rds.Filter{
@@ -1378,7 +1368,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 					log.Printf("[INFO] Cluster to delete: %s", *descBlueGreen.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier)
 
-					_, err := conn.DeleteBlueGreenDeploymentWithContext(ctx, blueGreenDelete)
+					_, err = conn.DeleteBlueGreenDeploymentWithContext(ctx, blueGreenDelete)
 
 					// for i := 0; i < len(blueGreenDescribe.BlueGreenDeployments); i++ {
 					//	target := blueGreenDescribe.BlueGreenDeployments[i].Target
