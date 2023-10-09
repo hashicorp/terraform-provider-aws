@@ -229,6 +229,8 @@ github.com/aws/aws-sdk-go-v2/service/oam v1.4.1 h1:BhLpb87aByUWX1x5ERmkXMa6p/bqE
 github.com/aws/aws-sdk-go-v2/service/oam v1.4.1/go.mod h1:F7D1NA9s0hR9NP2vZuh8RIUeRQlLtt7qbJsDY6DDkD0=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0 h1:iuVPMMbv8SGrKv7yCePAKW3Klvrs3g0XbkQlCyyTBtg=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0/go.mod h1:q4vucelgv/GslFK1qpKfH+40n9K73M2a0OHyjgcGDB8=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1 h1:+cbGcCXbXpHgGlvdyYDUhyQrXiRXV1Uxny4lE5fxPEI=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1/go.mod h1:Fq5Mxljf6cxQvepxkRXjhvJkEFS1o294bkI808Kk+pM=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1 h1:1MvAMuJjRPOKLIq8HUy/hg6NxoH7mtuvek07ovJlIBc=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1/go.mod h1:bElGVvs4CdPbb7iYex87vwut+9WQ75L0jhlV6JiZMjo=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.21.7 h1:KZ0OI+HSaR5GlYyCQuZwZhTGa0zbXSXOIySQ4A5IdBg=

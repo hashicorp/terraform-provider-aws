@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.4.1
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
