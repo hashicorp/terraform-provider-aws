@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -72,15 +73,11 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	if v, ok := d.GetOk("name"); ok {
-		d.Set("name", v.(string))
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", id.PrefixedUniqueId(v.(string)))
-	} else {
-		d.Set("name", id.PrefixedUniqueId("tf-"))
-	}
-
-	name := d.Get("name").(string)
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
 	input := &cloudfront.CreatePublicKeyInput{
 		PublicKeyConfig: &cloudfront.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
@@ -131,6 +128,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
 	d.Set("name", publicKeyConfig.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(publicKeyConfig.Name)))
 
 	return diags
 }

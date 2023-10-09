@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,6 +38,7 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "encoded_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 			{
@@ -73,10 +73,9 @@ func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
+func TestAccCloudFrontPublicKey_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	startsWithPrefix := regexache.MustCompile("^tf-acc-test-")
-	resourceName := "aws_cloudfront_public_key.example"
+	resourceName := "aws_cloudfront_public_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
@@ -85,19 +84,44 @@ func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig_namePrefix(),
+				Config: testAccPublicKeyConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "name", startsWithPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name_prefix",
-				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudfront_public_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublicKeyConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -187,14 +211,21 @@ resource "aws_cloudfront_public_key" "test" {
 `, rName)
 }
 
-func testAccPublicKeyConfig_namePrefix() string {
+func testAccPublicKeyConfig_nameGenerated() string {
 	return `
-resource "aws_cloudfront_public_key" "example" {
-  comment     = "test key"
+resource "aws_cloudfront_public_key" "test" {
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
-  name_prefix = "tf-acc-test-"
 }
 `
+}
+
+func testAccPublicKeyConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_public_key" "test" {
+  encoded_key = file("test-fixtures/cloudfront-public-key.pem")
+  name_prefix = %[1]q
+}
+`, namePrefix)
 }
 
 func testAccPublicKeyConfig_comment(rName, comment string) string {
