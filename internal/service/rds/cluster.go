@@ -109,15 +109,6 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"parameter_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"cleanup_on_delete": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
 					},
 				},
 			},
@@ -1336,12 +1327,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					"Target": target,
 				})
 
-				if dep, _ := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
-						"Target":  target,
-						"Members": dep.DBClusterMembers,
-					})
-				}
+				dep, _ := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate))
+
+				tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
+					"Target":  target,
+					"Members": dep.DBClusterMembers,
+				})
 			}
 		}
 
@@ -1363,7 +1354,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 				if descBlueGreen.BlueGreenDeployments != nil {
 					blueGreenDelete := &rds.DeleteBlueGreenDeploymentInput{
-						DeleteTarget:                  aws.Bool(d.Get("blue_green_update.0.cleanup_on_delete").(bool)),
+						DeleteTarget:                  aws.Bool(true),
 						BlueGreenDeploymentIdentifier: descBlueGreen.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier,
 					}
 
@@ -1391,11 +1382,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 					// return sdkdiag.AppendErrorf("deleting RDS Cluster (blue/green) %s, %s", err)
 					tflog.Info(ctx, "deleting RDS Cluster (green)")
-					if _, err := waitDBClusterDeleted(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						tflog.Info(ctx, "waiting for green cluster to be deleted", map[string]interface{}{
-							"err": err,
-						})
-					}
+					dep, _ := waitDBClusterDeleted(ctx, conn, target, d.Timeout(schema.TimeoutUpdate))
+					tflog.Info(ctx, "waiting for green cluster to be deleted", map[string]interface{}{
+						"Cluster": dep.DBClusterIdentifier,
+					})
+
 				} else {
 					tflog.Error(ctx, "No Blue Green Deployment Found")
 				}
