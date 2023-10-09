@@ -1610,6 +1610,34 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccObjectConfig_directoryBucket(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
