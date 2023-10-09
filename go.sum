@@ -253,6 +253,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.55.2 h1:dje4c9cNZY5bokl0YfT/xdXRg0mj
 github.com/aws/aws-sdk-go-v2/service/rds v1.55.2/go.mod h1:SKANU6tKVhn1wHbTSF0Bo6LFrAENtPfXG1DHyahqFyE=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.5 h1:iIRfLBX36lMn7vXdaVF1PZV/jiBXeUpiL2KHkGOjVsc=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.5/go.mod h1:q++QEMyKK3FcyuHOuab73F3mtkmP/Xu25VkMSEgqpE0=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6 h1:UpIGzyKcKqNsAAE+H57o4FxYn1lwkTkQCa7mc5euTFE=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6/go.mod h1:GM3w954QkzEAlPd0A1FS5514eNOzHx5z6uwJV+ncCow=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.0 h1:v5feSZ0CwkDw4gk6On3i2IwEbTzX7bOEPI7pyecOcSA=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.0/go.mod h1:cP3b7+o+kmgjIKp9hXs+arRFIoh6lnYphtD3JsGmMeQ=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.6 h1:2OKMYGgl8hi7BdtfgQlz5Or9nar+mAidpPjmgOZr3p4=
