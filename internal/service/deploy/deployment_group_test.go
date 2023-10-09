@@ -1841,7 +1841,7 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T)
 				Config: testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName, "IGNORE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "UPDATE"),
+					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "IGNORE"),
 				),
 			},
 			{
