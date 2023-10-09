@@ -289,6 +289,8 @@ github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.1 h1:Wzs47z3I1AOiUFZ2Vv
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.1/go.mod h1:xi6ausBg+Nd+0RNiVIcMCD4xoVV+VXyv/bZKEmMYDuE=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.1 h1:QxzS/Hr5kixvMyPIXTfspnRUiKgFJSTPrhnglAi2YLI=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.1/go.mod h1:qpAr/ear7teIUoBd1gaPbvavdICoo1XyAIHPVlyawQc=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.2 h1:3qYTIrsGBaxD8F6N+B0rx8OJSoS15GfT12UuhCTAumI=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.2/go.mod h1:NrZAizsqYf7fIXZP6sAcjV+jbW8yYwNDtHAxRC+mEMQ=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.5 h1:nqZqDR44/ao9zQXyuCJI8L/C3QQIo4wtZyLtgwJfpEY=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.5/go.mod h1:gHTmxtN3p6WKxFhcOSvWBFfEbxDRFtwfxjj1S7shS64=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.24.5 h1:RyDpTOMEJO6ycxw1vU/6s0KLFaH3M0z/z9gXHSndPTk=
