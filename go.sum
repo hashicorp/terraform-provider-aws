@@ -221,6 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1 h1:V35Jr6Aker94WCzlchrHV6
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1/go.mod h1:R1OMa2V11Ji2bTZz4Bw4YPKKR3iAmsIdRS9GEalq3Uk=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3 h1:lC+4aTyl6yZ59X2Ek0FBg2loD0R048dE/Hnje0tSg3s=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3/go.mod h1:GgF8CYrl3uUOa9NGOKLZUptq5A3hORrAG9rGR6KaHt0=
+github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.4 h1:C8zcX+aPVNrri+MRBGkjjnRteisedgN1oYUJ9XFCcsY=
+github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.4/go.mod h1:CrIAMXAFICTbRZIymSYgMvCPiEx99WgckvKuJcYjMaA=
 github.com/aws/aws-sdk-go-v2/service/oam v1.3.0 h1:yN7gae0RLYIT4NDptCV9wnuY2SrowqILGiavnNgDfRY=
 github.com/aws/aws-sdk-go-v2/service/oam v1.3.0/go.mod h1:4lD6a0zq+rWEL4Ba3d9n0JZp+tCAm1Bk9Ky5WX2tTmI=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0 h1:iuVPMMbv8SGrKv7yCePAKW3Klvrs3g0XbkQlCyyTBtg=
