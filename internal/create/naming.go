@@ -12,22 +12,7 @@ import (
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
 func Name(name string, namePrefix string) string {
-	//return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
-	return NameWithSuffix(name, namePrefix, "")
-}
-
-// NameWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
-// In the latter two cases, any suffix is appended to the generated name
-func NameWithSuffix(name string, namePrefix string, nameSuffix string) string {
-	if name != "" {
-		return name
-	}
-
-	if namePrefix != "" {
-		return id.PrefixedUniqueId(namePrefix) + nameSuffix
-	}
-
-	return id.UniqueId() + nameSuffix
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
 }
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix

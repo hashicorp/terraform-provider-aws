@@ -16,6 +16,10 @@ func strPtr(str string) *string {
 	return &str
 }
 
+func nameWithSuffix(name string, namePrefix string, nameSuffix string) string {
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix), WithSuffix(nameSuffix)).Generate()
+}
+
 func TestName(t *testing.T) {
 	t.Parallel()
 
@@ -122,10 +126,10 @@ func TestNameWithSuffix(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got := NameWithSuffix(testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
+			got := nameWithSuffix(testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
 
 			if !testCase.expectedRegexp.MatchString(got) {
-				t.Errorf("NameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
+				t.Errorf("nameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
 			}
 		})
 	}
@@ -360,7 +364,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
-			input := NameWithSuffix("", prefix, "suffix")
+			input := nameWithSuffix("", prefix, "suffix")
 			got := NamePrefixFromNameWithSuffix(input, "suffix")
 
 			if got == nil {
