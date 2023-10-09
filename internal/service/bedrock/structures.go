@@ -4,10 +4,12 @@
 package bedrock
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func flattenTrainingMetrics(metrics *bedrock.TrainingMetrics) []map[string]interface{} {
@@ -226,6 +228,43 @@ func expandS3Config(tfMap map[string]interface{}) *bedrock.S3Config {
 	}
 	if v, ok := tfMap["key_prefix"].(string); ok && v != "" {
 		apiObject.KeyPrefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandVPCConfig(tfList []interface{}) *bedrock.VpcConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObject := &bedrock.VpcConfig{}
+
+	tfMap := tfList[0].(map[string]interface{})
+	if v, ok := tfMap["security_group_ids"]; ok {
+		apiObject.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["subnet_ids"]; ok {
+		apiObject.SubnetIds = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if reflect.DeepEqual(&bedrock.VpcConfig{}, apiObject) {
+		return nil
+	}
+
+	return apiObject
+}
+
+func expandValidationDataConfig(tfList []*string) *bedrock.ValidationDataConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObject := &bedrock.ValidationDataConfig{}
+
+	for _, v := range tfList {
+		apiObject.Validators = append(apiObject.Validators, &bedrock.Validator{S3Uri: v})
 	}
 
 	return apiObject

@@ -218,16 +218,24 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	if len(job_tags) > 0 {
 		input.JobTags = Tags(tftags.New(ctx, job_tags.IgnoreAWS()))
 	}
+	if v, ok := d.GetOk("vpc_config"); ok {
+		input.VpcConfig = expandVPCConfig(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("validation_data_config"); ok {
+		input.ValidationDataConfig = expandValidationDataConfig(v.([]*string))
+	}
 
 	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
-		"BaseModelIdentifier": input.BaseModelIdentifier,
-		"ClientRequestToken":  input.ClientRequestToken,
-		"CustomModelName":     input.CustomModelName,
-		"CustomModelKmsKeyId": input.CustomModelKmsKeyId,
-		"JobName":             jobName,
-		"RoleArn":             roleArn,
-		"OutputDataConfig":    outputDataConfig,
-		"TrainingDataConfig":  trainingDataConfig,
+		"BaseModelIdentifier":  input.BaseModelIdentifier,
+		"ClientRequestToken":   input.ClientRequestToken,
+		"CustomModelName":      input.CustomModelName,
+		"CustomModelKmsKeyId":  input.CustomModelKmsKeyId,
+		"JobName":              jobName,
+		"RoleArn":              roleArn,
+		"OutputDataConfig":     outputDataConfig,
+		"TrainingDataConfig":   trainingDataConfig,
+		"ValidationDataConfig": input.ValidationDataConfig,
+		"VpcConfig":            input.VpcConfig,
 	})
 
 	jobStart, err := conn.CreateModelCustomizationJobWithContext(ctx, input)
@@ -271,7 +279,7 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("hyper_parameters", model.HyperParameters)
 	d.Set("job_arn", aws.StringValue(model.JobArn))
 	// This is nil in the model object - could be a bug
-	// However this is already in state so we can skip setting this here and avoid a forced update.
+	// However this is already in state so we can skip setting this here and avoid a forced update due to value change.
 	// d.Set("job_name", aws.StringValue(model.JobName))
 	d.Set("model_arn", aws.StringValue(model.ModelArn))
 	d.Set("model_kms_key_arn", aws.StringValue(model.ModelKmsKeyArn))
