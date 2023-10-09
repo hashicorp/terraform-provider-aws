@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
+func TestAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
@@ -22,7 +22,7 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockModelInvocationLoggingConfiguration_basic(rName),
+				Config: testAccModelInvocationLoggingConfiguration_basic(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// testAccCheckAddonExists(ctx, customModelResourceName, &addon),
 				// resource.TestCheckResourceAttr(customModelResourceName, "addon_name", addonName),
@@ -42,7 +42,7 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockModelInvocationLoggingConfiguration_basic(rName string) string {
+func testAccModelInvocationLoggingConfiguration_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

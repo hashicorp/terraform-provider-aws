@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
+func TestAccCustomModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -23,7 +23,7 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockCustomModelsDataSourceConfig_basic(rName),
+				Config: testAccCustomModelsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_bedrock_custom_models.test", "id"),
 				),
@@ -32,7 +32,7 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModelsDataSourceConfig_basic(rName string) string {
+func testAccCustomModelsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
