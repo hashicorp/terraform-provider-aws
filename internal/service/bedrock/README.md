@@ -1,10 +1,5 @@
-# Terraform AWS Provider Bedrock Package
+# Terraform AWS Provider Amazon Bedrock Package
 
-This area is primarily for AWS provider contributors and maintainers. For information on _using_ Terraform and the AWS provider, see the links below.
-
-## Handy Links
-
-* [Find out about contributing](https://hashicorp.github.io/terraform-provider-aws/#contribute) to the AWS provider!
-* AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-* AWS Provider Docs: [One of the EKS resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrock)
-* AWS Docs: [AWS SDK for Go EKS](https://docs.aws.amazon.com/sdk-for-go/api/service/bedrock/)
+* AWS Provider: [Contribution Guide](https://hashicorp.github.io/terraform-provider-aws/#contribute)
+* Service User Guide: [What is Amazon Bedrock?](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-service.html)
+* Service API Guide: [Bedrock API Reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/welcome.html)
