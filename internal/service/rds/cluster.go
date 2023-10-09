@@ -1362,8 +1362,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 					_, err = conn.DeleteBlueGreenDeploymentWithContext(ctx, blueGreenDelete)
 
-					// for i := 0; i < len(blueGreenDescribe.BlueGreenDeployments); i++ {
-					//	target := blueGreenDescribe.BlueGreenDeployments[i].Target
+					if err != nil {
+						// Handle the error
+						log.Printf("[ERROR] Failed to delete blue-green deployment: %v", err)
+					}
 
 					blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
 						Filters: []rdstypes.Filter{{
@@ -1386,9 +1388,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					tflog.Info(ctx, "waiting for green cluster to be deleted", map[string]interface{}{
 						"Cluster": dep.DBClusterIdentifier,
 					})
-
 				} else {
-					tflog.Error(ctx, "No Blue Green Deployment Found")
+					log.Printf("[ERROR] Failed to delete blue-green deployment: %v", err)
 				}
 			} else {
 				tflog.Error(ctx, "No Blue Green Deployment Found")

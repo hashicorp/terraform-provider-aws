@@ -57,7 +57,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql5.7"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql8.0"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
@@ -2653,15 +2653,80 @@ func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 	}
 }
 
+func TestAccRDSCluster_BlueGreen(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// have to ignore numbers that get assigned at first value
+				Config: testAccClusterConfig_BlueGreenDeployment(sdkacctest.RandStringFromCharSet(10, "abcdefghijklmnopqrstuvwxyz")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(
+						resourceName, "blue_green_update.0.enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_BlueGreenDeployment(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	resource "aws_rds_cluster" "test" {
+	  apply_immediately   = true
+	  blue_green_update {
+		enabled = true
+	  }
+	  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+	  cluster_identifier  = %[1]q
+	  engine              = "aurora-mysql"
+	  master_password     = "avoid-plaintext-passwords"
+	  master_username     = "tfacctest"
+	
+	  skip_final_snapshot = true
+	
+	  db_cluster_parameter_group_name = "default.aurora-mysql8.0"
+	}
+
+	resource "aws_rds_cluster_instance" "cluster_instances" {
+		depends_on         = [aws_rds_cluster.test]
+		count              =  2
+		identifier         = "${aws_rds_cluster.test.cluster_identifier}-${count.index}"
+		cluster_identifier = aws_rds_cluster.test.id
+		engine             = aws_rds_cluster.test.engine
+		engine_version     = aws_rds_cluster.test.engine_version
+		instance_class     = "db.x2g.large"
+		db_parameter_group_name = "default.aurora-mysql8.0"
+	  }
+
+	  resource "time_sleep" "wait_30_seconds" {
+		depends_on = [aws_rds_cluster.test]
+	  
+		create_duration = "600s"
+	  }
+	`, rName))
+}
+
 func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
-  database_name                   = "test"
+  database_name                   = "example"
   engine                          = "aurora-mysql"
   master_username                 = "tfacctest"
   master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
+  db_cluster_parameter_group_name = "default.aurora-mysql8.0"
   skip_final_snapshot             = true
 }
 `, rName)
