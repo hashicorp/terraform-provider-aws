@@ -17,12 +17,12 @@ import (
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
-func ResourceEC2ImageBlockPublicAccess() *schema.Resource {
+func ResourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceEC2ImageBlockPublicAccessCreate,
-		ReadWithoutTimeout:   resourceEC2ImageBlockPublicAccessRead,
-		UpdateWithoutTimeout: resourceEC2ImageBlockPublicAccessUpdate,
-		DeleteWithoutTimeout: resourceEC2ImageBlockPublicAccessDelete,
+		CreateWithoutTimeout: resourceImageBlockPublicAccessCreate,
+		ReadWithoutTimeout:   resourceImageBlockPublicAccessRead,
+		UpdateWithoutTimeout: resourceImageBlockPublicAccessUpdate,
+		DeleteWithoutTimeout: resourceImageBlockPublicAccessDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -40,7 +40,7 @@ func ResourceEC2ImageBlockPublicAccess() *schema.Resource {
 	}
 }
 
-func resourceEC2ImageBlockPublicAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var desiredState string
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -49,13 +49,13 @@ func resourceEC2ImageBlockPublicAccessCreate(ctx context.Context, d *schema.Reso
 	// By default, AWS accounts allow sharing AMIs publicly (effectively `enabled=false`)
 	if d.Get("enabled").(bool) {
 		desiredState = string(ec2types.ImageBlockPublicAccessEnabledStateBlockNewSharing)
-		diags = append(diags, enableEC2ImageBlockPublicAccess(ctx, d, conn)...)
+		diags = append(diags, enableImageBlockPublicAccess(ctx, d, conn)...)
 	} else {
 		desiredState = string(ec2types.ImageBlockPublicAccessDisabledStateUnblocked)
-		diags = append(diags, disableEC2ImageBlockPublicAccess(ctx, d, conn)...)
+		diags = append(diags, disableImageBlockPublicAccess(ctx, d, conn)...)
 	}
 
-	err := waitForEC2ImageBlockPublicAccessDesiredState(
+	err := waitForImageBlockPublicAccessDesiredState(
 		ctx,
 		desiredState,
 		conn,
@@ -68,14 +68,14 @@ func resourceEC2ImageBlockPublicAccessCreate(ctx context.Context, d *schema.Reso
 	// There's no unique identifier for this resource
 	d.SetId("ec2_image_block_public_access")
 
-	return append(diags, resourceEC2ImageBlockPublicAccessRead(ctx, d, meta)...)
+	return append(diags, resourceImageBlockPublicAccessRead(ctx, d, meta)...)
 }
 
-func resourceEC2ImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	blockState, err := getEC2ImageBlockPublicAccessState(ctx, conn)
+	blockState, err := getImageBlockPublicAccessState(ctx, conn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 image block public access state (%s): %s", d.Id(), err)
@@ -90,14 +90,14 @@ func resourceEC2ImageBlockPublicAccessRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceEC2ImageBlockPublicAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// In order to delete the public access block on the AWS-side, we simply set it to a disabled state
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	diags = append(diags, disableEC2ImageBlockPublicAccess(ctx, d, conn)...)
+	diags = append(diags, disableImageBlockPublicAccess(ctx, d, conn)...)
 
-	err := waitForEC2ImageBlockPublicAccessDesiredState(
+	err := waitForImageBlockPublicAccessDesiredState(
 		ctx,
 		string(ec2types.ImageBlockPublicAccessDisabledStateUnblocked),
 		conn,
@@ -107,12 +107,10 @@ func resourceEC2ImageBlockPublicAccessDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "disabling ec2 public image access block %s", err)
 	}
 
-	d.SetId("")
-
 	return diags
 }
 
-func resourceEC2ImageBlockPublicAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -123,15 +121,15 @@ func resourceEC2ImageBlockPublicAccessUpdate(ctx context.Context, d *schema.Reso
 		enabled := n.(bool)
 
 		if enabled {
-			diags = append(diags, enableEC2ImageBlockPublicAccess(ctx, d, conn)...)
+			diags = append(diags, enableImageBlockPublicAccess(ctx, d, conn)...)
 			desiredState = string(ec2types.ImageBlockPublicAccessEnabledStateBlockNewSharing)
 		} else {
-			diags = append(diags, disableEC2ImageBlockPublicAccess(ctx, d, conn)...)
+			diags = append(diags, disableImageBlockPublicAccess(ctx, d, conn)...)
 			desiredState = string(ec2types.ImageBlockPublicAccessDisabledStateUnblocked)
 		}
 
 		// Wait for change to propagate, which can take up to 10 minutes
-		err := waitForEC2ImageBlockPublicAccessDesiredState(
+		err := waitForImageBlockPublicAccessDesiredState(
 			ctx,
 			desiredState,
 			conn,
@@ -142,10 +140,10 @@ func resourceEC2ImageBlockPublicAccessUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return append(diags, resourceEC2ImageBlockPublicAccessRead(ctx, d, meta)...)
+	return append(diags, resourceImageBlockPublicAccessRead(ctx, d, meta)...)
 }
 
-func getEC2ImageBlockPublicAccessState(ctx context.Context, client *ec2.Client) (string, error) {
+func getImageBlockPublicAccessState(ctx context.Context, client *ec2.Client) (string, error) {
 	input := ec2.GetImageBlockPublicAccessStateInput{}
 
 	output, err := client.GetImageBlockPublicAccessState(ctx, &input)
@@ -158,7 +156,7 @@ func getEC2ImageBlockPublicAccessState(ctx context.Context, client *ec2.Client) 
 	return *output.ImageBlockPublicAccessState, err
 }
 
-func disableEC2ImageBlockPublicAccess(ctx context.Context, d *schema.ResourceData, client *ec2.Client) diag.Diagnostics {
+func disableImageBlockPublicAccess(ctx context.Context, d *schema.ResourceData, client *ec2.Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	input := ec2.DisableImageBlockPublicAccessInput{}
@@ -173,7 +171,7 @@ func disableEC2ImageBlockPublicAccess(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func enableEC2ImageBlockPublicAccess(ctx context.Context, d *schema.ResourceData, client *ec2.Client) diag.Diagnostics {
+func enableImageBlockPublicAccess(ctx context.Context, d *schema.ResourceData, client *ec2.Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	input := ec2.EnableImageBlockPublicAccessInput{
@@ -189,8 +187,8 @@ func enableEC2ImageBlockPublicAccess(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func waitForEC2ImageBlockPublicAccessDesiredState(ctx context.Context, desired string, client *ec2.Client) error {
-	blockState, err := getEC2ImageBlockPublicAccessState(ctx, client)
+func waitForImageBlockPublicAccessDesiredState(ctx context.Context, desired string, client *ec2.Client) error {
+	blockState, err := getImageBlockPublicAccessState(ctx, client)
 
 	if err != nil {
 		log.Printf("[ERROR] waiting for EC2 image block public access state to be '%s'", desired)
@@ -205,7 +203,7 @@ func waitForEC2ImageBlockPublicAccessDesiredState(ctx context.Context, desired s
 		)
 		time.Sleep(10 * time.Second)
 
-		blockState, err = getEC2ImageBlockPublicAccessState(ctx, client)
+		blockState, err = getImageBlockPublicAccessState(ctx, client)
 
 		if err != nil {
 			log.Printf("[ERROR] waiting for EC2 image block public access state to be '%s' %s", desired, err.Error())
