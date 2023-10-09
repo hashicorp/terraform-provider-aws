@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.0
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.1
