@@ -1,4 +1,3 @@
-
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
@@ -30,8 +29,8 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-No additional attributes are exported in addition to the arguments above.
+This resource exports no additional attributes.
 
 ## Import
 
-This resource does not support importing.
+You cannot import this resource.
