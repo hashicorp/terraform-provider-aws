@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -108,14 +110,6 @@ func ResourceCluster() *schema.Resource {
 							Optional: true,
 						},
 						"parameter_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"source_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"target_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1270,6 +1264,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	connv2 := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1284,82 +1279,140 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
-		blueGreenDescribe, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
-			Filters: []*rds.Filter{
-				{
-					Name:   aws.String("blue-green-deployment-name"),
-					Values: []*string{aws.String(d.Get("blue_green_update.0.source_name").(string))},
-				},
-			},
-		})
-
 		if d.Get("blue_green_update.0.enabled").(bool) {
-			if err == nil {
+			descBlueGreen, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+				Filters: []rdstypes.Filter{{
+					Name:   aws.String("blue-green-deployment-name"),
+					Values: []string{d.Get("cluster_identifier").(string)},
+				}},
+			})
+
+			if err != nil {
+				log.Printf("[DEBUG] Error: %s", err)
+			}
+
+			if len(descBlueGreen.BlueGreenDeployments) == 0 {
 				bluegreen := &rds.CreateBlueGreenDeploymentInput{
-					BlueGreenDeploymentName:           aws.String(d.Get("blue_green_update.0.target_name").(string)), // input.DBClusterIdentifier,
+					BlueGreenDeploymentName:           input.DBClusterIdentifier,
 					Source:                            aws.String(d.Get("arn").(string)),
 					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
 				}
 
-				conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
+				_, err := conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
 
-				createBlueGreen, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
-					Filters: []*rds.Filter{
-						{
+				if err == nil {
+					blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+						Filters: []rdstypes.Filter{{
 							Name:   aws.String("blue-green-deployment-name"),
-							Values: []*string{aws.String(d.Get("blue_green_update.0.source_name").(string))},
-						},
-					},
-				})
+							Values: []string{d.Get("cluster_identifier").(string)},
+						}},
+					})
 
-				tflog.Info(ctx, "Blue/Green Cluster Initiated: Creating Blue/Green Deployment", map[string]interface{}{
-					"err":         err,
-					"Deployments": createBlueGreen.BlueGreenDeployments,
-				})
+					target := aws.StringValue(blueGreenDesc.BlueGreenDeployments[0].Target)
+
+					if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
+							"err": err,
+						})
+					}
+
+					if err != nil {
+						tflog.Error(ctx, "Blue/Green Cluster Error: Error Creating Blue/Green Deployment", map[string]interface{}{
+							"Info": err,
+						})
+					}
+				} else {
+					tflog.Info(ctx, "Blue/Green Cluster Initiated: Creating Blue/Green Deployment", map[string]interface{}{
+						"Info": err,
+					})
+				}
 
 				defer func() {
 					tflog.Info(ctx, "Updating RDS DB Instance: Creating Blue/Green Deployment")
 				}()
 			} else {
-				log.Printf("[INFO] Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", err, blueGreenDescribe.BlueGreenDeployments)
-				tflog.Info(ctx, "Blue/Green Deployment Already Exists Err: %s: BG Deployments: %s", map[string]interface{}{
-					"err":         err,
-					"Deployments": blueGreenDescribe.BlueGreenDeployments,
+				blueGreenDesc, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
+					Filters: []*rds.Filter{
+						{
+							Name:   aws.String("blue-green-deployment-name"),
+							Values: []*string{aws.String(d.Get("cluster_identifier").(string))},
+						},
+					},
 				})
+
+				target := aws.StringValue(blueGreenDesc.BlueGreenDeployments[0].Target)
+
+				tflog.Info(ctx, "Blue/Green Deployment Already Exists", map[string]interface{}{
+					"Err": err,
+				})
+
+				if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
+						"err": err,
+					})
+				}
 			}
 		}
 
 		if !d.Get("blue_green_update.0.enabled").(bool) {
-			if len(blueGreenDescribe.BlueGreenDeployments) > 0 {
-				blueGreenDelete := &rds.DeleteBlueGreenDeploymentInput{
-					DeleteTarget:                  aws.Bool(d.Get("blue_green_update.0.cleanup_on_delete").(bool)),
-					BlueGreenDeploymentIdentifier: blueGreenDescribe.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier,
-				}
+			_, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+				Filters: []rdstypes.Filter{{
+					Name:   aws.String("blue-green-deployment-name"),
+					Values: []string{d.Get("cluster_identifier").(string)},
+				}},
+			})
 
-				dep, err := conn.DeleteBlueGreenDeploymentWithContext(ctx, blueGreenDelete)
-
-				// for i := 0; i < len(blueGreenDescribe.BlueGreenDeployments); i++ {
-				//	target := blueGreenDescribe.BlueGreenDeployments[i].Target
-
-				tflog.Info(ctx, "Deleting blue/green RDS Cluster...", map[string]interface{}{
-					"Status": dep,
-					"err":    err,
+			if err == nil {
+				descBlueGreen, _ := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+					Filters: []rdstypes.Filter{{
+						Name:   aws.String("blue-green-deployment-name"),
+						Values: []string{d.Get("cluster_identifier").(string)},
+					}},
 				})
 
-				// return sdkdiag.AppendErrorf("deleting RDS Cluster (blue/green) %s, %s", err)
-				/*
-					tflog.Info(ctx, "deleting RDS Cluster (blue/green)")
-					if _, err := waitDBInstanceDeleted(ctx, conn, aws.StringValue(target), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						tflog.Info(ctx, "waiting for blue/green cluster to be deleted", map[string]interface{}{
-							"Id":  d.Id(),
+				if descBlueGreen.BlueGreenDeployments != nil {
+					blueGreenDelete := &rds.DeleteBlueGreenDeploymentInput{
+						DeleteTarget:                  aws.Bool(d.Get("blue_green_update.0.cleanup_on_delete").(bool)),
+						BlueGreenDeploymentIdentifier: descBlueGreen.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier,
+					}
+
+					log.Printf("[INFO] Cluster to delete: %s", *descBlueGreen.BlueGreenDeployments[0].BlueGreenDeploymentIdentifier)
+
+					_, err := conn.DeleteBlueGreenDeploymentWithContext(ctx, blueGreenDelete)
+
+					// for i := 0; i < len(blueGreenDescribe.BlueGreenDeployments); i++ {
+					//	target := blueGreenDescribe.BlueGreenDeployments[i].Target
+
+					blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+						Filters: []rdstypes.Filter{{
+							Name:   aws.String("blue-green-deployment-name"),
+							Values: []string{d.Get("cluster_identifier").(string)},
+						}},
+					})
+
+					tflog.Info(ctx, "Deleting green RDS Cluster...", map[string]interface{}{
+						"Status": blueGreenDesc.BlueGreenDeployments[0].Status,
+						"err":    err,
+						"Id":     blueGreenDesc.BlueGreenDeployments[0].Target,
+					})
+
+					target := aws.StringValue(descBlueGreen.BlueGreenDeployments[0].Target)
+
+					// return sdkdiag.AppendErrorf("deleting RDS Cluster (blue/green) %s, %s", err)
+					tflog.Info(ctx, "deleting RDS Cluster (green)")
+					if _, err := waitDBClusterDeleted(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						tflog.Info(ctx, "waiting for green cluster to be deleted", map[string]interface{}{
 							"err": err,
 						})
-					}*/
-
+					}
+				} else {
+					tflog.Error(ctx, "No Blue Green Deployment Found")
+				}
 			} else {
 				tflog.Error(ctx, "No Blue Green Deployment Found")
 			}
 		}
+
 		if d.HasChange("allocated_storage") {
 			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
@@ -1493,7 +1546,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBClusterWithContext(ctx, input)
 			},
