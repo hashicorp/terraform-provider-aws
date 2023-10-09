@@ -281,6 +281,8 @@ github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.1 h1:Z1XsWjViyQrF7+VK4JECRdn
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.1/go.mod h1:bcdKaS8+sUoa39w9x93KjohdT/TGdvJb/N+FFbYIcuI=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0 h1:Ou2rjk3siybv09bzpi5fs+9zOYZACxT1LT0KkcDAtIs=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0/go.mod h1:/MCawoN8Xib5q04k2HsIQ+K2cNtC3CHamrfLZXd6KmA=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.1 h1:z/tG3vLlp7n1Ce2ZlJOiN3kd22JHqdkY4FYDrlfeA0k=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.1/go.mod h1:GQnvIQbeFVfBbjrJ+K6r330ev3/XVD7Hy15byeiOkWo=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.0 h1:dhp7Do5oaybdDdYGcdUNyzYFPsM4sNCvuPqph7MG5X0=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.0/go.mod h1:7+H2efEiOCrUl5EEsDFhe5BeI4gHGLUlisCyAJAcSvs=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.1 h1:QxzS/Hr5kixvMyPIXTfspnRUiKgFJSTPrhnglAi2YLI=
