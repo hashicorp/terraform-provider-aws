@@ -11,8 +11,9 @@ import (
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
-func Name(name string, prefix string) string {
-	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(prefix)).Generate()
+func Name(name string, namePrefix string) string {
+	//return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
+	return NameWithSuffix(name, namePrefix, "")
 }
 
 // NameWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
