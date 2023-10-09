@@ -57,12 +57,12 @@ type nameGenerator struct {
 }
 
 // nameGeneratorOptionsFunc is a type alias for a name generator functional option.
-type nameGeneratorOptionsFunc func(*nameGenerator)
+type NameGeneratorOptionsFunc func(*nameGenerator)
 
 // WithConfiguredName is a helper function to construct functional options
 // that set a name generator's configured name value.
 // An empty ("") configured name inidicates that no name was configured.
-func WithConfiguredName(name string) nameGeneratorOptionsFunc {
+func WithConfiguredName(name string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.configuredName = name
 	}
@@ -71,7 +71,7 @@ func WithConfiguredName(name string) nameGeneratorOptionsFunc {
 // WithConfiguredPrefix is a helper function to construct functional options
 // that set a name generator's configured prefix value.
 // An empty ("") configured prefix inidicates that no prefix was configured.
-func WithConfiguredPrefix(prefix string) nameGeneratorOptionsFunc {
+func WithConfiguredPrefix(prefix string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.configuredPrefix = prefix
 	}
@@ -79,7 +79,7 @@ func WithConfiguredPrefix(prefix string) nameGeneratorOptionsFunc {
 
 // WithDefaultPrefix is a helper function to construct functional options
 // that set a name generator's default prefix value.
-func WithDefaultPrefix(prefix string) nameGeneratorOptionsFunc {
+func WithDefaultPrefix(prefix string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.defaultPrefix = prefix
 	}
@@ -87,14 +87,14 @@ func WithDefaultPrefix(prefix string) nameGeneratorOptionsFunc {
 
 // WithSuffix is a helper function to construct functional options
 // that set a name generator's suffix value.
-func WithSuffix(suffix string) nameGeneratorOptionsFunc {
+func WithSuffix(suffix string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.suffix = suffix
 	}
 }
 
 // NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
-func NewNameGenerator(optFns ...nameGeneratorOptionsFunc) *nameGenerator {
+func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
 	g := &nameGenerator{defaultPrefix: id.UniqueIdPrefix}
 
 	for _, optFn := range optFns {
