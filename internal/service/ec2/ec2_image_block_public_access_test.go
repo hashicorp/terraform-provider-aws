@@ -71,9 +71,9 @@ func TestAccEC2ImageBlockPublicAccess_disappears(t *testing.T) {
 func testAccEC2ImageBlockPublicAccessConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_image_block_public_access" "test" {
-	enabled = %t
+  enabled = %[1]t
 }
-	`, enabled)
+`, enabled)
 }
 
 func checkEC2ImageBlockPublicAccessDestroy(ctx context.Context) resource.TestCheckFunc {
