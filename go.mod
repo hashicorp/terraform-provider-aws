@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/signer v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.17.0
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.0
