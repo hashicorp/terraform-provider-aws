@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.5
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.6
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.122.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.0
