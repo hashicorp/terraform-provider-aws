@@ -176,7 +176,7 @@ resource "aws_bedrock_custom_model" "test" {
 }
 
 data "aws_bedrock_custom_model" "test" {
-	model_id = aws_bedrock_custom_model.test.model_arn
+  model_id = aws_bedrock_custom_model.test.model_arn
 }
 `, rName)
 }
