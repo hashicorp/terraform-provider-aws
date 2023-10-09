@@ -129,7 +129,52 @@ func TestNameWithSuffix(t *testing.T) {
 			got := nameWithSuffix(testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
 
 			if !testCase.expectedRegexp.MatchString(got) {
-				t.Errorf("nameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
+				t.Errorf("NameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
+			}
+		})
+	}
+}
+
+func TestNameWithDefaultPrefix(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName         string
+		configuredName   string
+		configuredPrefix string
+		expectedRegexp   *regexp.Regexp
+	}{
+		{
+			testName:       "no configured name or prefix",
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^def-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:       "configured name only",
+			configuredName: "testing",
+			expectedRegexp: regexache.MustCompile(`^testing$`),
+		},
+		{
+			testName:         "configured prefix only",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:         "configured name and prefix",
+			configuredName:   "testing",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(`^testing$`),
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := NewNameGenerator(WithConfiguredName(testCase.configuredName), WithConfiguredPrefix(testCase.configuredPrefix), WithDefaultPrefix("def-")).Generate()
+
+			if !testCase.expectedRegexp.MatchString(got) {
+				t.Errorf("NameWithDefaultPrefix(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
 			}
 		})
 	}
