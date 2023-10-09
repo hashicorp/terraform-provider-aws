@@ -58,6 +58,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
@@ -171,7 +172,45 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeTargetGroup_lambdaEventStructureVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup vpclattice.GetTargetGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_lambdaEventStructureVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", "V2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -409,6 +448,19 @@ func testAccTargetGroupConfig_lambda(rName string) string {
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "LAMBDA"
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_lambdaEventStructureVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpclattice_target_group" "test" {
+  name = %[1]q
+  type = "LAMBDA"
+
+  config {
+    lambda_event_structure_version = "V2"
+  }
 }
 `, rName)
 }

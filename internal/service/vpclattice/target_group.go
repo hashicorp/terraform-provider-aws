@@ -6,7 +6,6 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -146,23 +144,32 @@ func ResourceTargetGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 						},
+						"lambda_event_structure_version": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
+						},
 						"port": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
 							Type:             schema.TypeString,
-							Required:         true,
+							Optional:         true,
+							Computed:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
 						},
 						"protocol_version": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
-							Default:  types.TargetGroupProtocolVersionHttp1,
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
@@ -170,11 +177,12 @@ func ResourceTargetGroup() *schema.Resource {
 						},
 						"vpc_identifier": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 					},
 				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -196,24 +204,7 @@ func ResourceTargetGroup() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				targetGroupType := types.TargetGroupType(d.Get("type").(string))
-
-				if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-					if targetGroupType == types.TargetGroupTypeLambda {
-						return fmt.Errorf(`config not supported for type = %q`, targetGroupType)
-					}
-				} else {
-					if targetGroupType != types.TargetGroupTypeLambda {
-						return fmt.Errorf(`config required for type = %q`, targetGroupType)
-					}
-				}
-
-				return nil
-			},
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -438,9 +429,10 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"ip_address_type":  apiObject.IpAddressType,
-		"protocol":         apiObject.Protocol,
-		"protocol_version": apiObject.ProtocolVersion,
+		"ip_address_type":                apiObject.IpAddressType,
+		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
+		"protocol":                       apiObject.Protocol,
+		"protocol_version":               apiObject.ProtocolVersion,
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
@@ -530,6 +522,10 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 
+	if v, ok := tfMap["lambda_event_structure_version"].(string); ok && v != "" {
+		apiObject.LambdaEventStructureVersion = types.LambdaEventStructureVersion(v)
+	}
+
 	if v, ok := tfMap["port"].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
@@ -538,12 +534,12 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
-	if v, ok := tfMap["vpc_identifier"].(string); ok && v != "" {
-		apiObject.VpcIdentifier = aws.String(v)
-	}
-
 	if v, ok := tfMap["protocol_version"].(string); ok && v != "" {
 		apiObject.ProtocolVersion = types.TargetGroupProtocolVersion(v)
+	}
+
+	if v, ok := tfMap["vpc_identifier"].(string); ok && v != "" {
+		apiObject.VpcIdentifier = aws.String(v)
 	}
 
 	return apiObject
