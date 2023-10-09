@@ -213,6 +213,8 @@ github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.6 h1:DeOKrIWI8M9noiLqs6iN82
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.6/go.mod h1:WJyI7A91cJsTNCgMWabnbAffHi1lv98JB6YM3kNqNJQ=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.5 h1:aEG8G1HXtyaSRHp3fKzP/AgKAviExpth8MQeBPYLvzI=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.5/go.mod h1:MC8RAClijE5FGkgl8rgw3fHIpsgTk97iZyo8NsHW6wU=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6 h1:egi5EkmnxHBgS17lHO/vnp25fNWJr2czdKRWoCpyqGE=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6/go.mod h1:CEwzxzOcMNP3yBh3AmPq8GuDTVucXBiSlhUNYNUvL2I=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0 h1:R5u3iuM07pN+lV4t3VHfr3kCByCnxZws1R5y875TuvQ=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0/go.mod h1:oBjVE7s8Z2RQtKxCgHavkhkAu0m54h4YCjXivPR/BhQ=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3 h1:lC+4aTyl6yZ59X2Ek0FBg2loD0R048dE/Hnje0tSg3s=
