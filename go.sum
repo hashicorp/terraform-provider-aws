@@ -233,6 +233,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1 h1:+cbGcCXbXpHg
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1/go.mod h1:Fq5Mxljf6cxQvepxkRXjhvJkEFS1o294bkI808Kk+pM=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1 h1:1MvAMuJjRPOKLIq8HUy/hg6NxoH7mtuvek07ovJlIBc=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1/go.mod h1:bElGVvs4CdPbb7iYex87vwut+9WQ75L0jhlV6JiZMjo=
+github.com/aws/aws-sdk-go-v2/service/pipes v1.4.2 h1:H2QURTJp7FrE87DnBalEEjJR4ed01LVIrg6E5zlNQUk=
+github.com/aws/aws-sdk-go-v2/service/pipes v1.4.2/go.mod h1:YISOhMmTXx73RosmN0IrtpUGyz+juRa8wiFlxBavufc=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.21.7 h1:KZ0OI+HSaR5GlYyCQuZwZhTGa0zbXSXOIySQ4A5IdBg=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.21.7/go.mod h1:9n3tkRCngy3+Iw/8vK3C69iXh22SCGsy3yn16nTxH+s=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5 h1:mmCoa7WmiISEuCOwNU63Mq9NnfuSlNx7UKmiG4Co3Dk=
