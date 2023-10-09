@@ -100,7 +100,7 @@ class MyConvertedCode(TerraformStack):
             engine="custom-oracle-ee",
             engine_version="19.c.ee.002",
             license_model="bring-your-own-license",
-            preferred_instance_classes=["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"
+            preferred_instance_classes=["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"
             ],
             storage_type="gp3"
         )
@@ -169,8 +169,8 @@ class MyConvertedCode(TerraformStack):
         )
         custom_sqlserver = DataAwsRdsOrderableDbInstance(self, "custom-sqlserver",
             engine="custom-sqlserver-se",
-            engine_version="115.00.4249.2.cev1",
-            preferred_instance_classes=["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"
+            engine_version="15.00.4249.2.v1",
+            preferred_instance_classes=["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"
             ],
             storage_type="gp3"
         )
@@ -187,6 +187,7 @@ class MyConvertedCode(TerraformStack):
             kms_key_id=Token.as_string(by_id.arn),
             multi_az=False,
             password="avoid-plaintext-passwords",
+            storage_encrypted=True,
             timeouts=[{
                 "create": "3h",
                 "delete": "3h",
@@ -573,4 +574,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5348e10ce76b94ea3543c947af183b44e90cbde641979d6904c70aafffcd18ce -->
+<!-- cache-key: cdktf-0.18.0 input-8b0ec66ca84e427495c0e2039cef5ea2187385e92cfcc7756d8213dedc665014 -->

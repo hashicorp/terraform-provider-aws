@@ -107,9 +107,9 @@ class MyConvertedCode extends TerraformStack {
         engineVersion: "19.c.ee.002",
         licenseModel: "bring-your-own-license",
         preferredInstanceClasses: [
-          "db.r5.24xlarge",
-          "db.r5.16xlarge",
-          "db.r5.12xlarge",
+          "db.r5.xlarge",
+          "db.r5.2xlarge",
+          "db.r5.4xlarge",
         ],
         storageType: "gp3",
       }
@@ -187,11 +187,11 @@ class MyConvertedCode extends TerraformStack {
       "custom-sqlserver",
       {
         engine: "custom-sqlserver-se",
-        engineVersion: "115.00.4249.2.cev1",
+        engineVersion: "15.00.4249.2.v1",
         preferredInstanceClasses: [
-          "db.r5.24xlarge",
-          "db.r5.16xlarge",
-          "db.r5.12xlarge",
+          "db.r5.xlarge",
+          "db.r5.2xlarge",
+          "db.r5.4xlarge",
         ],
         storageType: "gp3",
       }
@@ -209,6 +209,7 @@ class MyConvertedCode extends TerraformStack {
       kmsKeyId: Token.asString(byId.arn),
       multiAz: false,
       password: "avoid-plaintext-passwords",
+      storageEncrypted: true,
       timeouts: [
         {
           create: "3h",
@@ -621,4 +622,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5348e10ce76b94ea3543c947af183b44e90cbde641979d6904c70aafffcd18ce -->
+<!-- cache-key: cdktf-0.18.0 input-8b0ec66ca84e427495c0e2039cef5ea2187385e92cfcc7756d8213dedc665014 -->
