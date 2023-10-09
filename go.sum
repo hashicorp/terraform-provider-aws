@@ -79,6 +79,8 @@ github.com/aws/aws-sdk-go-v2/service/acm v1.19.1 h1:xcrvCNWIb4uzlVVFjjDVvNeRvKPM
 github.com/aws/aws-sdk-go-v2/service/acm v1.19.1/go.mod h1:KptofjTaHq44E4heGaSacYmmi2Hya/arRcyzw5Oy6ZI=
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0 h1:bRmFz6sBl9wp0PHlhcZnEdTHaci25HXk3Milyw73Dz4=
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0/go.mod h1:zk3+CYtLFK+Yo83oc+rARhvajxgM3rmxPRmoFpHTsNw=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1 h1:ioS2SwCT3cNA6y0KKEozBJ+IoinrBiWuNbU6oGHpk6o=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1/go.mod h1:3hIsAH76MSJuhdbCI/axMDGDlXruT0r6Swo3/vtUAoo=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5 h1:nAZnFygNPs3I3LR9AR7rud21ESTiTTHXuLQ4KW4tO+0=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5/go.mod h1:EwlbwoKCPpH81bmlIVk6XD91fh9fF7CKQlp8uxlndXE=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0 h1:wDRpDU1x+xSKfezFyMUA96wzwXDVN/TbBKr6EED6Muo=
