@@ -1298,7 +1298,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					TargetDBClusterParameterGroupName: input.DBClusterParameterGroupName,
 				}
 
-				_, err = conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
+				dep, _ := conn.CreateBlueGreenDeploymentWithContext(ctx, bluegreen)
 
 				blueGreenDesc, err := connv2.DescribeBlueGreenDeployments(ctx, &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
 					Filters: []rdstypes.Filter{{
@@ -1311,17 +1311,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 				if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
-						"err": err,
+						"Info": dep,
 					})
 				}
 
 				if err != nil {
 					tflog.Error(ctx, "Blue/Green Cluster Error: Error Creating Blue/Green Deployment", map[string]interface{}{
-						"Info": err,
+						"Info": dep,
 					})
 				}
 			} else {
-				blueGreenDesc, err := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
+				blueGreenDesc, _ := conn.DescribeBlueGreenDeploymentsWithContext(ctx, &rds.DescribeBlueGreenDeploymentsInput{
 					Filters: []*rds.Filter{
 						{
 							Name:   aws.String("blue-green-deployment-name"),
@@ -1333,12 +1333,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				target := aws.StringValue(blueGreenDesc.BlueGreenDeployments[0].Target)
 
 				tflog.Info(ctx, "Blue/Green Deployment Already Exists", map[string]interface{}{
-					"Err": err,
+					"Target": target,
 				})
 
-				if _, err := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if dep, _ := waitDBClusterCreated(ctx, conn, target, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					tflog.Info(ctx, "waiting for blue/green cluster to be created", map[string]interface{}{
-						"err": err,
+						"Target":  target,
+						"Members": dep.DBClusterMembers,
 					})
 				}
 			}
