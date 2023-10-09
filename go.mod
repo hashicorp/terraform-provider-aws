@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.0
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.6
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.1
