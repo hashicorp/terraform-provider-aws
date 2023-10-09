@@ -33,6 +33,8 @@ func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 func testAccBedrockCustomModelDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource aws_s3_bucket training_data {
   bucket = "bedrock-training-data-%[1]s"
@@ -88,7 +90,7 @@ resource "aws_iam_role" "bedrock_fine_tuning" {
 					"aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
 				},
 				"ArnEquals": {
-					"aws:SourceArn": "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+					"aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
 				}
 			}
 		}

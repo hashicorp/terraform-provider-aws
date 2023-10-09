@@ -45,6 +45,8 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 func testAccBedrockModelInvocationLoggingConfiguration_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource aws_s3_bucket bedrock_logging {
   bucket        = "bedrock-logging-%[1]s"
@@ -79,7 +81,7 @@ resource "aws_s3_bucket_policy" "bedrock_logging" {
           "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
         },
         "ArnLike": {
-          "aws:SourceArn": "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:*"
+          "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.name}:${data.aws_caller_identity.current.account_id}:*"
         }
       }
     }

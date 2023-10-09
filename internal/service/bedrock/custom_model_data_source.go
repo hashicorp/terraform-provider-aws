@@ -147,7 +147,7 @@ func dataSourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.Errorf("reading Tags for Job: %s", err)
 	}
-	d.Set("job_tags", jobTags)
+	d.Set("job_tags", jobTags.IgnoreAWS().Map())
 
 	return nil
 }
