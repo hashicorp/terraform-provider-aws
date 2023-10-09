@@ -5,6 +5,7 @@ package bedrock
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -315,11 +316,10 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.StopModelCustomizationJobWithContext(ctx, &bedrock.StopModelCustomizationJobInput{
 		JobIdentifier: &jobArn,
 	})
-	if err != nil {
+	var berr *bedrock.ValidationException
+	if err != nil && !errors.As(err, &berr) {
 		// ignore validatin errors - eg. already complete
-		if _, ok := err.(*bedrock.ValidationException); !ok {
-			return sdkdiag.AppendErrorf(diags, "stopping Bedrock Customization Job ID(%s): %s", jobArn, err)
-		}
+		return sdkdiag.AppendErrorf(diags, "stopping Bedrock Customization Job ID(%s): %s", jobArn, err)
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("Deleting Bedrock Custom Model: %s", d.Id()))
