@@ -1418,7 +1418,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.S3, create.ErrActionDeleting, resNameBucket, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return nil, findBucket(ctx, connSDKv2, d.Id())
 	})
 
