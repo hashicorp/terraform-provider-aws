@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.2
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.0
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.18.0
 	github.com/beevik/etree v1.2.0
