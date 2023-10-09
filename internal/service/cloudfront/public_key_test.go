@@ -87,7 +87,7 @@ func TestAccCloudFrontPublicKey_nameGenerated(t *testing.T) {
 				Config: testAccPublicKeyConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
 				),
 			},
