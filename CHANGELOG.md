@@ -1,5 +1,9 @@
 ## 5.21.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_verifiedaccess_group` ([#33297](https://github.com/hashicorp/terraform-provider-aws/issues/33297))
+
 ENHANCEMENTS:
 
 * data-source/aws_msk_cluster: Add `cluster_uuid` attribute ([#33805](https://github.com/hashicorp/terraform-provider-aws/issues/33805))
