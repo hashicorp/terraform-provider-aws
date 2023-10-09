@@ -217,6 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6 h1:egi5EkmnxHBgS17lHO/
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6/go.mod h1:CEwzxzOcMNP3yBh3AmPq8GuDTVucXBiSlhUNYNUvL2I=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0 h1:R5u3iuM07pN+lV4t3VHfr3kCByCnxZws1R5y875TuvQ=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0/go.mod h1:oBjVE7s8Z2RQtKxCgHavkhkAu0m54h4YCjXivPR/BhQ=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1 h1:V35Jr6Aker94WCzlchrHV62oRHrmHyulUlulutQKjoQ=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1/go.mod h1:R1OMa2V11Ji2bTZz4Bw4YPKKR3iAmsIdRS9GEalq3Uk=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3 h1:lC+4aTyl6yZ59X2Ek0FBg2loD0R048dE/Hnje0tSg3s=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3/go.mod h1:GgF8CYrl3uUOa9NGOKLZUptq5A3hORrAG9rGR6KaHt0=
 github.com/aws/aws-sdk-go-v2/service/oam v1.3.0 h1:yN7gae0RLYIT4NDptCV9wnuY2SrowqILGiavnNgDfRY=
