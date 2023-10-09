@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.1
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.15.5
