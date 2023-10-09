@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.8
-	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
+	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.5
