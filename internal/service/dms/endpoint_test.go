@@ -312,7 +312,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", "false"),
 				),
 			},
 			{
@@ -346,6 +346,8 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.include_op_for_full_load", "true"),
 				),
 			},
 			{
@@ -2989,7 +2991,7 @@ resource "aws_dms_endpoint" "test" {
     bucket_folder             = "new-bucket_folder"
     bucket_name               = "new-bucket_name"
     compression_type          = "GZIP"
-    glue_catalog_generation   = true
+    glue_catalog_generation   = false
   }
 }
 
@@ -3069,6 +3071,8 @@ resource "aws_dms_endpoint" "test" {
     bucket_folder             = "new-bucket_folder"
     bucket_name               = "new-bucket_name"
     compression_type          = "GZIP"
+    glue_catalog_generation   = true
+    include_op_for_full_load  = true
   }
 }
 
