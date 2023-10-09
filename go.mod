@@ -348,3 +348,11 @@ replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /Users/ewbankkit/Down
 replace github.com/aws/aws-sdk-go-v2/service/workspaces => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/workspaces
 
 replace github.com/aws/aws-sdk-go-v2/service/xray => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/xray
+
+replace github.com/aws/aws-sdk-go-v2/service/dynamodb => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/dynamodb
+
+replace github.com/aws/aws-sdk-go-v2/service/mediaconnect => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/mediaconnect
+
+replace github.com/aws/aws-sdk-go-v2/service/servicequotas => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/servicequotas
+
+replace github.com/aws/aws-sdk-go-v2/service/sqs => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/sqs
