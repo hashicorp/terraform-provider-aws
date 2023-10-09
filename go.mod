@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.7
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.0
