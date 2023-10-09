@@ -76,15 +76,15 @@ func dataSourceFoundationModelRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(modelId)
-	d.Set("model_arn", aws.StringValue(model.ModelDetails.ModelArn))
-	d.Set("model_id", aws.StringValue(model.ModelDetails.ModelId))
-	d.Set("model_name", aws.StringValue(model.ModelDetails.ModelName))
-	d.Set("provider_name", aws.StringValue(model.ModelDetails.ProviderName))
+	d.Set("model_arn", model.ModelDetails.ModelArn)
+	d.Set("model_id", model.ModelDetails.ModelId)
+	d.Set("model_name", model.ModelDetails.ModelName)
+	d.Set("provider_name", model.ModelDetails.ProviderName)
 	d.Set("customizations_supported", aws.StringValueSlice(model.ModelDetails.CustomizationsSupported))
 	d.Set("inference_types_supported", aws.StringValueSlice(model.ModelDetails.InferenceTypesSupported))
 	d.Set("input_modalities", aws.StringValueSlice(model.ModelDetails.InputModalities))
 	d.Set("output_modalities", aws.StringValueSlice(model.ModelDetails.OutputModalities))
-	d.Set("response_streaming_supported", aws.BoolValue(model.ModelDetails.ResponseStreamingSupported))
+	d.Set("response_streaming_supported", model.ModelDetails.ResponseStreamingSupported)
 
 	return nil
 }

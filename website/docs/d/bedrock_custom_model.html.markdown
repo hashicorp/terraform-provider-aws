@@ -40,5 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `validation_metrics` - The validation metrics from the job creation.
 * `job_tags` - Key-value mapping of tags for the fine-tuning job. 
 * `tags` - Key-value mapping of resource tags.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider.
   

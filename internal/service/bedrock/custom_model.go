@@ -246,7 +246,7 @@ func resourceCustomModelCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Successfully started job. Save the name as the id of the custom model.
 	d.SetId(customModelName)
 	// also store the job arn now incase we need to cancel and destroy.
-	d.Set("job_arn", aws.StringValue(jobStart.JobArn))
+	d.Set("job_arn", jobStart.JobArn)
 
 	err = waitForModelCustomizationJob(ctx, conn, *jobStart.JobArn, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
@@ -274,18 +274,18 @@ func resourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diags
 	}
 
-	d.Set("base_model_arn", aws.StringValue(model.BaseModelArn))
+	d.Set("base_model_arn", model.BaseModelArn)
 	d.Set("creation_time", aws.TimeValue(model.CreationTime).Format(time.RFC3339))
 	d.Set("hyper_parameters", model.HyperParameters)
-	d.Set("job_arn", aws.StringValue(model.JobArn))
+	d.Set("job_arn", model.JobArn)
 	// This is nil in the model object - could be a bug
 	// However this is already in state so we can skip setting this here and avoid a forced update due to value change.
-	// d.Set("job_name", aws.StringValue(model.JobName))
-	d.Set("model_arn", aws.StringValue(model.ModelArn))
-	d.Set("model_kms_key_arn", aws.StringValue(model.ModelKmsKeyArn))
-	d.Set("model_name", aws.StringValue(model.ModelName))
-	d.Set("output_data_config", aws.StringValue(model.OutputDataConfig.S3Uri))
-	d.Set("training_data_config", aws.StringValue(model.TrainingDataConfig.S3Uri))
+	// d.Set("job_name", model.JobName)
+	d.Set("model_arn", model.ModelArn)
+	d.Set("model_kms_key_arn", model.ModelKmsKeyArn)
+	d.Set("model_name", model.ModelName)
+	d.Set("output_data_config", model.OutputDataConfig.S3Uri)
+	d.Set("training_data_config", model.TrainingDataConfig.S3Uri)
 	if err := d.Set("training_metrics", flattenTrainingMetrics(model.TrainingMetrics)); err != nil {
 		return diag.Errorf("setting training_metrics: %s", err)
 	}
@@ -316,11 +316,9 @@ func resourceCustomModelDelete(ctx context.Context, d *schema.ResourceData, meta
 		JobIdentifier: &jobArn,
 	})
 	if err != nil {
-		if err != nil {
-			// ignore validatin errors - eg. already complete
-			if _, ok := err.(*bedrock.ValidationException); !ok {
-				return sdkdiag.AppendErrorf(diags, "stopping Bedrock Customization Job ID(%s): %s", jobArn, err)
-			}
+		// ignore validatin errors - eg. already complete
+		if _, ok := err.(*bedrock.ValidationException); !ok {
+			return sdkdiag.AppendErrorf(diags, "stopping Bedrock Customization Job ID(%s): %s", jobArn, err)
 		}
 	}
 
@@ -341,7 +339,7 @@ func waitForModelCustomizationJob(ctx context.Context, conn *bedrock.Bedrock, jo
 			JobIdentifier: &jobArn,
 		})
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error getting model customization job: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("getting model customization job: %s", err))
 		}
 
 		tflog.Info(ctx, "GetModelCustomizationJobOuput:", map[string]any{

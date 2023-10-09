@@ -111,7 +111,7 @@ func resourceModelInvocationLoggingConfigurationCreate(ctx context.Context, d *s
 		input.LoggingConfig = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.PutModelInvocationLoggingConfiguration(input)
+	_, err := conn.PutModelInvocationLoggingConfigurationWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to put model invocation logging configuration: %s", err)
 	}
@@ -125,7 +125,7 @@ func resourceModelInvocationLoggingConfigurationRead(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
-	output, err := conn.GetModelInvocationLoggingConfiguration(&bedrock.GetModelInvocationLoggingConfigurationInput{})
+	output, err := conn.GetModelInvocationLoggingConfigurationWithContext(ctx, &bedrock.GetModelInvocationLoggingConfigurationInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to get model invocation logging configuration: %s", err)
 	}
@@ -146,7 +146,7 @@ func resourceModelInvocationLoggingConfigurationDelete(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BedrockConn(ctx)
 
-	_, err := conn.DeleteModelInvocationLoggingConfiguration(&bedrock.DeleteModelInvocationLoggingConfigurationInput{})
+	_, err := conn.DeleteModelInvocationLoggingConfigurationWithContext(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to delete model invocation logging configuration: %s", err)
 	}

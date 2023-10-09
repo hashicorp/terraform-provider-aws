@@ -38,24 +38,15 @@ data "aws_partition" "current" {}
 
 resource aws_s3_bucket training_data {
   bucket = "bedrock-training-data-%[1]s"
-  tags = {
-    "CreatorName" = "richard.weerasinghe@slalom.com"
-  }
 }
 
 resource aws_s3_bucket validation_data {
   bucket = "bedrock-validation-data-%[1]s"
-  tags = {
-    "CreatorName" = "richard.weerasinghe@slalom.com"
-  }
 }
 
 resource aws_s3_bucket output_data {
   bucket        = "bedrock-output-data-%[1]s"
   force_destroy = true
-  tags = {
-    "CreatorName" = "richard.weerasinghe@slalom.com"
-  }
 }
 
 resource "aws_s3_bucket_object" "training_data" {

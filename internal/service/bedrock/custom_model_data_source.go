@@ -104,8 +104,7 @@ func DataSourceCustomModel() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchemaComputed(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -123,16 +122,16 @@ func dataSourceCustomModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(modelId)
-	d.Set("base_model_arn", aws.StringValue(model.BaseModelArn))
+	d.Set("base_model_arn", model.BaseModelArn)
 	d.Set("creation_time", aws.TimeValue(model.CreationTime).Format(time.RFC3339))
 	d.Set("hyper_parameters", model.HyperParameters)
-	d.Set("job_arn", aws.StringValue(model.JobArn))
-	d.Set("job_name", aws.StringValue(model.JobName))
-	d.Set("model_arn", aws.StringValue(model.ModelArn))
-	d.Set("model_kms_key_arn", aws.StringValue(model.ModelKmsKeyArn))
-	d.Set("model_name", aws.StringValue(model.ModelName))
-	d.Set("output_data_config", aws.StringValue(model.OutputDataConfig.S3Uri))
-	d.Set("training_data_config", aws.StringValue(model.TrainingDataConfig.S3Uri))
+	d.Set("job_arn", model.JobArn)
+	d.Set("job_name", model.JobName)
+	d.Set("model_arn", model.ModelArn)
+	d.Set("model_kms_key_arn", model.ModelKmsKeyArn)
+	d.Set("model_name", model.ModelName)
+	d.Set("output_data_config", model.OutputDataConfig.S3Uri)
+	d.Set("training_data_config", model.TrainingDataConfig.S3Uri)
 	if err := d.Set("training_metrics", flattenTrainingMetrics(model.TrainingMetrics)); err != nil {
 		return diag.Errorf("setting training_metrics: %s", err)
 	}
