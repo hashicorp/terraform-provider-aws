@@ -171,6 +171,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.37 h1:Mx1zJlYbiUQANW
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.37/go.mod h1:PjKIAMFthKPgG/B8bbRpo3F8jfr2q2L+w3u78jJ12a0=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.35 h1:UKjpIDLVF90RfV88XurdduMoTxPqtGHZMIDYZQM7RO4=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.35/go.mod h1:B3dUg0V6eJesUTi+m27NUkj7n8hdDKYUpxj8f4+TqaQ=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36 h1:0ZzowXTZABVqnJnwDMlTDP3eeEkuP1r6RYnhSBmgK2o=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36/go.mod h1:zAE5h/4VanzBpqyWoCZX/nJImdsqjjsGt2r3MtbKSFA=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.35 h1:CdzPW9kKitgIiLV1+MHobfR5Xg25iYnyzWZhyQuSlDI=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.35/go.mod h1:QGF2Rs33W5MaN9gYdEQOBBFPLwTZkEhRwI33f7KIG0o=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.36 h1:YXlm7LxwNlauqb2OrinWlcvtsflTzP8GaMvYfQBhoT4=
@@ -327,6 +329,8 @@ github.com/aws/aws-sdk-go-v2/service/swf v1.17.4 h1:C9kYSI8M4s4nWGqyLLVjappbBuf9
 github.com/aws/aws-sdk-go-v2/service/swf v1.17.4/go.mod h1:gKxgDhvUcMktase1gvNt4EdWl9uzSnUsqgwwhfUGkPE=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.0 h1:3iPa1ovz5XSN/ZN52kciKcdh1o1smzO8Cz0lHmAWYys=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.0/go.mod h1:buYLLyS+R/JuRlr6XPTzaVO09EFw4B4S+l1kto3EvXY=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.1 h1:vR4rTWTQkzqDqnYbafOdKxSEpoTPtMpU4ga83nMgdAY=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.1/go.mod h1:085nMFR23/NB91pGEOxJeNJsgk2tIu/CbBxPQJXDBuw=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.5 h1:l0lxYW7VgLkYhD0r0WOyBqsta/oQd8tLlBkkrQ/Zyk8=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.5/go.mod h1:EVrV4Pc8rVQ2YEk0UHpMQz//eR0cZDAa9zb+iUNyh4o=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.1 h1:EzuBm6kVbBJz/gjiFfTkKbZ2TEN0I7lVivnhuY00Niw=
