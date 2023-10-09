@@ -123,6 +123,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.6 h1:LkWkBy2/jTexo+s
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.6/go.mod h1:dz9teMP8i6dur+rcfmM4XnUCjz/HIKtDPomWugbLJvY=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0 h1:c9Ifajg9VU0b86Xd7B6KGpEUtbXbwAJj/8FAQN6ZBeg=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0/go.mod h1:XLn8/EbqX+qGri306t4IPUBi+VmphNcsR+OJRxPlGqg=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.1 h1:0T2cQq8v/CkGJMHdtBe18qAWRDNZD9jB0pr8Ly+UQGE=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.1/go.mod h1:9Q9f9ST4lEaDFJfPIeGRj2rzgR3Phq+OcA+Xun9u4kI=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5 h1:EeNQ3bDA6hlx3vifHf7LT/l9dh9w7D2XgCdaD11TRU4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5/go.mod h1:X3ThW5RPV19hi7bnQ0RMAiBjZbzxj4rZlj+qdctbMWY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.122.0 h1:i+YnwvmUy51p+8nwH9eDMzn5GWVLK+Pvva6To8O4AaI=
