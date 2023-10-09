@@ -3434,17 +3434,3 @@ rules:
           patterns:
             - pattern-regex: "(?i)Comprehend"
     severity: WARNING
-  - id: comprehend-in-var-name
-    languages:
-      - go
-    message: Do not use "Comprehend" in var name inside comprehend package
-    paths:
-      include:
-        - internal/service/comprehend
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Comprehend"
-    severity: WARNING

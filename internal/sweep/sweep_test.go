@@ -146,7 +146,6 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
-	_ "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
