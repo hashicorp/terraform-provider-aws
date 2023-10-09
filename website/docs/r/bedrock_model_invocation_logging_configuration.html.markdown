@@ -79,7 +79,7 @@ The following arguments are required:
 
 * `logging_config` - The logging configuration values to set. Type: LoggingConfig object.
 
-The following arguments are optional:
+## Attribute Reference
 
 NONE
 

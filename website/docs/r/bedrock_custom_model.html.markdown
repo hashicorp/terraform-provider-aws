@@ -170,6 +170,9 @@ The following arguments are optional:
 * `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No.
 * `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+## Attribute Reference
+
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### VpcConfig Object
