@@ -35,7 +35,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 func TestAccDocDBCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster docdb.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rInt),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster:.+`)),
@@ -151,7 +151,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1 docdb.DBCluster
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
 
@@ -188,7 +188,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1 docdb.DBCluster
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	if acctest.Partition() == "aws-us-gov" {
@@ -232,7 +232,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1 docdb.DBCluster
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_global_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
 
@@ -276,7 +276,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1 docdb.DBCluster
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName1 := "aws_docdb_global_cluster.test.0"
 	globalClusterResourceName2 := "aws_docdb_global_cluster.test.1"
 	resourceName := "aws_docdb_cluster.test"
@@ -315,6 +315,10 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 }
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster docdb.DBCluster
@@ -350,16 +354,17 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	snapshotName := fmt.Sprintf("%s-snapshot", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshot(ctx, rInt),
+		CheckDestroy:             testAccCheckClusterSnapshot(ctx, snapshotName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_finalSnapshot(rInt),
+				Config: testAccClusterConfig_finalSnapshot(rName, snapshotName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 				),
@@ -384,6 +389,8 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/11568
 func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
@@ -391,7 +398,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_noUsernameOrPassword(sdkacctest.RandInt()),
+				Config:      testAccClusterConfig_noUsernameOrPassword(rName),
 				ExpectError: regexache.MustCompile(`required field is not set`),
 			},
 		},
@@ -401,7 +408,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 func TestAccDocDBCluster_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
-	ri := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -410,7 +417,7 @@ func TestAccDocDBCluster_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(ri),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr(
@@ -430,7 +437,7 @@ func TestAccDocDBCluster_updateTags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_updatedTags(ri),
+				Config: testAccClusterConfig_updatedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr(
@@ -444,7 +451,7 @@ func TestAccDocDBCluster_updateTags(t *testing.T) {
 func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
-	ri := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -453,7 +460,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_noCloudWatchLogs(ri),
+				Config: testAccClusterConfig_noCloudWatchLogs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 				),
@@ -471,7 +478,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_basic(ri),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr("aws_docdb_cluster.default",
@@ -485,6 +492,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 func TestAccDocDBCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -493,7 +501,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_kmsKey(sdkacctest.RandInt()),
+				Config: testAccClusterConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttrPair("aws_docdb_cluster.default", "kms_key_id", "aws_kms_key.foo", "arn"),
@@ -518,6 +526,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 func TestAccDocDBCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -526,7 +535,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(sdkacctest.RandInt()),
+				Config: testAccClusterConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr("aws_docdb_cluster.default", "storage_encrypted", "true"),
@@ -551,8 +560,8 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	ri := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
@@ -560,7 +569,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_backups(ri),
+				Config: testAccClusterConfig_backups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr(
@@ -584,7 +593,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_backupsUpdate(ri),
+				Config: testAccClusterConfig_backupsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
 					resource.TestCheckResourceAttr(
@@ -602,7 +611,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 func TestAccDocDBCluster_port(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 docdb.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -612,7 +621,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_port(rInt, 5432),
+				Config: testAccClusterConfig_port(rName, 5432),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
@@ -631,7 +640,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_port(rInt, 2345),
+				Config: testAccClusterConfig_port(rName, 2345),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
@@ -916,7 +925,7 @@ func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckClusterSnapshot(ctx context.Context, rInt int) resource.TestCheckFunc {
+func testAccCheckClusterSnapshot(ctx context.Context, snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -924,14 +933,13 @@ func testAccCheckClusterSnapshot(ctx context.Context, rInt int) resource.TestChe
 			}
 
 			// Try and delete the snapshot before we check for the cluster not found
-			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
 			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 			conn := awsClient.DocDBConn(ctx)
 
-			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
+			log.Printf("[INFO] Deleting the Snapshot %s", snapshotName)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
-				DBClusterSnapshotIdentifier: aws.String(snapshot_identifier),
+				DBClusterSnapshotIdentifier: aws.String(snapshotName),
 			})
 			if snapDeleteErr != nil {
 				return snapDeleteErr
@@ -961,10 +969,10 @@ func testAccCheckClusterSnapshot(ctx context.Context, rInt int) resource.TestChe
 	}
 }
 
-func testAccClusterConfig_basic(n int) string {
+func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -985,7 +993,7 @@ resource "aws_docdb_cluster" "default" {
     "profiler",
   ]
 }
-`, n))
+`, rName))
 }
 
 func testAccClusterConfig_namePrefix() string {
@@ -1009,10 +1017,10 @@ resource "aws_docdb_cluster" "test" {
 `
 }
 
-func testAccClusterConfig_finalSnapshot(n int) string {
+func testAccClusterConfig_finalSnapshot(rName, snapshotName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%[1]d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1022,19 +1030,19 @@ resource "aws_docdb_cluster" "default" {
 
   master_username           = "foo"
   master_password           = "mustbeeightcharaters"
-  final_snapshot_identifier = "tf-acctest-docdbcluster-snapshot-%[1]d"
+  final_snapshot_identifier = %[2]q
 
   tags = {
     Environment = "production"
   }
 }
-`, n))
+`, rName, snapshotName))
 }
 
-func testAccClusterConfig_noUsernameOrPassword(n int) string {
+func testAccClusterConfig_noUsernameOrPassword(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1044,13 +1052,13 @@ resource "aws_docdb_cluster" "default" {
 
   skip_final_snapshot = true
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_updatedTags(n int) string {
+func testAccClusterConfig_updatedTags(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1058,22 +1066,22 @@ resource "aws_docdb_cluster" "default" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   tags = {
     Environment = "production"
     AnotherTag  = "test"
   }
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_noCloudWatchLogs(n int) string {
+func testAccClusterConfig_noCloudWatchLogs(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1089,13 +1097,13 @@ resource "aws_docdb_cluster" "default" {
     Environment = "production"
   }
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_kmsKey(n int) string {
+func testAccClusterConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %[1]d"
+  description = "Terraform acc test %[1]s"
 
   policy = <<POLICY
 {
@@ -1117,7 +1125,7 @@ POLICY
 }
 
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%[1]d"
+  cluster_identifier = %[1]q
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
@@ -1130,13 +1138,13 @@ resource "aws_docdb_cluster" "default" {
   kms_key_id          = aws_kms_key.foo.arn
   skip_final_snapshot = true
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_encrypted(n int) string {
+func testAccClusterConfig_encrypted(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1149,13 +1157,13 @@ resource "aws_docdb_cluster" "default" {
   storage_encrypted   = true
   skip_final_snapshot = true
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_backups(n int) string {
+func testAccClusterConfig_backups(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1170,13 +1178,13 @@ resource "aws_docdb_cluster" "default" {
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_backupsUpdate(n int) string {
+func testAccClusterConfig_backupsUpdate(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
+  cluster_identifier = %[1]q
 
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -1192,10 +1200,10 @@ resource "aws_docdb_cluster" "default" {
   apply_immediately            = true
   skip_final_snapshot          = true
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterConfig_port(rInt, port int) string {
+func testAccClusterConfig_port(rName string, port int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   availability_zones = [
@@ -1204,14 +1212,14 @@ resource "aws_docdb_cluster" "test" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  cluster_identifier  = "tf-acc-test-%d"
+  cluster_identifier  = %[1]q
   engine              = "docdb"
   master_password     = "mustbeeightcharaters"
   master_username     = "foo"
-  port                = %d
+  port                = %[2]d
   skip_final_snapshot = true
 }
-`, rInt, port))
+`, rName, port))
 }
 
 func testAccClusterConfig_deleteProtection(isProtected bool) string {
@@ -1221,7 +1229,7 @@ resource "aws_docdb_cluster" "default" {
   master_username           = "root"
   master_password           = "password"
   skip_final_snapshot       = true
-  deletion_protection       = %t
+  deletion_protection       = %[1]t
 }
 `, isProtected)
 }
