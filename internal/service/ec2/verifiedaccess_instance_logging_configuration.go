@@ -8,7 +8,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,7 +22,8 @@ import (
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
 func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationRead,
+		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
+		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -119,6 +122,34 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	}
 }
 
+func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	vaiID := d.Get("verifiedaccess_instance_id").(string)
+
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
+	}
+
+	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]interface{})),
+		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+		VerifiedAccessInstanceId: aws.String(vaiID),
+	}
+
+	output, err := conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+
+	if err != nil || output == nil {
+		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
+	}
+
+	d.SetId(vaiID)
+
+	return append(diags, resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx, d, meta)...)
+}
+
 func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -148,6 +179,116 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	d.Set("verifiedaccess_instance_id", vaiID)
 
 	return diags
+}
+
+func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.VerifiedAccessLogOptions {
+	if len(accessLogs) == 0 || accessLogs[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := accessLogs[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.VerifiedAccessLogOptions{}
+
+	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
+	}
+
+	if v, ok := tfMap["include_trust_context"].(bool); ok {
+		result.IncludeTrustContext = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["kinesis_data_firehose"].([]interface{}); ok && len(v) > 0 {
+		result.KinesisDataFirehose = expandVerifiedAccessLogKinesisDataFirehose(v)
+	}
+
+	if v, ok := tfMap["log_version"].(string); ok && v != "" {
+		result.LogVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+		result.S3 = expandVerifiedAccessLogS3(v)
+	}
+
+	return result
+}
+
+func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []interface{}) *types.VerifiedAccessLogCloudWatchLogsDestinationOptions {
+	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := cloudWatchLogs[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		result.LogGroup = aws.String(v)
+	}
+
+	return result
+}
+
+func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []interface{}) *types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions {
+	if len(kinesisDataFirehose) == 0 || kinesisDataFirehose[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := kinesisDataFirehose[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		result.DeliveryStream = aws.String(v)
+	}
+
+	return result
+}
+
+func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3DestinationOptions {
+	if len(s3) == 0 || s3[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := s3[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.VerifiedAccessLogS3DestinationOptions{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		result.BucketName = aws.String(v)
+	}
+
+	// if enabled is true, pass bucket owner, otherwise don't pass it
+	// api error InvalidParameterCombination: The parameter AccessLogs.S3.BucketOwner cannot be used when AccessLogs.S3.Enabled is false
+	if v, ok := tfMap["enabled"].(bool); ok && v {
+		if v, ok := tfMap["bucket_owner"].(string); ok && v != "" {
+			result.BucketOwner = aws.String(v)
+		}
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		result.Prefix = aws.String(v)
+	}
+
+	return result
 }
 
 func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs) []interface{} {
