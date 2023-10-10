@@ -403,7 +403,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 
 func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": bool(*apiObject.Enabled),
+		"enabled": apiObject.Enabled,
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -415,7 +415,7 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 
 func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": bool(*apiObject.Enabled),
+		"enabled": apiObject.Enabled,
 	}
 
 	if v := apiObject.DeliveryStream; v != nil {
@@ -427,7 +427,7 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 
 func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": bool(*apiObject.Enabled),
+		"enabled": apiObject.Enabled,
 	}
 
 	if v := apiObject.BucketName; v != nil {
