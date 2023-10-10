@@ -116,7 +116,7 @@ The following arguments are optional:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `model_id`:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Invocation Logging Configuration using the `id` set to the aws region. For example:
 
 ```terraform
 import {
@@ -125,7 +125,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock custom model using the `model_id`:
+Using `terraform import`, import Bedrock custom model using the `id` set to the region. For example:
 
 ```console
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1

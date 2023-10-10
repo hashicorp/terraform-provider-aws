@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
+func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"

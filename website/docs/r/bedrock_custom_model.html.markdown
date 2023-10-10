@@ -190,7 +190,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `model_id`:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `model_id`. For example:
 
 ```terraform
 import {
@@ -199,7 +199,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock custom model using the `model_id`:
+Using `terraform import`, import Bedrock custom model using the `model_id`. For example:
 
 ```console
 % terraform import aws_bedrock_custom_model.my_model my_model_arn
