@@ -952,7 +952,7 @@ data "aws_iam_policy_document" "test" {
     effect = "Allow"
 
     actions = [
-      "s3beta2022a:*",
+      "s3express:*",
     ]
 
     resources = [

@@ -498,7 +498,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
 					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "s3beta2022a"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ZONAL"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),

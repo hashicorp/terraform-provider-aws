@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	// e.g. example--usw2-az2-d-s3
-	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)-d-s3$`)
+	// e.g. example--usw2-az2--x-s3
+	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
 )
 
 // @FrameworkResource(name="Directory Bucket")
@@ -195,7 +195,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 
 // arn returns the ARN of the specified bucket.
 func (r *resourceDirectoryBucket) arn(bucket string) string {
-	return r.RegionalARN("s3beta2022a", fmt.Sprintf("bucket/%s", bucket))
+	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type resourceDirectoryBucketData struct {

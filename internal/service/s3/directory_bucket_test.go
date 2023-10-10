@@ -34,7 +34,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				Config: testAccDirectoryBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3beta2022a", regexache.MustCompile(fmt.Sprintf(`bucket/%s--.*-d-s3`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3express", regexache.MustCompile(fmt.Sprintf(`bucket/%s--.*-d-s3`, rName))),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 func testAccDirectoryBucketConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 locals {
-  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}-d-s3"
+  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}--x-s3"
 }
 `, rName))
 }

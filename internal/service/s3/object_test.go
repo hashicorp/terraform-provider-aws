@@ -1586,7 +1586,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, "source"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "s3beta2022a"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ZONAL"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
