@@ -102,7 +102,7 @@ The following arguments are optional:
 The following arguments are required:
 
 * `log_group_name` – The log group name. Type: String. Length Constraints: Minimum length of 1. Maximum length of 512.
-* `role_arn` – The role ARN.. Type: String. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$
+* `role_arn` – The role ARN.. Type: String. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$`
 
 The following arguments are optional:
 

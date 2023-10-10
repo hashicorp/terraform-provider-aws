@@ -155,17 +155,17 @@ resource "aws_bedrock_custom_model" "test" {
 
 The following arguments are required:
 
-* `base_model_identifier` - Name of the base model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: ^(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}/[a-z0-9]{12})|(:foundation-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2})))|([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})|(([0-9a-zA-Z][_-]?)+)$
-* `custom_model_name` - Name for the custom model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: ^([0-9a-zA-Z][_-]?)+$
-* `job_name` - Enter a unique name for the fine-tuning job. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: ^[a-zA-Z0-9](-*[a-zA-Z0-9\+\-\.])*$
+* `base_model_identifier` - Name of the base model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: `^(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}/[a-z0-9]{12})|(:foundation-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2})))|([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})|(([0-9a-zA-Z][_-]?)+)$`
+* `custom_model_name` - Name for the custom model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: `^([0-9a-zA-Z][_-]?)+$`
+* `job_name` - Enter a unique name for the fine-tuning job. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: `^[a-zA-Z0-9](-*[a-zA-Z0-9\+\-\.])*$`
 * `output_data_config` - S3 location for the output data. Type: String. Required: Yes
-* `role_arn` - The Amazon Resource Name (ARN) of an IAM role that Bedrock can assume to perform tasks on your behalf. Type: String. Required: Yes. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$
+* `role_arn` - The Amazon Resource Name (ARN) of an IAM role that Bedrock can assume to perform tasks on your behalf. Type: String. Required: Yes. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$`
 * `training_data_config` - Information about the training dataset. Type: String. Required: Yes
 
 The following arguments are optional:
 
-* `client_request_token` - Unique token value that you can provide. The GetModelCustomizationJob response includes the same token value. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 256. Pattern: ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$
-* `custom_model_kms_key_id` - The custom model is encrypted at rest using this key. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: ^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$
+* `client_request_token` - Unique token value that you can provide. The GetModelCustomizationJob response includes the same token value. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 256. Pattern: `^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`
+* `custom_model_kms_key_id` - The custom model is encrypted at rest using this key. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$`
 * `validation_data_config` - Information about the validation dataset. Type: string. Required: No.
 * `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No.
 * `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job.
@@ -177,9 +177,8 @@ The following arguments are optional:
 
 ### VpcConfig Object
 
-* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
-  the names returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `security_group_ids` – (Required) VPC configuration security group Ids. Type: Array of strings. Array Members: Minimum number of 1 item. Maximum number of 5 items. Length Constraints: Minimum length of 0. Maximum length of 32. Pattern: `^[-0-9a-zA-Z]+$`
+* `subnet_ids` – (Required) VPC configuration subnets. Type: Array of strings. Array Members: Minimum number of 1 item. Maximum number of 16 items. Length Constraints: Minimum length of 0. Maximum length of 32. Pattern: `^[-0-9a-zA-Z]+$`
 
 ## Timeouts
 

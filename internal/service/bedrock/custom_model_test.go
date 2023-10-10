@@ -22,7 +22,7 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockCustomModelConfig_basic(rName),
+				Config: testAccCustomModelConfig_basic(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// testAccCheckAddonExists(ctx, customModelResourceName, &addon),
 				// resource.TestCheckResourceAttr(customModelResourceName, "addon_name", addonName),
@@ -42,7 +42,7 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModelConfig_basic(rName string) string {
+func testAccCustomModelConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
