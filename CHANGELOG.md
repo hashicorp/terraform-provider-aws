@@ -1,4 +1,9 @@
 ## 5.20.1 (Unreleased)
+
+NOTES:
+
+* provider: Build with [Terraform Plugin Framework v1.4.1](https://github.com/hashicorp/terraform-plugin-framework/blob/main/CHANGELOG.md#141-october-09-2023), fixing potential [initialization errors](https://github.com/hashicorp/terraform/issues/33990) when using v1.6 of the Terraform CLI.
+
 ## 5.20.0 (October  6, 2023)
 
 FEATURES:
