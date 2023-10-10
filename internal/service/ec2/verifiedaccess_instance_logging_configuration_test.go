@@ -67,6 +67,53 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustCon
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
+	instanceResourceName := "aws_verifiedaccess_instance.test"
+
+	log_version_original := "ocsf-0.1"
+	log_version_updated := "ocsf-1.0.0-rc.2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsLogVersion(log_version_original),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.log_version", log_version_original),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsLogVersion(log_version_updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.log_version", log_version_updated),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -146,4 +193,18 @@ resource "aws_verifiedaccess_instance_logging_configuration" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
 }
 `, includeTrustContext))
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsLogVersion(logVersion string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		fmt.Sprintf(`
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    log_version = %[1]q
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`, logVersion))
 }
