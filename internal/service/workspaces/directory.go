@@ -58,6 +58,12 @@ func ResourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dedicated_tenancy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default: false,
+				Computed: true,
+			},
 			"dns_ip_addresses": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -217,13 +223,17 @@ func ResourceDirectory() *schema.Resource {
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-
+    
 	directoryID := d.Get("directory_id").(string)
+	directoryTenancy := types.TenancyShared
+	if d.Get("dedicated_tenancy").(bool) {
+		directoryTenancy = types.TenancyDedicated
+	}
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryID),
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
-		Tenancy:           types.TenancyShared,
+		Tenancy:           directoryTenancy,
 		Tags:              getTagsIn(ctx),
 	}
 
