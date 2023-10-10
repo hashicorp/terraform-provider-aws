@@ -655,7 +655,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
-	log.Printf("[DEBUG] Destroying DocumentDB Cluster (%s)", d.Id())
+
+	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
@@ -667,62 +668,52 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
-		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster (%s) from DocumentDB Global Cluster: %s", d.Id(), err)
+		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
+			return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster (%s) from Global Cluster: %s", d.Id(), err)
 		}
 	}
 
-	deleteOpts := docdb.DeleteDBClusterInput{
+	input := &docdb.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	input.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
 	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "DocumentDB Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
 		}
 	}
 
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-		_, err := conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
-		if err != nil {
+	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteDBClusterWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-				return retry.RetryableError(err)
+				return true, err
 			}
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
-				return retry.RetryableError(err)
+				return true, err
 			}
-			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
-				return nil
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "DocumentDB Cluster cannot be deleted: %s", err)
+
+			return false, err
+		},
+	)
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+		return diags
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    resourceClusterDeletePendingStates,
-		Target:     []string{"destroyed"},
-		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDBClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -909,11 +900,12 @@ func statusDBCluster(ctx context.Context, conn *docdb.DocDB, id string) retry.St
 
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"available", "backing-up", "deleting", "modifying"},
-		Target:  []string{},
-		Refresh: statusDBCluster(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   5 * time.Second,
+		Pending:    []string{"available", "backing-up", "deleting", "modifying"},
+		Target:     []string{},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
