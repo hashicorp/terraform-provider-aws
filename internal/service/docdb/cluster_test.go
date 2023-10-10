@@ -529,10 +529,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_cluster.default", "storage_encrypted", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_cluster.default", "db_cluster_parameter_group_name", "default.docdb4.0"),
+					resource.TestCheckResourceAttr("aws_docdb_cluster.default", "storage_encrypted", "true"),
 				),
 			},
 			{
@@ -977,7 +974,6 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb4.0"
   skip_final_snapshot             = true
 
   tags = {
@@ -1026,7 +1022,6 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb4.0"
   final_snapshot_identifier       = "tf-acctest-docdbcluster-snapshot-%[1]d"
 
   tags = {
@@ -1089,7 +1084,6 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb4.0"
   skip_final_snapshot             = true
 
   tags = {
@@ -1133,7 +1127,6 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb4.0"
   storage_encrypted               = true
   kms_key_id                      = aws_kms_key.foo.arn
   skip_final_snapshot             = true
@@ -1213,7 +1206,6 @@ resource "aws_docdb_cluster" "test" {
   ]
 
   cluster_identifier              = "tf-acc-test-%d"
-  db_cluster_parameter_group_name = "default.docdb4.0"
   engine                          = "docdb"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
