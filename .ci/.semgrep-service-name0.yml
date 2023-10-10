@@ -3448,3 +3448,18 @@ rules:
           patterns:
             - pattern-regex: "(?i)Comprehend"
     severity: WARNING
+  - id: computeoptimizer-in-func-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in func name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
