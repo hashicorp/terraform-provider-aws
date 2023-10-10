@@ -114,6 +114,56 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *t
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
+	instanceResourceName := "aws_verifiedaccess_instance.test"
+	logGroupName := "aws_cloudwatch_log_group.test"
+	logGroupName2 := "aws_cloudwatch_log_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogs("first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogs("second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -181,6 +231,14 @@ resource "aws_verifiedaccess_instance" "test" {}
 `
 }
 
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatchTwoLogGroups() string {
+	return `
+resource "aws_cloudwatch_log_group" "test" {}
+
+resource "aws_cloudwatch_log_group" "test2" {}
+`
+}
+
 func testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(includeTrustContext bool) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
@@ -207,4 +265,26 @@ resource "aws_verifiedaccess_instance_logging_configuration" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
 }
 `, logVersion))
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogs(selectLogGroup string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatchTwoLogGroups(),
+		fmt.Sprintf(`
+locals {
+  select_log_group = %[1]q
+}
+
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = local.select_log_group == "first" ? aws_cloudwatch_log_group.test.id : aws_cloudwatch_log_group.test2.id
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`, selectLogGroup))
 }
