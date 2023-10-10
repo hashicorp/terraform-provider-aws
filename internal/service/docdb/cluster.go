@@ -279,77 +279,68 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
-		opts := docdb.RestoreDBClusterFromSnapshotInput{
+		input := &docdb.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Tags:                getTagsIn(ctx),
 		}
 
-		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			opts.AvailabilityZones = flex.ExpandStringSet(attr)
+		if v := d.Get("availability_zones").(*schema.Set); v.Len() > 0 {
+			input.AvailabilityZones = flex.ExpandStringSet(v)
 		}
 
-		if attr, ok := d.GetOk("backup_retention_period"); ok {
-			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("backup_retention_period"); ok {
+			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 			requiresModifyDbCluster = true
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
-			opts.DBSubnetGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
-			modifyDbClusterInput.DBClusterParameterGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+			modifyDbClusterInput.DBClusterParameterGroupName = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = flex.ExpandStringList(attr.([]interface{}))
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("engine_version"); ok {
-			opts.EngineVersion = aws.String(attr.(string))
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
 		}
 
-		if attr, ok := d.GetOk("kms_key_id"); ok {
-			opts.KmsKeyId = aws.String(attr.(string))
+		if v, ok := d.GetOk("engine_version"); ok {
+			input.EngineVersion = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("port"); ok {
-			opts.Port = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("preferred_backup_window"); ok {
-			modifyDbClusterInput.PreferredBackupWindow = aws.String(attr.(string))
+		if v, ok := d.GetOk("port"); ok {
+			input.Port = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("preferred_backup_window"); ok {
+			modifyDbClusterInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
-		if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
-			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			_, err := conn.RestoreDBClusterFromSnapshotWithContext(ctx, &opts)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.RestoreDBClusterFromSnapshotWithContext(ctx, &opts)
-		}
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
+		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password
@@ -366,92 +357,77 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		createOpts := &docdb.CreateDBClusterInput{
+		input := &docdb.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(identifier),
-			Engine:              aws.String(d.Get("engine").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
-			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:              aws.String(d.Get("engine").(string)),
+			MasterUsername:      aws.String(d.Get("master_username").(string)),
+			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			Tags:                getTagsIn(ctx),
 		}
 
-		if attr, ok := d.GetOk("global_cluster_identifier"); ok {
-			createOpts.GlobalClusterIdentifier = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("port"); ok {
-			createOpts.Port = aws.Int64(int64(attr.(int)))
-		}
-
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
-			createOpts.DBSubnetGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
-			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("engine_version"); ok {
-			createOpts.EngineVersion = aws.String(attr.(string))
-		}
-
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
-		}
-
-		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = flex.ExpandStringSet(attr)
+		if v := d.Get("availability_zones").(*schema.Set); v.Len() > 0 {
+			input.AvailabilityZones = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
-			createOpts.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
+			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+			input.DBClusterParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("engine_version"); ok {
+			input.EngineVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("global_cluster_identifier"); ok {
+			input.GlobalClusterIdentifier = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("port"); ok {
+			input.Port = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
-			createOpts.PreferredBackupWindow = aws.String(v.(string))
+			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			createOpts.PreferredMaintenanceWindow = aws.String(v.(string))
+			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("kms_key_id"); ok {
-			createOpts.KmsKeyId = aws.String(attr.(string))
+		if v, ok := d.GetOkExists("storage_encrypted"); ok {
+			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = flex.ExpandStringList(attr.([]interface{}))
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
-			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
-		}
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.CreateDBClusterWithContext(ctx, input)
+		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			var err error
-			_, err = conn.CreateDBClusterWithContext(ctx, createOpts)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.CreateDBClusterWithContext(ctx, createOpts)
-		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating DocumentDB cluster: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (%s): %s", identifier, err)
 		}
 	}
 
 	d.SetId(identifier)
-
-	log.Printf("[INFO] DocumentDB Cluster ID: %s", d.Id())
-
-	log.Println(
-		"[INFO] Waiting for DocumentDB Cluster to be available")
 
 	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,

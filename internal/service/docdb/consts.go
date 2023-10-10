@@ -20,3 +20,7 @@ func engine_Values() []string {
 		engineDocDB,
 	}
 }
+
+const (
+	errCodeInvalidParameterValue = "InvalidParameterValue"
+)
