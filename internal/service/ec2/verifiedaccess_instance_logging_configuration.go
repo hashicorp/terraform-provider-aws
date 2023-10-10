@@ -24,6 +24,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
+		UpdateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -179,6 +180,34 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	d.Set("verifiedaccess_instance_id", vaiID)
 
 	return diags
+}
+
+func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	vaiID := d.Id()
+
+	if d.HasChange("access_logs") {
+		uuid, err := uuid.GenerateUUID()
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
+		}
+
+		input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]interface{})),
+			ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+			VerifiedAccessInstanceId: aws.String(vaiID),
+		}
+
+		_, err = conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
+		}
+	}
+
+	return append(diags, resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
 func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.VerifiedAccessLogOptions {
