@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,12 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	DefaultLogVersionValue = "ocsf-1.0.0-rc.2"
+)
+
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
 func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
 		UpdateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationUpdate,
+		DeleteWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -208,6 +214,55 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 	}
 
 	return append(diags, resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx, d, meta)...)
+}
+
+func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	vaiID := d.Id()
+
+	// create structure for reset
+	resetObject := &types.VerifiedAccessLogOptions{
+		CloudWatchLogs: &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
+			Enabled: aws.Bool(false),
+		},
+		KinesisDataFirehose: &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
+			Enabled: aws.Bool(false),
+		},
+		S3: &types.VerifiedAccessLogS3DestinationOptions{
+			Enabled: aws.Bool(false),
+		},
+		IncludeTrustContext: aws.Bool(false),
+		// reset log_version because ocsf-0.1 is not compatible with enabling include_trust_context
+		// without reset, if practitioners previously applied and destroyed with ocsf-0.1,
+		// ocsf-0.1 will be the new "default" value, leading to errors with include_trust_context
+		LogVersion: aws.String(DefaultLogVersionValue),
+	}
+
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
+	}
+
+	log.Printf("[INFO] Deleting Verified Access Instance Logging Configuration: %s", vaiID)
+	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+		AccessLogs:               resetObject,
+		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+		VerifiedAccessInstanceId: aws.String(vaiID),
+	}
+
+	_, err = conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
+	}
+
+	return diags
 }
 
 func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.VerifiedAccessLogOptions {
