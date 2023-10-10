@@ -7,13 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -68,6 +66,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -102,6 +101,7 @@ func TestAccDocDBCluster_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -136,6 +136,7 @@ func TestAccDocDBCluster_generatedName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -173,11 +174,12 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
-					"snapshot_identifier",
 				},
 			},
 		},
@@ -213,11 +215,12 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
-					"snapshot_identifier",
 				},
 			},
 			{
@@ -254,11 +257,12 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
-					"snapshot_identifier",
 				},
 			},
 			{
@@ -299,11 +303,12 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
-					"snapshot_identifier",
 				},
 			},
 			{
@@ -361,7 +366,7 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshot(ctx, snapshotName),
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshot(rName, snapshotName),
@@ -374,6 +379,7 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -429,6 +435,7 @@ func TestAccDocDBCluster_updateTags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -470,6 +477,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -512,6 +520,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -546,6 +555,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -585,6 +595,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -632,6 +643,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -674,6 +686,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
@@ -704,140 +717,6 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
-data "aws_availability_zones" "alternate" {
-  provider = "awsalternate"
-  state    = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_docdb_global_cluster" "test" {
-  global_cluster_identifier = "%[1]s"
-  engine                    = "docdb"
-  engine_version            = "4.0.0"
-}
-
-resource "aws_docdb_cluster" "primary" {
-  cluster_identifier        = "%[2]s"
-  master_username           = "foo"
-  master_password           = "barbarbar"
-  skip_final_snapshot       = true
-  global_cluster_identifier = aws_docdb_global_cluster.test.id
-  engine                    = aws_docdb_global_cluster.test.engine
-  engine_version            = aws_docdb_global_cluster.test.engine_version
-}
-
-resource "aws_docdb_cluster_instance" "primary" {
-  identifier         = "%[2]s"
-  cluster_identifier = aws_docdb_cluster.primary.id
-  instance_class     = "db.r5.large"
-}
-
-resource "aws_vpc" "alternate" {
-  provider   = "awsalternate"
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "%[3]s"
-  }
-}
-
-resource "aws_subnet" "alternate" {
-  provider          = "awsalternate"
-  count             = 3
-  vpc_id            = aws_vpc.alternate.id
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-
-  tags = {
-    Name = "%[3]s"
-  }
-}
-
-resource "aws_docdb_subnet_group" "alternate" {
-  provider   = "awsalternate"
-  name       = "%[3]s"
-  subnet_ids = aws_subnet.alternate[*].id
-}
-
-resource "aws_docdb_cluster" "secondary" {
-  provider                  = "awsalternate"
-  cluster_identifier        = "%[3]s"
-  skip_final_snapshot       = true
-  db_subnet_group_name      = aws_docdb_subnet_group.alternate.name
-  global_cluster_identifier = aws_docdb_global_cluster.test.id
-  engine                    = aws_docdb_global_cluster.test.engine
-  engine_version            = aws_docdb_global_cluster.test.engine_version
-  depends_on                = [aws_docdb_cluster_instance.primary]
-}
-
-resource "aws_docdb_cluster_instance" "secondary" {
-  provider           = "awsalternate"
-  identifier         = "%[3]s"
-  cluster_identifier = aws_docdb_cluster.secondary.id
-  instance_class     = "db.r5.large"
-}
-`, rNameGlobal, rNamePrimary, rNameSecondary))
-}
-
-func testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterIdentifierResourceName string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_global_cluster" "test" {
-  count                     = 2
-  engine                    = "docdb"
-  engine_version            = "4.0.0" # version compatible with global
-  global_cluster_identifier = "%[1]s-${count.index}"
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier        = %[1]q
-  global_cluster_identifier = %[2]s.id
-  engine_version            = %[2]s.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
-  skip_final_snapshot       = true
-}
-`, rName, globalClusterIdentifierResourceName)
-}
-
-func testAccClusterConfig_globalCompatible(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier  = %[1]q
-  engine_version      = "4.0.0" # version compatible with global
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-`, rName)
-}
-
-func testAccClusterConfig_globalIdentifier(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_docdb_global_cluster" "test" {
-  engine_version            = "4.0.0" # version compatible
-  engine                    = "docdb"
-  global_cluster_identifier = %[1]q
-}
-
-resource "aws_docdb_cluster" "test" {
-  cluster_identifier        = %[1]q
-  global_cluster_identifier = aws_docdb_global_cluster.test.id
-  engine_version            = aws_docdb_global_cluster.test.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
-  skip_final_snapshot       = true
-}
-`, rName)
 }
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -891,54 +770,45 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
-			return errors.New("DocumentDB Cluster was not recreated")
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_docdb_cluster" {
+				continue
+			}
+
+			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
+				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfdocdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DocumentDB Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterSnapshot(ctx context.Context, snapshotName string) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_docdb_cluster" {
-				continue
-			}
-
-			// Try and delete the snapshot before we check for the cluster not found
-
-			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.DocDBConn(ctx)
-
-			log.Printf("[INFO] Deleting the Snapshot %s", snapshotName)
-			_, snapDeleteErr := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
-				DBClusterSnapshotIdentifier: aws.String(snapshotName),
-			})
-			if snapDeleteErr != nil {
-				return snapDeleteErr
-			}
-
-			// Try to find the Group
-			var err error
-			resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
-
-			if err == nil {
-				if len(resp.DBClusters) != 0 &&
-					*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-					return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-				}
-			}
-
-			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
-				continue
-			}
-
-			return err
+		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+			return errors.New("DocumentDB Cluster was not recreated")
 		}
 
 		return nil
@@ -1208,4 +1078,138 @@ resource "aws_docdb_cluster" "default" {
   deletion_protection       = %[1]t
 }
 `, isProtected)
+}
+
+func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_docdb_global_cluster" "test" {
+  global_cluster_identifier = "%[1]s"
+  engine                    = "docdb"
+  engine_version            = "4.0.0"
+}
+
+resource "aws_docdb_cluster" "primary" {
+  cluster_identifier        = "%[2]s"
+  master_username           = "foo"
+  master_password           = "barbarbar"
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_docdb_global_cluster.test.id
+  engine                    = aws_docdb_global_cluster.test.engine
+  engine_version            = aws_docdb_global_cluster.test.engine_version
+}
+
+resource "aws_docdb_cluster_instance" "primary" {
+  identifier         = "%[2]s"
+  cluster_identifier = aws_docdb_cluster.primary.id
+  instance_class     = "db.r5.large"
+}
+
+resource "aws_vpc" "alternate" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  provider          = "awsalternate"
+  count             = 3
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_docdb_subnet_group" "alternate" {
+  provider   = "awsalternate"
+  name       = "%[3]s"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_docdb_cluster" "secondary" {
+  provider                  = "awsalternate"
+  cluster_identifier        = "%[3]s"
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_docdb_subnet_group.alternate.name
+  global_cluster_identifier = aws_docdb_global_cluster.test.id
+  engine                    = aws_docdb_global_cluster.test.engine
+  engine_version            = aws_docdb_global_cluster.test.engine_version
+  depends_on                = [aws_docdb_cluster_instance.primary]
+}
+
+resource "aws_docdb_cluster_instance" "secondary" {
+  provider           = "awsalternate"
+  identifier         = "%[3]s"
+  cluster_identifier = aws_docdb_cluster.secondary.id
+  instance_class     = "db.r5.large"
+}
+`, rNameGlobal, rNamePrimary, rNameSecondary))
+}
+
+func testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterIdentifierResourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_global_cluster" "test" {
+  count                     = 2
+  engine                    = "docdb"
+  engine_version            = "4.0.0" # version compatible with global
+  global_cluster_identifier = "%[1]s-${count.index}"
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier        = %[1]q
+  global_cluster_identifier = %[2]s.id
+  engine_version            = %[2]s.engine_version
+  master_password           = "barbarbarbar"
+  master_username           = "foo"
+  skip_final_snapshot       = true
+}
+`, rName, globalClusterIdentifierResourceName)
+}
+
+func testAccClusterConfig_globalCompatible(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine_version      = "4.0.0" # version compatible with global
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_globalIdentifier(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_global_cluster" "test" {
+  engine_version            = "4.0.0" # version compatible
+  engine                    = "docdb"
+  global_cluster_identifier = %[1]q
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier        = %[1]q
+  global_cluster_identifier = aws_docdb_global_cluster.test.id
+  engine_version            = aws_docdb_global_cluster.test.engine_version
+  master_password           = "barbarbarbar"
+  master_username           = "foo"
+  skip_final_snapshot       = true
+}
+`, rName)
 }
