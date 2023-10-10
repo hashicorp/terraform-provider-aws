@@ -429,34 +429,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(identifier)
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    resourceClusterCreatePendingStates,
-		Target:     []string{"available"},
-		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster state to be \"available\": %s", err)
+	if _, err := waitDBClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if requiresModifyDbCluster {
 		modifyDbClusterInput.DBClusterIdentifier = aws.String(d.Id())
 
-		log.Printf("[INFO] DocumentDB Cluster (%s) configuration requires ModifyDBCluster: %s", d.Id(), modifyDbClusterInput)
 		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster (%s): %s", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DocumentDB Cluster (%s) to be available", d.Id())
-		err = waitForClusterUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) to be available: %s", d.Id(), err)
+		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -898,9 +885,64 @@ func statusDBCluster(ctx context.Context, conn *docdb.DocDB, id string) retry.St
 	}
 }
 
+func waitDBClusterCreated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			"creating",
+			"backing-up",
+			"modifying",
+			"preparing-data-migration",
+			"migrating",
+			"resetting-master-credentials",
+		},
+		Target:     []string{"available"},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterUpdated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			"backing-up",
+			"modifying",
+			"resetting-master-credentials",
+			"upgrading",
+		},
+		Target:     []string{"available"},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"available", "backing-up", "deleting", "modifying"},
+		Pending: []string{
+			"available",
+			"deleting",
+			"backing-up",
+			"modifying",
+		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
