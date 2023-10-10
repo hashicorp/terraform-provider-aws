@@ -81,13 +81,9 @@ The following arguments are required:
 
 ## Attribute Reference
 
-NONE
+This resource exports no additional attributes.
 
 ### LoggingConfig Object
-
-The following arguments are required:
-
-NONE
 
 The following arguments are optional:
 

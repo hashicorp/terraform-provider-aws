@@ -38,6 +38,6 @@ This data source exports the following attributes in addition to the arguments a
 * `training_metrics` - The training metrics from the job creation.
 * `validation_data_config` - Array of up to 10 validators.
 * `validation_metrics` - The validation metrics from the job creation.
-* `job_tags` - Key-value mapping of tags for the fine-tuning job. 
+* `job_tags` - Key-value mapping of tags for the fine-tuning job.
 * `tags` - Key-value mapping of resource tags.
   
