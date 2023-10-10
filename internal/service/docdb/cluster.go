@@ -825,7 +825,7 @@ func waitDBClusterCreated(ctx context.Context, conn *docdb.DocDB, id string, tim
 	return nil, err
 }
 
-func waitDBClusterUpdated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
+func waitDBClusterUpdated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
