@@ -222,6 +222,75 @@ func ResourceTask() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"task_report_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_destination": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bucket_access_role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"s3_bucket_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"subdirectory": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"s3_object_versioning": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"output_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"report_overrides": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"deleted_override": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"skipped_override": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"transferred_override": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"verified_override": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"report_level": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -253,6 +322,10 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("task_report_config"); ok {
+		input.TaskReportConfig = expandTaskReportConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
@@ -344,10 +417,14 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
-		_, err := conn.UpdateTaskWithContext(ctx, input)
+		if d.HasChanges("task_report_config") {
+			input.TaskReportConfig = expandTaskReportConfig(d.Get("task_report_config").([]interface{}))
+		}
 
-		if err != nil {
+		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
+		if _, err := conn.UpdateTaskWithContext(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s): %s", d.Id(), err)
+
 		}
 	}
 
@@ -520,6 +597,60 @@ func flattenTaskSchedule(schedule *datasync.TaskSchedule) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func expandTaskReportConfig(l []interface{}) *datasync.TaskReportConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	reportConfig := &datasync.TaskReportConfig{}
+
+	m := l[0].(map[string]interface{})
+
+	dest := m["s3_destination"].([]interface{})
+	reportConfig = reportConfig.SetDestination(expandTaskReportDestination(dest))
+	reportConfig = reportConfig.SetObjectVersionIds(m["s3_object_versioning"].(string))
+	reportConfig = reportConfig.SetOutputType(m["output_type"].(string))
+	reportConfig = reportConfig.SetReportLevel(m["report_level"].(string))
+	o := m["report_overrides"].([]interface{})
+	reportConfig = reportConfig.SetOverrides(expandTaskReportOverrides(o))
+
+	return reportConfig
+}
+
+func expandTaskReportDestination(l []interface{}) *datasync.ReportDestination {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &datasync.ReportDestination{
+		S3: &datasync.ReportDestinationS3{
+			BucketAccessRoleArn: aws.String(m["bucket_access_role_arn"].(string)),
+			S3BucketArn:         aws.String(m["s3_bucket_arn"].(string)),
+			Subdirectory:        aws.String(m["subdirectory"].(string)),
+		},
+	}
+}
+
+func expandTaskReportOverrides(l []interface{}) *datasync.ReportOverrides {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &datasync.ReportOverrides{
+		Deleted: &datasync.ReportOverride{
+			ReportLevel: aws.String(m["deleted_override"].(string)),
+		},
+		Skipped: &datasync.ReportOverride{
+			ReportLevel: aws.String(m["skipped_override"].(string)),
+		},
+		Transferred: &datasync.ReportOverride{
+			ReportLevel: aws.String(m["transferred_override"].(string)),
+		},
+		Verified: &datasync.ReportOverride{
+			ReportLevel: aws.String(m["verified_override"].(string)),
+		},
+	}
 }
 
 func expandFilterRules(l []interface{}) []*datasync.FilterRule {
