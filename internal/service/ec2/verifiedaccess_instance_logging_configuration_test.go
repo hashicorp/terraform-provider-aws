@@ -219,6 +219,65 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFire
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
+	instanceResourceName := "aws_verifiedaccess_instance.test"
+	bucketName := "aws_s3_bucket.test"
+	bucketName2 := "aws_s3_bucket.test2"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	prefix_original := "prefix-original"
+	prefix_updated := "prefix-updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName, rName2, "first", prefix_original),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "access_logs.0.s3.0.bucket_owner"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.prefix", prefix_original),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName, rName2, "second", prefix_updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName2, "id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "access_logs.0.s3.0.bucket_owner"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.prefix", prefix_updated),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -415,6 +474,20 @@ resource "aws_kinesis_firehose_delivery_stream" "test2" {
 `, rName2, rName3))
 }
 
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3TwoBuckets(rName, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+`, rName, rName2)
+}
+
 func testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(includeTrustContext bool) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
@@ -485,4 +558,30 @@ resource "aws_verifiedaccess_instance_logging_configuration" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
 }
 `, selectStream))
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsS3(rName, rName2, selectBucket, prefix string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3TwoBuckets(rName, rName2),
+		fmt.Sprintf(`
+locals {
+  select_bucket = %[1]q
+}
+
+data "aws_caller_identity" "test" {}
+
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    s3 {
+      enabled      = true
+      bucket_name  = local.select_bucket == "first" ? aws_s3_bucket.test.id : aws_s3_bucket.test2.id
+      bucket_owner = data.aws_caller_identity.test.account_id
+      prefix       = %[2]q
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`, selectBucket, prefix))
 }
