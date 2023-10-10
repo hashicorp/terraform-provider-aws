@@ -154,7 +154,7 @@ func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]a
 		// AWS SDK for Go v2 does not use the AWS_S3_US_EAST_1_REGIONAL_ENDPOINT environment variable during configuration.
 		// For compatibility, read it now.
 		if client.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
-			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err != nil {
+			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err == nil {
 				client.s3UsEast1RegionalEndpoint = v
 			}
 		}
