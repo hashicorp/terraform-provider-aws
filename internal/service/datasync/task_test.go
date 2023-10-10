@@ -798,6 +798,10 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_report_config(t *testing.T) {
+
+}
+
 func TestAccDataSyncTask_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2, task3 datasync.DescribeTaskOutput
