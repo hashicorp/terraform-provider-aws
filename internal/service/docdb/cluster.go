@@ -36,8 +36,15 @@ func ResourceCluster() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterRead,
 		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
+
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceClusterImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+				// from any API call, so we need to default skip_final_snapshot to true so
+				// that final_snapshot_identifier is not required
+				d.Set("skip_final_snapshot", true)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -51,20 +58,28 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zones": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
-				Set:      schema.HashString,
+				ForceNew: true,
 			},
-
+			"backup_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntAtMost(35),
+			},
 			"cluster_identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -81,69 +96,58 @@ func ResourceCluster() *schema.Resource {
 				ConflictsWith: []string{"cluster_identifier"},
 				ValidateFunc:  validIdentifierPrefix,
 			},
-
 			"cluster_members": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
-				Set:      schema.HashString,
 			},
-
-			"db_subnet_group_name": {
+			"cluster_resource_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
-
 			"db_cluster_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
+			"db_subnet_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"audit",
+						"profiler",
+					}, false),
+				},
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"global_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validGlobalCusterIdentifier,
-			},
-
-			"reader_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "docdb",
 				ForceNew:     true,
-				ValidateFunc: validEngine(),
+				Default:      engineDocDB,
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-
 			"final_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -162,65 +166,46 @@ func ResourceCluster() *schema.Resource {
 					return
 				},
 			},
-
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			"global_cluster_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validGlobalCusterIdentifier,
 			},
-
-			"master_username": {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
-				ForceNew: true,
 			},
-
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"master_password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-
-			"snapshot_identifier": {
+			"master_username": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// allow snapshot_idenfitier to be removed without forcing re-creation
-					return new == ""
-				},
 			},
-
 			"port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      27017,
 				ForceNew:     true,
+				Default:      27017,
 				ValidateFunc: validation.IntBetween(1150, 65535),
 			},
-
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
 			"preferred_backup_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -233,59 +218,41 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-
-			"backup_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"cluster_resource_id": {
+			"reader_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"audit",
-						"profiler",
-					}, false),
-				},
-			},
-
-			"deletion_protection": {
+			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
-
+			"snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
+			},
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-}
-
-func resourceClusterImport(ctx context.Context,
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
-	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required
-	d.Set("skip_final_snapshot", true)
-	return []*schema.ResourceData{d}, nil
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

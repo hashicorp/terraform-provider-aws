@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -60,7 +61,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				ForceNew:      true,
 				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validEngine(),
+				ValidateFunc:  validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,

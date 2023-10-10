@@ -10,3 +10,13 @@ import (
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	engineDocDB = "docdb"
+)
+
+func engine_Values() []string {
+	return []string{
+		engineDocDB,
+	}
+}
