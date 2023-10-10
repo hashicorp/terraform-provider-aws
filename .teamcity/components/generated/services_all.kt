@@ -127,6 +127,7 @@ val services = mapOf(
     "macie2" to ServiceSpec("Macie"),
     "mediaconnect" to ServiceSpec("Elemental MediaConnect"),
     "mediaconvert" to ServiceSpec("Elemental MediaConvert"),
+    "medialive" to ServiceSpec("Elemental MediaLive"),
     "mediapackage" to ServiceSpec("Elemental MediaPackage"),
     "mediastore" to ServiceSpec("Elemental MediaStore"),
     "memorydb" to ServiceSpec("MemoryDB for Redis"),
