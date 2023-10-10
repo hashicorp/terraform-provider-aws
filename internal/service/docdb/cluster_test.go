@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -56,10 +58,8 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName,
-						"enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(resourceName,
-						"enabled_cloudwatch_logs_exports.1", "profiler"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "profiler"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
@@ -842,37 +842,24 @@ resource "aws_docdb_cluster" "test" {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
-	}
-}
-
-func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
 				continue
 			}
 
-			// Try to find the Group
-			var err error
-			resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfdocdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.DBClusters) != 0 &&
-					*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-					return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-				}
-			}
-
-			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DocumentDB Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -890,28 +877,17 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
-		}
+		conn := providerF().Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-		resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfdocdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == rs.Primary.ID {
-				*v = *c
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

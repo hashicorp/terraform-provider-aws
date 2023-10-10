@@ -24,9 +24,3 @@ func engine_Values() []string {
 const (
 	errCodeInvalidParameterValue = "InvalidParameterValue"
 )
-
-const (
-	DBClusterStatusAvailable = "available"
-	DBClusterStatusDeleted   = "deleted"
-	DBClusterStatusDeleting  = "deleting"
-)
