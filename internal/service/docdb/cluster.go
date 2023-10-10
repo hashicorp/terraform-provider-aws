@@ -866,3 +866,67 @@ func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 
 	return add, disable
 }
+
+func FindDBClusterById(ctx context.Context, conn *docdb.DocDB, dBClusterID string) (*docdb.DBCluster, error) {
+	var dBCluster *docdb.DBCluster
+
+	input := &docdb.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dBClusterID),
+	}
+
+	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, dbc := range page.DBClusters {
+			if dbc == nil {
+				continue
+			}
+
+			if aws.StringValue(dbc.DBClusterIdentifier) == dBClusterID {
+				dBCluster = dbc
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return dBCluster, err
+}
+
+func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		dBCluster, err := FindDBClusterById(ctx, conn, dBClusterID)
+
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) || dBCluster == nil {
+			return nil, DBClusterStatusDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("reading DocumentDB Cluster (%s): %w", dBClusterID, err)
+		}
+
+		return dBCluster, aws.StringValue(dBCluster.Status), nil
+	}
+}
+
+func WaitForDBClusterDeletion(ctx context.Context, conn *docdb.DocDB, dBClusterID string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{DBClusterStatusAvailable, DBClusterStatusDeleting},
+		Target:         []string{DBClusterStatusDeleted},
+		Refresh:        statusDBClusterRefreshFunc(ctx, conn, dBClusterID),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocumentDB Cluster (%s) deletion", dBClusterID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
+}
