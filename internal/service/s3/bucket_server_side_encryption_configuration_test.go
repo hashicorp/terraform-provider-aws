@@ -111,7 +111,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMS(t *t
 	})
 }
 
-/*
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSDSSE(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -141,7 +140,6 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSDSSE(
 		},
 	})
 }
-*/
 
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSSEAlgorithm(t *testing.T) {
 	ctx := acctest.Context(t)
