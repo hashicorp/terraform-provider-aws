@@ -690,7 +690,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func expandCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
+func expandCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration { // nosemgrep:ci.caps0-in-func-name
 	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
 	o := oraw.([]interface{})
 	n := nraw.([]interface{})

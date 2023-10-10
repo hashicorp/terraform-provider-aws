@@ -12,7 +12,7 @@ const (
 )
 
 const (
-	engineDocDB = "docdb"
+	engineDocDB = "docdb" // nosemgrep:ci.docdb-in-const-name,ci.docdb-in-var-name
 )
 
 func engine_Values() []string {
