@@ -194,6 +194,7 @@ val services = mapOf(
     "transcribe" to ServiceSpec("Transcribe"),
     "transfer" to ServiceSpec("Transfer Family", vpcLock = true),
     "verifiedpermissions" to ServiceSpec("Verified Permissions"),
+    "vpclattice" to ServiceSpec("VPC Lattice"),
     "waf" to ServiceSpec("WAF Classic", regionOverride = "us-east-1"),
     "wafregional" to ServiceSpec("WAF Classic Regional"),
     "wafv2" to ServiceSpec("WAF"),

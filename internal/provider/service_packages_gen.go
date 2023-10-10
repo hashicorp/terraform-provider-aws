@@ -202,6 +202,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -409,6 +410,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),
 		verifiedpermissions.ServicePackage(ctx),
+		vpclattice.ServicePackage(ctx),
 		waf.ServicePackage(ctx),
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
