@@ -34,6 +34,7 @@ autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalin
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,
 batch,batch,batch,batch,,batch,,,Batch,Batch,,1,,,aws_batch_,,batch_,Batch,AWS,,,,,,
+bedrock,bedrock,bedrock,,,bedrock,,,Bedrock,Bedrock,,1,,,aws_bedrock_,,bedrock_,Amazon Bedrock,Amazon,,,,,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,
 ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,
@@ -123,7 +124,7 @@ dax,dax,dax,dax,,dax,,,DAX,DAX,,1,,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Am
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,
 ,,,,,ec2ebs,ec2,,EC2EBS,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,,x,,,Part of EC2
 ebs,ebs,ebs,ebs,,ebs,,,EBS,EBS,,1,,,aws_ebs_,,changewhenimplemented,EBS (Elastic Block Store),Amazon,,x,,,,
-ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,2,aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot),aws_ec2_,ec2_,ami;availability_zone;ec2_availability_;ec2_capacity_;ec2_fleet;ec2_host;ec2_instance_;ec2_public_ipv4_pool;ec2_serial_;ec2_spot_;ec2_tag;eip;instance;key_pair;launch_template;placement_group;spot_,EC2 (Elastic Compute Cloud),Amazon,,,,,,
+ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,2,aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot),aws_ec2_,ec2_,ami;availability_zone;ec2_availability_;ec2_capacity_;ec2_fleet;ec2_host;ec2_image_;ec2_instance_;ec2_public_ipv4_pool;ec2_serial_;ec2_spot_;ec2_tag;eip;instance;key_pair;launch_template;placement_group;spot_,EC2 (Elastic Compute Cloud),Amazon,,,,,,
 imagebuilder,imagebuilder,imagebuilder,imagebuilder,,imagebuilder,,,ImageBuilder,Imagebuilder,,1,,,aws_imagebuilder_,,imagebuilder_,EC2 Image Builder,Amazon,,,,,,
 ec2-instance-connect,ec2instanceconnect,ec2instanceconnect,ec2instanceconnect,,ec2instanceconnect,,,EC2InstanceConnect,EC2InstanceConnect,,1,,,aws_ec2instanceconnect_,,ec2instanceconnect_,EC2 Instance Connect,AWS,,x,,,,
 ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,
