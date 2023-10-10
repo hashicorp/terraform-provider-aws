@@ -380,6 +380,35 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsK
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T) {
+	// note: disappears test does not test the logging configuration since the instance is deleted
+	// the logging configuration cannot be deleted, rather, the boolean flags and logging version are reset to the default values
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
