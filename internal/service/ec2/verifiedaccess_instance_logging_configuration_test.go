@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -164,6 +165,60 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFirehose(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
+	instanceResourceName := "aws_verifiedaccess_instance.test"
+	kinesisStreamName := "aws_kinesis_firehose_delivery_stream.test"
+	kinesisStreamName2 := "aws_kinesis_firehose_delivery_stream.test2"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName, rName2, rName3, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName, rName2, rName3, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -239,6 +294,127 @@ resource "aws_cloudwatch_log_group" "test2" {}
 `
 }
 
+func testAccInstanceStorageDeliveryStreamConfig_Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "firehose" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+}
+
+resource "aws_iam_role_policy" "firehose" {
+  name = %[1]q
+  role = aws_iam_role.firehose.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
+      ]
+    },
+    {
+      "Sid": "GlueAccess",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehoseTwoStreams(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageDeliveryStreamConfig_Base(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test2" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[2]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+}
+`, rName2, rName3))
+}
+
 func testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(includeTrustContext bool) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
@@ -287,4 +463,26 @@ resource "aws_verifiedaccess_instance_logging_configuration" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
 }
 `, selectLogGroup))
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName, rName2, rName3, selectStream string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehoseTwoStreams(rName, rName2, rName3),
+		fmt.Sprintf(`
+locals {
+  select_stream = %[1]q
+}
+
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    kinesis_data_firehose {
+      delivery_stream = local.select_stream == "first" ? aws_kinesis_firehose_delivery_stream.test.name : aws_kinesis_firehose_delivery_stream.test2.name
+      enabled         = true
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`, selectStream))
 }
