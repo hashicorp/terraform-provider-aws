@@ -467,46 +467,24 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	input := &docdb.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
+	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeDBClustersWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing DocumentDB Cluster (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving DocumentDB cluster: empty response for: %s", input)
-	}
-
-	var dbc *docdb.DBCluster
-	for _, c := range resp.DBClusters {
-		if aws.StringValue(c.DBClusterIdentifier) == d.Id() {
-			dbc = c
-			break
-		}
-	}
-
-	if !d.IsNewResource() && dbc == nil {
-		log.Printf("[WARN] DocumentDB Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	globalCluster, err := findGlobalClusterByARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
 
 	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
-		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
+	if err != nil && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s) Global Cluster information: %s", d.Id(), err)
 	}
 
 	if globalCluster != nil {
@@ -515,35 +493,24 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("global_cluster_identifier", "")
 	}
 
-	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting availability_zones: %s", err)
-	}
-
 	d.Set("arn", dbc.DBClusterArn)
+	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
-
 	var cm []string
 	for _, m := range dbc.DBClusterMembers {
 		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
 	}
-	if err := d.Set("cluster_members", cm); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cluster_members: %s", err)
-	}
-
+	d.Set("cluster_members", cm)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
-
-	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enabled_cloudwatch_logs_exports: %s", err)
-	}
-
+	d.Set("deletion_protection", dbc.DeletionProtection)
+	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
-
 	d.Set("kms_key_id", dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("port", dbc.Port)
@@ -551,15 +518,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("deletion_protection", dbc.DeletionProtection)
-
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
 		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
 	}
-	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_security_group_ids: %s", err)
-	}
+	d.Set("vpc_security_group_ids", vpcg)
 
 	return diags
 }
@@ -867,66 +830,97 @@ func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 	return add, disable
 }
 
-func FindDBClusterById(ctx context.Context, conn *docdb.DocDB, dBClusterID string) (*docdb.DBCluster, error) {
-	var dBCluster *docdb.DBCluster
-
+func FindDBClusterByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBCluster, error) {
 	input := &docdb.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dBClusterID),
+		DBClusterIdentifier: aws.String(id),
 	}
+	output, err := findDBCluster(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBCluster(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput) (*docdb.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusters(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput) ([]*docdb.DBCluster, error) {
+	var output []*docdb.DBCluster
 
 	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, dbc := range page.DBClusters {
-			if dbc == nil {
-				continue
-			}
-
-			if aws.StringValue(dbc.DBClusterIdentifier) == dBClusterID {
-				dBCluster = dbc
-				return false
+		for _, v := range page.DBClusters {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
 		return !lastPage
 	})
 
-	return dBCluster, err
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
-func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		dBCluster, err := FindDBClusterById(ctx, conn, dBClusterID)
+		output, err := FindDBClusterByID(ctx, conn, id)
 
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) || dBCluster == nil {
-			return nil, DBClusterStatusDeleted, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Cluster (%s): %w", dBClusterID, err)
+			return nil, "", err
 		}
 
-		return dBCluster, aws.StringValue(dBCluster.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func WaitForDBClusterDeletion(ctx context.Context, conn *docdb.DocDB, dBClusterID string, timeout time.Duration) error {
+func waitDBClusterDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{DBClusterStatusAvailable, DBClusterStatusDeleting},
-		Target:         []string{DBClusterStatusDeleted},
-		Refresh:        statusDBClusterRefreshFunc(ctx, conn, dBClusterID),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
+		Pending: []string{"available", "backing-up", "deleting", "modifying"},
+		Target:  []string{},
+		Refresh: statusDBCluster(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
 	}
 
-	log.Printf("[DEBUG] Waiting for DocumentDB Cluster (%s) deletion", dBClusterID)
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.NotFound(err) {
-		return nil
+	if output, ok := outputRaw.(*docdb.DBCluster); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
 }

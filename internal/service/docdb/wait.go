@@ -16,7 +16,6 @@ import (
 
 const (
 	DBClusterSnapshotDeleteTimeout = 5 * time.Minute
-	DBClusterDeleteTimeout         = 5 * time.Minute
 	DBInstanceDeleteTimeout        = 5 * time.Minute
 	DBSubnetGroupDeleteTimeout     = 5 * time.Minute
 	EventSubscriptionDeleteTimeout = 5 * time.Minute
