@@ -972,9 +972,9 @@ resource "aws_docdb_cluster" "default" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   tags = {
     Environment = "production"
@@ -1020,9 +1020,9 @@ resource "aws_docdb_cluster" "default" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  final_snapshot_identifier       = "tf-acctest-docdbcluster-snapshot-%[1]d"
+  master_username           = "foo"
+  master_password           = "mustbeeightcharaters"
+  final_snapshot_identifier = "tf-acctest-docdbcluster-snapshot-%[1]d"
 
   tags = {
     Environment = "production"
@@ -1082,9 +1082,9 @@ resource "aws_docdb_cluster" "default" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   tags = {
     Environment = "production"
@@ -1125,11 +1125,11 @@ resource "aws_docdb_cluster" "default" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  storage_encrypted               = true
-  kms_key_id                      = aws_kms_key.foo.arn
-  skip_final_snapshot             = true
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  storage_encrypted   = true
+  kms_key_id          = aws_kms_key.foo.arn
+  skip_final_snapshot = true
 }
 `, n))
 }
@@ -1205,12 +1205,12 @@ resource "aws_docdb_cluster" "test" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  cluster_identifier              = "tf-acc-test-%d"
-  engine                          = "docdb"
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
-  port                            = %d
-  skip_final_snapshot             = true
+  cluster_identifier  = "tf-acc-test-%d"
+  engine              = "docdb"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  port                = %d
+  skip_final_snapshot = true
 }
 `, rInt, port))
 }
