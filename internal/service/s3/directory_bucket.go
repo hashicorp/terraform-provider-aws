@@ -87,7 +87,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 	_, err := conn.CreateBucket(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating S3 Directory Bucket", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Directory Bucket (%s)", data.Bucket.ValueString()), err.Error())
 
 		return
 	}
