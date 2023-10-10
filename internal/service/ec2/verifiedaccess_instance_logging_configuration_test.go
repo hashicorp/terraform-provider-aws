@@ -278,6 +278,108 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T
 	})
 }
 
+func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsKinesisDataFirehoseS3(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstanceLoggingConfiguration
+	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
+	instanceResourceName := "aws_verifiedaccess_instance.test"
+	logGroupName := "aws_cloudwatch_log_group.test"
+	kinesisStreamName := "aws_kinesis_firehose_delivery_stream.test"
+	bucketName := "aws_s3_bucket.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Test all 3 logging configurations together - CloudWatch, Kinesis Data Firehose, S3
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehoseS3(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				// Test 2 logging configurations together - CloudWatch, Kinesis Data Firehose
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehose(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				// Test 2 logging configurations together - CloudWatch, S3
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsS3(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				// Test 2 logging configurations together - Kinesis Data Firehose, S3
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehoseS3(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -342,6 +444,12 @@ func testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx context.Conte
 func testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance() string {
 	return `
 resource "aws_verifiedaccess_instance" "test" {}
+`
+}
+
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatch() string {
+	return `
+resource "aws_cloudwatch_log_group" "test" {}
 `
 }
 
@@ -438,6 +546,27 @@ EOF
 `, rName)
 }
 
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehose(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageDeliveryStreamConfig_Base(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+}
+`, rName2))
+}
+
 func testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehoseTwoStreams(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceStorageDeliveryStreamConfig_Base(rName),
@@ -472,6 +601,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test2" {
   }
 }
 `, rName2, rName3))
+}
+
+func testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
 }
 
 func testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3TwoBuckets(rName, rName2 string) string {
@@ -584,4 +722,109 @@ resource "aws_verifiedaccess_instance_logging_configuration" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
 }
 `, selectBucket, prefix))
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehoseS3(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatch(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehose(rName, rName2),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3(rName3),
+		`
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.id
+    }
+
+    kinesis_data_firehose {
+      delivery_stream = aws_kinesis_firehose_delivery_stream.test.name
+      enabled         = true
+    }
+
+    s3 {
+      enabled     = true
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`)
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehose(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatch(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehose(rName, rName2),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3(rName3),
+		`
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.id
+    }
+
+    kinesis_data_firehose {
+      delivery_stream = aws_kinesis_firehose_delivery_stream.test.name
+      enabled         = true
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`)
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsS3(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatch(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehose(rName, rName2),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3(rName3),
+		`
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    cloudwatch_logs {
+      enabled   = true
+      log_group = aws_cloudwatch_log_group.test.id
+    }
+
+    s3 {
+      enabled     = true
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`)
+}
+
+func testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehoseS3(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_instance(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_cloudwatch(),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_firehose(rName, rName2),
+		testAccVerifiedAccessInstanceLoggingConfigurationConfig_s3(rName3),
+		`
+resource "aws_verifiedaccess_instance_logging_configuration" "test" {
+  access_logs {
+    kinesis_data_firehose {
+      delivery_stream = aws_kinesis_firehose_delivery_stream.test.name
+      enabled         = true
+    }
+
+    s3 {
+      enabled     = true
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  verifiedaccess_instance_id = aws_verifiedaccess_instance.test.id
+}
+`)
 }
