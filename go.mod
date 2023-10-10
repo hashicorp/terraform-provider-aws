@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.45.24
-	github.com/aws/aws-sdk-go-v2 v1.21.1
+	github.com/aws/aws-sdk-go-v2 v1.22.0-zeta.3351ef76d077
 	github.com/aws/aws-sdk-go-v2/config v1.18.44
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.12
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.89
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.22.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.37 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.0-zeta.3351ef76d077 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.36 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.5 // indirect
