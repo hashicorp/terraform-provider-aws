@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -217,7 +217,7 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 
 func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VerifiedAccessInstanceId), aws.StringValue(after.VerifiedAccessInstanceId); before != after {
+		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before != after {
 			return fmt.Errorf("Verified Access Instance (%s/%s) recreated", before, after)
 		}
 
@@ -227,7 +227,7 @@ func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.Verifie
 
 func testAccCheckVerifiedAccessInstanceRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VerifiedAccessInstanceId), aws.StringValue(after.VerifiedAccessInstanceId); before == after {
+		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before == after {
 			return fmt.Errorf("Verified Access Instance (%s) not recreated", before)
 		}
 
