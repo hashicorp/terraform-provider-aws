@@ -74,35 +74,30 @@ func init() {
 func sweepDBClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %d", err)
 	}
-
 	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBClustersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(out *docdb.DescribeDBClustersOutput, lastPage bool) bool {
-		for _, dBCluster := range out.DBClusters {
-			id := aws.StringValue(dBCluster.DBClusterIdentifier)
-			input := &docdb.DeleteDBClusterInput{
-				DBClusterIdentifier: dBCluster.DBClusterIdentifier,
-				SkipFinalSnapshot:   aws.Bool(true),
-			}
-
-			log.Printf("[INFO] Deleting DocumentDB Cluster: %s", id)
-
-			_, err := conn.DeleteDBClusterWithContext(ctx, input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocumentDB Cluster (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForDBClusterDeletion(ctx, conn, id, DBClusterDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocumentDB Cluster (%s) to be deleted: %s", id, err)
-			}
+	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.DBClusters {
+			r := ResourceCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DBClusterIdentifier))
+			d.Set("skip_final_snapshot", true)
+			if globalCluster, err := findGlobalClusterByARN(ctx, conn, aws.StringValue(v.DBClusterArn)); err == nil && globalCluster != nil {
+				d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
 
@@ -112,7 +107,13 @@ func sweepDBClusters(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving DocumentDB Clusters: %w", err)
+		return fmt.Errorf("error listing DocumentDB Clusters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DocumentDB Clusters (%s): %w", region, err)
 	}
 
 	return nil
