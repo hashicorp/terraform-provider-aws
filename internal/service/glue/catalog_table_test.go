@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -625,6 +626,39 @@ func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTable_targetTableWithRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogTableConfig_targetWithRegion(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_table.0.region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -645,6 +679,7 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_table.0.region", ""),
 				),
 			},
 			{
@@ -1439,6 +1474,35 @@ resource "aws_glue_catalog_table" "test2" {
   database_name = aws_glue_catalog_database.test2.name
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_targetWithRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  target_table {
+    catalog_id    = aws_glue_catalog_table.test2.catalog_id
+    database_name = aws_glue_catalog_table.test2.database_name
+    name          = aws_glue_catalog_table.test2.name
+	region        = %[2]q
+  }
+}
+
+resource "aws_glue_catalog_database" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_glue_catalog_table" "test2" {
+  name          = "%[1]s-2"
+  database_name = aws_glue_catalog_database.test2.name
+}
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccCatalogTableConfig_openTableFormat(rName, columnComment string) string {
