@@ -34,6 +34,7 @@ func ResourceClusterInstance() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
 		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
 		DeleteWithoutTimeout: resourceClusterInstanceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -45,8 +46,6 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			// apply_immediately is used to determine when the update modifications take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -64,8 +63,8 @@ func ResourceClusterInstance() *schema.Resource {
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"ca_cert_identifier": {
 				Type:     schema.TypeString,
@@ -80,7 +79,6 @@ func ResourceClusterInstance() *schema.Resource {
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -189,62 +187,53 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
+	var identifier string
+	if v, ok := d.GetOk("identifier"); ok {
+		identifier = v.(string)
+	} else if v, ok := d.GetOk("identifier_prefix"); ok {
+		identifier = id.PrefixedUniqueId(v.(string))
+	} else {
+		identifier = id.PrefixedUniqueId("tf-")
+	}
 	input := &docdb.CreateDBInstanceInput{
-		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+		DBInstanceIdentifier:    aws.String(identifier),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if attr, ok := d.GetOk("availability_zone"); ok {
-		input.AvailabilityZone = aws.String(attr.(string))
+	if v, ok := d.GetOk("availability_zone"); ok {
+		input.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if attr, ok := d.GetOk("enable_performance_insights"); ok {
-		input.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	if v, ok := d.GetOk("copy_tags_to_snapshot"); ok {
+		input.CopyTagsToSnapshot = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("identifier"); ok {
-		input.DBInstanceIdentifier = aws.String(v.(string))
-	} else {
-		if v, ok := d.GetOk("identifier_prefix"); ok {
-			input.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId(v.(string)))
-		} else {
-			input.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId("tf-"))
-		}
+	if v, ok := d.GetOk("enable_performance_insights"); ok {
+		input.EnablePerformanceInsights = aws.Bool(v.(bool))
 	}
 
-	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-		input.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+	if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 	}
 
-	if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
-		input.PreferredMaintenanceWindow = aws.String(attr.(string))
+	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	var resp *docdb.CreateDBInstanceOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		resp, err = conn.CreateDBInstanceWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDBInstanceWithContext(ctx, input)
-	}
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateDBInstanceWithContext(ctx, input)
+	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Instance (%s): %s", identifier, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
+	d.SetId(identifier)
 
 	// reuse db_instance refresh func
 	stateConf := &retry.StateChangeConf{
