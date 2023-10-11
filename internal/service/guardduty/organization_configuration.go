@@ -306,7 +306,7 @@ func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface
 	}
 }
 
-func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings {
+func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -326,7 +326,7 @@ func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{})
 	}
 }
 
-func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes {
+func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -429,7 +429,7 @@ func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *guarddut
 	return tfMap
 }
 
-func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -443,7 +443,7 @@ func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.O
 	return tfMap
 }
 
-func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} {
+func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
