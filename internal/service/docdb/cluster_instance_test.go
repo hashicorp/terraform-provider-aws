@@ -63,14 +63,6 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "writer", "true"),
 				),
 			},
-			// TODO separate test
-			// {
-			// 	Config: testAccClusterInstanceConfig_modified(rName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-			// 		resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-			// 	),
-			// },
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -79,6 +71,14 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					"apply_immediately",
 					"identifier_prefix",
 				},
+			},
+			{
+				Config: testAccClusterInstanceConfig_modified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
+				),
 			},
 		},
 	})
@@ -394,26 +394,13 @@ resource "aws_docdb_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_modified(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_docdb_cluster" "default" {
-  cluster_identifier  = %[1]q
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-}
-
-data "aws_docdb_orderable_db_instance" "test" {
-  engine                     = "docdb"
-  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
-}
-
-resource "aws_docdb_cluster_instance" "cluster_instances" {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_docdb_cluster_instance" "test" {
   identifier                 = %[1]q
-  cluster_identifier         = aws_docdb_cluster.default.id
+  cluster_identifier         = aws_docdb_cluster.test.id
   instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
   auto_minor_version_upgrade = false
-  promotion_tier             = "3"
+  promotion_tier             = 3
 }
 `, rName))
 }
