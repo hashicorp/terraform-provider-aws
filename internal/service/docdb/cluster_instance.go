@@ -307,84 +307,54 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
-	requestUpdate := false
 
-	req := &docdb.ModifyDBInstanceInput{
-		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-		DBInstanceIdentifier: aws.String(d.Id()),
-	}
-
-	if d.HasChange("copy_tags_to_snapshot") {
-		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("instance_class") {
-		req.DBInstanceClass = aws.String(d.Get("instance_class").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("preferred_maintenance_window") {
-		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("auto_minor_version_upgrade") {
-		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("promotion_tier") {
-		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("ca_cert_identifier") {
-		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("enable_performance_insights") {
-		req.EnablePerformanceInsights = aws.Bool(d.Get("enable_performance_insights").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("performance_insights_kms_key_id") {
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
-		requestUpdate = true
-	}
-
-	if requestUpdate {
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			_, err := conn.ModifyDBInstanceWithContext(ctx, req)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &docdb.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			DBInstanceIdentifier: aws.String(d.Id()),
 		}
+
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		}
+
+		if d.HasChange("ca_cert_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		}
+
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
+		if d.HasChange("enable_performance_insights") {
+			input.EnablePerformanceInsights = aws.Bool(d.Get("enable_performance_insights").(bool))
+		}
+
+		if d.HasChange("instance_class") {
+			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+		}
+
+		if d.HasChange("performance_insights_kms_key_id") {
+			input.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		}
+
+		if d.HasChange("preferred_maintenance_window") {
+			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		}
+
+		if d.HasChange("promotion_tier") {
+			input.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.ModifyDBInstanceWithContext(ctx, input)
+		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying DB Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		// reuse db_instance refresh func
-		stateConf := &retry.StateChangeConf{
-			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
-			Target:     []string{"available"},
-			Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForStateContext(ctx)
-		if err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -410,72 +380,6 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
-}
-
-func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := resourceInstanceRetrieve(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return v, aws.StringValue(v.DBInstanceStatus), nil
-	}
-}
-
-// resourceInstanceRetrieve fetches DBInstance information from the AWS
-// API. It returns an error if there is a communication problem or unexpected
-// error with AWS. When the DBInstance is not found, it returns no error and a
-// nil pointer.
-func resourceInstanceRetrieve(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBInstance, error) {
-	input := docdb.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
-	}
-	out, err := conn.DescribeDBInstancesWithContext(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	switch count := len(out.DBInstances); count {
-	case 0:
-		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.DBInstances[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-}
-
-var resourceClusterInstanceCreateUpdatePendingStates = []string{
-	"backing-up",
-	"configuring-enhanced-monitoring",
-	"configuring-iam-database-auth",
-	"configuring-log-exports",
-	"creating",
-	"maintenance",
-	"modifying",
-	"rebooting",
-	"renaming",
-	"resetting-master-credentials",
-	"starting",
-	"storage-optimization",
-	"upgrading",
-}
-
-var resourceClusterInstanceDeletePendingStates = []string{
-	"configuring-log-exports",
-	"modifying",
-	"deleting",
 }
 
 func FindDBInstanceByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBInstance, error) {
@@ -554,14 +458,6 @@ func statusDBInstance(ctx context.Context, conn *docdb.DocDB, id string) retry.S
 		return output, aws.StringValue(output.DBInstanceStatus), nil
 	}
 }
-
-const (
-	DBInstanceDeleteTimeout = 5 * time.Minute
-
-	DBInstanceStatusAvailable = "available"
-	DBInstanceStatusDeleted   = "deleted"
-	DBInstanceStatusDeleting  = "deleting"
-)
 
 func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
