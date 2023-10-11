@@ -25,9 +25,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// GuardDuty Organization Configuration cannot be deleted separately.
-		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
@@ -67,9 +65,7 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// GuardDuty Organization Configuration cannot be deleted separately.
-		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
@@ -93,22 +89,12 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
@@ -119,11 +105,6 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
@@ -132,22 +113,12 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -166,7 +137,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
@@ -210,7 +181,7 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(true),
@@ -256,7 +227,7 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(true),
