@@ -12,10 +12,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_guardduty_organization_configuration")
@@ -194,13 +196,9 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	input := &guardduty.DescribeOrganizationConfigurationInput{
-		DetectorId: aws.String(d.Id()),
-	}
+	output, err := FindOrganizationConfigurationByID(ctx, conn, d.Id())
 
-	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -216,7 +214,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
-
 	if output.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
@@ -224,7 +221,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	} else {
 		d.Set("datasources", nil)
 	}
-
 	d.Set("detector_id", d.Id())
 
 	return diags
@@ -455,4 +451,29 @@ func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVol
 	}
 
 	return tfMap
+}
+
+func FindOrganizationConfigurationByID(ctx context.Context, conn *guardduty.GuardDuty, id string) (*guardduty.DescribeOrganizationConfigurationOutput, error) {
+	input := &guardduty.DescribeOrganizationConfigurationInput{
+		DetectorId: aws.String(id),
+	}
+
+	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
