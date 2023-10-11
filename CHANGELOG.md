@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * data-source/aws_msk_cluster: Add `cluster_uuid` attribute ([#33805](https://github.com/hashicorp/terraform-provider-aws/issues/33805))
 * resource/aws_dms_endpoint: Add `s3_settings.glue_catalog_generation` attribute ([#33778](https://github.com/hashicorp/terraform-provider-aws/issues/33778))
 * resource/aws_dms_s3_endpoint: Add `glue_catalog_generation` attribute ([#33778](https://github.com/hashicorp/terraform-provider-aws/issues/33778))
+* resource/aws_docdb_cluster: Add `allow_major_version_upgrade` argument ([#33790](https://github.com/hashicorp/terraform-provider-aws/issues/33790))
 * resource/aws_dynamodb_table: Add `import_table` configuration block ([#33802](https://github.com/hashicorp/terraform-provider-aws/issues/33802))
 * resource/aws_msk_cluster: Add `cluster_uuid` attribute ([#33805](https://github.com/hashicorp/terraform-provider-aws/issues/33805))
 * resource/aws_msk_serverless_cluster: Add `cluster_uuid` attribute ([#33805](https://github.com/hashicorp/terraform-provider-aws/issues/33805))
@@ -21,6 +22,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Respect valid values for the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable when configuring the S3 API client ([#33874](https://github.com/hashicorp/terraform-provider-aws/issues/33874))
 * resource/aws_appflow_connector_profile: Fix various crashes ([#33856](https://github.com/hashicorp/terraform-provider-aws/issues/33856))
 
 ## 5.20.1 (October 10, 2023)
