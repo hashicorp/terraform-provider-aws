@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,8 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -29,11 +31,11 @@ func init() {
 
 func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn()
+	conn := client.AutoScalingConn(ctx)
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -63,7 +65,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Groups (%s): %w", region, err)
@@ -74,11 +76,11 @@ func sweepGroups(region string) error {
 
 func sweepLaunchConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn()
+	conn := client.AutoScalingConn(ctx)
 	input := &autoscaling.DescribeLaunchConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -107,7 +109,7 @@ func sweepLaunchConfigurations(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Launch Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Launch Configurations (%s): %w", region, err)

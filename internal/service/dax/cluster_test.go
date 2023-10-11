@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -33,11 +36,11 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexache.MustCompile("cache/.+")),
 					resource.TestCheckResourceAttr(
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
-						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
+						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t2.small"),
@@ -46,19 +49,19 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "test cluster"),
 					resource.TestMatchResourceAttr(
-						resourceName, "parameter_group_name", regexp.MustCompile(`^default.dax`)),
+						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
-						resourceName, "maintenance_window", regexp.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
+						resourceName, "maintenance_window", regexache.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "subnet_group_name", "default"),
 					resource.TestMatchResourceAttr(
-						resourceName, "nodes.0.id", regexp.MustCompile(`^tf-[\w-]+$`)),
+						resourceName, "nodes.0.id", regexache.MustCompile(`^tf-[\w-]+$`)),
 					resource.TestMatchResourceAttr(
-						resourceName, "configuration_endpoint", regexp.MustCompile(`:\d+$`)),
+						resourceName, "configuration_endpoint", regexache.MustCompile(`:\d+$`)),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "cluster_address"),
 					resource.TestMatchResourceAttr(
-						resourceName, "port", regexp.MustCompile(`^\d+$`)),
+						resourceName, "port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -261,7 +264,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_cluster" {
@@ -296,7 +299,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) re
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 		resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -315,7 +318,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) re
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.DescribeClustersInput{}
 

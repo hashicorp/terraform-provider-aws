@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -37,7 +40,7 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	perm, err := migrateExpandIPPerm(is.Attributes)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error making new IP Permission in Security Group migration")
+		return nil, fmt.Errorf("making new IP Permission in Security Group migration")
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
@@ -52,12 +55,12 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 	var perm ec2.IpPermission
 	tp, err := strconv.Atoi(attrs["to_port"])
 	if err != nil {
-		return nil, fmt.Errorf("Error converting to_port in Security Group migration")
+		return nil, fmt.Errorf("converting to_port in Security Group migration")
 	}
 
 	fp, err := strconv.Atoi(attrs["from_port"])
 	if err != nil {
-		return nil, fmt.Errorf("Error converting from_port in Security Group migration")
+		return nil, fmt.Errorf("converting from_port in Security Group migration")
 	}
 
 	perm.ToPort = aws.Int64(int64(tp))

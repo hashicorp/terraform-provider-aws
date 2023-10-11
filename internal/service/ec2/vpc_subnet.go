@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -154,7 +157,7 @@ func ResourceSubnet() *schema.Resource {
 
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSubnet),
@@ -223,9 +226,9 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, SubnetPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -278,14 +281,14 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	SetTagsOut(ctx, subnet.Tags)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }
 
 func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// You cannot modify multiple subnet attributes in the same request,
 	// except CustomerOwnedIpv4Pool and MapCustomerOwnedIpOnLaunch.
@@ -293,6 +296,20 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChanges("customer_owned_ipv4_pool", "map_customer_owned_ip_on_launch") {
 		if err := modifySubnetOutpostRackAttributes(ctx, conn, d.Id(), d.Get("customer_owned_ipv4_pool").(string), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
+	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
+		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
+	if d.HasChange("ipv6_cidr_block") {
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -333,19 +350,6 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
-	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && d.Get("assign_ipv6_address_on_creation").(bool) {
 		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), true); err != nil {
@@ -358,7 +362,7 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 

@@ -25,9 +25,9 @@ The following arguments are required:
 
 * `user` - (Required) Name of the IAM user associated with the access keys.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `access_keys` - List of the IAM access keys associated with the specified user. See below.
 

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -152,14 +155,14 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
 							"only alphanumeric characters and hyphens allowed in %q", k))
 					}
-					if regexp.MustCompile(`--`).MatchString(value) {
+					if regexache.MustCompile(`--`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
 					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
+					if regexache.MustCompile(`-$`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
 					}
 					return
@@ -273,6 +276,11 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -296,7 +304,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
@@ -322,7 +330,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
@@ -332,7 +340,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputM := &neptune.ModifyDBClusterInput{
@@ -388,6 +396,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		v := v.(string)
 
 		inputC.KmsKeyId = aws.String(v)
+		inputR.KmsKeyId = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
@@ -481,7 +490,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	dbc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -552,9 +561,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
+	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
@@ -714,7 +723,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := neptune.DeleteDBClusterInput{

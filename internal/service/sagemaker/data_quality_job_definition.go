@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -65,7 +68,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -74,7 +77,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -100,7 +103,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -119,7 +122,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -148,7 +151,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -199,7 +202,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 										),
 									},
 									"s3_data_distribution_type": {
@@ -239,7 +242,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 										),
 									},
 									"s3_data_distribution_type": {
@@ -296,7 +299,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													ForceNew: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 1024),
-														validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+														validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 													),
 												},
 												"s3_upload_mode": {
@@ -311,7 +314,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													Required: true,
 													ForceNew: true,
 													ValidateFunc: validation.All(
-														validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+														validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 														validation.StringLenBetween(1, 512),
 													),
 												},
@@ -454,7 +457,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 
 func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -475,7 +478,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		JobDefinitionName:           aws.String(name),
 		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                     aws.String(roleArn),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
@@ -503,7 +506,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	jobDefinition, err := FindDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
@@ -562,7 +565,7 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
 	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{

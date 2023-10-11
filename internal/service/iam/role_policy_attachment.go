@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -45,7 +48,7 @@ func ResourceRolePolicyAttachment() *schema.Resource {
 
 func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
@@ -63,7 +66,7 @@ func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -121,7 +124,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 

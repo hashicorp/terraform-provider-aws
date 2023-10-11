@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -143,6 +146,14 @@ func TestRuleParseResourceID(t *testing.T) {
 			InputID: tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
 			//lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -311,6 +322,15 @@ func TestTargetParseImportID(t *testing.T) {
 			TestName:      "ARN event bus",
 			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget", //lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",                     //lintignore:AWSAT003,AWSAT005
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule/TestTarget",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
 			ExpectedPart1: "TestRule",
 			ExpectedPart2: "TestTarget",
 		},

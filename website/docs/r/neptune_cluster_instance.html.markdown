@@ -39,7 +39,7 @@ resource "aws_neptune_cluster_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any instance modifications
   are applied immediately, or during the next maintenance window. Default is`false`.
@@ -61,9 +61,9 @@ The following arguments are supported:
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default is `false`.
 * `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The hostname of the instance. See also `endpoint` and `port`.
 * `arn` - Amazon Resource Name (ARN) of neptune instance
@@ -87,8 +87,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_cluster_instance` can be imported by using the instance identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_cluster_instance` using the instance identifier. For example:
 
+```terraform
+import {
+  to = aws_neptune_cluster_instance.example
+  id = "my-instance"
+}
 ```
-$ terraform import aws_neptune_cluster_instance.example my-instance
+
+Using `terraform import`, import `aws_neptune_cluster_instance` using the instance identifier. For example:
+
+```console
+% terraform import aws_neptune_cluster_instance.example my-instance
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
@@ -87,7 +90,7 @@ func ResourceGrantAccepter() *schema.Resource {
 }
 
 func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.AcceptGrantInput{
 		GrantArn: aws.String(d.Get("grant_arn").(string)),
@@ -105,7 +108,7 @@ func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantAccepterByGrantARN(ctx, conn, d.Id())
 
@@ -133,7 +136,7 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGrantAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.RejectGrantInput{
 		GrantArn: aws.String(d.Id()),

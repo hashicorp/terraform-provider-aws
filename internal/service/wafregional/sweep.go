@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -13,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -54,11 +56,11 @@ func init() {
 
 func sweepRateBasedRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn()
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListRateBasedRulesInput{}
 
@@ -148,11 +150,11 @@ func sweepRateBasedRules(region string) error {
 
 func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn()
+	conn := client.WAFRegionalConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -195,11 +197,11 @@ func sweepRegexMatchSet(region string) error {
 
 func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn()
+	conn := client.WAFRegionalConn(ctx)
 
 	req := &waf.ListRuleGroupsInput{}
 	resp, err := conn.ListRuleGroupsWithContext(ctx, req)
@@ -235,11 +237,11 @@ func sweepRuleGroups(region string) error {
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn()
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListRulesInput{}
 
@@ -328,11 +330,11 @@ func sweepRules(region string) error {
 
 func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn()
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListWebACLsInput{}
 

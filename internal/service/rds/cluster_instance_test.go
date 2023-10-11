@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -39,13 +42,14 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "custom_iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
@@ -179,7 +183,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -669,7 +673,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora"
+	engine := "aurora-mysql"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, engine) },
@@ -679,44 +683,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL2(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora-mysql"
-	engineVersion := "5.7.mysql_aurora.2.04.2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsPreCheck(ctx, t, engine, engineVersion) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL2(rName, engine, engineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
@@ -782,7 +748,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora"
+	engine := "aurora-mysql"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, engine) },
@@ -820,7 +786,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora"
+	engine := "aurora-mysql"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, engine) },
@@ -846,89 +812,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
-			},
-		},
-	})
-}
-
-func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL2(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	kmsKeyResourceName := "aws_kms_key.test"
-	resourceName := "aws_rds_cluster_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora-mysql"
-	engineVersion := "5.7.mysql_aurora.2.04.2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsPreCheck(ctx, t, engine, engineVersion) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL2(rName, engine, engineVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKeyToCustomKey(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	engine := "aurora-mysql"
-	engineVersion := "5.7.mysql_aurora.2.04.2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsPreCheck(ctx, t, engine, engineVersion) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL2(rName, engine, engineVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-			{
-				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL2(rName, engine, engineVersion),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -945,7 +829,10 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "aurora") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "aurora-mysql")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -1061,14 +948,14 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
 }
 
 func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *testing.T, engine string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
@@ -1088,7 +975,7 @@ func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *te
 }
 
 func testAccPerformanceInsightsPreCheck(ctx context.Context, t *testing.T, engine string, engineVersion string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),
@@ -1134,7 +1021,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 			return fmt.Errorf("No RDS Cluster Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1149,7 +1036,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 
 func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_instance" {
@@ -1173,33 +1060,62 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccClusterInstanceConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
+func testAccClusterInstanceConfig_orderableEngineBase(engine string, performanceInsights bool) string {
+	if performanceInsights {
+		return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                        = aws_rds_cluster.test.engine
+  engine_version                = aws_rds_cluster.test.engine_version
+  supports_performance_insights = true
+  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+}
+`, engine)
+	}
+
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
+}
+`, engine)
+}
+
+func testAccClusterInstanceConfig_base(rName, engine string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccClusterInstanceConfig_orderableEngineBase(engine, false),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = %[1]q
+  cluster_identifier = %[2]q
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
     data.aws_availability_zones.available.names[2]
   ]
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
-`, rName))
+`, engine, rName))
 }
 
 func testAccClusterInstanceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier              = %[1]q
+  engine                  = data.aws_rds_engine_version.default.engine
   cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name = aws_db_parameter_group.test.name
@@ -1208,7 +1124,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1220,9 +1136,10 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_modified(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier                 = %[1]q
+  engine                     = data.aws_rds_engine_version.default.engine
   cluster_identifier         = aws_rds_cluster.test.id
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name    = aws_db_parameter_group.test.name
@@ -1232,7 +1149,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1244,9 +1161,10 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier              = %[1]q
+  engine                  = data.aws_rds_engine_version.default.engine
   cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name = aws_db_parameter_group.test.name
@@ -1259,7 +1177,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1271,9 +1189,10 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier              = %[1]q
+  engine                  = data.aws_rds_engine_version.default.engine
   cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name = aws_db_parameter_group.test.name
@@ -1287,7 +1206,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1299,9 +1218,10 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_az(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier              = %[1]q
+  engine                  = data.aws_rds_engine_version.default.engine
   cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name = aws_db_parameter_group.test.name
@@ -1311,7 +1231,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1323,23 +1243,23 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_identifierPrefix(rName, identifierPrefix string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
-  master_username      = "root"
-  master_password      = "password"
   db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  master_password      = "password"
+  master_username      = "root"
   skip_final_snapshot  = true
 }
 
 resource "aws_rds_cluster_instance" "test" {
   identifier_prefix  = %[2]q
+  engine             = data.aws_rds_engine_version.default.engine
   cluster_identifier = aws_rds_cluster.test.id
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
@@ -1352,23 +1272,23 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccClusterInstanceConfig_identifierGenerated(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   master_username      = "root"
   master_password      = "password"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
 }
 
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_engine_version.default.engine
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
@@ -1380,7 +1300,13 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccClusterInstanceConfig_kmsKey(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1393,7 +1319,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -1411,6 +1337,8 @@ resource "aws_rds_cluster" "test" {
     data.aws_availability_zones.available.names[2]
   ]
   database_name       = "mydb"
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_username     = "foo"
   master_password     = "mustbeeightcharacters"
   storage_encrypted   = true
@@ -1418,22 +1346,17 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
 resource "aws_rds_cluster_instance" "test" {
   identifier              = %[1]q
   cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_parameter_group_name = aws_db_parameter_group.test.name
+  engine                  = data.aws_rds_engine_version.default.engine
 }
 
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora5.6"
+  family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
     name         = "back_log"
@@ -1445,9 +1368,10 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately   = true
+  engine              = data.aws_rds_engine_version.default.engine
   cluster_identifier  = aws_rds_cluster.test.id
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
@@ -1457,9 +1381,10 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_copyTagsToSnapshot(rName string, copy bool) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   identifier            = %[1]q
+  engine                = data.aws_rds_engine_version.default.engine
   cluster_identifier    = aws_rds_cluster.test.id
   instance_class        = data.aws_rds_orderable_db_instance.test.instance_class
   promotion_tier        = "3"
@@ -1469,7 +1394,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_caCertificateID(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
 }
@@ -1477,6 +1402,7 @@ data "aws_rds_certificate" "latest" {
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately  = true
   cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_engine_version.default.engine
   identifier         = %[1]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   ca_cert_identifier = data.aws_rds_certificate.latest.id
@@ -1485,7 +1411,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -1517,6 +1443,7 @@ resource "aws_rds_cluster_instance" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 
   cluster_identifier  = aws_rds_cluster.test.id
+  engine              = data.aws_rds_engine_version.default.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   monitoring_interval = %[2]d
@@ -1526,9 +1453,10 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_engine_version.default.engine
   identifier         = %[1]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
@@ -1536,7 +1464,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_monitoringRoleARN(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -1565,91 +1493,54 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  depends_on = [aws_iam_role_policy_attachment.test]
-
+  engine              = data.aws_rds_engine_version.default.engine
   cluster_identifier  = aws_rds_cluster.test.id
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   monitoring_interval = 5
   monitoring_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase(engine, true),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
-  engine              = %[2]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
 
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
-}
-
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier           = aws_rds_cluster.test.id
-  engine                       = aws_rds_cluster.test.engine
+  engine                       = data.aws_rds_engine_version.default.engine
   identifier                   = %[1]q
   instance_class               = data.aws_rds_orderable_db_instance.test.instance_class
   performance_insights_enabled = true
 }
-`, rName, engine)
-}
-
-func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL2(rName, engine, engineVersion string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "mydb"
-  engine              = %[2]q
-  engine_version      = %[3]q
-  master_password     = "mustbeeightcharacters"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier           = aws_rds_cluster.test.id
-  engine                       = aws_rds_cluster.test.engine
-  engine_version               = aws_rds_cluster.test.engine_version
-  identifier                   = %[1]q
-  instance_class               = data.aws_rds_orderable_db_instance.test.instance_class
-  performance_insights_enabled = true
-}
-`, rName, engine, engineVersion)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraPostgresql(rName, engine string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase(engine, true),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
-  engine              = %[2]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1659,11 +1550,13 @@ resource "aws_rds_cluster_instance" "test" {
   instance_class               = data.aws_rds_orderable_db_instance.test.instance_class
   performance_insights_enabled = true
 }
-`, rName, engine)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName, engine string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase(engine, true),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -1671,17 +1564,11 @@ resource "aws_kms_key" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
-  engine              = %[2]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1692,46 +1579,13 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_enabled    = true
   performance_insights_kms_key_id = aws_kms_key.test.arn
 }
-`, rName, engine)
-}
-
-func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL2(rName, engine, engineVersion string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "mydb"
-  engine              = %[2]q
-  engine_version      = %[3]q
-  master_password     = "mustbeeightcharacters"
-  master_username     = "foo"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier              = aws_rds_cluster.test.id
-  engine                          = aws_rds_cluster.test.engine
-  engine_version                  = aws_rds_cluster.test.engine_version
-  identifier                      = %[1]q
-  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  performance_insights_enabled    = true
-  performance_insights_kms_key_id = aws_kms_key.test.arn
-}
-`, rName, engine, engineVersion)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rName, engine string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase(engine, true),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -1739,17 +1593,11 @@ resource "aws_kms_key" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
-  engine              = %[2]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1760,25 +1608,21 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_enabled    = true
   performance_insights_kms_key_id = aws_kms_key.test.arn
 }
-`, rName, engine)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsRetentionPeriod(rName string, performanceInsightsRetentionPeriod int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", true),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
-  engine              = "aurora"
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1789,5 +1633,5 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_enabled          = true
   performance_insights_retention_period = %[2]d
 }
-`, rName, performanceInsightsRetentionPeriod)
+`, rName, performanceInsightsRetentionPeriod))
 }

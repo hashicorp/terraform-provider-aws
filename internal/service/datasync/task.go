@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -130,6 +133,12 @@ func ResourceTask() *schema.Resource {
 							Default:      datasync.MtimePreserve,
 							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
+						"object_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.ObjectTagsPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectTags_Values(), false),
+						},
 						"overwrite_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -198,7 +207,7 @@ func ResourceTask() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\ \_\*\?\,\|\^\-\/\#\s\(\)\+]*$`),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\s #()*+,/?^|-]*$`),
 									"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
 							),
 						},
@@ -221,13 +230,13 @@ func ResourceTask() *schema.Resource {
 
 func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -267,7 +276,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindTaskByARN(ctx, conn, d.Id())
 
@@ -304,7 +313,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -335,7 +344,9 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
-		if _, err := conn.UpdateTaskWithContext(ctx, input); err != nil {
+		_, err := conn.UpdateTaskWithContext(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s): %s", d.Id(), err)
 		}
 	}
@@ -345,14 +356,12 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteTaskInput{
+	log.Printf("[DEBUG] Deleting DataSync Task: %s", d.Id())
+	_, err := conn.DeleteTaskWithContext(ctx, &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Task: %s", input)
-	_, err := conn.DeleteTaskWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
@@ -363,6 +372,31 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func FindTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
+	input := &datasync.DescribeTaskInput{
+		TaskArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeTaskWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
@@ -413,6 +447,7 @@ func flattenOptions(options *datasync.Options) []interface{} {
 		"gid":                            aws.StringValue(options.Gid),
 		"log_level":                      aws.StringValue(options.LogLevel),
 		"mtime":                          aws.StringValue(options.Mtime),
+		"object_tags":                    aws.StringValue(options.ObjectTags),
 		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
 		"posix_permissions":              aws.StringValue(options.PosixPermissions),
 		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
@@ -439,6 +474,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 		Gid:                  aws.String(m["gid"].(string)),
 		LogLevel:             aws.String(m["log_level"].(string)),
 		Mtime:                aws.String(m["mtime"].(string)),
+		ObjectTags:           aws.String(m["object_tags"].(string)),
 		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
 		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
 		PreserveDevices:      aws.String(m["preserve_devices"].(string)),

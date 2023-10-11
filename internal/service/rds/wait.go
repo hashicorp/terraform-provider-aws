@@ -1,17 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-)
-
-const (
-	dbClusterRoleAssociationCreatedTimeout = 10 * time.Minute
-	dbClusterRoleAssociationDeletedTimeout = 10 * time.Minute
 )
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
@@ -111,12 +108,14 @@ func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, t
 	return nil, err
 }
 
-func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
+func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterRoleStatusPending},
-		Target:  []string{ClusterRoleStatusActive},
-		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
-		Timeout: dbClusterRoleAssociationCreatedTimeout,
+		Pending:    []string{ClusterRoleStatusPending},
+		Target:     []string{ClusterRoleStatusActive},
+		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -128,12 +127,14 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbC
 	return nil, err
 }
 
-func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
+func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
-		Target:  []string{},
-		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
-		Timeout: dbClusterRoleAssociationDeletedTimeout,
+		Pending:    []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
+		Target:     []string{},
+		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -215,6 +216,7 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusConfiguringLogExports,
+			InstanceStatusDeletePreCheck,
 			InstanceStatusDeleting,
 			InstanceStatusModifying,
 		},
@@ -223,42 +225,6 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{InstanceAutomatedBackupStatusPending},
-		Target:  []string{InstanceAutomatedBackupStatusReplicating},
-		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
-// The connection must be valid for the database instance's Region.
-func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{strconv.FormatBool(true)},
-		Target:  []string{strconv.FormatBool(false)},
-		Refresh: statusDBInstanceHasAutomatedBackup(ctx, conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
-		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

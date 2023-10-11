@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -23,11 +26,15 @@ func init() {
 
 func sweepReportDefinitions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	if region != names.USEast1RegionID {
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for region: %s", region)
+		return nil
+	}
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CURConn()
+	conn := client.CURConn(ctx)
 	input := &cur.DescribeReportDefinitionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -48,14 +55,14 @@ func sweepReportDefinitions(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Cost And Usage Report Definition sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Cost And Usage Report Definitions (%s): %w", region, err)

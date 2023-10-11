@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,7 +45,7 @@ func ResourceActionTarget() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				),
 			},
 			"name": {
@@ -58,7 +61,7 @@ func ResourceActionTarget() *schema.Resource {
 
 func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)
 	identifier := d.Get("identifier").(string)
@@ -92,7 +95,7 @@ func resourceActionTargetParseIdentifier(identifier string) (string, error) {
 
 func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	log.Printf("[DEBUG] Reading Security Hub Action Targets to find %s", d.Id())
 
@@ -124,7 +127,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
@@ -161,7 +164,7 @@ func ActionTargetCheckExists(ctx context.Context, conn *securityhub.SecurityHub,
 
 func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	log.Printf("[DEBUG] Deleting Security Hub Action Target %s", d.Id())
 
 	_, err := conn.DeleteActionTargetWithContext(ctx, &securityhub.DeleteActionTargetInput{

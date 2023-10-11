@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -48,7 +51,7 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 256),
-											validation.StringMatch(regexp.MustCompile(`^[a-z0-9*](?:[._\-/a-z0-9*]?[a-z0-9*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
 										),
 									},
 									"filter_type": {
@@ -78,7 +81,7 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 
 func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: aws.String(d.Get("scan_type").(string)),
@@ -98,7 +101,7 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 
 func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	out, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
@@ -115,7 +118,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 
 func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
 	_, err := conn.PutRegistryScanningConfigurationWithContext(ctx, &ecr.PutRegistryScanningConfigurationInput{
@@ -133,10 +136,6 @@ func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.
 // Helper functions
 
 func expandScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
 	rules := make([]*ecr.RegistryScanningRule, 0)
 
 	for _, rule := range l {

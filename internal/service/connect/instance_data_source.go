@@ -1,9 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -88,41 +89,30 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	var matchedInstance *connect.Instance
 
 	if v, ok := d.GetOk("instance_id"); ok {
-		instanceId := v.(string)
-
-		input := connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId),
-		}
-
-		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
-
-		output, err := conn.DescribeInstanceWithContext(ctx, &input)
+		instanceID := v.(string)
+		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))
+			return diag.Errorf("reading Connect Instance (%s): %s", instanceID, err)
 		}
 
-		if output == nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): empty output", instanceId))
-		}
-
-		matchedInstance = output.Instance
+		matchedInstance = instance
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
 		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
 		}
 
 		if instanceSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias))
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
 		}
 
 		matchedInstance = &connect.Instance{
@@ -139,13 +129,14 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if matchedInstance == nil {
-		return diag.FromErr(fmt.Errorf("no Connect Instance found for query, try adjusting your search criteria"))
+		return diag.Errorf("no Connect Instance found for query, try adjusting your search criteria")
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
-
 	d.Set("arn", matchedInstance.Arn)
-	d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+	if matchedInstance.CreatedTime != nil {
+		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
@@ -156,7 +147,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
+			return diag.Errorf("reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
 		}
 		d.Set(InstanceAttributeMapping()[att], value)
 	}

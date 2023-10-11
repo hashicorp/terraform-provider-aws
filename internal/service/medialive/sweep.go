@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,10 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -42,22 +44,21 @@ func init() {
 
 func sweepChannels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListChannelsInput{}
-	var errs *multierror.Error
 
 	pages := medialive.NewListChannelsPaginator(conn, in)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Println("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, err)
 			return nil
 		}
@@ -78,36 +79,30 @@ func sweepChannels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Channels for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping MediaLive Channels for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepInputs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputsInput{}
-	var errs *multierror.Error
 
 	pages := medialive.NewListInputsPaginator(conn, in)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Println("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
 			return nil
 		}
@@ -128,36 +123,30 @@ func sweepInputs(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Inputs for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping MediaLive Inputs for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepInputSecurityGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputSecurityGroupsInput{}
-	var errs *multierror.Error
 
 	pages := medialive.NewListInputSecurityGroupsPaginator(conn, in)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Println("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
 			return nil
 		}
@@ -178,36 +167,30 @@ func sweepInputSecurityGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Input Security Groups for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping MediaLive Input Security Groups for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepMultiplexes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListMultiplexesInput{}
-	var errs *multierror.Error
 
 	pages := medialive.NewListMultiplexesPaginator(conn, in)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Println("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, err)
 			return nil
 		}
@@ -228,14 +211,9 @@ func sweepMultiplexes(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Multiplexes for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping MediaLive Multiplexes for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -33,11 +36,11 @@ func init() {
 
 func sweepQueues(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SQSConn()
+	conn := client.SQSConn(ctx)
 
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error
@@ -51,7 +54,7 @@ func sweepQueues(region string) error {
 			r := ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
-			err = sweep.DeleteResource(ctx, r, d, client)
+			err = sdk.DeleteResource(ctx, r, d, client)
 
 			if err != nil {
 				log.Printf("[ERROR] %s", err)

@@ -40,7 +40,7 @@ resource "aws_docdb_cluster" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications
      are applied immediately, or during the next maintenance window. Default is`false`.
@@ -82,9 +82,9 @@ The following arguments are supported:
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
 * `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster instance
 * `db_subnet_group_name` - The DB subnet group to associate with this DB instance.
@@ -116,8 +116,17 @@ the time required to take snapshots
 
 ## Import
 
-DocumentDB Cluster Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocumentDB Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import DocumentDB Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```

@@ -137,7 +137,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `description` - (Optional) Description of the rule
@@ -182,9 +182,9 @@ Provides the rule owner (AWS or customer), the rule identifier, and the notifica
 * `policy_runtime` - (Required) The runtime system for your Config Custom Policy rule. Guard is a policy-as-code language that allows you to write policies that are enforced by Config Custom Policy rules. For more information about Guard, see the [Guard GitHub Repository](https://github.com/aws-cloudformation/cloudformation-guard).
 * `policy_text` - (Required) The policy definition containing the logic for your Config Custom Policy rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the config rule
 * `rule_id` - The ID of the config rule
@@ -192,8 +192,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Config Rule can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Rule using the name. For example:
 
+```terraform
+import {
+  to = aws_config_config_rule.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_config_rule.foo example
+
+Using `terraform import`, import Config Rule using the name. For example:
+
+```console
+% terraform import aws_config_config_rule.foo example
 ```

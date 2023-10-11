@@ -26,12 +26,12 @@ resource "aws_cognito_user_pool" "example" {
 }
 
 resource "aws_cognito_user" "example" {
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.example.id
   username     = "example"
 }
 
 resource "aws_cognito_user_group" "example" {
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.example.id
   name         = "example"
 }
 
@@ -50,6 +50,6 @@ The following arguments are required:
 * `group_name` - (Required) The name of the group to which the user is to be added.
 * `username` - (Required) The username of the user to be added to the group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

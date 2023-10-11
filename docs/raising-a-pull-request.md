@@ -15,12 +15,12 @@
 
 1. Make the changes you would like to include in the provider, add new tests as required, and make sure that all relevant existing tests are passing.
 
-1. Create a changelog entry following the process outlined [here](changelog-process.md)
-
 1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible)   the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
+
+1. Create a changelog entry following the process outlined [here](changelog-process.md)
 
 1. Once you believe your pull request is ready to be reviewed, ensure the
    pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types_test
 
 import (
 	"context"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -28,7 +31,7 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `\w+`),
-			expected: fwtypes.RegexpValue(regexp.MustCompile(`\w+`)),
+			expected: fwtypes.RegexpValue(regexache.MustCompile(`\w+`)),
 		},
 		"invalid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `(`),
@@ -110,7 +113,7 @@ func TestRegexpToStringValue(t *testing.T) {
 		expected types.String
 	}{
 		"value": {
-			regexp:   fwtypes.RegexpValue(regexp.MustCompile(`\w+`)),
+			regexp:   fwtypes.RegexpValue(regexache.MustCompile(`\w+`)),
 			expected: types.StringValue(`\w+`),
 		},
 		"null": {

@@ -30,8 +30,8 @@ data "aws_networkmanager_links" "example" {
 * `tags` - (Optional) Restricts the list to the links with these tags.
 * `type` - (Optional) Link type to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - IDs of the links.

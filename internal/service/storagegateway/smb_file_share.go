@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -158,7 +161,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Optional: true,
 				Default:  "{}",
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
 					validation.StringLenBetween(2, 100),
 				),
 			},
@@ -207,7 +210,7 @@ func ResourceSMBFileShare() *schema.Resource {
 
 func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
@@ -220,7 +223,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                   aws.String(d.Get("role_arn").(string)),
 		SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
@@ -301,7 +304,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	fileshare, err := FindSMBFileShareByARN(ctx, conn, d.Id())
 
@@ -351,14 +354,14 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	SetTagsOut(ctx, fileshare.Tags)
+	setTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }
 
 func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -402,6 +405,8 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		// This value can only be set when KMSEncrypted is true.
 		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
 			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
+		} else if d.Get("kms_encrypted").(bool) && d.Get("kms_key_arn").(string) != "" {
+			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
 		}
 
 		if d.HasChange("notification_policy") {
@@ -437,7 +442,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
 	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{

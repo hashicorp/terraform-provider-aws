@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -170,7 +173,7 @@ const (
 )
 
 func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	d.SetId(d.Get("arn").(string))
 
@@ -184,7 +187,7 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, client, d.Id())
+	tags, err := listTags(ctx, client, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}

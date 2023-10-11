@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -24,7 +27,7 @@ func (e *EmptyResultError) Error() string {
 }
 
 func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*EmptyResultError)
 	return ok
 }
 
@@ -61,7 +64,7 @@ func (e *TooManyResultsError) Error() string {
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
-	_, ok := err.(*TooManyResultsError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*TooManyResultsError)
 	return ok
 }
 
@@ -92,7 +95,7 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
 
-func AssertSingleResult[T any](a []*T) (*T, error) {
+func AssertSinglePtrResult[T any](a []*T) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
@@ -101,4 +104,13 @@ func AssertSingleResult[T any](a []*T) (*T, error) {
 		return nil, NewEmptyResultError(nil)
 	}
 	return a[0], nil
+}
+
+func AssertSingleValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+	return &a[0], nil
 }

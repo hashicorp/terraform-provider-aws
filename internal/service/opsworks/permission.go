@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
@@ -63,7 +66,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	iamUserARN := d.Get("user_arn").(string)
 	stackID := d.Get("stack_id").(string)
@@ -100,7 +103,7 @@ func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	permission, err := FindPermissionByTwoPartKey(ctx, conn, d.Get("user_arn").(string), d.Get("stack_id").(string))
 

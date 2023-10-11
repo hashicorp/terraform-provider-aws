@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -146,6 +151,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"db_system_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -173,11 +184,13 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ClusterEngineAurora,
-				ValidateFunc: validClusterEngine(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringInSlice(ClusterEngine_Values(), false),
+				),
 			},
 			"engine_mode": {
 				Type:         schema.TypeString,
@@ -200,14 +213,14 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
 							"only alphanumeric characters and hyphens allowed in %q", k))
 					}
-					if regexp.MustCompile(`--`).MatchString(value) {
+					if regexache.MustCompile(`--`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
 					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
+					if regexache.MustCompile(`-$`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
 					}
 					return
@@ -474,6 +487,11 @@ func ResourceCluster() *schema.Resource {
 					// cluster which is not joined to the provided global cluster).
 					"global_cluster_identifier",
 				},
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
@@ -489,7 +507,7 @@ func ResourceCluster() *schema.Resource {
 			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -501,13 +519,34 @@ func ResourceCluster() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// Aurora supports mutation of the storage_type parameter, other engines do not
+				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
+			}),
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
+				old, new := diff.GetChange("storage_type")
+
+				if new.(string) == "aurora" && old.(string) == "" {
+					if err := diff.SetNew("storage_type", ""); err != nil {
+						return err
+					}
+					return nil
+				}
+				return nil
+			},
+		),
 	}
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -536,7 +575,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -655,7 +694,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -759,13 +798,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      GetTagsIn(ctx),
+			Tags:                      getTagsIn(ctx),
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
@@ -877,7 +916,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOkExists("allocated_storage"); ok {
@@ -910,6 +949,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("db_system_id"); ok {
+			input.DBSystemId = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enable_global_write_forwarding"); ok {
@@ -1049,7 +1092,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
@@ -1087,6 +1130,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
@@ -1167,11 +1211,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	setTagsOut(ctx, dbc.TagList)
+
 	return nil
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1207,7 +1253,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
-			input.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+			input.DBClusterInstanceClass = aws.String(d.Get("db_cluster_instance_class").(string))
 		}
 
 		if d.HasChange("db_cluster_parameter_group_name") {
@@ -1404,7 +1450,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
@@ -1555,8 +1601,54 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
 
-	output, err := conn.DescribeDBClustersWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if arn.IsARN(id) {
+		if aws.StringValue(output.DBClusterArn) != id {
+			return nil, &retry.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	} else if aws.StringValue(output.DBClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*rds.DBCluster]) (*rds.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*rds.DBCluster]) ([]*rds.DBCluster, error) {
+	var output []*rds.DBCluster
+
+	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusters {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -1569,30 +1661,23 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		return nil, err
 	}
 
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
+	return output, nil
+}
 
-	if count := len(output.DBClusters); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterByID(ctx, conn, id)
 
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if arn.IsARN(id) {
-		if aws.StringValue(dbCluster.DBClusterArn) != id {
-			return nil, &retry.NotFoundError{
-				LastRequest: input,
-			}
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
-	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
 
-	return dbCluster, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
@@ -1630,6 +1715,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusModifying,
 			ClusterStatusRenaming,
 			ClusterStatusResettingMasterCredentials,
+			ClusterStatusScalingCompute,
 			ClusterStatusUpgrading,
 		},
 		Target:     []string{ClusterStatusAvailable},
@@ -1670,20 +1756,4 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	}
 
 	return nil, err
-}
-
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
 }

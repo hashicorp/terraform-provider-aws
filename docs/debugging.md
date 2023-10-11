@@ -199,7 +199,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
                 // This error should not happen!
                 // See https://github.com/hashicorp/terraform-provider-aws/issues/45912
-				ExpectError: regexp.MustCompile(`invalid destination`),
+				ExpectError: regexache.MustCompile(`invalid destination`),
 			},
 		},
 	})

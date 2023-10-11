@@ -34,7 +34,7 @@ These will map the AWS API response to the data source schema. You will also nee
 
 ### Register Data Source to the provider
 
-Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make servicepackages` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make gen` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 ```
 package something

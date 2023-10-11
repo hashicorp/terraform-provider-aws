@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -95,7 +98,7 @@ func ResourceDatabase() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-]+[A-Za-z0-9]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z-]+[0-9A-Za-z]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 				),
 			},
 			"master_database_name": {
@@ -104,8 +107,8 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
 				),
 			},
 			"master_endpoint_address": {
@@ -122,7 +125,7 @@ func ResourceDatabase() *schema.Resource {
 				Sensitive: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(8, 128),
-					validation.StringMatch(regexp.MustCompile(`^[ -~][^@\/" ]+$`), "The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces."),
+					validation.StringMatch(regexache.MustCompile(`^[ -~][^@\/" ]+$`), "The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces."),
 				),
 			},
 			"master_username": {
@@ -131,8 +134,8 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
 				),
 			},
 			"preferred_backup_window": {
@@ -162,7 +165,7 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[^._\-]+[0-9A-Za-z-]+[^._\-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[^_.-]+[0-9A-Za-z-]+[^_.-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 				),
 			},
 			"secondary_availability_zone": {
@@ -186,7 +189,7 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	relationalDatabaseName := d.Get("relational_database_name").(string)
 	input := &lightsail.CreateRelationalDatabaseInput{
@@ -195,7 +198,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		RelationalDatabaseBlueprintId: aws.String(d.Get("blueprint_id").(string)),
 		RelationalDatabaseBundleId:    aws.String(d.Get("bundle_id").(string)),
 		RelationalDatabaseName:        aws.String(relationalDatabaseName),
-		Tags:                          GetTagsIn(ctx),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -218,13 +221,13 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
-	output, err := conn.CreateRelationalDatabaseWithContext(ctx, input)
+	output, err := conn.CreateRelationalDatabase(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Lightsail Relational Database (%s): %s", relationalDatabaseName, err)
 	}
 
-	diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeCreateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
+	diagError := expandOperations(ctx, conn, output.Operations, types.OperationTypeCreateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
 
 	if diagError != nil {
 		return diagError
@@ -241,13 +244,13 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 			RelationalDatabaseName: aws.String(d.Id()),
 		}
 
-		output, err := conn.UpdateRelationalDatabaseWithContext(ctx, input)
+		output, err := conn.UpdateRelationalDatabase(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Lightsail Relational Database (%s) backup retention: %s", d.Id(), err)
 		}
 
-		diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeUpdateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
+		diagError := expandOperations(ctx, conn, output.Operations, types.OperationTypeUpdateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
 
 		if diagError != nil {
 			return diagError
@@ -267,13 +270,13 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	// This is to support importing a resource that is not in a ready state.
 	database, err := waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && IsANotFoundError(err) {
 		log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -308,13 +311,13 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
 	d.Set("support_code", rd.SupportCode)
 
-	SetTagsOut(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return nil
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", "tags", "tags_all") {
 		input := &lightsail.UpdateRelationalDatabaseInput{
@@ -350,13 +353,13 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 		}
 
-		output, err := conn.UpdateRelationalDatabaseWithContext(ctx, input)
+		output, err := conn.UpdateRelationalDatabase(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Lightsail Relational Database (%s): %s", d.Id(), err)
 		}
 
-		diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeUpdateRelationalDatabase, ResNameDatabase, d.Id())
+		diagError := expandOperations(ctx, conn, output.Operations, types.OperationTypeUpdateRelationalDatabase, ResNameDatabase, d.Id())
 
 		if diagError != nil {
 			return diagError
@@ -384,7 +387,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	if _, err := waitDatabaseModified(ctx, conn, aws.String(d.Id())); err != nil {
@@ -406,13 +409,13 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	output, err := conn.DeleteRelationalDatabaseWithContext(ctx, input)
+	output, err := conn.DeleteRelationalDatabase(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("deleting Lightsail Relational Database (%s): %s", d.Id(), err)
 	}
 
-	diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeDeleteRelationalDatabase, ResNameDatabase, d.Id())
+	diagError := expandOperations(ctx, conn, output.Operations, types.OperationTypeDeleteRelationalDatabase, ResNameDatabase, d.Id())
 
 	if diagError != nil {
 		return diagError

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -90,7 +93,7 @@ func ResourceRuleGroup() *schema.Resource {
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -98,7 +101,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRuleGroupWithContext(ctx, input)
@@ -124,7 +127,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -164,7 +167,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -172,7 +175,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		err := updateRuleGroupResource(ctx, d.Id(), oldRules, newRules, conn)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating WAF Rule Group: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Rule Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -181,7 +184,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	if err := deleteRuleGroup(ctx, d.Id(), oldRules, conn); err != nil {
@@ -195,7 +198,7 @@ func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 		noRules := []interface{}{}
 		err := updateRuleGroupResource(ctx, id, oldRules, noRules, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Rule Group Predicates: %s", err)
+			return fmt.Errorf("updating WAF Rule Group Predicates: %s", err)
 		}
 	}
 
@@ -209,7 +212,7 @@ func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 		return conn.DeleteRuleGroupWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule Group: %s", err)
+		return fmt.Errorf("deleting WAF Rule Group: %s", err)
 	}
 	return nil
 }
@@ -226,7 +229,7 @@ func updateRuleGroupResource(ctx context.Context, id string, oldRules, newRules 
 		return conn.UpdateRuleGroupWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		return fmt.Errorf("Updating WAF Rule Group: %s", err)
 	}
 
 	return nil

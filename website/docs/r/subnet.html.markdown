@@ -35,18 +35,18 @@ resource, it is recommended to reference that resource's `vpc_id` attribute to e
 ```terraform
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "172.2.0.0/16"
+  cidr_block = "172.20.0.0/16"
 }
 
 resource "aws_subnet" "in_secondary_cidr" {
   vpc_id     = aws_vpc_ipv4_cidr_block_association.secondary_cidr.vpc_id
-  cidr_block = "172.2.0.0/24"
+  cidr_block = "172.20.0.0/24"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
@@ -71,9 +71,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) The VPC ID.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the subnet
 * `arn` - The ARN of the subnet.
@@ -90,8 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Subnets can be imported using the `subnet id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
+```terraform
+import {
+  to = aws_subnet.public_subnet
+  id = "subnet-9d4a7b6c"
+}
 ```
-$ terraform import aws_subnet.public_subnet subnet-9d4a7b6c
+
+Using `terraform import`, import subnets using the subnet `id`. For example:
+
+```console
+% terraform import aws_subnet.public_subnet subnet-9d4a7b6c
 ```

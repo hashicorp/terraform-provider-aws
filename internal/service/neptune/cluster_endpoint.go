@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -80,13 +83,13 @@ func ResourceClusterEndpoint() *schema.Resource {
 
 func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("endpoint_type").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
@@ -121,7 +124,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	resp, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -150,7 +153,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &neptune.ModifyDBClusterEndpointInput{
@@ -185,7 +188,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
 	input := &neptune.DeleteDBClusterEndpointInput{

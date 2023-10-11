@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -131,13 +134,13 @@ func init() {
 
 func sweepByteMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -160,7 +163,7 @@ func sweepByteMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in byte_match_tuples attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
@@ -192,7 +195,7 @@ func sweepByteMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Byte Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Byte Match Set for %s: %w", region, err))
 	}
 
@@ -206,13 +209,13 @@ func sweepByteMatchSet(region string) error {
 
 func sweepGeoMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -235,7 +238,7 @@ func sweepGeoMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in geo_match_constraint attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Geo Match Set (%s): %w", id, err)
@@ -267,7 +270,7 @@ func sweepGeoMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Geo Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
 	}
 
@@ -281,13 +284,13 @@ func sweepGeoMatchSet(region string) error {
 
 func sweepIPSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -310,7 +313,7 @@ func sweepIPSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in ip_set_descriptors attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF IP Set (%s): %w", id, err)
@@ -342,7 +345,7 @@ func sweepIPSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF IP Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
 	}
 
@@ -356,13 +359,13 @@ func sweepIPSet(region string) error {
 
 func sweepRateBasedRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -385,7 +388,7 @@ func sweepRateBasedRules(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in predicates attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
@@ -417,7 +420,7 @@ func sweepRateBasedRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rate Based Rules: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
 	}
 
@@ -431,13 +434,13 @@ func sweepRateBasedRules(region string) error {
 
 func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -460,7 +463,7 @@ func sweepRegexMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in regex_match_tuple attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Regex Match Set (%s): %w", id, err)
@@ -492,7 +495,7 @@ func sweepRegexMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Match Set for %s: %w", region, err))
 	}
 
@@ -506,13 +509,13 @@ func sweepRegexMatchSet(region string) error {
 
 func sweepRegexPatternSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -535,7 +538,7 @@ func sweepRegexPatternSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in regex_pattern_strings attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Regex Pattern Set (%s): %w", id, err)
@@ -567,7 +570,7 @@ func sweepRegexPatternSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Pattern Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Pattern Set for %s: %w", region, err))
 	}
 
@@ -581,13 +584,13 @@ func sweepRegexPatternSet(region string) error {
 
 func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -610,7 +613,7 @@ func sweepRuleGroups(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in activated_rule attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rule Group (%s): %w", id, err)
@@ -642,7 +645,7 @@ func sweepRuleGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rule Groups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rule Group for %s: %w", region, err))
 	}
 
@@ -656,13 +659,13 @@ func sweepRuleGroups(region string) error {
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -689,7 +692,7 @@ func sweepRules(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in predicates attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rule (%s): %w", id, err)
@@ -721,7 +724,7 @@ func sweepRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rules: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rules for %s: %w", region, err))
 	}
 
@@ -735,13 +738,13 @@ func sweepRules(region string) error {
 
 func sweepSizeConstraintSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -764,7 +767,7 @@ func sweepSizeConstraintSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in size_constraints attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Size Constraint Set (%s): %w", id, err)
@@ -796,7 +799,7 @@ func sweepSizeConstraintSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Size Constraint Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Size Constraint Sets for %s: %w", region, err))
 	}
 
@@ -810,13 +813,13 @@ func sweepSizeConstraintSet(region string) error {
 
 func sweepSQLInjectionMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -839,7 +842,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in sql_injection_match_tuples attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF SQL Injection Match Set (%s): %w", id, err)
@@ -871,7 +874,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF SQL Injection Matches: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF SQL Injection Matches for %s: %w", region, err))
 	}
 
@@ -885,13 +888,13 @@ func sweepSQLInjectionMatchSet(region string) error {
 
 func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -918,7 +921,7 @@ func sweepWebACLs(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in rules argument
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
@@ -950,7 +953,7 @@ func sweepWebACLs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Web ACLs: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
 	}
 
@@ -964,13 +967,13 @@ func sweepWebACLs(region string) error {
 
 func sweepXSSMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -993,7 +996,7 @@ func sweepXSSMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in xss_match_tuples attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF XSS Match Set (%s): %w", id, err)
@@ -1025,7 +1028,7 @@ func sweepXSSMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF XSS Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF XSS Match Sets for %s: %w", region, err))
 	}
 

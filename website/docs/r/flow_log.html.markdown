@@ -178,7 +178,7 @@ resource "aws_s3_bucket" "example" {
 
 ~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
@@ -186,7 +186,7 @@ The following arguments are supported:
 * `iam_role_arn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
 * `log_destination_type` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_destination` - (Optional) The ARN of the logging destination. Either `log_destination` or `log_group_name` must be set.
-* `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
+* `log_group_name` - (Optional) **Deprecated:** Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
 * `subnet_id` - (Optional) Subnet ID to attach to
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
@@ -207,9 +207,9 @@ Describes the destination options for a flow log.
 * `hive_compatible_partitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
 * `per_hour_partition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
@@ -217,8 +217,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Flow Logs can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Flow Logs using the `id`. For example:
 
+```terraform
+import {
+  to = aws_flow_log.test_flow_log
+  id = "fl-1a2b3c4d"
+}
 ```
-$ terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
+
+Using `terraform import`, import Flow Logs using the `id`. For example:
+
+```console
+% terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```

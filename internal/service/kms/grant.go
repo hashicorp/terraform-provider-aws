@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -87,10 +90,13 @@ func ResourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grantee_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -119,10 +125,13 @@ func ResourceGrant() *schema.Resource {
 				ForceNew: true,
 			},
 			"retiring_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 		},
 	}
@@ -130,7 +139,7 @@ func ResourceGrant() *schema.Resource {
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.CreateGrantInput{
@@ -184,7 +193,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		timeout = 3 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -227,7 +236,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -328,13 +337,13 @@ func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, g
 		}
 
 		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}

@@ -1,22 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm
 
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_acm_certificate")
-func DataSourceCertificate() *schema.Resource {
+func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
@@ -41,8 +44,8 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(acm.KeyAlgorithm_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
 				},
 			},
 			"most_recent": {
@@ -70,140 +73,148 @@ func DataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &acm.ListCertificatesInput{}
+	domain := d.Get("domain")
+	input := &acm.ListCertificatesInput{}
 
-	if v := d.Get("key_types").(*schema.Set); v.Len() > 0 {
-		params.Includes = &acm.Filters{
-			KeyTypes: flex.ExpandStringSet(v),
+	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.Includes = &types.Filters{
+			KeyTypes: flex.ExpandStringyValueSet[types.KeyAlgorithm](v.(*schema.Set)),
 		}
 	}
 
-	target := d.Get("domain")
-	statuses, ok := d.GetOk("statuses")
-	if ok {
-		statusStrings := statuses.([]interface{})
-		params.CertificateStatuses = flex.ExpandStringList(statusStrings)
+	if v, ok := d.GetOk("statuses"); ok && len(v.([]interface{})) > 0 {
+		input.CertificateStatuses = flex.ExpandStringyValueList[types.CertificateStatus](v.([]interface{}))
 	} else {
-		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
+		input.CertificateStatuses = []types.CertificateStatus{types.CertificateStatusIssued}
 	}
 
-	var arns []*string
-	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
-	err := conn.ListCertificatesPagesWithContext(ctx, params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
-		for _, cert := range page.CertificateSummaryList {
-			if aws.StringValue(cert.DomainName) == target {
-				arns = append(arns, cert.CertificateArn)
+	var arns []string
+	pages := acm.NewListCertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return diag.Errorf("reading ACM Certificates: %s", err)
+		}
+
+		for _, v := range page.CertificateSummaryList {
+			if aws.ToString(v.DomainName) == domain {
+				arns = append(arns, aws.ToString(v.CertificateArn))
 			}
 		}
-
-		return true
-	})
-
-	if err != nil {
-		return diag.Errorf("listing ACM Certificates: %s", err)
 	}
 
 	if len(arns) == 0 {
-		return diag.Errorf("no certificate for domain %q found in this Region", target)
+		return diag.Errorf("no ACM Certificate matching domain (%s)", domain)
 	}
 
 	filterMostRecent := d.Get("most_recent").(bool)
-	filterTypes, filterTypesOk := d.GetOk("types")
+	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
-	var matchedCertificate *acm.CertificateDetail
-
-	if !filterMostRecent && !filterTypesOk && len(arns) > 1 {
-		// Multiple certificates have been found and no additional filtering set
-		return diag.Errorf("multiple certificates for domain %q found in this Region", target)
+	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
+		return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
 	}
 
-	typesStrings := flex.ExpandStringList(filterTypes.([]interface{}))
+	var matchedCertificate *types.CertificateDetail
 
 	for _, arn := range arns {
-		arn := aws.StringValue(arn)
-		output, err := conn.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
+		input := &acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),
-		})
+		}
+
+		certificate, err := findCertificate(ctx, conn, input)
 
 		if err != nil {
 			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
 		}
 
-		certificate := output.Certificate
-
-		if filterTypesOk {
-			for _, certType := range typesStrings {
-				if aws.StringValue(certificate.Type) == aws.StringValue(certType) {
-					// We do not have a candidate certificate
+		if len(certificateTypes) > 0 {
+			for _, certificateType := range certificateTypes {
+				if certificate.Type == certificateType {
+					// We do not have a candidate certificate.
 					if matchedCertificate == nil {
 						matchedCertificate = certificate
+
 						break
 					}
-					// At this point, we already have a candidate certificate
-					// Check if we are filtering by most recent and update if necessary
+
+					// At this point, we already have a candidate certificate.
+					// Check if we are filtering by most recent and update if necessary.
 					if filterMostRecent {
 						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
+
 						if err != nil {
 							return diag.FromErr(err)
 						}
+
 						break
 					}
-					// Now we have multiple candidate certificates and we only allow one certificate
-					return diag.Errorf("multiple certificates for domain %q found in this Region", target)
+					// Now we have multiple candidate certificates and we only allow one certificate.
+					return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
 				}
 			}
+
 			continue
 		}
-		// We do not have a candidate certificate
+
+		// We do not have a candidate certificate.
 		if matchedCertificate == nil {
 			matchedCertificate = certificate
+
 			continue
 		}
-		// At this point, we already have a candidate certificate
-		// Check if we are filtering by most recent and update if necessary
+
+		// At this point, we already have a candidate certificate.
+		// Check if we are filtering by most recent and update if necessary.
 		if filterMostRecent {
 			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
+
 			if err != nil {
 				return diag.FromErr(err)
 			}
+
 			continue
 		}
-		// Now we have multiple candidate certificates and we only allow one certificate
-		return diag.Errorf("multiple certificates for domain %q found in this Region", target)
+
+		// Now we have multiple candidate certificates and we only allow one certificate.
+		return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
 	}
 
 	if matchedCertificate == nil {
-		return diag.Errorf("no certificate for domain %q found in this Region", target)
+		return diag.Errorf("no ACM Certificate matching domain (%s)", domain)
 	}
 
 	// Get the certificate data if the status is issued
-	var certOutput *acm.GetCertificateOutput
-	if aws.StringValue(matchedCertificate.Status) == acm.CertificateStatusIssued {
-		arn := aws.StringValue(matchedCertificate.CertificateArn)
-		certOutput, err = conn.GetCertificateWithContext(ctx, &acm.GetCertificateInput{
+	var output *acm.GetCertificateOutput
+	if matchedCertificate.Status == types.CertificateStatusIssued {
+		arn := aws.ToString(matchedCertificate.CertificateArn)
+		input := &acm.GetCertificateInput{
 			CertificateArn: aws.String(arn),
-		})
+		}
+		var err error
+
+		output, err = conn.GetCertificate(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
 		}
 	}
-	if certOutput != nil {
-		d.Set("certificate", certOutput.Certificate)
-		d.Set("certificate_chain", certOutput.CertificateChain)
+	if output != nil {
+		d.Set("certificate", output.Certificate)
+		d.Set("certificate_chain", output.CertificateChain)
 	} else {
 		d.Set("certificate", nil)
 		d.Set("certificate_chain", nil)
 	}
 
-	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
+	d.SetId(aws.ToString(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(matchedCertificate.CertificateArn))
+	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
@@ -216,19 +227,19 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func mostRecentCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
-	if aws.StringValue(i.Status) != aws.StringValue(j.Status) {
+func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDetail, error) {
+	if i.Status != j.Status {
 		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
 	}
 	// Cover IMPORTED and ISSUED AMAZON_ISSUED certificates
-	if aws.StringValue(i.Status) == acm.CertificateStatusIssued {
-		if aws.TimeValue(i.NotBefore).After(aws.TimeValue(j.NotBefore)) {
+	if i.Status == types.CertificateStatusIssued {
+		if aws.ToTime(i.NotBefore).After(aws.ToTime(j.NotBefore)) {
 			return i, nil
 		}
 		return j, nil
 	}
 	// Cover non-ISSUED AMAZON_ISSUED certificates
-	if aws.TimeValue(i.CreatedAt).After(aws.TimeValue(j.CreatedAt)) {
+	if aws.ToTime(i.CreatedAt).After(aws.ToTime(j.CreatedAt)) {
 		return i, nil
 	}
 	return j, nil

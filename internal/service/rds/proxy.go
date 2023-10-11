@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -137,14 +140,14 @@ func ResourceProxy() *schema.Resource {
 
 func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := rds.CreateDBProxyInput{
 		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		VpcSubnetIds: flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
@@ -180,7 +183,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxy, err := FindDBProxyByName(ctx, conn, d.Id())
 
@@ -211,7 +214,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
@@ -251,7 +254,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
 	_, err := conn.DeleteDBProxyWithContext(ctx, &rds.DeleteDBProxyInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -106,7 +109,7 @@ func ResourceGlobalCluster() *schema.Resource {
 }
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	globalClusterID := d.Get("global_cluster_identifier").(string)
 	input := &neptune.CreateGlobalClusterInput{
@@ -149,7 +152,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	globalCluster, err := FindGlobalClusterByID(ctx, conn, d.Id())
 
@@ -178,7 +181,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChange("deletion_protection") {
 		input := &neptune.ModifyGlobalClusterInput{
@@ -244,7 +247,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	// Remove any members from the global cluster.
 	for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {

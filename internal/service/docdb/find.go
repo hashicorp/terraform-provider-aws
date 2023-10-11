@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -57,35 +60,6 @@ func findGlobalClusterIDByARN(ctx context.Context, conn *docdb.DocDB, arn string
 		}
 	}
 	return ""
-}
-
-func FindDBClusterById(ctx context.Context, conn *docdb.DocDB, dBClusterID string) (*docdb.DBCluster, error) {
-	var dBCluster *docdb.DBCluster
-
-	input := &docdb.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dBClusterID),
-	}
-
-	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, dbc := range page.DBClusters {
-			if dbc == nil {
-				continue
-			}
-
-			if aws.StringValue(dbc.DBClusterIdentifier) == dBClusterID {
-				dBCluster = dbc
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dBCluster, err
 }
 
 func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) (*docdb.DBClusterSnapshot, error) {

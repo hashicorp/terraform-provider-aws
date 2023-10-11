@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -20,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,7 +143,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var plan resourceExportTaskData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -194,7 +197,7 @@ func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -228,7 +231,7 @@ func (r *resourceExportTask) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

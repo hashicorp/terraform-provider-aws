@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -87,7 +90,7 @@ func ResourceRadiusSettings() *schema.Resource {
 }
 
 func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	input := &directoryservice.EnableRadiusInput{
@@ -121,7 +124,7 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	output, err := FindRadiusSettings(ctx, conn, d.Id())
 
@@ -149,7 +152,7 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	input := &directoryservice.UpdateRadiusInput{
 		DirectoryId: aws.String(d.Id()),
@@ -180,7 +183,7 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	_, err := conn.DisableRadiusWithContext(ctx, &directoryservice.DisableRadiusInput{
 		DirectoryId: aws.String(d.Id()),

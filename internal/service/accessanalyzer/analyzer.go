@@ -1,20 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,12 +37,13 @@ const (
 
 // @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
 // @Tags(identifierAttribute="arn")
-func ResourceAnalyzer() *schema.Resource {
+func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
 		ReadWithoutTimeout:   resourceAnalyzerRead,
 		UpdateWithoutTimeout: resourceAnalyzerUpdate,
 		DeleteWithoutTimeout: resourceAnalyzerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -49,7 +55,7 @@ func ResourceAnalyzer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 			"arn": {
@@ -59,14 +65,11 @@ func ResourceAnalyzer() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  accessanalyzer.TypeAccount,
-				ValidateFunc: validation.StringInSlice([]string{
-					accessanalyzer.TypeAccount,
-					accessanalyzer.TypeOrganization,
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.TypeAccount,
+				ValidateDiagFunc: enum.Validate[types.Type](),
 			},
 		},
 
@@ -76,37 +79,32 @@ func ResourceAnalyzer() *schema.Resource {
 
 func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
-		Tags:         GetTagsIn(ctx),
-		Type:         aws.String(d.Get("type").(string)),
+		Tags:         getTagsIn(ctx),
+		Type:         types.Type(d.Get("type").(string)),
 	}
 
-	// Handle Organizations eventual consistency
-	err := retry.RetryContext(ctx, organizationCreationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateAnalyzerWithContext(ctx, input)
+	// Handle Organizations eventual consistency.
+	_, err := tfresource.RetryWhen(ctx, organizationCreationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateAnalyzer(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*types.ValidationException](err, "You must create an organization") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateAnalyzerWithContext(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Access Analyzer Analyzer (%s): %s", analyzerName, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Analyzer (%s): %s", analyzerName, err)
 	}
 
 	d.SetId(analyzerName)
@@ -116,34 +114,25 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	input := &accessanalyzer.GetAnalyzerInput{
-		AnalyzerName: aws.String(d.Id()),
-	}
+	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
-	output, err := conn.GetAnalyzerWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Access Analyzer Analyzer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Access Analyzer Analyzer (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Analyzer == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Access Analyzer Analyzer (%s): empty response", d.Id())
-	}
+	d.Set("analyzer_name", analyzer.Name)
+	d.Set("arn", analyzer.Arn)
+	d.Set("type", analyzer.Type)
 
-	d.Set("analyzer_name", output.Analyzer.Name)
-	d.Set("arn", output.Analyzer.Arn)
-
-	SetTagsOut(ctx, output.Analyzer.Tags)
-
-	d.Set("type", output.Analyzer.Type)
+	setTagsOut(ctx, analyzer.Tags)
 
 	return diags
 }
@@ -158,21 +147,46 @@ func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
-	_, err := conn.DeleteAnalyzerWithContext(ctx, &accessanalyzer.DeleteAnalyzerInput{
+	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
+	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
 		ClientToken:  aws.String(id.UniqueId()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Access Analyzer Analyzer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Analyzer Analyzer (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name string) (*types.AnalyzerSummary, error) {
+	input := &accessanalyzer.GetAnalyzerInput{
+		AnalyzerName: aws.String(name),
+	}
+
+	output, err := conn.GetAnalyzer(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Analyzer == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Analyzer, nil
 }

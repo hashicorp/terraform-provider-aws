@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -50,7 +53,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 }
 
 func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
@@ -96,7 +99,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
@@ -127,7 +130,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 

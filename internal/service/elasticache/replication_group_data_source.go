@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -23,11 +26,6 @@ func DataSourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateReplicationGroupID,
-			},
-			"replication_group_description": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use description instead",
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -68,11 +66,6 @@ func DataSourceReplicationGroup() *schema.Resource {
 			"num_node_groups": {
 				Type:     schema.TypeInt,
 				Computed: true,
-			},
-			"number_cache_clusters": {
-				Type:       schema.TypeInt,
-				Computed:   true,
-				Deprecated: "Use num_cache_clusters instead",
 			},
 			"member_clusters": {
 				Type:     schema.TypeSet,
@@ -129,7 +122,7 @@ func DataSourceReplicationGroup() *schema.Resource {
 
 func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	groupID := d.Get("replication_group_id").(string)
 
@@ -140,7 +133,6 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("description", rg.Description)
-	d.Set("replication_group_description", rg.Description)
 	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
@@ -178,7 +170,6 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("num_cache_clusters", len(rg.MemberClusters))
-	d.Set("number_cache_clusters", len(rg.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}

@@ -696,7 +696,59 @@ func (e *ConditionalExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostic
 		return cty.UnknownVal(resultType), diags
 	}
 	if !condResult.IsKnown() {
-		return cty.UnknownVal(resultType), diags
+		// We might be able to offer a refined range for the result based on
+		// the two possible outcomes.
+		if trueResult.Type() == cty.Number && falseResult.Type() == cty.Number {
+			// This case deals with the common case of (predicate ? 1 : 0) and
+			// significantly decreases the range of the result in that case.
+			if !(trueResult.IsNull() || falseResult.IsNull()) {
+				if gt := trueResult.GreaterThan(falseResult); gt.IsKnown() {
+					b := cty.UnknownVal(cty.Number).Refine()
+					if gt.True() {
+						b = b.
+							NumberRangeLowerBound(falseResult, true).
+							NumberRangeUpperBound(trueResult, true)
+					} else {
+						b = b.
+							NumberRangeLowerBound(trueResult, true).
+							NumberRangeUpperBound(falseResult, true)
+					}
+					b = b.NotNull() // If neither of the results is null then the result can't be either
+					return b.NewValue().WithSameMarks(condResult).WithSameMarks(trueResult).WithSameMarks(falseResult), diags
+				}
+			}
+		}
+		if trueResult.Type().IsCollectionType() && falseResult.Type().IsCollectionType() {
+			if trueResult.Type().Equals(falseResult.Type()) {
+				if !(trueResult.IsNull() || falseResult.IsNull()) {
+					trueLen := trueResult.Length()
+					falseLen := falseResult.Length()
+					if gt := trueLen.GreaterThan(falseLen); gt.IsKnown() {
+						b := cty.UnknownVal(resultType).Refine()
+						trueLen, _ := trueLen.AsBigFloat().Int64()
+						falseLen, _ := falseLen.AsBigFloat().Int64()
+						if gt.True() {
+							b = b.
+								CollectionLengthLowerBound(int(falseLen)).
+								CollectionLengthUpperBound(int(trueLen))
+						} else {
+							b = b.
+								CollectionLengthLowerBound(int(trueLen)).
+								CollectionLengthUpperBound(int(falseLen))
+						}
+						b = b.NotNull() // If neither of the results is null then the result can't be either
+						return b.NewValue().WithSameMarks(condResult).WithSameMarks(trueResult).WithSameMarks(falseResult), diags
+					}
+				}
+			}
+		}
+		trueRng := trueResult.Range()
+		falseRng := falseResult.Range()
+		ret := cty.UnknownVal(resultType)
+		if trueRng.DefinitelyNotNull() && falseRng.DefinitelyNotNull() {
+			ret = ret.RefineNotNull()
+		}
+		return ret.WithSameMarks(condResult).WithSameMarks(trueResult).WithSameMarks(falseResult), diags
 	}
 	condResult, err := convert.Convert(condResult, cty.Bool)
 	if err != nil {
@@ -1632,11 +1684,15 @@ func (e *SplatExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 		// example, it is valid to use a splat on a single object to retrieve a
 		// list of a single attribute, but we still need to check if that
 		// attribute actually exists.
-		upgradedUnknown = !sourceVal.IsKnown()
+		if !sourceVal.IsKnown() {
+			sourceRng := sourceVal.Range()
+			if sourceRng.CouldBeNull() {
+				upgradedUnknown = true
+			}
+		}
 
 		sourceVal = cty.TupleVal([]cty.Value{sourceVal})
 		sourceTy = sourceVal.Type()
-
 	}
 
 	// We'll compute our result type lazily if we need it. In the normal case
@@ -1675,7 +1731,20 @@ func (e *SplatExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 		// checking to proceed.
 		ty, tyDiags := resultTy()
 		diags = append(diags, tyDiags...)
-		return cty.UnknownVal(ty), diags
+		ret := cty.UnknownVal(ty)
+		if ty != cty.DynamicPseudoType {
+			ret = ret.RefineNotNull()
+		}
+		if ty.IsListType() && sourceVal.Type().IsCollectionType() {
+			// We can refine the length of an unknown list result based on
+			// the source collection's own length.
+			sourceRng := sourceVal.Range()
+			ret = ret.Refine().
+				CollectionLengthLowerBound(sourceRng.LengthLowerBound()).
+				CollectionLengthUpperBound(sourceRng.LengthUpperBound()).
+				NewValue()
+		}
+		return ret.WithSameMarks(sourceVal), diags
 	}
 
 	// Unmark the collection, and save the marks to apply to the returned

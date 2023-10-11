@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -8,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -49,7 +52,7 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
@@ -81,7 +84,7 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
@@ -99,7 +102,7 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 // testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
 func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 	alias, err := tfkms.FindAliasByName(ctx, conn, "alias/aws/ebs")
 	if err != nil {

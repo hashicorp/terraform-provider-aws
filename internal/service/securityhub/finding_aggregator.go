@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -55,7 +58,7 @@ func ResourceFindingAggregator() *schema.Resource {
 
 func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	linkingMode := d.Get("linking_mode").(string)
 
@@ -82,7 +85,7 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	aggregatorArn := d.Id()
 
@@ -137,7 +140,7 @@ func FindingAggregatorCheckExists(ctx context.Context, conn *securityhub.Securit
 
 func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	aggregatorArn := d.Id()
 
@@ -165,7 +168,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	aggregatorArn := d.Id()
 

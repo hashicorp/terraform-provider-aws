@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -50,17 +53,10 @@ func ResourceThreatIntelSet() *schema.Resource {
 				Required: true,
 			},
 			"format": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.ThreatIntelSetFormatTxt,
-					guardduty.ThreatIntelSetFormatStix,
-					guardduty.ThreatIntelSetFormatOtxCsv,
-					guardduty.ThreatIntelSetFormatAlienVault,
-					guardduty.ThreatIntelSetFormatProofPoint,
-					guardduty.ThreatIntelSetFormatFireEye,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(guardduty.ThreatIntelSetFormat_Values(), false),
 			},
 			"location": {
 				Type:     schema.TypeString,
@@ -80,7 +76,7 @@ func ResourceThreatIntelSet() *schema.Resource {
 
 func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	name := d.Get("name").(string)
@@ -90,7 +86,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateThreatIntelSetWithContext(ctx, input)
@@ -117,7 +113,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetId, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
@@ -153,14 +149,14 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.ThreatIntelSetStatusActive)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }
 
 func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
@@ -193,7 +189,7 @@ func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {

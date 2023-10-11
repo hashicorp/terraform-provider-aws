@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
@@ -7,13 +10,14 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -848,7 +852,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -863,7 +867,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -889,7 +893,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -899,7 +903,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -909,7 +913,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -919,7 +923,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -929,7 +933,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -939,7 +943,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -949,7 +953,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -967,7 +971,7 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_streamSpecification("anything", true, ""),
-				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true`),
+				ExpectError: regexache.MustCompile(`stream_view_type is required when stream_enabled = true`),
 			},
 		},
 	})
@@ -1504,15 +1508,15 @@ func TestAccDynamoDBTable_attributeUpdateValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_oneAttribute(rName, "firstKey", "unusedKey", "S"),
-				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["unusedKey"\]`),
+				ExpectError: regexache.MustCompile(`attributes must be indexed. Unused attributes: \["unusedKey"\]`),
 			},
 			{
 				Config:      testAccTableConfig_twoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
-				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
+				ExpectError: regexache.MustCompile(`attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
 			},
 			{
 				Config:      testAccTableConfig_unmatchedIndexes(rName, "firstUnused", "secondUnused"),
-				ExpectError: regexp.MustCompile(`indexes must match a defined attribute. Unmatched indexes:`),
+				ExpectError: regexache.MustCompile(`indexes must match a defined attribute. Unmatched indexes:`),
 			},
 		},
 	})
@@ -1647,7 +1651,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						names.AttrARN: regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
+						names.AttrARN: regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
 					}),
 				),
 			},
@@ -1705,9 +1709,9 @@ func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						names.AttrARN:  regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
-						"stream_arn":   regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
-						"stream_label": regexp.MustCompile(`[0-9]+.*:[0-9]+`),
+						names.AttrARN:  regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
+						"stream_arn":   regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
+						"stream_label": regexache.MustCompile(`[0-9]+.*:[0-9]+`),
 					}),
 				),
 			},
@@ -2543,9 +2547,46 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
+func TestAccDynamoDBTable_importTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_import(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						"name": rName,
+						"type": "S",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_table" {
@@ -2580,7 +2621,7 @@ func testAccCheckInitialTableExists(ctx context.Context, n string, v *dynamodb.T
 			return fmt.Errorf("No DynamoDB Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		output, err := tfdynamodb.FindTableByName(ctx, conn, rs.Primary.ID)
 
@@ -2615,7 +2656,7 @@ func testAccCheckReplicaExists(ctx context.Context, n string, region string, v *
 			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
 
 		if aws.StringValue(conn.Config.Region) != region {
@@ -2650,7 +2691,7 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
 
 		if aws.StringValue(conn.Config.Region) != region {
@@ -4403,6 +4444,41 @@ resource "aws_dynamodb_table" "test" {
   name                   = "%[1]s-target"
   restore_source_name    = aws_dynamodb_table.source.name
   restore_to_latest_time = true
+}
+`, rName)
+}
+
+func testAccTableConfig_import(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "data/somedoc.json"
+  content = "{\"Item\":{\"%[1]s\":{\"S\":\"test\"},\"field\":{\"S\":\"test\"}}}"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  import_table {
+    input_compression_type = "NONE"
+    input_format           = "DYNAMODB_JSON"
+    s3_bucket_source {
+      bucket     = aws_s3_bucket.test.bucket
+      key_prefix = "data"
+    }
+  }
 }
 `, rName)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -39,7 +42,7 @@ func DataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 }
 
 func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	alias_prefix := d.Get("alias_prefix").(string)
 	workspaces, err := FindWorkspaces(ctx, conn, alias_prefix)

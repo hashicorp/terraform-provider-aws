@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -5,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -17,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +124,7 @@ func ResourceConfigRule() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 64),
-											validation.StringMatch(regexp.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
+											validation.StringMatch(regexache.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
 										),
 									},
 									"policy_text": {
@@ -186,9 +188,13 @@ func ResourceConfigRule() *schema.Resource {
 	}
 }
 
+const (
+	ResNameConfigRule = "Config Rule"
+)
+
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
@@ -209,7 +215,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -229,7 +235,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating AWSConfig rule: %s", err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)...)
 	}
 
 	d.SetId(name)
@@ -239,7 +245,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := FindConfigRule(ctx, conn, d.Id())
 
@@ -247,6 +253,9 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
@@ -268,7 +277,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -290,11 +299,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting Config Rule failed: %s", err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Config Service Rule (%s) to deleted: %s", d.Id(), err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	return diags
