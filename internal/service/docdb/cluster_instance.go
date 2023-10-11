@@ -457,7 +457,7 @@ func statusDBInstance(ctx context.Context, conn *docdb.DocDB, id string) retry.S
 	}
 }
 
-func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
+func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
