@@ -97,8 +97,8 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "docdb",
-				ValidateFunc: validEngine(),
+				Default:      engineDocDB,
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
