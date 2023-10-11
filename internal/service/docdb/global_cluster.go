@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -61,7 +60,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				ForceNew:      true,
 				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(engine_Values(), false),
+				ValidateFunc:  validEngine(),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -340,7 +339,8 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 		return err
 	}
 	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		if _, err := waitDBClusterUpdated(ctx, conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		err := waitForClusterUpdate(ctx, conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
 			return err
 		}
 	}

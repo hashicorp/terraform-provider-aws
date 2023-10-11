@@ -6,10 +6,8 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -56,7 +54,7 @@ func TestAccVerifiedAccessInstance_basic(t *testing.T) {
 
 func TestAccVerifiedAccessInstance_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 types.VerifiedAccessInstance
+	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	originalDescription := "original description"
@@ -74,7 +72,7 @@ func TestAccVerifiedAccessInstance_description(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessInstanceConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 				),
 			},
@@ -87,51 +85,8 @@ func TestAccVerifiedAccessInstance_description(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessInstanceConfig_description(updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
-					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
-				),
-			},
-		},
-	})
-}
-
-func TestAccVerifiedAccessInstance_fipsEnabled(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1, v2 types.VerifiedAccessInstance
-	resourceName := "aws_verifiedaccess_instance.test"
-
-	originalFipsEnabled := true
-	updatedFipsEnabled := false
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccessInstance(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(originalFipsEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(originalFipsEnabled)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-			{
-				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(updatedFipsEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
-					testAccCheckVerifiedAccessInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(updatedFipsEnabled)),
 				),
 			},
 		},
@@ -166,7 +121,7 @@ func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
 
 func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 types.VerifiedAccessInstance
+	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,7 +136,7 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -189,8 +144,7 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
-					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -199,8 +153,7 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v3),
-					testAccCheckVerifiedAccessInstanceNotRecreated(&v2, &v3),
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -213,26 +166,6 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before != after {
-			return fmt.Errorf("Verified Access Instance (%s/%s) recreated", before, after)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVerifiedAccessInstanceRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before == after {
-			return fmt.Errorf("Verified Access Instance (%s) not recreated", before)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *types.VerifiedAccessInstance) resource.TestCheckFunc {
@@ -308,14 +241,6 @@ resource "aws_verifiedaccess_instance" "test" {
   description = %[1]q
 }
 `, description)
-}
-
-func testAccVerifiedAccessInstanceConfig_fipsEnabled(fipsEnabled bool) string {
-	return fmt.Sprintf(`
-resource "aws_verifiedaccess_instance" "test" {
-  fips_enabled = %[1]t
-}
-`, fipsEnabled)
 }
 
 func testAccVerifiedAccessInstanceConfig_tags1(tagKey1, tagValue1 string) string {

@@ -10,17 +10,3 @@ import (
 const (
 	propagationTimeout = 2 * time.Minute
 )
-
-const (
-	engineDocDB = "docdb" // nosemgrep:ci.docdb-in-const-name,ci.docdb-in-var-name
-)
-
-func engine_Values() []string {
-	return []string{
-		engineDocDB,
-	}
-}
-
-const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
-)

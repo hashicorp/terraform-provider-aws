@@ -563,7 +563,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
+	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),

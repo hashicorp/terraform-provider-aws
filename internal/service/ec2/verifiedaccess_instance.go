@@ -44,11 +44,6 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"fips_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
 			"last_updated_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -102,10 +97,6 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("fips_enabled"); ok {
-		input.FIPSEnabled = aws.Bool(v.(bool))
-	}
-
 	output, err := conn.CreateVerifiedAccessInstance(ctx, input)
 
 	if err != nil {
@@ -135,7 +126,6 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("creation_time", output.CreationTime)
 	d.Set("description", output.Description)
-	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set("last_updated_time", output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {

@@ -23,9 +23,6 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 			"disappears":  testAccTemplateAssociation_disappears,
 			"skipDestroy": testAccTemplateAssociation_skipDestroy,
 		},
-		"TemplatesDataSource": {
-			"basic": testAccTemplatesDataSource_basic,
-		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

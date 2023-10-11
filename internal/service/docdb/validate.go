@@ -8,6 +8,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
@@ -50,6 +52,12 @@ func validClusterSnapshotIdentifier(v interface{}, k string) (ws []string, error
 			"%q cannot end with a hyphen", k))
 	}
 	return
+}
+
+func validEngine() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"docdb",
+	}, false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
