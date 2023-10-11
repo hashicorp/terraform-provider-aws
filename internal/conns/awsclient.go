@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -150,6 +151,13 @@ func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]a
 	switch servicePackageName {
 	case names.S3:
 		m["s3_use_path_style"] = client.s3UsePathStyle
+		// AWS SDK for Go v2 does not use the AWS_S3_US_EAST_1_REGIONAL_ENDPOINT environment variable during configuration.
+		// For compatibility, read it now.
+		if client.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
+			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err == nil {
+				client.s3UsEast1RegionalEndpoint = v
+			}
+		}
 		m["s3_us_east_1_regional_endpoint"] = client.s3UsEast1RegionalEndpoint
 	case names.STS:
 		m["sts_region"] = client.stsRegion
