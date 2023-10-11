@@ -49,7 +49,6 @@ func ResourceClusterInstance() *schema.Resource {
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
