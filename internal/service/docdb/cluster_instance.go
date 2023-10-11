@@ -5,7 +5,6 @@ package docdb
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -423,25 +422,17 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	opts := docdb.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
+	log.Printf("[DEBUG] Deleting DocumentDB Cluster Instance: %s", d.Id())
+	_, err := conn.DeleteDBInstanceWithContext(ctx, &docdb.DeleteDBInstanceInput{
+		DBInstanceIdentifier: aws.String(d.Id()),
+	})
 
-	if _, err := conn.DeleteDBInstanceWithContext(ctx, &opts); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	// re-uses db_instance refresh func
-	log.Println("[INFO] Waiting for DocumentDB Cluster Instance to be destroyed")
-	stateConf := &retry.StateChangeConf{
-		Pending:    resourceClusterInstanceDeletePendingStates,
-		Target:     []string{},
-		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) deletion: %s", d.Id(), err)
+	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -513,48 +504,80 @@ var resourceClusterInstanceDeletePendingStates = []string{
 	"deleting",
 }
 
-func FindDBInstanceById(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) (*docdb.DBInstance, error) {
-	var dBInstance *docdb.DBInstance
-
+func FindDBInstanceByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBInstance, error) {
 	input := &docdb.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(dBInstanceID),
+		DBInstanceIdentifier: aws.String(id),
 	}
+	output, err := findDBInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBInstanceIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBInstance(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBInstancesInput) (*docdb.DBInstance, error) {
+	output, err := findDBInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBInstances(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBInstancesInput) ([]*docdb.DBInstance, error) {
+	var output []*docdb.DBInstance
 
 	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, dbi := range page.DBInstances {
-			if dbi == nil {
-				continue
-			}
-
-			if aws.StringValue(dbi.DBInstanceIdentifier) == dBInstanceID {
-				dBInstance = dbi
-				return false
+		for _, v := range page.DBInstances {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
 		return !lastPage
 	})
 
-	return dBInstance, err
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
-func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) retry.StateRefreshFunc {
+func statusDBInstance(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
+		output, err := FindDBInstanceByID(ctx, conn, id)
 
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) || dBInstance == nil {
-			return nil, DBInstanceStatusDeleted, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Instance (%s): %w", dBInstanceID, err)
+			return nil, "", err
 		}
 
-		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
+		return output, aws.StringValue(output.DBInstanceStatus), nil
 	}
 }
 
@@ -566,21 +589,25 @@ const (
 	DBInstanceStatusDeleting  = "deleting"
 )
 
-func WaitForDBInstanceDeletion(ctx context.Context, conn *docdb.DocDB, dBInstanceID string, timeout time.Duration) error {
+func waitDBInstanceDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{DBInstanceStatusAvailable, DBInstanceStatusDeleting},
-		Target:         []string{DBInstanceStatusDeleted},
-		Refresh:        statusDBInstanceRefreshFunc(ctx, conn, dBInstanceID),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
+		Pending: []string{
+			"configuring-log-exports",
+			"modifying",
+			"deleting",
+		},
+		Target:     []string{},
+		Refresh:    statusDBInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	log.Printf("[DEBUG] Waiting for DocumentDB Instance (%s) deletion", dBInstanceID)
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.NotFound(err) {
-		return nil
+	if output, ok := outputRaw.(*docdb.DBInstance); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
