@@ -53,13 +53,20 @@ This argument supports the following arguments:
 * `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
 * `detector_id` - (Required) The detector ID of the GuardDuty account.
-* `datasources` - (Optional) Configuration for the collected datasources.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_detector_feature` resources](guardduty_detector_feature.html).
 
-`datasources` supports the following:
+### Data Sources
 
-* `s3_logs` - (Optional) Enable S3 Protection automatically for new member accounts.
-* `kubernetes` - (Optional) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts.
-* `malware_protection` - (Optional) Enable Malware Protection automatically for new member accounts.
+The `datasources` block supports the following:
+
+* `s3_logs` - (Optional) Configures [S3 protection](https://docs.aws.amazon.com/guardduty/latest/ug/s3-protection.html).
+  See [S3 Logs](#s3-logs) below for more details.
+* `kubernetes` - (Optional) Configures [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  See [Kubernetes](#kubernetes) and [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
+* `malware_protection` - (Optional) Configures [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html).
+  See [Malware Protection](#malware-protection), [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) and [EBS volumes](#ebs-volumes) below for more details.
+
+The `datasources` block is deprecated since March 2023. Use the `features` block instead and [map each `datasources` block to the corresponding `features` block](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation).
 
 ### S3 Logs
 

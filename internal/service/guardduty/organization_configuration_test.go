@@ -153,50 +153,6 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 	})
 }
 
-func testAccOrganizationConfiguration_s3logs(t *testing.T) {
-	ctx := acctest.Context(t)
-	detectorResourceName := "aws_guardduty_detector.test"
-	resourceName := "aws_guardduty_organization_configuration.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
-			testAccPreCheckDetectorNotExists(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccOrganizationConfigurationConfig_s3Logs(false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
 func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 	ctx := acctest.Context(t)
 	detectorResourceName := "aws_guardduty_detector.test"
@@ -291,6 +247,50 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConfiguration_s3logs(t *testing.T) {
+	ctx := acctest.Context(t)
+	detectorResourceName := "aws_guardduty_detector.test"
+	resourceName := "aws_guardduty_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_s3Logs(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 const testAccOrganizationConfigurationConfigBase = `
 data "aws_caller_identity" "current" {}
 
@@ -340,25 +340,6 @@ resource "aws_guardduty_organization_configuration" "test" {
 `, value))
 }
 
-func testAccOrganizationConfigurationConfig_s3Logs(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
-resource "aws_guardduty_organization_configuration" "test" {
-  depends_on = [aws_guardduty_organization_admin_account.test]
-
-  auto_enable = true
-  detector_id = aws_guardduty_detector.test.id
-
-  datasources {
-    s3_logs {
-      auto_enable = %[1]t
-    }
-  }
-}
-`, autoEnable))
-}
-
 func testAccOrganizationConfigurationConfig_kubernetes(autoEnable bool) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConfigurationConfigBase,
@@ -397,6 +378,25 @@ resource "aws_guardduty_organization_configuration" "test" {
           auto_enable = %[1]t
         }
       }
+    }
+  }
+}
+`, autoEnable))
+}
+
+func testAccOrganizationConfigurationConfig_s3Logs(autoEnable bool) string {
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationConfigBase,
+		fmt.Sprintf(`
+resource "aws_guardduty_organization_configuration" "test" {
+  depends_on = [aws_guardduty_organization_admin_account.test]
+
+  auto_enable = true
+  detector_id = aws_guardduty_detector.test.id
+
+  datasources {
+    s3_logs {
+      auto_enable = %[1]t
     }
   }
 }

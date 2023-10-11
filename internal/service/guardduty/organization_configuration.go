@@ -38,7 +38,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				Deprecated:   "Use auto_enable_organization_members instead",
 			},
-
 			"auto_enable_organization_members": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -46,7 +45,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				ValidateFunc: validation.StringInSlice(guardduty.AutoEnableMembers_Values(), false),
 			},
-
 			"datasources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,20 +52,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"auto_enable": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
 						"kubernetes": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -123,10 +107,23 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auto_enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-
 			"detector_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -239,10 +236,6 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 
 	apiObject := &guardduty.OrganizationDataSourceConfigurations{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
-	}
-
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
@@ -251,18 +244,8 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]interface{}))
 	}
 
-	return apiObject
-}
-
-func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationS3LogsConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &guardduty.OrganizationS3LogsConfiguration{}
-
-	if v, ok := tfMap["auto_enable"].(bool); ok {
-		apiObject.AutoEnable = aws.Bool(v)
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -342,6 +325,20 @@ func expandOrganizationEBSVolumesConfiguration(tfMap map[string]interface{}) *gu
 	return apiObject
 }
 
+func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationS3LogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.OrganizationS3LogsConfiguration{}
+
+	if v, ok := tfMap["auto_enable"].(bool); ok {
+		apiObject.AutoEnable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationKubernetesAuditLogsConfiguration {
 	if tfMap == nil {
 		return nil
@@ -363,29 +360,15 @@ func flattenOrganizationDataSourceConfigurationsResult(apiObject *guardduty.Orga
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenOrganizationS3LogsConfigurationResult(v)}
-	}
 	if v := apiObject.Kubernetes; v != nil {
 		tfMap["kubernetes"] = []interface{}{flattenOrganizationKubernetesConfigurationResult(v)}
 	}
 	if v := apiObject.MalwareProtection; v != nil {
 		tfMap["malware_protection"] = []interface{}{flattenOrganizationMalwareProtectionConfigurationResult(v)}
 	}
-	return tfMap
-}
-
-func flattenOrganizationS3LogsConfigurationResult(apiObject *guardduty.OrganizationS3LogsConfigurationResult) map[string]interface{} {
-	if apiObject == nil {
-		return nil
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenOrganizationS3LogsConfigurationResult(v)}
 	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.AutoEnable; v != nil {
-		tfMap["auto_enable"] = aws.BoolValue(v)
-	}
-
 	return tfMap
 }
 
@@ -425,13 +408,13 @@ func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *guarddut
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationScanEc2InstanceWithFindingsResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -439,13 +422,27 @@ func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiOb
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationMalwareProtectionEBSVolumesResult(v)}
+		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationEbsVolumesResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionEBSVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} {
+func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoEnable; v != nil {
+		tfMap["auto_enable"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenOrganizationS3LogsConfigurationResult(apiObject *guardduty.OrganizationS3LogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
