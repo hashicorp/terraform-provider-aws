@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceTemplate,
 			Name:    "Template",
 		},
+		{
+			Factory: newResourceTemplateAssociation,
+			Name:    "Template Association",
+		},
 	}
 }
 
