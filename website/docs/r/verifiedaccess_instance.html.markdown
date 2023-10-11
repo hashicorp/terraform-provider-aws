@@ -12,6 +12,8 @@ Terraform resource for managing a Verified Access Instance.
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_verifiedaccess_instance" "example" {
   description = "example"
@@ -22,11 +24,20 @@ resource "aws_verifiedaccess_instance" "example" {
 }
 ```
 
+### With `fips_enabled`
+
+```terraform
+resource "aws_verifiedaccess_instance" "example" {
+  fips_enabled = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
 * `description` - (Optional) A description for the AWS Verified Access Instance.
+* `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
