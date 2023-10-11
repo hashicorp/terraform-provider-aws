@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -257,63 +258,44 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	db, err := resourceInstanceRetrieve(ctx, conn, d.Id())
+	db, err := FindDBInstanceByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DocumentDB Cluster Instance (%s): not found, removing from state.", d.Id())
+		log.Printf("[WARN] DocumentDB Cluster Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving DocumentDB Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	// Retrieve DB Cluster information, to determine if this Instance is a writer
-	resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
-		DBClusterIdentifier: db.DBClusterIdentifier,
-	})
+	clusterID := aws.StringValue(db.DBClusterIdentifier)
+	dbc, err := FindDBClusterByID(ctx, conn, clusterID)
 
-	var dbc *docdb.DBCluster
-	for _, c := range resp.DBClusters {
-		if aws.StringValue(c.DBClusterIdentifier) == aws.StringValue(db.DBClusterIdentifier) {
-			dbc = c
-		}
-	}
-
-	if dbc == nil {
-		return sdkdiag.AppendErrorf(diags, "finding DocumentDB Cluster (%s) for Cluster Instance (%s): %s",
-			aws.StringValue(db.DBClusterIdentifier), aws.StringValue(db.DBInstanceIdentifier), err)
-	}
-
-	for _, m := range dbc.DBClusterMembers {
-		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
-			if *m.IsClusterWriter {
-				d.Set("writer", true)
-			} else {
-				d.Set("writer", false)
-			}
-		}
-	}
-
-	if db.Endpoint != nil {
-		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
-	}
-
-	if db.DBSubnetGroup != nil {
-		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", clusterID, err)
 	}
 
 	d.Set("arn", db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	if db.DBSubnetGroup != nil {
+		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
+	}
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	// The AWS API does not expose 'EnablePerformanceInsights' the line below should be uncommented
 	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
-	d.Set("engine_version", db.EngineVersion)
+	if db.Endpoint != nil {
+		d.Set("endpoint", db.Endpoint.Address)
+		d.Set("port", db.Endpoint.Port)
+	}
 	d.Set("engine", db.Engine)
+	d.Set("engine_version", db.EngineVersion)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
@@ -325,7 +307,11 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
-	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
+	if v := tfslices.Filter(dbc.DBClusterMembers, func(v *docdb.DBClusterMember) bool {
+		return aws.StringValue(v.DBInstanceIdentifier) == d.Id()
+	}); len(v) == 1 {
+		d.Set("writer", v[0].IsClusterWriter)
+	}
 
 	return diags
 }
