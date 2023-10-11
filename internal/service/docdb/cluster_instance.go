@@ -235,20 +235,8 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(identifier)
 
-	// reuse db_instance refresh func
-	stateConf := &retry.StateChangeConf{
-		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
-		Target:     []string{"available"},
-		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) to become available: %s", d.Id(), err)
+	if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
@@ -574,6 +562,39 @@ const (
 	DBInstanceStatusDeleted   = "deleted"
 	DBInstanceStatusDeleting  = "deleting"
 )
+
+func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			"backing-up",
+			"configuring-enhanced-monitoring",
+			"configuring-iam-database-auth",
+			"configuring-log-exports",
+			"creating",
+			"maintenance",
+			"modifying",
+			"rebooting",
+			"renaming",
+			"resetting-master-credentials",
+			"starting",
+			"storage-optimization",
+			"upgrading",
+		},
+		Target:     []string{"available"},
+		Refresh:    statusDBInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func waitDBInstanceDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
