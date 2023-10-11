@@ -61,7 +61,7 @@ Each `verified_access_trust_providers` supports the following argument:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Workflows using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Access Instances using the `id`. For example:
 
 ```terraform
 import {
@@ -70,7 +70,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Transfer Workflows using the  `id`. For example:
+Using `terraform import`, import Verified Access Instances using the  `id`. For example:
 
 ```console
 % terraform import aws_verifiedaccess_instance.example vai-1234567890abcdef0
