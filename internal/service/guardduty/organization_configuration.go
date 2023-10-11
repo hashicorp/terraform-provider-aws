@@ -21,9 +21,9 @@ import (
 // @SDKResource("aws_guardduty_organization_configuration")
 func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		CreateWithoutTimeout: resourceOrganizationConfigurationPut,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
-		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		UpdateWithoutTimeout: resourceOrganizationConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -38,7 +38,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				Deprecated:   "Use auto_enable_organization_members instead",
 			},
-
 			"auto_enable_organization_members": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -46,7 +45,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				ValidateFunc: validation.StringInSlice(guardduty.AutoEnableMembers_Values(), false),
 			},
-
 			"datasources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,20 +52,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"auto_enable": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
 						"kubernetes": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -123,10 +107,23 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auto_enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-
 			"detector_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -166,12 +163,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
-
 	input := &guardduty.UpdateOrganizationConfigurationInput{
 		AutoEnableOrganizationMembers: aws.String(d.Get("auto_enable_organization_members").(string)),
 		DetectorId:                    aws.String(detectorID),
@@ -187,7 +183,9 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Organization Configuration (%s): %s", detectorID, err)
 	}
 
-	d.SetId(detectorID)
+	if d.IsNewResource() {
+		d.SetId(detectorID)
+	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
@@ -239,16 +237,16 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 
 	apiObject := &guardduty.OrganizationDataSourceConfigurations{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
-	}
-
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -304,11 +302,11 @@ func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface
 	}
 
 	return &guardduty.OrganizationMalwareProtectionConfiguration{
-		ScanEc2InstanceWithFindings: expandOrganizationScanEC2InstanceWithFindingsConfiguration(m),
+		ScanEc2InstanceWithFindings: expandOrganizationScanEc2InstanceWithFindings(m),
 	}
 }
 
-func expandOrganizationScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings {
+func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings {
 	if tfMap == nil {
 		return nil
 	}
@@ -324,11 +322,11 @@ func expandOrganizationScanEC2InstanceWithFindingsConfiguration(tfMap map[string
 	}
 
 	return &guardduty.OrganizationScanEc2InstanceWithFindings{
-		EbsVolumes: expandOrganizationEBSVolumesConfiguration(m),
+		EbsVolumes: expandOrganizationEbsVolumes(m),
 	}
 }
 
-func expandOrganizationEBSVolumesConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes {
+func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes {
 	if tfMap == nil {
 		return nil
 	}
@@ -397,13 +395,13 @@ func flattenOrganizationKubernetesConfigurationResult(apiObject *guardduty.Organ
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AuditLogs; v != nil {
-		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfiguration(v)}
+		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationKubernetesAuditLogsConfiguration(apiObject *guardduty.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
+func flattenOrganizationKubernetesAuditLogsConfigurationResult(apiObject *guardduty.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -425,13 +423,13 @@ func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *guarddut
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationScanEc2InstanceWithFindingsResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -439,13 +437,13 @@ func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiOb
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationMalwareProtectionEBSVolumesResult(v)}
+		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationEbsVolumesResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionEBSVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} {
+func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
