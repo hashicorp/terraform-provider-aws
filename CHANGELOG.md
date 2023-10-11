@@ -27,6 +27,8 @@ BUG FIXES:
 
 * provider: Respect valid values for the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable when configuring the S3 API client ([#33874](https://github.com/hashicorp/terraform-provider-aws/issues/33874))
 * resource/aws_appflow_connector_profile: Fix various crashes ([#33856](https://github.com/hashicorp/terraform-provider-aws/issues/33856))
+* resource/aws_db_parameter_group: Group names containing periods (`.`) no longer fail validation ([#33704](https://github.com/hashicorp/terraform-provider-aws/issues/33704))
+* resource/aws_rds_cluster_parameter_group: Group names containing periods (`.`) no longer fail validation ([#33704](https://github.com/hashicorp/terraform-provider-aws/issues/33704))
 
 ## 5.20.1 (October 10, 2023)
 
