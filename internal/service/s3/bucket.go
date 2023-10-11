@@ -93,7 +93,7 @@ func ResourceBucket() *schema.Resource {
 				ConflictsWith: []string{"bucket_prefix"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 63),
-					validation.StringDoesNotMatch(directoryBucketNameRegex, `*** TODO ***`),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]-x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
 				),
 			},
 			"bucket_domain_name": {

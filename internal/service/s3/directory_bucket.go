@@ -56,7 +56,7 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(directoryBucketNameRegex, `*** TODO ***`),
+					stringvalidator.RegexMatches(directoryBucketNameRegex, `must be in the format [bucket_name]--[azid]-x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
 				},
 			},
 			"force_destroy": schema.BoolAttribute{
