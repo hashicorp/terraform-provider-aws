@@ -90,7 +90,6 @@ func ResourceClusterInstance() *schema.Resource {
 			"enable_performance_insights": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
