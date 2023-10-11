@@ -5,6 +5,7 @@ package docdb
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -521,4 +522,76 @@ var resourceClusterInstanceDeletePendingStates = []string{
 	"configuring-log-exports",
 	"modifying",
 	"deleting",
+}
+
+func FindDBInstanceById(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) (*docdb.DBInstance, error) {
+	var dBInstance *docdb.DBInstance
+
+	input := &docdb.DescribeDBInstancesInput{
+		DBInstanceIdentifier: aws.String(dBInstanceID),
+	}
+
+	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, dbi := range page.DBInstances {
+			if dbi == nil {
+				continue
+			}
+
+			if aws.StringValue(dbi.DBInstanceIdentifier) == dBInstanceID {
+				dBInstance = dbi
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return dBInstance, err
+}
+
+func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
+
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) || dBInstance == nil {
+			return nil, DBInstanceStatusDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("reading DocumentDB Instance (%s): %w", dBInstanceID, err)
+		}
+
+		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
+	}
+}
+
+const (
+	DBInstanceDeleteTimeout = 5 * time.Minute
+
+	DBInstanceStatusAvailable = "available"
+	DBInstanceStatusDeleted   = "deleted"
+	DBInstanceStatusDeleting  = "deleting"
+)
+
+func WaitForDBInstanceDeletion(ctx context.Context, conn *docdb.DocDB, dBInstanceID string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{DBInstanceStatusAvailable, DBInstanceStatusDeleting},
+		Target:         []string{DBInstanceStatusDeleted},
+		Refresh:        statusDBInstanceRefreshFunc(ctx, conn, dBInstanceID),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocumentDB Instance (%s) deletion", dBInstanceID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
 }
