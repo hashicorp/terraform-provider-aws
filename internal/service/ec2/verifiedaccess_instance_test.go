@@ -6,10 +6,12 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -93,6 +95,48 @@ func TestAccVerifiedAccessInstance_description(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessInstance_fipsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+
+	originalFipsEnabled := true
+	updatedFipsEnabled := false
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(originalFipsEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(originalFipsEnabled)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(updatedFipsEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
+					testAccCheckVerifiedAccessInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(updatedFipsEnabled)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessInstance
@@ -166,6 +210,16 @@ func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckVerifiedAccessInstanceRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.VerifiedAccessInstanceId), aws.StringValue(after.VerifiedAccessInstanceId); before == after {
+			return fmt.Errorf("Verified Access Instance (%s) not recreated", before)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *types.VerifiedAccessInstance) resource.TestCheckFunc {
