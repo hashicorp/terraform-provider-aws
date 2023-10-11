@@ -1429,12 +1429,12 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string) error {
+func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFns ...func(*s3_sdkv2.Options)) error {
 	input := &s3_sdkv2.HeadBucketInput{
 		Bucket: aws_sdkv2.String(bucket),
 	}
 
-	_, err := conn.HeadBucket(ctx, input)
+	_, err := conn.HeadBucket(ctx, input, optFns...)
 
 	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{

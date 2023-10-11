@@ -84,7 +84,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 		Bucket: flex.StringFromFramework(ctx, data.Bucket),
 	}
 
-	_, err := conn.CreateBucket(ctx, input)
+	_, err := conn.CreateBucket(ctx, input, useRegionalEndpointInUSEast1)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Directory Bucket (%s)", data.Bucket.ValueString()), err.Error())
@@ -110,7 +110,7 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3Client(ctx)
 
-	err := findBucket(ctx, conn, data.ID.ValueString())
+	err := findBucket(ctx, conn, data.ID.ValueString(), useRegionalEndpointInUSEast1)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -163,7 +163,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 
 	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
 		Bucket: flex.StringFromFramework(ctx, data.ID),
-	})
+	}, useRegionalEndpointInUSEast1)
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if data.ForceDestroy.ValueBool() {
