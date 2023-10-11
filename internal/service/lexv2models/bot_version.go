@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @FrameworkResource(name="Bot Version")
 func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotVersion{}
 
