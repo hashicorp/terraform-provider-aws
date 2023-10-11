@@ -61,8 +61,8 @@ func ResourceDirectory() *schema.Resource {
 			"dedicated_tenancy": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default: false,
-				Computed: true,
+				ForceNew: true,
+				Default:  false,
 			},
 			"dns_ip_addresses": {
 				Type:     schema.TypeSet,
@@ -223,7 +223,7 @@ func ResourceDirectory() *schema.Resource {
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-    
+
 	directoryID := d.Get("directory_id").(string)
 	directoryTenancy := types.TenancyShared
 	if d.Get("dedicated_tenancy").(bool) {
