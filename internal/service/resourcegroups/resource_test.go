@@ -44,6 +44,30 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsResource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r types.ListGroupResourcesItem
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resourcegroups_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &r),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceResource(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
