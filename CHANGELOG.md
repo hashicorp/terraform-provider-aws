@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_verifiedaccess_instance: Add `fips_enabled` argument ([#33880](https://github.com/hashicorp/terraform-provider-aws/issues/33880))
 * resource/aws_vpclattice_target_group: Add `config.lambda_event_structure_version` argument ([#33804](https://github.com/hashicorp/terraform-provider-aws/issues/33804))
 * resource/aws_vpclattice_target_group: Make `config.port`, `config.protocol` and `config.vpc_identifier` optional ([#33804](https://github.com/hashicorp/terraform-provider-aws/issues/33804))
+* resource/aws_wafv2_web_acl: Add `aws_managed_rules_acfp_rule_set` to `managed_rule_group_configs` configuration block ([#33915](https://github.com/hashicorp/terraform-provider-aws/issues/33915))
 
 BUG FIXES:
 
