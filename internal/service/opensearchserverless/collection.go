@@ -208,6 +208,14 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
 	state.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
