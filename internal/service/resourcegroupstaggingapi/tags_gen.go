@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
