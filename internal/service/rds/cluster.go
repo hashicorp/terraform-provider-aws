@@ -553,11 +553,6 @@ func ResourceCluster() *schema.Resource {
 				return nil
 			},
 
-			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				// Aurora supports mutation of the storage_type parameter, other engines do not
-				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
-			}),
-
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {
 					return nil
@@ -1565,12 +1560,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		"tags", "tags_all") {
-		input := &rds.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
-			DBClusterIdentifier: aws.String(d.Id()),
-		}
 
 		if d.Get("blue_green_update.0.enabled").(bool) {
+			input := &rds.ModifyDBClusterInput{
+				ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+				DBClusterIdentifier: aws.String(d.Id()),
+			}
 			orchestrator := newBlueGreenOrchestratorCluster(connv2)
 			handler := newClusterHandler(connv2)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
@@ -1755,6 +1750,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): %s", d.Get("cluster_identifier").(string), err)
 			}
+		}
+
+		input := &rds.ModifyDBClusterInput{
+			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
 		if d.HasChange("allocated_storage") {
