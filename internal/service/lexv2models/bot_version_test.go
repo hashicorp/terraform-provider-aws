@@ -39,7 +39,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotVersionConfig_basic(rName, 60, true, rName),
+				Config: testAccBotVersionConfig_basic(rName, 60, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -77,7 +77,7 @@ func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotVersionConfig_basic(rName, 60, true, rName),
+				Config: testAccBotVersionConfig_basic(rName, 60, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotVersion, resourceName),
@@ -136,7 +136,7 @@ func testAccCheckBotVersionExists(ctx context.Context, name string, botversion *
 	}
 }
 
-func testAccBotVersionConfig_basic(rName string, ttl int, dp bool, key string) string {
+func testAccBotVersionConfig_basic(rName string, ttl int, dp bool) string {
 	return acctest.ConfigCompose(
 		testAccBotBaseConfig(rName),
 		fmt.Sprintf(`
@@ -153,10 +153,10 @@ resource "aws_lexv2models_bot" "test" {
 resource "aws_lexv2models_bot_version" "test" {
   bot_id                        = aws_lexv2models_bot.test.id
   locale_specification = {
-    %[4]q = {
+    "key"= {
       source_bot_version = "DRAFT"
     }
   }
 }
-`, rName, ttl, dp, key))
+`, rName, ttl, dp))
 }
