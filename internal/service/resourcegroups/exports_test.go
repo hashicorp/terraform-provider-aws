@@ -5,7 +5,9 @@ package resourcegroups
 
 // Exports for use in tests only.
 var (
-	ResourceGroup = resourceGroup
+	ResourceGroup    = resourceGroup
+	ResourceResource = resourceResource
 
-	FindGroupByName = findGroupByName
+	FindGroupByName          = findGroupByName
+	FindResourceByTwoPartKey = findResourceByTwoPartKey
 )
