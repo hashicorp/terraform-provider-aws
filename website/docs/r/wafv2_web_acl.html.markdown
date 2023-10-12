@@ -121,7 +121,7 @@ resource "aws_wafv2_web_acl" "acfp-example" {
               email_field {
                 identifier = "/email"
               }
-              
+
               password_field {
                 identifier = "/password"
               }
