@@ -179,6 +179,8 @@ resource "aws_resourcegroups_group" "test" {
       ]
     }
   }
+
+  depends_on = [aws_ec2_host.test]
 }
 `, rName))
 }
