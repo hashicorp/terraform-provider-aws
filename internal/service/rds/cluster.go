@@ -1438,7 +1438,6 @@ func dbClusterModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID str
 
 func findDBClusterByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, meta interface{}, id string) (*types.DBCluster, error) {
 	input := &rds_sdkv2.DescribeDBClustersInput{}
-	connv2 := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
 		input.Filters = []types.Filter{
@@ -1451,14 +1450,14 @@ func findDBClusterByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, meta in
 		input.DBClusterIdentifier = aws.String(id)
 	}
 
-	output, err := connv2.DescribeDBClusters(ctx, input)
+	output, err := conn.DescribeDBClusters(ctx, input)
 
 	// in case a DB has an *identifier* starting with "db-""
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBClusters) == 0) {
 		input = &rds_sdkv2.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(id),
 		}
-		output, err = connv2.DescribeDBClusters(ctx, input)
+		output, err = conn.DescribeDBClusters(ctx, input)
 	}
 
 	if errs.IsA[*types.DBClusterNotFoundFault](err) {
@@ -1491,23 +1490,20 @@ func waitDBClusterAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringIAMDatabaseAuth,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusMaintenance,
-			InstanceStatusModifying,
-			InstanceStatusMovingToVPC,
-			InstanceStatusRebooting,
-			InstanceStatusRenaming,
-			InstanceStatusResettingMasterCredentials,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
-			InstanceStatusUpgrading,
+			ClusterStatusBackingUp,
+			ClusterStatusConfiguringIAMDatabaseAuth,
+			ClusterStatusCreating,
+			ClusterStatusDeleting,
+			ClusterStatusMigrating,
+			ClusterStatusModifying,
+			ClusterStatusPreparingDataMigration,
+			ClusterStatusRebooting,
+			ClusterStatusRenaming,
+			ClusterStatusResettingMasterCredentials,
+			ClusterStatusScalingCompute,
+			ClusterStatusUpgrading,
 		},
-		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
+		Target:  []string{ClusterStatusAvailable},
 		Refresh: statusDBInstanceSDKv2(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -1560,7 +1556,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		"tags", "tags_all") {
-
 		if d.Get("blue_green_update.0.enabled").(bool) {
 			input := &rds.ModifyDBClusterInput{
 				ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
