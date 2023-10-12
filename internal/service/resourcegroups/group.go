@@ -100,12 +100,10 @@ func resourceGroup() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  types.QueryTypeTagFilters10,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.QueryTypeTagFilters10),
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      types.QueryTypeTagFilters10,
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.QueryTypeTagFilters10), false),
 						},
 					},
 				},
