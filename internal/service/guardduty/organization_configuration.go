@@ -179,6 +179,11 @@ func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.Resourc
 		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	// We have seen occasional acceptance test failures when updating multiple features on the same detector concurrently,
+	// so use a mutex to ensure that multiple features being updated concurrently don't trample on each other.
+	conns.GlobalMutexKV.Lock(detectorID)
+	defer conns.GlobalMutexKV.Unlock(detectorID)
+
 	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {

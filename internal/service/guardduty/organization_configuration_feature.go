@@ -74,6 +74,12 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
+
+	// We have seen occasional acceptance test failures when updating multiple features on the same detector concurrently,
+	// so use a mutex to ensure that multiple features being updated concurrently don't trample on each other.
+	conns.GlobalMutexKV.Lock(detectorID)
+	defer conns.GlobalMutexKV.Unlock(detectorID)
+
 	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
