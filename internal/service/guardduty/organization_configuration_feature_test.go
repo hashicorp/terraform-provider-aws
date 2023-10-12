@@ -198,10 +198,10 @@ resource "aws_guardduty_organization_configuration_feature" "test" {
 
   detector_id = aws_guardduty_detector.test.id
   name        = "EKS_RUNTIME_MONITORING"
-  auto_enable      = %[1]q
+  auto_enable = %[1]q
 
   additional_configuration {
-    name   = "EKS_ADDON_MANAGEMENT"
+    name        = "EKS_ADDON_MANAGEMENT"
     auto_enable = %[2]q
   }
 }
