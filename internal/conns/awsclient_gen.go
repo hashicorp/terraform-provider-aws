@@ -48,6 +48,7 @@ import (
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
+	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -188,7 +189,6 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	resourcegroupstaggingapi_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
@@ -883,8 +883,8 @@ func (c *AWSClient) ResourceGroupsClient(ctx context.Context) *resourcegroups_sd
 	return errs.Must(client[*resourcegroups_sdkv2.Client](ctx, c, names.ResourceGroups))
 }
 
-func (c *AWSClient) ResourceGroupsTaggingAPIConn(ctx context.Context) *resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI {
-	return errs.Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](ctx, c, names.ResourceGroupsTaggingAPI))
+func (c *AWSClient) ResourceGroupsTaggingAPIClient(ctx context.Context) *resourcegroupstaggingapi_sdkv2.Client {
+	return errs.Must(client[*resourcegroupstaggingapi_sdkv2.Client](ctx, c, names.ResourceGroupsTaggingAPI))
 }
 
 func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
