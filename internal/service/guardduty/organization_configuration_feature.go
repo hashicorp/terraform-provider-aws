@@ -73,7 +73,14 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	detectorID, name := d.Get("detector_id").(string), d.Get("name").(string)
+	detectorID := d.Get("detector_id").(string)
+	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", detectorID, err)
+	}
+
+	name := d.Get("name").(string)
 	feature := &guardduty.OrganizationFeatureConfiguration{
 		AutoEnable: aws.String(d.Get("auto_enable").(string)),
 		Name:       aws.String(name),
@@ -84,11 +91,12 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	}
 
 	input := &guardduty.UpdateOrganizationConfigurationInput{
-		DetectorId: aws.String(detectorID),
-		Features:   []*guardduty.OrganizationFeatureConfiguration{feature},
+		AutoEnableOrganizationMembers: output.AutoEnableOrganizationMembers,
+		DetectorId:                    aws.String(detectorID),
+		Features:                      []*guardduty.OrganizationFeatureConfiguration{feature},
 	}
 
-	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
+	_, err = conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Organization Configuration (%s) Feature (%s): %s", detectorID, name, err)

@@ -295,7 +295,7 @@ func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) 
 	}
 }
 
-const testAccOrganizationConfigurationConfigBase = `
+const testAccOrganizationConfigurationConfig_base = `
 data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
@@ -319,9 +319,7 @@ resource "aws_guardduty_organization_admin_account" "test" {
 `
 
 func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -332,9 +330,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(value string) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -345,9 +341,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_s3Logs(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -364,9 +358,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_kubernetes(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -385,9 +377,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_malwareprotection(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
