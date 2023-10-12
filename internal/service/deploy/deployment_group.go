@@ -75,52 +75,62 @@ func ResourceDeploymentGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"alarm_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarms": {
+							Type:     schema.TypeSet,
+							MaxItems: 10,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"ignore_poll_alarm_failure": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"app_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"compute_platform": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deployment_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"deployment_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"deployment_style": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+			"auto_rollback_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"deployment_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
-						"deployment_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentTypeInPlace,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						"events": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"autoscaling_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"blue_green_deployment_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -146,7 +156,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"green_fleet_provisioning_option": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -162,7 +171,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"terminate_blue_instances_on_deployment_success": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -185,41 +193,119 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"service_role_arn": {
+			"compute_platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_config_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "CodeDeployDefault.OneAtATime",
+				ValidateFunc: validation.StringLenBetween(0, 100),
+			},
+			"deployment_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-
-			"alarm_configuration": {
+			"deployment_style": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						},
+						"deployment_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentTypeInPlace,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						},
+					},
+				},
+			},
+			"ec2_tag_filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validTagFilters,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+				Set: resourceTagFilterHash,
+			},
+			"ec2_tag_set": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ec2_tag_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validTagFilters,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							Set: resourceTagFilterHash,
+						},
+					},
+				},
+				Set: resourceTagSetHash,
+			},
+			"ecs_service": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarms": {
-							Type:     schema.TypeSet,
-							MaxItems: 10,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"cluster_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
-
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"ignore_poll_alarm_failure": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+						"service_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 					},
 				},
 			},
-
 			"load_balancer_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -239,7 +325,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -253,7 +338,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_pair_info": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -316,121 +400,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"auto_rollback_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"events": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-
-			"autoscaling_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"deployment_config_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "CodeDeployDefault.OneAtATime",
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-
-			"ec2_tag_set": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ec2_tag_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTagFilters,
-									},
-
-									"value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-							Set: resourceTagFilterHash,
-						},
-					},
-				},
-				Set: resourceTagSetHash,
-			},
-
-			"ec2_tag_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTagFilters,
-						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceTagFilterHash,
-			},
-
-			"ecs_service": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"service_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-					},
-				},
-			},
-
 			"on_premises_instance_tag_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -440,13 +409,11 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validTagFilters,
 						},
-
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -455,7 +422,19 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTagFilterHash,
 			},
-
+			"outdated_instances_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      codedeploy.OutdatedInstancesStrategyUpdate,
+				ValidateFunc: validation.StringInSlice(codedeploy.OutdatedInstancesStrategy_Values(), false),
+			},
+			"service_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trigger_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -464,18 +443,15 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"trigger_events": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(codedeploy.TriggerEventType_Values(), false),
 							},
 						},
-
 						"trigger_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"trigger_target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -485,15 +461,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTriggerHashConfig,
 			},
-
-			"outdated_instances_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      codedeploy.OutdatedInstancesStrategyUpdate,
-				ValidateFunc: validation.StringInSlice(codedeploy.OutdatedInstancesStrategy_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
