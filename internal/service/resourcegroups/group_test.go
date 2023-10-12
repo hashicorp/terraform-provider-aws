@@ -75,6 +75,30 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccResourceGroupsGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
