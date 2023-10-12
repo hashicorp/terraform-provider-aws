@@ -38,6 +38,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceDeploymentGroupRead,
 		UpdateWithoutTimeout: resourceDeploymentGroupUpdate,
 		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -50,23 +51,13 @@ func ResourceDeploymentGroup() *schema.Resource {
 				deploymentGroupName := idParts[1]
 				conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-				input := &codedeploy.GetDeploymentGroupInput{
-					ApplicationName:     aws.String(applicationName),
-					DeploymentGroupName: aws.String(deploymentGroupName),
-				}
-
-				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
-				output, err := conn.GetDeploymentGroupWithContext(ctx, input)
+				group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
 				}
 
-				if output == nil || output.DeploymentGroupInfo == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", d.Id())
-				}
-
-				d.SetId(aws.StringValue(output.DeploymentGroupInfo.DeploymentGroupId))
+				d.SetId(aws.StringValue(group.DeploymentGroupId))
 				d.Set("app_name", applicationName)
 				d.Set("deployment_group_name", deploymentGroupName)
 
@@ -535,8 +526,6 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OutdatedInstancesStrategy = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
-
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
 	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
@@ -561,7 +550,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy deployment group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
@@ -573,23 +562,18 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	deploymentGroupName := d.Get("deployment_group_name").(string)
-	resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
-		ApplicationName:     aws.String(d.Get("app_name").(string)),
-		DeploymentGroupName: aws.String(deploymentGroupName),
-	})
+	group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, d.Get("app_name").(string), d.Get("deployment_group_name").(string))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding CodeDeploy Deployment Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
-	group := resp.DeploymentGroupInfo
 	appName := aws.StringValue(group.ApplicationName)
 	groupName := aws.StringValue(group.DeploymentGroupName)
 	groupArn := arn.ARN{
@@ -792,7 +776,7 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
+	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
 	_, err := conn.DeleteDeploymentGroupWithContext(ctx, &codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
@@ -806,6 +790,32 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func FindDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.CodeDeploy, applicationName, deploymentGroupName string) (*codedeploy.DeploymentGroupInfo, error) {
+	input := &codedeploy.GetDeploymentGroupInput{
+		ApplicationName:     aws.String(applicationName),
+		DeploymentGroupName: aws.String(deploymentGroupName),
+	}
+
+	output, err := conn.GetDeploymentGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DeploymentGroupInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DeploymentGroupInfo, nil
 }
 
 // buildOnPremTagFilters converts raw schema lists into a list of
