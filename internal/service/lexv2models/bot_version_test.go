@@ -141,14 +141,14 @@ func testAccBotVersionConfig_basic(rName string, ttl int, dp bool, key string) s
 		testAccBotBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
-	name                        = %[1]q
-	idle_session_ttl_in_seconds = %[2]d
-	role_arn                    = aws_iam_role.test_role.arn
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test_role.arn
 
-	data_privacy {
-	  child_directed = "%[3]t"
-	}
+  data_privacy {
+    child_directed = "%[3]t"
   }
+}
 
 resource "aws_lexv2models_bot_version" "test" {
   bot_id                        = aws_lexv2models_bot.test.id

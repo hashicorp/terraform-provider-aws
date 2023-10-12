@@ -101,12 +101,12 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"version": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			// "version": schema.StringAttribute{
+			// 	Computed: true,
+			// 	PlanModifiers: []planmodifier.String{
+			// 		stringplanmodifier.RequiresReplace(),
+			// 	},
+			// },
 		},
 		Blocks: map[string]schema.Block{
 			"members": schema.ListNestedBlock{
@@ -157,13 +157,13 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	var localeSpec map[string]versionLocaleDetailsData
-	resp.Diagnostics.Append(plan.VersionLocaleSpecification.ElementsAs(ctx, &localeSpec, false)...)
+	resp.Diagnostics.Append(plan.LocaleSpecification.ElementsAs(ctx, &localeSpec, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &lexmodelsv2.CreateBotVersionInput{
-		BotId:                         aws.String(plan.ID.String()),
+		BotId:                         aws.String(plan.BotID.String()),
 		BotVersionLocaleSpecification: expandLocalSpecification(ctx, localeSpec),
 	}
 
@@ -174,27 +174,27 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	out, err := conn.CreateBotVersion(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.BotID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.BotVersion == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.ID.String(), nil),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.BotID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.BotId)
+	plan.BotID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
 
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitBotVersionCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitBotVersionCreated(ctx, conn, plan.BotID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, state.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, state.BotID.String(), err),
 			err.Error(),
 		)
 		return
@@ -215,21 +215,21 @@ func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest,
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := FindBotVersionByID(ctx, conn, state.ID.ValueString())
+	out, err := FindBotVersionByID(ctx, conn, state.BotID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotVersion, state.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotVersion, state.BotID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.ID = flex.StringToFramework(ctx, out.BotId)
+	state.BotID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
@@ -265,7 +265,7 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &lexmodelsv2.DeleteBotVersionInput{
-		BotId: aws.String(state.ID.ValueString()),
+		BotId: aws.String(state.BotID.ValueString()),
 	}
 
 	_, err := conn.DeleteBotVersion(ctx, in)
@@ -275,17 +275,17 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotVersion, state.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotVersion, state.BotID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotVersionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitBotVersionDeleted(ctx, conn, state.BotID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.BotID.String(), err),
 			err.Error(),
 		)
 		return
@@ -384,16 +384,16 @@ func expandLocalSpecification(ctx context.Context, tfMap map[string]versionLocal
 }
 
 type resourceBotVersionData struct {
-	VersionLocaleSpecification types.Map      `tfsdk:"version_locale_specification"`
-	DataPrivacy                types.List     `tfsdk:"data_privacy"`
-	Description                types.String   `tfsdk:"description"`
-	ID                         types.String   `tfsdk:"id"`
-	IdleSessionTTLInSeconds    types.Int64    `tfsdk:"idle_session_ttl_in_seconds"`
-	Members                    types.List     `tfsdk:"members"`
-	Name                       types.String   `tfsdk:"name"`
-	RoleARN                    fwtypes.ARN    `tfsdk:"role_arn"`
-	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-	Type                       types.String   `tfsdk:"type"`
+	LocaleSpecification     types.Map      `tfsdk:"locale_specification"`
+	DataPrivacy             types.List     `tfsdk:"data_privacy"`
+	Description             types.String   `tfsdk:"description"`
+	BotID                   types.String   `tfsdk:"bot_id"`
+	IdleSessionTTLInSeconds types.Int64    `tfsdk:"idle_session_ttl_in_seconds"`
+	Members                 types.List     `tfsdk:"members"`
+	Name                    types.String   `tfsdk:"name"`
+	RoleARN                 fwtypes.ARN    `tfsdk:"role_arn"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+	Type                    types.String   `tfsdk:"type"`
 }
 
 type versionLocaleDetailsData struct {
