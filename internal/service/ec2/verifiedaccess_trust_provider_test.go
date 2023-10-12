@@ -22,11 +22,6 @@ import (
 
 func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
@@ -106,10 +101,6 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"

@@ -685,6 +685,7 @@ The `ruleActionOverride` block supports the following arguments:
 The `managedRuleGroupConfigs` block support the following arguments:
 
 * `awsManagedRulesBotControlRuleSet` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`awsManagedRulesBotControlRuleSet`](#aws_managed_rules_bot_control_rule_set-block) for more details
+* `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
 * `awsManagedRulesAtpRuleSet` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `loginPath` - (Optional, **Deprecated**) The path of the login endpoint for your application.
 * `passwordField` - (Optional, **Deprecated**) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
@@ -694,6 +695,14 @@ The `managedRuleGroupConfigs` block support the following arguments:
 ### `awsManagedRulesBotControlRuleSet` Block
 
 * `inspectionLevel` - (Optional) The inspection level to use for the Bot Control rule group.
+
+### `aws_managed_rules_acfp_rule_set` Block
+
+* `creation_path` - (Required) The path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
+* `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
+* `registration_page_path` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
+* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
+* `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
 
 ### `awsManagedRulesAtpRuleSet` Block
 

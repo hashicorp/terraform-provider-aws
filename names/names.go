@@ -54,6 +54,8 @@ const (
 	QLDBEndpointID                       = "qldb"
 	RedshiftDataEndpointID               = "redshift-data"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
+	ResourceGroupsEndpointID             = "resource-groups"
+	ResourceGroupsTaggingAPIEndpointID   = "tagging"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"

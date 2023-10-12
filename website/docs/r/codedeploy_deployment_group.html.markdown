@@ -80,6 +80,9 @@ resource "aws_codedeploy_deployment_group" "example" {
     alarms  = ["my-alarm-name"]
     enabled = true
   }
+
+  outdated_instances_strategy = "UPDATE"
+
 }
 ```
 
@@ -200,6 +203,7 @@ This resource supports the following arguments:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdated_instances_strategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
