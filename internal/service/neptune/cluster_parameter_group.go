@@ -258,15 +258,16 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	input := neptune.DeleteDBClusterParameterGroupInput{
+	log.Printf("[DEBUG] Deleting Neptune Cluster Parameter Group: %s", d.Id())
+	_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, &neptune.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+		return diags
 	}
 
-	_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, &input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
