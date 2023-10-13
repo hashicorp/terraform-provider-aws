@@ -10,15 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
@@ -191,7 +190,7 @@ func TestAccDocDBClusterParameterGroup_disappears(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_basic(parameterGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					testAccCheckClusterParameterGroupDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -305,43 +304,20 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			resp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, &docdb.DescribeDBClusterParameterGroupsInput{
-				DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfdocdb.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.DBClusterParameterGroups) != 0 &&
-					aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) == rs.Primary.ID {
-					return errors.New("DocumentDB Cluster Parameter Group still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("DocumentDB Cluster Parameter Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckClusterParameterGroupDisappears(ctx context.Context, group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-
-		params := &docdb.DeleteDBClusterParameterGroupInput{
-			DBClusterParameterGroupName: group.DBClusterParameterGroupName,
-		}
-
-		_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		return tfdocdb.WaitForClusterParameterGroupDeletion(ctx, conn, *group.DBClusterParameterGroupName)
 	}
 }
 
@@ -372,22 +348,13 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *d
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-		opts := docdb.DescribeDBClusterParameterGroupsInput{
-			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, &opts)
+		output, err := tfdocdb.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DBClusterParameterGroups) != 1 ||
-			aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) != rs.Primary.ID {
-			return fmt.Errorf("DocumentDB Cluster Parameter Group not found: %s", rs.Primary.ID)
-		}
-
-		*v = *resp.DBClusterParameterGroups[0]
+		*v = *output
 
 		return nil
 	}
