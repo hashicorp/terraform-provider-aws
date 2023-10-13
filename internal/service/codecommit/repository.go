@@ -145,7 +145,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
-	
+
 	if d.HasChange("repository_name") {
 		if err := resourceUpdateRepositoryName(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) name: %s", d.Id(), err)

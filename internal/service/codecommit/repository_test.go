@@ -76,7 +76,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 						"aws_codecommit_repository.test", "description", "This is a test description - with changes"),
 					resource.TestCheckResourceAttr(
 						"aws_codecommit_repository.test", "repository_name", "renamed_test_repository"),
-					),
+				),
 			},
 		},
 	})
