@@ -187,15 +187,20 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceUpdateRepositoryName(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+	newName := d.Get("repository_name").(string)
+
 	branchInput := &codecommit.UpdateRepositoryNameInput{
 		OldName: aws.String(d.Id()),
-		NewName: aws.String(d.Get("repository_name").(string)),
+		NewName: aws.String(newName),
 	}
 
 	_, err := conn.UpdateRepositoryNameWithContext(ctx, branchInput)
 	if err != nil {
 		return fmt.Errorf("Updating Repository Name for CodeCommit Repository: %s", err.Error())
 	}
+
+	// The Id is the name
+	d.SetId(newName)
 
 	return nil
 }

@@ -77,6 +77,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 				Config: testAccRepositoryConfig_changes(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
+					testAccCheckRepositoryNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description - with changes"),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rNameUpdated),
 				),
@@ -211,6 +212,52 @@ func TestAccCodeCommitRepository_tags(t *testing.T) {
 	})
 }
 
+func TestAccCodeCommitRepository_UpdateNameAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_repository.test"
+	var v1, v2 codecommit.RepositoryMetadata
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_tags2(rNameUpdated, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRepositoryExists(ctx context.Context, name string, v *codecommit.RepositoryMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -269,6 +316,15 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 			return err
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckRepositoryNotRecreated(v1, v2 *codecommit.RepositoryMetadata) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(v1.RepositoryId) != aws.StringValue(v2.RepositoryId) {
+			return fmt.Errorf("CodeCommit Repository recreated")
+		}
 		return nil
 	}
 }
