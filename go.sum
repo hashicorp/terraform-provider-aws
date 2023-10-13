@@ -103,7 +103,6 @@ github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.38 h1:skaFGzv+3kA+v2
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.38/go.mod h1:epIZoRSSbRIwLPJU5F+OldHhwZPBdpDeQkRdCeY3+00=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36 h1:0ZzowXTZABVqnJnwDMlTDP3eeEkuP1r6RYnhSBmgK2o=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36/go.mod h1:zAE5h/4VanzBpqyWoCZX/nJImdsqjjsGt2r3MtbKSFA=
-github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.36/go.mod h1:ou9ffqJ9hKOVZmjlC6kQ6oROAyG1M4yBKzR+9BKbDwk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37 h1:WWZA/I2K4ptBS1kg0kV1JbBtG/umed0vwHRrmcr9z7k=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37/go.mod h1:vBmDnwWXWxNPFRMmG2m/3MKOe+xEcMDo1tanpaWCcck=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.5/go.mod h1:HC7gNz3VH0p+RvLKK+HqNQv/gHy+1Os3ko/F41s3+aw=
@@ -143,8 +142,8 @@ github.com/aws/aws-sdk-go-v2/service/qldb v1.16.7 h1:lLP/LlzaI67MXKfyTVLox6HBKgB
 github.com/aws/aws-sdk-go-v2/service/qldb v1.16.7/go.mod h1:po39i8aELtAKkN5FtMRzOhuOjEi6v/pwAS6FqRT4ags=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.10.2 h1:69qtIi4V7ehV07agrcPnZY6Pq6ZkW+LAInuvyql2rIw=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.10.2/go.mod h1:brD/m0i8L/zx56h8JRC1K+37C6fbom3boeSNPgY6t8M=
-github.com/aws/aws-sdk-go-v2/service/rds v1.55.2 h1:dje4c9cNZY5bokl0YfT/xdXRg0mja1pUWijXLhab9y8=
-github.com/aws/aws-sdk-go-v2/service/rds v1.55.2/go.mod h1:SKANU6tKVhn1wHbTSF0Bo6LFrAENtPfXG1DHyahqFyE=
+github.com/aws/aws-sdk-go-v2/service/rds v1.56.0 h1:H4VLq374EwXR0i2OcDyD4a5vBGKPYbd1bHyw184A6QQ=
+github.com/aws/aws-sdk-go-v2/service/rds v1.56.0/go.mod h1:NNx09yR8B7z4I5xTt2rUq+5h2lmA9T9bbm7NME/74Ac=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6 h1:UpIGzyKcKqNsAAE+H57o4FxYn1lwkTkQCa7mc5euTFE=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6/go.mod h1:GM3w954QkzEAlPd0A1FS5514eNOzHx5z6uwJV+ncCow=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.2 h1:2mfEZP1NEn+NryKAYp9lt3LGnR2KCZ9gdes4mwBVQ2E=
