@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_codecommit_repository: rename repository when repository_name is changed, don't force replacement, causing data loss
+resource/aws_codecommit_repository: Doesn't force replacement when renaming
 ```
