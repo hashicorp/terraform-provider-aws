@@ -1,5 +1,8 @@
 ```release-note:bug
-resource/aws_neptune_cluster_instance:  Remove engine_version as ForceNew parameter on aws_neptune_cluster_instance resource.
-resource/aws_neptune_cluster_parameter_group:  Fixed condition where defined cluser parameters with system default values
-were being seen as updates.
+resource/aws_neptune_cluster_instance: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `engine_version`
+```
+
+```release-note:bug
+resource/aws_neptune_cluster_parameter_group: Fix condition where defined cluster parameters with system default values
+are seen as updates
 ```
