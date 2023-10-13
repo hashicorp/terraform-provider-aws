@@ -1,4 +1,11 @@
 ## 5.22.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_inspector2_enabler: Fix `Value at 'resourceTypes' failed to satisfy constraint` errors ([#33348](https://github.com/hashicorp/terraform-provider-aws/issues/33348))
+* resource/aws_neptune_cluster_instance: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `engine_version` ([#33487](https://github.com/hashicorp/terraform-provider-aws/issues/33487))
+* resource/aws_neptune_cluster_parameter_group: Fix condition where defined cluster parameters with system default values are seen as updates ([#33487](https://github.com/hashicorp/terraform-provider-aws/issues/33487))
+
 ## 5.21.0 (October 12, 2023)
 
 FEATURES:
