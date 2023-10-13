@@ -3,6 +3,5 @@ resource/aws_neptune_cluster_instance: Remove [ForceNew](https://developer.hashi
 ```
 
 ```release-note:bug
-resource/aws_neptune_cluster_parameter_group: Fix condition where defined cluster parameters with system default values
-are seen as updates
+resource/aws_neptune_cluster_parameter_group: Fix condition where defined cluster parameters with system default values are seen as updates
 ```
