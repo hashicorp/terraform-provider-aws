@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.125.0
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.16.1
