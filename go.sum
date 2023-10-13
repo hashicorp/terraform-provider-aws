@@ -105,7 +105,6 @@ github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36 h1:0Zzo
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36/go.mod h1:zAE5h/4VanzBpqyWoCZX/nJImdsqjjsGt2r3MtbKSFA=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37 h1:WWZA/I2K4ptBS1kg0kV1JbBtG/umed0vwHRrmcr9z7k=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37/go.mod h1:vBmDnwWXWxNPFRMmG2m/3MKOe+xEcMDo1tanpaWCcck=
-github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.5/go.mod h1:HC7gNz3VH0p+RvLKK+HqNQv/gHy+1Os3ko/F41s3+aw=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.6 h1:9ulSU5ClouoPIYhDQdg9tpl83d5Yb91PXTKK+17q+ow=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.6/go.mod h1:lnc2taBsR9nTlz9meD+lhFZZ9EWY712QHrRflWpTcOA=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.6.2 h1:JD5IUr3CejC0kGxvnU8dxkl2k383n94QdUcxb2Vt+Nw=
@@ -158,8 +157,8 @@ github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.5 h1:18p6+HD6xj5oOtDNi
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.5/go.mod h1:BhMj1pZPuQfzuS96s4ScniYr9qhPwDMA19N4eWPM1Lg=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.40.2 h1:Ll5/YVCOzRB+gxPqs2uD0R7/MyATC0w85626glSKmp4=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.40.2/go.mod h1:Zjfqt7KhQK+PO1bbOsFNzKgaq7TcxzmEoDWN8lM0qzQ=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.33.1 h1:et+tylt0R4X5jGq++egvYrv2u7JCuB0ZhSlzHYdOwtw=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.33.1/go.mod h1:/qC7aNeoLJcZu2a90OnclO8VMz9QClZTDpG4AFLDSMA=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.33.2 h1:leQTMJgJevNcCcUVAHg0OePm/pgKKjHAHaBKkBwO0qg=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.33.2/go.mod h1:RCYpYoSEUpDfeQeZYHMFgY15cUNc/IbG06sF7IDSSO0=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.1 h1:Z1XsWjViyQrF7+VK4JECRdn/R6i1v6EsrBMEmzB0rf4=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.1/go.mod h1:bcdKaS8+sUoa39w9x93KjohdT/TGdvJb/N+FFbYIcuI=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.1 h1:z/tG3vLlp7n1Ce2ZlJOiN3kd22JHqdkY4FYDrlfeA0k=
