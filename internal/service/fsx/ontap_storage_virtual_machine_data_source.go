@@ -18,9 +18,9 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
-func DataSourceOntapStorageVirtualMachine() *schema.Resource {
+func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOntapStorageVirtualMachineRead,
+		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachineRead,
 
 		Schema: map[string]*schema.Schema{
 			"active_directory_configuration": {
@@ -191,7 +191,7 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 	}
 }
 
-func dataSourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig

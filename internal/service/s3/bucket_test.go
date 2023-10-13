@@ -2638,6 +2638,25 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 	}
 }
 
+func testAccCheckBucketAddObjectWithMetadata(ctx context.Context, n string, key string, metadata map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+
+		_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
+			Bucket:   aws.String(rs.Primary.ID),
+			Key:      aws.String(key),
+			Metadata: aws.StringMap(metadata),
+		})
+
+		if err != nil {
+			return fmt.Errorf("PutObject error: %s", err)
+		}
+
+		return nil
+	}
+}
+
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

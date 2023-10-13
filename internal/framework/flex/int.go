@@ -48,3 +48,11 @@ func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
 
 	return aws.Int64(i)
 }
+
+func Int32ToFramework(ctx context.Context, v *int32) types.Int64 {
+	var output types.Int64
+
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
+}

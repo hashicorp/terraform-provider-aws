@@ -65,7 +65,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
-				ElementType: types.StringType,
+				ElementType: fwtypes.ARNType,
 				Required:    true,
 			},
 			"id": framework.IDAttribute(),
@@ -365,6 +365,7 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 
 	return diags
 }
+
 func expandComputeEnvironmentOrder(order []string) (envs []*batch.ComputeEnvironmentOrder) {
 	for i, env := range order {
 		envs = append(envs, &batch.ComputeEnvironmentOrder{

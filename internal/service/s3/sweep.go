@@ -73,9 +73,23 @@ func sweepObjects(region string) error {
 	sweepables := make([]sweep.Sweepable, 0)
 
 	for _, bucket := range buckets {
+		bucket := aws.ToString(bucket.Name)
+		objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucket, "")
+
+		var objectLockEnabled bool
+
+		if tfresource.NotFound(err) {
+		} else if err != nil {
+			log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
+			continue
+		} else {
+			objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
+		}
+
 		sweepables = append(sweepables, objectSweeper{
-			conn: conn,
-			name: aws.ToString(bucket.Name),
+			conn:   conn,
+			bucket: bucket,
+			locked: objectLockEnabled,
 		})
 	}
 
@@ -89,15 +103,16 @@ func sweepObjects(region string) error {
 }
 
 type objectSweeper struct {
-	conn *s3.Client
-	name string
+	conn   *s3.Client
+	bucket string
+	locked bool
 }
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := deleteAllObjectVersions(ctx, os.conn, os.name, "", true, true)
+	_, err := deleteAllObjectVersions(ctx, os.conn, os.bucket, "", os.locked, true)
 	if err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.name, err)
+		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
 	return nil
 }

@@ -126,7 +126,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `imageOwnerAlias` - AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
 * `imageType` - Type of image.
 * `hypervisor` - Hypervisor type of the image.
-* `ownerId` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Whether the image has public launch permissions.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -161,4 +160,4 @@ Using `terraform import`, import `awsAmi` using the ID of the AMI. For example:
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f95e34d8937554a41a0cf9f51c58a9a29cd4f3a00cd9c851b2926346eb65ba3 -->
+<!-- cache-key: cdktf-0.18.0 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->

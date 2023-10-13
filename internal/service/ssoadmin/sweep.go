@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
@@ -165,7 +164,7 @@ func sweepPermissionSets(region string) error {
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	input := &ssoadmin.ListPermissionSetsInput{
 		InstanceArn: aws.String(instanceArn),

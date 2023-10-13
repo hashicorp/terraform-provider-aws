@@ -124,3 +124,39 @@ func TestInt64ToFrameworkLegacy(t *testing.T) {
 		})
 	}
 }
+
+func TestInt32ToFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *int32
+		expected types.Int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Int32(42),
+			expected: types.Int64Value(42),
+		},
+		"zero int64": {
+			input:    aws.Int32(0),
+			expected: types.Int64Value(0),
+		},
+		"nil int64": {
+			input:    nil,
+			expected: types.Int64Null(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.Int32ToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
