@@ -1,0 +1,35 @@
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix various bugs
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Fix various bugs
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix various bugs
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
