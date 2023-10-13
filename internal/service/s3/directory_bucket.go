@@ -9,6 +9,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -82,6 +83,16 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 
 	input := &s3.CreateBucketInput{
 		Bucket: flex.StringFromFramework(ctx, data.Bucket),
+		CreateBucketConfiguration: &awstypes.CreateBucketConfiguration{
+			Bucket: &awstypes.BucketInfo{
+				DataRedundancy: awstypes.DataRedundancySingleAvailabilityZone,
+				Type:           awstypes.BucketTypeDirectory,
+			},
+		},
+	}
+
+	if region := r.Meta().Region; region != names.USEast1RegionID {
+		input.CreateBucketConfiguration.LocationConstraint = awstypes.BucketLocationConstraint(region)
 	}
 
 	_, err := conn.CreateBucket(ctx, input, useRegionalEndpointInUSEast1)
