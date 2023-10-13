@@ -123,8 +123,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.40.0 h1:M5NR3l0p/+8H0Ers+e2iKIwi2
 github.com/aws/aws-sdk-go-v2/service/lambda v1.40.0/go.mod h1:kFs07FNyTowZkz+dGBR33xJbzGs2mkC5Kfm6/lyR5CA=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.7 h1:E7FrBLLabuWke0vzZLxktK8xNLoGblQsZVN2o+V2wYk=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.7/go.mod h1:dbmSa5HVnGr1MZwEi4okJLfx4Z7J8ur/cSwiBIgTkZg=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.6 h1:DeOKrIWI8M9noiLqs6iN82go1wQvAEreqBhlfeTy8e4=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.6/go.mod h1:WJyI7A91cJsTNCgMWabnbAffHi1lv98JB6YM3kNqNJQ=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.7 h1:NdIzvYLlzuI+XQOe+zeZjvOb5v2aQkij7UZb1sunFBA=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.7/go.mod h1:u2yl3D9ygNXthorLQOj2wmMPSxWBGZ+XTlkVbsK2Bh8=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6 h1:egi5EkmnxHBgS17lHO/vnp25fNWJr2czdKRWoCpyqGE=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.20.6/go.mod h1:CEwzxzOcMNP3yBh3AmPq8GuDTVucXBiSlhUNYNUvL2I=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.37.1 h1:V35Jr6Aker94WCzlchrHV62oRHrmHyulUlulutQKjoQ=
