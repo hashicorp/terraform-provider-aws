@@ -31,6 +31,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
 		UpdateWithoutTimeout: resourceClusterParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceClusterParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -39,6 +40,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -56,22 +68,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      neptune.ApplyMethodPendingReboot,
+							ValidateFunc: validation.StringInSlice(neptune.ApplyMethod_Values(), false),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -79,15 +86,6 @@ func ResourceClusterParameterGroup() *schema.Resource {
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
-						},
-						"apply_method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  neptune.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice([]string{
-								neptune.ApplyMethodImmediate,
-								neptune.ApplyMethodPendingReboot,
-							}, false),
 						},
 					},
 				},
