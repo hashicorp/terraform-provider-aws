@@ -101,8 +101,9 @@ github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.15 h1:7R8uRYy
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.15/go.mod h1:26SQUPcTNgV1Tapwdt4a1rOsYRsnBsJHLMPoxK2b0d8=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.38 h1:skaFGzv+3kA+v2BPKhuekeb1Hbb105+44r8ASC+q5SE=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.38/go.mod h1:epIZoRSSbRIwLPJU5F+OldHhwZPBdpDeQkRdCeY3+00=
-github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36 h1:0ZzowXTZABVqnJnwDMlTDP3eeEkuP1r6RYnhSBmgK2o=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.36/go.mod h1:zAE5h/4VanzBpqyWoCZX/nJImdsqjjsGt2r3MtbKSFA=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.37 h1:4LoizcvPT9A0tiAFhepxn0bGZXkzvN0pG0epydY3Pno=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.37/go.mod h1:7xBUZyP6LeLc+5Ym9PG7atqw4sR28sBtYcHETik+bPE=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37 h1:WWZA/I2K4ptBS1kg0kV1JbBtG/umed0vwHRrmcr9z7k=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.37/go.mod h1:vBmDnwWXWxNPFRMmG2m/3MKOe+xEcMDo1tanpaWCcck=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.6 h1:9ulSU5ClouoPIYhDQdg9tpl83d5Yb91PXTKK+17q+ow=
@@ -185,8 +186,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.23.2 h1:0BkLfgeDjfZnZ+MhB3ONb01u9pwF
 github.com/aws/aws-sdk-go-v2/service/sts v1.23.2/go.mod h1:Eows6e1uQEsc4ZaHANmsPRzAKcVDrcmjjWiih2+HUUQ=
 github.com/aws/aws-sdk-go-v2/service/swf v1.17.5 h1:MR6A/XkUKAkaRuUiuLHcZPgjCB+o9iRxBBSym7pVDek=
 github.com/aws/aws-sdk-go-v2/service/swf v1.17.5/go.mod h1:yQR+w4YfnXyKeDIIFX3tDZ1wndz+VESqcEJN5cFIjSI=
-github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.1 h1:vR4rTWTQkzqDqnYbafOdKxSEpoTPtMpU4ga83nMgdAY=
-github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.1/go.mod h1:085nMFR23/NB91pGEOxJeNJsgk2tIu/CbBxPQJXDBuw=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.2 h1:ppsskGhrtUfE07a5EQpIjneB3gDcOxUI3gByyLh87QI=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.2/go.mod h1:7bY9UbR+qbrj3nSV1IxGol1OLA1fM5dZQ4y97FF1zvA=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.6 h1:b3v0V0bS8VX0YCg+NcVZYJtBwJJFELwtJtcvKeWwOCk=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.6/go.mod h1:jB3ccZlCktNZaK4Db1RUxgPsieWWqd4FxFidaJvrmRY=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.2 h1:9xtkwhrvGMgIYuyO2tYrnRH979MgVQj17K1YFZSKgMA=
