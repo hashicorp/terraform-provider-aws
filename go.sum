@@ -188,8 +188,8 @@ github.com/aws/aws-sdk-go-v2/service/swf v1.17.5 h1:MR6A/XkUKAkaRuUiuLHcZPgjCB+o
 github.com/aws/aws-sdk-go-v2/service/swf v1.17.5/go.mod h1:yQR+w4YfnXyKeDIIFX3tDZ1wndz+VESqcEJN5cFIjSI=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.2 h1:ppsskGhrtUfE07a5EQpIjneB3gDcOxUI3gByyLh87QI=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.19.2/go.mod h1:7bY9UbR+qbrj3nSV1IxGol1OLA1fM5dZQ4y97FF1zvA=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.6 h1:b3v0V0bS8VX0YCg+NcVZYJtBwJJFELwtJtcvKeWwOCk=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.6/go.mod h1:jB3ccZlCktNZaK4Db1RUxgPsieWWqd4FxFidaJvrmRY=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.29.0 h1:kTRJ0ZloHKzGchHa5REs7pGVeaxqR00r5R5TOKQE6rU=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.29.0/go.mod h1:JfI0OCCqM779RRoXNL8829r6i9ItxodDcm8VjA9uifY=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.2 h1:9xtkwhrvGMgIYuyO2tYrnRH979MgVQj17K1YFZSKgMA=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.2/go.mod h1:t3lH38by/71ZUuMH8Q29yxSr2sbiSvUyylQ/pvDnLD0=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.1 h1:maF3kTtf7OolW7IPTbpzJbCK31O3KIro9UpgEVZkBz0=
