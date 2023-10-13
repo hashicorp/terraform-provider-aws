@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.125.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.6
