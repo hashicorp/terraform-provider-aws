@@ -814,12 +814,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [`cookies`](#cookies-block) below for details.
 * `headers` - (Optional) Inspect the request headers. See [`headers`](#headers-block) below for details.
+* `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [`json_body`](#json_body-block) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -858,6 +859,12 @@ The `headers` block supports the following arguments:
     * `excluded_headers` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
 * `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
+### `ja3_fingerprint` Block
+
+The `ja3_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### `json_body` Block
 
