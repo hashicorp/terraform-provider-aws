@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,6 +36,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
 		UpdateWithoutTimeout: resourceClusterParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceClusterParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,6 +45,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -60,22 +73,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      docdb.ApplyMethodPendingReboot,
+							ValidateFunc: validation.StringInSlice(docdb.ApplyMethod_Values(), false),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -83,15 +91,6 @@ func ResourceClusterParameterGroup() *schema.Resource {
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
-						},
-						"apply_method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  docdb.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice([]string{
-								docdb.ApplyMethodImmediate,
-								docdb.ApplyMethodPendingReboot,
-							}, false),
 						},
 					},
 				},
@@ -117,23 +116,30 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		groupName = id.UniqueId()
 	}
 
-	input := docdb.CreateDBClusterParameterGroupInput{
+	input := &docdb.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &input)
+	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group (%s): %s", groupName, err)
 	}
 
-	d.SetId(aws.StringValue(input.DBClusterParameterGroupName))
+	d.SetId(groupName)
 
-	d.Set("arn", resp.DBClusterParameterGroup.DBClusterParameterGroupArn)
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 
-	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -197,27 +203,11 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters := expandParameters(ns.Difference(os).List())
-		if len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				var paramsToModify []*docdb.Parameter
-				if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
-					paramsToModify, parameters = parameters[:], nil
-				} else {
-					paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
-				}
-				parameterGroupName := d.Id()
-				modifyOpts := docdb.ModifyDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(parameterGroupName),
-					Parameters:                  paramsToModify,
-				}
+		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
+			err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), parameters)
 
-				_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, &modifyOpts)
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster Parameter Group: %s", err)
-				}
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -245,6 +235,24 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 	return diags
+}
+
+func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.DocDB, name string, parameters []*docdb.Parameter) error {
+	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
+	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+		input := &docdb.ModifyDBClusterParameterGroupInput{
+			DBClusterParameterGroupName: aws.String(name),
+			Parameters:                  chunk,
+		}
+
+		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("modifying DocumentDB Cluster Parameter Group (%s): %w", name, err)
+		}
+	}
+
+	return nil
 }
 
 func WaitForClusterParameterGroupDeletion(ctx context.Context, conn *docdb.DocDB, name string) error {
