@@ -203,6 +203,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
+	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion
