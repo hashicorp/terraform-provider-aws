@@ -165,8 +165,8 @@ github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.2 h1:UWaB/MOz3+efoi5lbiqM
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.2/go.mod h1:bT7d8k/k7DbfzbDdOv4IiiBpvPiet4aDpocpxeB0AtQ=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.2 h1:7dfERjekFyE/OAd4ZyA+EpW/8CW/aL2ou3yOgNyigqk=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.2/go.mod h1:N5a9dNF+SH34X/nWhpUePVebcnNRa0A2W4IByMpB3gg=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.2 h1:3qYTIrsGBaxD8F6N+B0rx8OJSoS15GfT12UuhCTAumI=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.2/go.mod h1:NrZAizsqYf7fIXZP6sAcjV+jbW8yYwNDtHAxRC+mEMQ=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.3 h1:mVJ3AgbjUUMZcMRImOelgx1S28o2LoYv75WZfkiMLVs=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.3/go.mod h1:xrSmtekhLtdb13dQGTnGkCtuvk4tkS12m8UVtZn2NZE=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.6 h1:df3gIYF9ViDrg5aUXDcey8x+r20GnVZUcp+MCmxIREA=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.6/go.mod h1:qJTvAvexUNd2qquSHqdsH8nvcF7LdbQsdri0BuIiwxM=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.24.6 h1:gOp27f7sRnebYZmBTEU9SshxNmUSZpLxwhEbR4B7IG0=
