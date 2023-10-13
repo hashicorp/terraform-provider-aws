@@ -117,6 +117,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// Avoid duplicate calls to STS by enabling SkipCredsValidation for the call to GetAwsConfig
+	// and then restoring the configured value for the call to GetAwsAccountIDAndPartition.
+	skipCredsValidation := awsbaseConfig.SkipCredsValidation
+	awsbaseConfig.SkipCredsValidation = true
+
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
 	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 
@@ -138,6 +143,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 	c.Region = cfg.Region
+
+	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
 	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
