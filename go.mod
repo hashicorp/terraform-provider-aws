@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.90
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.11.7
-	github.com/aws/aws-sdk-go-v2/service/acm v1.19.1
+	github.com/aws/aws-sdk-go-v2/service/acm v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.1
