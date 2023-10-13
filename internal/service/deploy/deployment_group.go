@@ -38,6 +38,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceDeploymentGroupRead,
 		UpdateWithoutTimeout: resourceDeploymentGroupUpdate,
 		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -50,23 +51,13 @@ func ResourceDeploymentGroup() *schema.Resource {
 				deploymentGroupName := idParts[1]
 				conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-				input := &codedeploy.GetDeploymentGroupInput{
-					ApplicationName:     aws.String(applicationName),
-					DeploymentGroupName: aws.String(deploymentGroupName),
-				}
-
-				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
-				output, err := conn.GetDeploymentGroupWithContext(ctx, input)
+				group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
 				}
 
-				if output == nil || output.DeploymentGroupInfo == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", d.Id())
-				}
-
-				d.SetId(aws.StringValue(output.DeploymentGroupInfo.DeploymentGroupId))
+				d.SetId(aws.StringValue(group.DeploymentGroupId))
 				d.Set("app_name", applicationName)
 				d.Set("deployment_group_name", deploymentGroupName)
 
@@ -75,52 +66,62 @@ func ResourceDeploymentGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"alarm_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarms": {
+							Type:     schema.TypeSet,
+							MaxItems: 10,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"ignore_poll_alarm_failure": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"app_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"compute_platform": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deployment_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"deployment_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"deployment_style": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+			"auto_rollback_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"deployment_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
-						"deployment_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentTypeInPlace,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						"events": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"autoscaling_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"blue_green_deployment_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -146,7 +147,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"green_fleet_provisioning_option": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -162,7 +162,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"terminate_blue_instances_on_deployment_success": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -185,41 +184,119 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"service_role_arn": {
+			"compute_platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_config_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "CodeDeployDefault.OneAtATime",
+				ValidateFunc: validation.StringLenBetween(0, 100),
+			},
+			"deployment_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-
-			"alarm_configuration": {
+			"deployment_style": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						},
+						"deployment_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentTypeInPlace,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						},
+					},
+				},
+			},
+			"ec2_tag_filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validTagFilters,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+				Set: resourceTagFilterHash,
+			},
+			"ec2_tag_set": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ec2_tag_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validTagFilters,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							Set: resourceTagFilterHash,
+						},
+					},
+				},
+				Set: resourceTagSetHash,
+			},
+			"ecs_service": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarms": {
-							Type:     schema.TypeSet,
-							MaxItems: 10,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"cluster_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
-
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"ignore_poll_alarm_failure": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+						"service_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 					},
 				},
 			},
-
 			"load_balancer_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -239,7 +316,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -253,7 +329,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_pair_info": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -316,121 +391,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"auto_rollback_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"events": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-
-			"autoscaling_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"deployment_config_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "CodeDeployDefault.OneAtATime",
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-
-			"ec2_tag_set": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ec2_tag_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTagFilters,
-									},
-
-									"value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-							Set: resourceTagFilterHash,
-						},
-					},
-				},
-				Set: resourceTagSetHash,
-			},
-
-			"ec2_tag_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTagFilters,
-						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceTagFilterHash,
-			},
-
-			"ecs_service": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"service_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-					},
-				},
-			},
-
 			"on_premises_instance_tag_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -440,13 +400,11 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validTagFilters,
 						},
-
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -455,7 +413,19 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTagFilterHash,
 			},
-
+			"outdated_instances_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      codedeploy.OutdatedInstancesStrategyUpdate,
+				ValidateFunc: validation.StringInSlice(codedeploy.OutdatedInstancesStrategy_Values(), false),
+			},
+			"service_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trigger_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -464,18 +434,15 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"trigger_events": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(codedeploy.TriggerEventType_Values(), false),
 							},
 						},
-
 						"trigger_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"trigger_target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -485,8 +452,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTriggerHashConfig,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -557,7 +522,9 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(attr.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
+	if attr, ok := d.GetOk("outdated_instances_strategy"); ok {
+		input.OutdatedInstancesStrategy = aws.String(attr.(string))
+	}
 
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
@@ -583,7 +550,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy deployment group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
@@ -595,23 +562,18 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	deploymentGroupName := d.Get("deployment_group_name").(string)
-	resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
-		ApplicationName:     aws.String(d.Get("app_name").(string)),
-		DeploymentGroupName: aws.String(deploymentGroupName),
-	})
+	group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, d.Get("app_name").(string), d.Get("deployment_group_name").(string))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding CodeDeploy Deployment Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
-	group := resp.DeploymentGroupInfo
 	appName := aws.StringValue(group.ApplicationName)
 	groupName := aws.StringValue(group.DeploymentGroupName)
 	groupArn := arn.ARN{
@@ -629,6 +591,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("deployment_group_id", group.DeploymentGroupId)
 	d.Set("compute_platform", group.ComputePlatform)
 	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
 
 	autoScalingGroups := make([]string, len(group.AutoScalingGroups))
 	for i, autoScalingGroup := range group.AutoScalingGroups {
@@ -768,6 +731,15 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(n.([]interface{}))
 		}
 
+		if d.HasChange("outdated_instances_strategy") {
+			o, n := d.GetChange("outdated_instances_strategy")
+			if n.(string) == "" && o.(string) == codedeploy.OutdatedInstancesStrategyIgnore { // if the user is trying to remove the strategy, set it to update (the default)
+				input.OutdatedInstancesStrategy = aws.String(codedeploy.OutdatedInstancesStrategyUpdate)
+			} else if n.(string) != "" { //
+				input.OutdatedInstancesStrategy = aws.String(n.(string))
+			}
+		}
+
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
 
 		var err error
@@ -804,7 +776,7 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
+	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
 	_, err := conn.DeleteDeploymentGroupWithContext(ctx, &codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
@@ -818,6 +790,32 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func FindDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.CodeDeploy, applicationName, deploymentGroupName string) (*codedeploy.DeploymentGroupInfo, error) {
+	input := &codedeploy.GetDeploymentGroupInput{
+		ApplicationName:     aws.String(applicationName),
+		DeploymentGroupName: aws.String(deploymentGroupName),
+	}
+
+	output, err := conn.GetDeploymentGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DeploymentGroupInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DeploymentGroupInfo, nil
 }
 
 // buildOnPremTagFilters converts raw schema lists into a list of
