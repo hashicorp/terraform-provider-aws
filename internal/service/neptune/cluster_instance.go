@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -293,7 +294,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("port", port)
 	}
 
-	m, err := FindClusterMemberByInstanceByTwoPartKey(ctx, conn, clusterID, d.Id())
+	m, err := findClusterMemberByInstanceByTwoPartKey(ctx, conn, clusterID, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s) member (%s): %s", clusterID, d.Id(), err)
@@ -439,24 +440,16 @@ func findDBInstances(ctx context.Context, conn *neptune.Neptune, input *neptune.
 	return output, nil
 }
 
-func FindClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.Neptune, clusterID, instanceID string) (*neptune.DBClusterMember, error) {
-	dbc, err := FindClusterByID(ctx, conn, clusterID)
+func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.Neptune, clusterID, instanceID string) (*neptune.DBClusterMember, error) {
+	output, err := FindDBClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, v := range dbc.DBClusterMembers {
-		if v == nil {
-			continue
-		}
-
-		if aws.StringValue(v.DBInstanceIdentifier) == instanceID {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
+	return tfresource.AssertSinglePtrResult(tfslices.Filter(output.DBClusterMembers, func(v *neptune.DBClusterMember) bool {
+		return aws.StringValue(v.DBInstanceIdentifier) == instanceID
+	}))
 }
 
 func statusDBInstance(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {

@@ -615,7 +615,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 				continue
 			}
 
-			_, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -649,7 +649,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *nep
 
 		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -685,7 +685,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err = tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
