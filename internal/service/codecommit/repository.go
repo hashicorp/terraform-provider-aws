@@ -136,7 +136,11 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("repository_name", out.RepositoryMetadata.RepositoryName)
 
 	if _, ok := d.GetOk("default_branch"); ok {
-		d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
+		// The default branch can only be set when there is code in the repository
+		// Preserve the configured value
+		if out.RepositoryMetadata.DefaultBranch != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+			d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
+		}
 	}
 
 	return diags
@@ -230,8 +234,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 		DefaultBranchName: aws.String(d.Get("default_branch").(string)),
 	}
 
-	_, err = conn.UpdateDefaultBranchWithContext(ctx, branchInput)
-	if err != nil {
+	if _, err := conn.UpdateDefaultBranchWithContext(ctx, branchInput); err != nil {
 		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
 	}
 
