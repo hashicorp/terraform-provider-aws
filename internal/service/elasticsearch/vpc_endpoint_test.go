@@ -277,7 +277,7 @@ resource "aws_elasticsearch_domain" "test" {
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "t2.small.elasticsearch"
+    instance_type          = "t2.medium.elasticsearch"
   }
 
   vpc_options {
