@@ -539,6 +539,9 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
+			if k == "LambdaCode" {
+				k = "LAMBDA_CODE"
+			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
 		results[aws.ToString(a.AccountId)] = status
