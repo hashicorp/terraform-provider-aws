@@ -49,7 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.7
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.1
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.2
