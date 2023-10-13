@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1248 resources and 513 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1259 resources and 518 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -323,27 +323,29 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+
 ### Assume Role Configuration Reference
 
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
+Note that environment variables are not supported for assuming IAM roles.
+
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|--------|-----------------------|
-|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Duration|`duration`|N/A|`duration_seconds`|
-|External ID|`external_id`|N/A|`external_id`|
-|Policy|`policy`|N/A|N/A|
-|Policy ARNs|`policy_arns`|N/A|N/A|
-|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|N/A|
-|Tags|`tags`|N/A|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
-
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`role_arn`|`role_arn`|
+|Duration|`duration`|`duration_seconds`|
+|External ID|`external_id`|`external_id`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policy_arns`|N/A|
+|Session Name|`session_name`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|
 
 ### Assume Role with Web Identity Configuration Reference
 
@@ -785,4 +787,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.18.0 input-39ce8f656c02038ebd768d32b389b4dc2f7ee37785c96943b49d045f754827a0 -->
+<!-- cache-key: cdktf-0.18.0 input-b1ced2bc38615543492e0f0570fb7876f5cb05e7ef00d9ee1f094edf7e2d6472 -->

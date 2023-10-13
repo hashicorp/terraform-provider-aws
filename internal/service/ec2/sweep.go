@@ -240,6 +240,7 @@ func init() {
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_openzfs_file_system",
 			"aws_fsx_windows_file_system",
+			"aws_grafana_workspace",
 			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_lb",
@@ -249,6 +250,7 @@ func init() {
 			"aws_network_interface",
 			"aws_networkfirewall_firewall",
 			"aws_opensearch_domain",
+			"aws_quicksight_vpc_connection",
 			"aws_redshift_cluster",
 			"aws_redshift_subnet_group",
 			"aws_route53_resolver_endpoint",
@@ -256,7 +258,6 @@ func init() {
 			"aws_spot_fleet_request",
 			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
-			"aws_grafana_workspace",
 		},
 	})
 
@@ -364,6 +365,8 @@ func init() {
 			"aws_subnet",
 			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
+			"aws_vpclattice_service_network",
+			"aws_vpclattice_target_group",
 		},
 		F: sweepVPCs,
 	})

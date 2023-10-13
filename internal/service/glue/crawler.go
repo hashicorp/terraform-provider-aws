@@ -315,7 +315,7 @@ func ResourceCrawler() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9-_$#\/]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#\/-]+$`), ""),
 				),
 			},
 			"recrawl_policy": {

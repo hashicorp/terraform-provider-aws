@@ -146,7 +146,7 @@ func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
 			}
 		}
 
-		errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, valid, v))
+		errors = append(errors, fmt.Errorf("expected %s to be one of %q, got %s", k, valid, v))
 		return warnings, errors
 	}
 }

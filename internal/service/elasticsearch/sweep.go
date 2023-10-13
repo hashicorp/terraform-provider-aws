@@ -65,6 +65,11 @@ func sweepDomains(region string) error {
 
 		name := aws.StringValue(domainInfo.DomainName)
 
+		if engineType := aws.StringValue(domainInfo.EngineType); engineType != elasticsearchservice.EngineTypeElasticsearch {
+			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
+			continue
+		}
+
 		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.

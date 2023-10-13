@@ -63,7 +63,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-z0-9]{4,7}$`),
+						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
 						"value must contain 4-7 lowercase letters or numbers",
 					),
 				},

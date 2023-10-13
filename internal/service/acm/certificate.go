@@ -913,7 +913,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 	return nil, err
 }
 
-var validateHybridDuration = verify.ValidAnyDiag(
+var validateHybridDuration = validation.AnyDiag(
 	sdktypes.ValidateDuration,
 	sdktypes.ValidateRFC3339Duration,
 )

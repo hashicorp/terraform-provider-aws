@@ -146,7 +146,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			},
 			{
 				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
-				ExpectError: regexache.MustCompile(`Search returned 0 results`),
+				ExpectError: regexache.MustCompile(`no matching EFS file system found`),
 			},
 		},
 	})

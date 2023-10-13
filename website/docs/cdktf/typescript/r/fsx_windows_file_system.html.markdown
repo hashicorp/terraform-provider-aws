@@ -88,23 +88,29 @@ The following arguments are optional:
 
 * `activeDirectoryId` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `selfManagedActiveDirectory`.
 * `aliases` - (Optional) An array DNS alias names that you want to associate with the Amazon FSx file system.  For more information, see [Working with DNS Aliases](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-dns-aliases.html)
-* `auditLogConfiguration` - (Optional) The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system. See below.
+* `auditLogConfiguration` - (Optional) The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system. See [Audit Log Configuration](#audit-log-configuration) below.
 * `automaticBackupRetentionDays` - (Optional) The number of days to retain automatic backups. Minimum of `0` and maximum of `90`. Defaults to `7`. Set to `0` to disable.
 * `backupId` - (Optional) The ID of the source backup to create the filesystem from.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags on the file system should be copied to backups. Defaults to `false`.
 * `dailyAutomaticBackupStartTime` - (Optional) The preferred time (in `hh:mm` format) to take daily automatic backups, in the UTC time zone.
 * `deploymentType` - (Optional) Specifies the file system deployment type, valid values are `multiAz1`, `singleAz1` and `singleAz2`. Default value is `singleAz1`.
+* `diskIopsConfiguration` - (Optional) The SSD IOPS configuration for the Amazon FSx for Windows File Server file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
 * `kmsKeyId` - (Optional) ARN for the KMS Key to encrypt the file system at rest. Defaults to an AWS managed KMS Key.
 * `preferredSubnetId` - (Optional) Specifies the subnet in which you want the preferred file server to be located. Required for when deployment type is `multiAz1`.
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
-* `selfManagedActiveDirectory` - (Optional) Configuration block that Amazon FSx uses to join the Windows File Server instance to your self-managed (including on-premises) Microsoft Active Directory (AD) directory. Cannot be specified with `activeDirectoryId`. Detailed below.
+* `selfManagedActiveDirectory` - (Optional) Configuration block that Amazon FSx uses to join the Windows File Server instance to your self-managed (including on-premises) Microsoft Active Directory (AD) directory. Cannot be specified with `activeDirectoryId`. See [Self-Managed Active Directory](#self-managed-active-directory) below.
 * `skipFinalBackup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `storageCapacity` - (Optional) Storage capacity (GiB) of the file system. Minimum of 32 and maximum of 65536. If the storage type is set to `hdd` the minimum value is 2000. Required when not creating filesystem for a backup.
 * `storageType` - (Optional) Specifies the storage type, Valid values are `ssd` and `hdd`. `hdd` is supported on `singleAz2` and `multiAz1` Windows file system deployment types. Default value is `ssd`.
 * `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:hh:mm` format) to perform weekly maintenance, in the UTC time zone.
 
-### self_managed_active_directory
+### Disk Iops Configuration
+
+* `iops` - (Optional) - The total number of SSD IOPS provisioned for the file system.
+* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `automatic` and `userProvisioned`. Default value is `automatic`.
+
+### Self-Managed Active Directory
 
 The `selfManagedActiveDirectory` configuration block supports the following arguments:
 
@@ -115,7 +121,7 @@ The `selfManagedActiveDirectory` configuration block supports the following argu
 * `fileSystemAdministratorsGroup` - (Optional) The name of the domain group whose members are granted administrative privileges for the file system. Administrative privileges include taking ownership of files and folders, and setting audit controls (audit ACLs) on files and folders. The group that you specify must already exist in your domain. Defaults to `Domain Admins`.
 * `organizationalUnitDistinguishedName` - (Optional) The fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `ou=fSx,dc=yourdomain,dc=corp,dc=com`. Only accepts OU as the direct parent of the file system. If none is provided, the FSx file system is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
 
-### audit_log_configuration
+### Audit Log Configuration
 
 * `auditLogDestination` - (Optional) The Amazon Resource Name (ARN) for the destination of the audit logs. The destination can be any Amazon CloudWatch Logs log group ARN or Amazon Kinesis Data Firehose delivery stream ARN. Can be specified when `fileAccessAuditLogLevel` and `fileShareAccessAuditLogLevel` are not set to `disabled`. The name of the Amazon CloudWatch Logs log group must begin with the `/aws/fsx` prefix. The name of the Amazon Kinesis Data Firehouse delivery stream must begin with the `awsFsx` prefix. If you do not provide a destination in `auditLogDestionation`, Amazon FSx will create and use a log stream in the CloudWatch Logs /aws/fsx/windows log group.
 * `fileAccessAuditLogLevel` - (Optional) Sets which attempt type is logged by Amazon FSx for file and folder accesses. Valid values are `successOnly`, `failureOnly`, `successAndFailure`, and `disabled`. Default value is `disabled`.
@@ -196,4 +202,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-374f94db1d1b4439804b4c21a577a772b84b0d20ddb7945da1ff349e5a4fa70c -->
+<!-- cache-key: cdktf-0.18.0 input-31e24eac31454cd45208a9da64e10292bbdac7ddfbe8990731498cf18fa7de07 -->

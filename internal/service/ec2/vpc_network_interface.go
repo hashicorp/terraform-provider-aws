@@ -1476,6 +1476,8 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.EC2, filterName, resourc
 
 	err = multierror.Append(err, deleteLingeringComprehendENIs(ctx, &g, conn, filterName, resourceId, timeout))
 
+	err = multierror.Append(err, deleteLingeringDMSENIs(ctx, &g, conn, filterName, resourceId, timeout))
+
 	return multierror.Append(err, g.Wait()).ErrorOrNil()
 }
 
@@ -1554,6 +1556,54 @@ func deleteLingeringComprehendENIs(ctx context.Context, g *multierror.Group, con
 	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
 	for _, v := range enis {
 		if strings.HasSuffix(aws.StringValue(v.RequesterId), ":Comprehend") {
+			networkInterfaces = append(networkInterfaces, v)
+		}
+	}
+
+	for _, v := range networkInterfaces {
+		v := v
+		g.Go(func() error {
+			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+
+			if v.Attachment != nil {
+				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+
+				if err != nil {
+					return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
+				}
+			}
+
+			err := DeleteNetworkInterface(ctx, conn, networkInterfaceID)
+
+			if err != nil {
+				return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
+			}
+
+			return nil
+		})
+	}
+
+	return nil
+}
+
+func deleteLingeringDMSENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	enis, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			filterName: resourceId,
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
+	}
+
+	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
+	for _, v := range enis {
+		if aws.StringValue(v.Description) == "DMSNetworkInterface" {
 			networkInterfaces = append(networkInterfaces, v)
 		}
 	}

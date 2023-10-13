@@ -28,7 +28,7 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeDefaultValues.html
@@ -88,7 +88,7 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -145,7 +145,7 @@ func integerParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -202,7 +202,7 @@ func stringParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -408,7 +408,7 @@ func parameterNameSchema(required bool) *schema.Schema {
 		Optional: !required,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 2048),
-			validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+			validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 		),
 	}
 }

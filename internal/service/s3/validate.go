@@ -39,7 +39,7 @@ func ValidBucketName(value string, region string) error {
 		if len(value) > 255 {
 			return fmt.Errorf("%q must contain less than 256 characters", value)
 		}
-		if !regexache.MustCompile(`^[0-9a-zA-Z-._]+$`).MatchString(value) {
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
 			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
 		}
 	}

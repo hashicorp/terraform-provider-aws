@@ -112,7 +112,7 @@ func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
 		rs := s.RootModule().Resources[n]
 
 		expectedNum := 3
-		expectedFormat := regexache.MustCompile("[a-z0-9]{32}")
+		expectedFormat := regexache.MustCompile("[0-9a-z]{32}")
 
 		tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
 		if expectedNum != tokenNum {

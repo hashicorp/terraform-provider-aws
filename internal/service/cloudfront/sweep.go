@@ -27,6 +27,12 @@ func init() {
 		},
 	})
 
+	// DO NOT add a continuous deployment policy sweeper as these are swept as part of the distribution sweeper
+	// resource.AddTestSweepers("aws_cloudfront_continuous_deployment_policy", &resource.Sweeper{
+	//	Name: "aws_cloudfront_continuous_deployment_policy",
+	//	F:    sweepContinuousDeploymentPolicies,
+	//})
+
 	resource.AddTestSweepers("aws_cloudfront_distribution", &resource.Sweeper{
 		Name: "aws_cloudfront_distribution",
 		F:    sweepDistributions,
@@ -58,6 +64,9 @@ func init() {
 	resource.AddTestSweepers("aws_cloudfront_monitoring_subscription", &resource.Sweeper{
 		Name: "aws_cloudfront_monitoring_subscription",
 		F:    sweepMonitoringSubscriptions,
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
 	})
 
 	resource.AddTestSweepers("aws_cloudfront_origin_access_control", &resource.Sweeper{
@@ -151,6 +160,27 @@ func sweepCachePolicies(region string) error {
 }
 
 func sweepDistributions(region string) error {
+	var result *multierror.Error
+
+	// 1. Production Distributions
+	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	// 2. Continuous Deployment Policies
+	if err := sweepContinuousDeploymentPolicies(region); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	// 3. Staging Distributions
+	if err := sweepDistributionsByProductionStaging(region, true); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -159,6 +189,12 @@ func sweepDistributions(region string) error {
 	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListDistributionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
+
+	if staging {
+		log.Printf("[INFO] Sweeping staging distributions")
+	} else {
+		log.Printf("[INFO] Sweeping production distributions")
+	}
 
 	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -176,6 +212,10 @@ func sweepDistributions(region string) error {
 
 			if err != nil {
 				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			if staging != aws.BoolValue(output.Distribution.DistributionConfig.Staging) {
 				continue
 			}
 
@@ -200,12 +240,53 @@ func sweepDistributions(region string) error {
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
 	}
 
 	return nil
+}
+
+func sweepContinuousDeploymentPolicies(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.CloudFrontConn(ctx)
+	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
+
+	log.Printf("[INFO] Sweeping continuous deployment policies")
+	var result *multierror.Error
+
+	// ListContinuousDeploymentPolicies does not have a paginator
+	for {
+		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
+		if err != nil {
+			log.Printf("[WARN] %s", err)
+			result = multierror.Append(result, err)
+			break
+		}
+
+		if output == nil || output.ContinuousDeploymentPolicyList == nil {
+			log.Printf("[WARN] CloudFront ListContinuousDeploymentPolicies empty response")
+			break
+		}
+
+		for _, cdp := range output.ContinuousDeploymentPolicyList.Items {
+			if err := DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id)); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+
+		if output.ContinuousDeploymentPolicyList.NextMarker == nil {
+			break
+		}
+
+		input.Marker = output.ContinuousDeploymentPolicyList.NextMarker
+	}
+
+	return result.ErrorOrNil()
 }
 
 func sweepFunctions(region string) error {

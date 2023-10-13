@@ -385,9 +385,9 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		var re *regexp.Regexp
 
 		if fifoQueue {
-			re = regexache.MustCompile(`^[a-zA-Z0-9_-]{1,75}\.fifo$`)
+			re = regexache.MustCompile(`^[0-9A-Za-z_-]{1,75}\.fifo$`)
 		} else {
-			re = regexache.MustCompile(`^[a-zA-Z0-9_-]{1,80}$`)
+			re = regexache.MustCompile(`^[0-9A-Za-z_-]{1,80}$`)
 		}
 
 		if !re.MatchString(name) {

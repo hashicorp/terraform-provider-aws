@@ -742,7 +742,7 @@ func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifi
 		"output_s3_uri": s3Uri,
 	}
 
-	re := regexache.MustCompile(`^(s3://[-a-z0-9.]{3,63}(/.+)?/)[-a-zA-Z0-9]+/output/output\.tar\.gz`)
+	re := regexache.MustCompile(`^(s3://[0-9a-z.-]{3,63}(/.+)?/)[0-9A-Za-z-]+/output/output\.tar\.gz`)
 	match := re.FindStringSubmatch(s3Uri)
 	if match != nil && match[1] != "" {
 		m["s3_uri"] = match[1]

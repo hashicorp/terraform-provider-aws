@@ -106,7 +106,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][a-z0-9-]+$`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
 						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
 				},
 			},
@@ -205,6 +205,14 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), nil),
+			err.Error(),
+		)
 		return
 	}
 
