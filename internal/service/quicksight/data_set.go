@@ -209,7 +209,7 @@ func ResourceDataSet() *schema.Resource {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
-								MaxItems: 16,
+								MaxItems: 18,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {

@@ -355,6 +355,12 @@ func expandNumericFormatConfiguration(tfList []interface{}) *quicksight.NumericF
 	if v, ok := tfMap["currency_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CurrencyDisplayFormatConfiguration = expandCurrencyDisplayFormatConfiguration(v)
 	}
+	if v, ok := tfMap["number_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.NumberDisplayFormatConfiguration = expandNumberDisplayFormatConfiguration(v)
+	}
+	if v, ok := tfMap["percentage_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.PercentageDisplayFormatConfiguration = expandPercentageDisplayFormatConfiguration(v)
+	}
 
 	return config
 }
@@ -650,13 +656,13 @@ func expandNumberDisplayFormatConfiguration(tfList []interface{}) *quicksight.Nu
 
 	config := &quicksight.NumberDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["number_scale"].(string); ok {
+	if v, ok := tfMap["number_scale"].(string); ok && v != "" {
 		config.NumberScale = aws.String(v)
 	}
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -687,10 +693,10 @@ func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *quicksigh
 
 	config := &quicksight.PercentageDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
