@@ -53,8 +53,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.11.7 h1:77Y0z87uZbG7R3djQJhxLetw
 github.com/aws/aws-sdk-go-v2/service/account v1.11.7/go.mod h1:hIGpFtNvJLOEDfp9hqnRVYfah6i9JDKqpyh/EGxDw1U=
 github.com/aws/aws-sdk-go-v2/service/acm v1.19.2 h1:M+BY1Sk+AcWg596Nz3MMX630a3vposBFDaTan+UD/Kk=
 github.com/aws/aws-sdk-go-v2/service/acm v1.19.2/go.mod h1:Zx0vrYeKZEZIPnggUx09FdoXze1+2i6Od+lHsG/L3vU=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1 h1:ioS2SwCT3cNA6y0KKEozBJ+IoinrBiWuNbU6oGHpk6o=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.1/go.mod h1:3hIsAH76MSJuhdbCI/axMDGDlXruT0r6Swo3/vtUAoo=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.2 h1:J0OmY99LItcxPA/82K8BqsVkKQNNs3hit6Jr3OAEs0U=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.21.2/go.mod h1:7bTOwXFz4+VxkDVB26d7TAhFKloGA3EtwtLAydyv1ek=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.6 h1:wodMSnced6g4nzZzioDnA8htdEq/dReyyZBTQFGWx2I=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.6/go.mod h1:xbR4FPxBw7W+POjVCu2hIO4t2Hv7/B3R6YXyGLKAXqw=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.1 h1:raBk0al+3nOOn/cF70/qebleYfWuWw2WDy37CLd2mYA=
