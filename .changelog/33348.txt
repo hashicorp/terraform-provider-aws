@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_inspector2_enabler: Fix fails to create due to incorrect resource type constant
+resource/aws_inspector2_enabler: Fix `Value at 'resourceTypes' failed to satisfy constraint` errors
 ```
