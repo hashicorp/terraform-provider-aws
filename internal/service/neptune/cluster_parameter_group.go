@@ -5,6 +5,7 @@ package neptune
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -111,24 +113,26 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		groupName = id.UniqueId()
 	}
 
-	createOpts := neptune.CreateDBClusterParameterGroupInput{
+	input := &neptune.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &createOpts)
+	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Parameter Group (%s): %s", groupName, err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
+	d.SetId(groupName)
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
 		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -238,12 +242,11 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters := expandParameters(ns.Difference(os).List())
-
-		if len(parameters) > 0 {
+		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
 			err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), parameters)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Parameter Group (%s) parameter: %s", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -271,24 +274,17 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 }
 
 func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
-	// We can only modify 20 parameters at a time, so walk them until
-	// we've got them all.
-	for parameters != nil {
-		var paramsToModify []*neptune.Parameter
-		if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
-			paramsToModify, parameters = parameters[:], nil
-		} else {
-			paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
-		}
-
-		modifyOpts := neptune.ModifyDBClusterParameterGroupInput{
+	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
+	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+		input := &neptune.ModifyDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(name),
-			Parameters:                  paramsToModify,
+			Parameters:                  chunk,
 		}
 
-		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, &modifyOpts)
+		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("modifying Neptune Cluster Parameter Group (%s): %w", name, err)
 		}
 	}
 
