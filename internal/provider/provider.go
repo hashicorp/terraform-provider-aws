@@ -273,6 +273,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -349,6 +350,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
