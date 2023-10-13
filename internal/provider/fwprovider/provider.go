@@ -319,6 +319,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -389,6 +390,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
 				}
 
 				return ctx
