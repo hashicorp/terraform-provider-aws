@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
@@ -333,23 +333,17 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			resp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, &neptune.DescribeDBClusterParameterGroupsInput{
-				DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfneptune.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.DBClusterParameterGroups) != 0 &&
-					aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) == rs.Primary.ID {
-					return errors.New("Neptune Cluster Parameter Group still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("Neptune Cluster Parameter Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -383,22 +377,13 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *n
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		opts := neptune.DescribeDBClusterParameterGroupsInput{
-			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, &opts)
+		output, err := tfneptune.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DBClusterParameterGroups) != 1 ||
-			aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) != rs.Primary.ID {
-			return errors.New("Neptune Cluster Parameter Group not found")
-		}
-
-		*v = *resp.DBClusterParameterGroups[0]
+		*v = *output
 
 		return nil
 	}
