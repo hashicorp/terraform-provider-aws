@@ -96,7 +96,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 	}
 }
 
-func TestAccelasticsearchVPCEndpoint_basic(t *testing.T) {
+func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -134,7 +134,7 @@ func TestAccelasticsearchVPCEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccelasticsearchVPCEndpoint_disappears(t *testing.T) {
+func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -163,7 +163,7 @@ func TestAccelasticsearchVPCEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccelasticsearchVPCEndpoint_update(t *testing.T) {
+func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
