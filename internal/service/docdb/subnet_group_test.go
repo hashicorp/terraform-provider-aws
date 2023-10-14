@@ -9,15 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDocDBSubnetGroup_basic(t *testing.T) {
@@ -54,7 +53,7 @@ func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBSubnetGroup
-
+	resourceName := "aws_docdb_subnet_group.foo"
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,8 +65,8 @@ func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.foo", &v),
-					testAccCheckSubnetGroupDisappears(ctx, &v),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -175,42 +174,20 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			// Try to find the resource
-			resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+			_, err := tfdocdb.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.DBSubnetGroups) != 0 &&
-					aws.StringValue(resp.DBSubnetGroups[0].DBSubnetGroupName) == rs.Primary.ID {
-					return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckSubnetGroupDisappears(ctx context.Context, group *docdb.DBSubnetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-
-		params := &docdb.DeleteDBSubnetGroupInput{
-			DBSubnetGroupName: group.DBSubnetGroupName,
-		}
-
-		_, err := conn.DeleteDBSubnetGroupWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		return tfdocdb.WaitForSubnetGroupDeletion(ctx, conn, *group.DBSubnetGroupName)
 	}
 }
 
@@ -221,20 +198,15 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *docdb.DBSub
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-		resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+
+		output, err := tfdocdb.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.DBSubnetGroups) == 0 {
-			return fmt.Errorf("DbSubnetGroup not found")
-		}
 
-		*v = *resp.DBSubnetGroups[0]
+		*v = *output
 
 		return nil
 	}
