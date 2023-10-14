@@ -158,21 +158,21 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChanges("subnet_ids", "description") {
+	if d.HasChanges("description", "subnet_ids") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
 		}
-		sIds := flex.ExpandStringSet(n.(*schema.Set))
-
-		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, &docdb.ModifyDBSubnetGroupInput{
+		input := &docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                sIds,
-		})
+			SubnetIds:                flex.ExpandStringSet(n.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Subnet Group (%s) parameters: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
