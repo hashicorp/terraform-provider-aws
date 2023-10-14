@@ -93,16 +93,17 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		groupName = id.UniqueId()
 	}
 
-	input := docdb.CreateDBSubnetGroupInput{
-		DBSubnetGroupName:        aws.String(groupName),
+	input := &docdb.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
+		DBSubnetGroupName:        aws.String(groupName),
 		SubnetIds:                subnetIds,
 		Tags:                     getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateDBSubnetGroupWithContext(ctx, &input)
+	_, err := conn.CreateDBSubnetGroupWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Subnet Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Subnet Group (%s): %s", groupName, err)
 	}
 
 	d.SetId(groupName)
