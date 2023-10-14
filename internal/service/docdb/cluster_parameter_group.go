@@ -13,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -107,17 +107,9 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = id.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = id.UniqueId()
-	}
-
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateDBClusterParameterGroupInput{
-		DBClusterParameterGroupName: aws.String(groupName),
+		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
 		Tags:                        getTagsIn(ctx),
@@ -126,10 +118,10 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group (%s): %s", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(groupName)
+	d.SetId(name)
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
 		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
@@ -158,11 +150,11 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
-	d.Set("arn", arn)
+	d.Set("arn", dbClusterParameterGroup.DBClusterParameterGroupArn)
 	d.Set("description", dbClusterParameterGroup.Description)
 	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
 	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	input := &docdb.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),

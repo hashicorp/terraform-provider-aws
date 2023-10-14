@@ -81,13 +81,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	subnetIds := flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
-
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		DBSubnetGroupName:        aws.String(name),
-		SubnetIds:                subnetIds,
+		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -136,14 +134,10 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	if d.HasChanges("description", "subnet_ids") {
-		_, n := d.GetChange("subnet_ids")
-		if n == nil {
-			n = new(schema.Set)
-		}
 		input := &docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                flex.ExpandStringSet(n.(*schema.Set)),
+			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
