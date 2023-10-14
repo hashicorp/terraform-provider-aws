@@ -9,7 +9,7 @@ Tooling has been created that will scaffold an existing resource into a Framewor
 Build:
 
 ```console
-make tfsdk2f
+make tfsdk2fw
 ```
 
 Convert a resource:
@@ -22,8 +22,56 @@ Example
 tfsdk2fw -resource aws_example_resource examplepackage ResourceName internal/service/examplepackage/resource_name_fw.go
 ```
 
-## State Migration
+## State Upgrade
 
-## Setting State
+Terraform Plugin Framework introduced `null` values, which differ from `zero` values. Since the Plugin SDKv2 marked both `null` and `zero` values as the same, it will be necessary to use the [State Upgrader](https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade).
+
+### Custom Types
+
+The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow the practitioner to implement custom validation. The following attribute types will require a state upgrade to utilize these custom types.
+
+- ARNs
+- CIDR Blocks
+- Duration
+- Timestamps
 
 ## Plan Modifiers
+
+
+## Testing
+
+It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
+
+```go
+func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
+	ctx := acctest.Context(t)
+	var example service.ExampleResourceOutput
+	resourceName := "aws_example_resource.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+		CheckDestroy: testAccCheckExampleResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.21.0",
+					},
+				},
+				Config: testAccExampleResourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &example),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccExampleResourceConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+```
