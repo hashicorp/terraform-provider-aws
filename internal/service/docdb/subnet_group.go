@@ -183,23 +183,23 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	delOpts := docdb.DeleteDBSubnetGroupInput{
+	log.Printf("[DEBUG] Deleting DocumentDB Subnet Group: %s", d.Id())
+	_, err := conn.DeleteDBSubnetGroupWithContext(ctx, &docdb.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting DocumentDB Subnet Group: %s", d.Id())
-
-	_, err := conn.DeleteDBSubnetGroupWithContext(ctx, &delOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitForSubnetGroupDeletion(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
