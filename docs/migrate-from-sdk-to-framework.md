@@ -37,7 +37,6 @@ The Plugin Framework introduced [custom types](https://developer.hashicorp.com/t
 
 ## Plan Modifiers
 
-
 ## Testing
 
 It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
