@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -83,18 +83,10 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	subnetIds := flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = id.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = id.UniqueId()
-	}
-
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-		DBSubnetGroupName:        aws.String(groupName),
+		DBSubnetGroupName:        aws.String(name),
 		SubnetIds:                subnetIds,
 		Tags:                     getTagsIn(ctx),
 	}
@@ -102,10 +94,10 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateDBSubnetGroupWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Subnet Group (%s): %s", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Subnet Group (%s): %s", name, err)
 	}
 
-	d.SetId(groupName)
+	d.SetId(name)
 
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
@@ -129,6 +121,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", subnetGroup.DBSubnetGroupArn)
 	d.Set("description", subnetGroup.DBSubnetGroupDescription)
 	d.Set("name", subnetGroup.DBSubnetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
 	var subnetIDs []string
 	for _, v := range subnetGroup.Subnets {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
