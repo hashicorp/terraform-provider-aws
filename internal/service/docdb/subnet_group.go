@@ -5,7 +5,6 @@ package docdb
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -115,41 +114,26 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	describeOpts := docdb.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(d.Id()),
-	}
+	subnetGroup, err := FindDBSubnetGroupByName(ctx, conn, d.Id())
 
-	var subnetGroups []*docdb.DBSubnetGroup
-	if err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, &describeOpts, func(resp *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
-		return !lastPage
-	}); err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			log.Printf("[WARN] DocumentDB Subnet Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Subnet Group (%s) parameters: %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && (len(subnetGroups) != 1 || aws.StringValue(subnetGroups[0].DBSubnetGroupName) != d.Id()) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	subnetGroup := subnetGroups[0]
-	d.Set("name", subnetGroup.DBSubnetGroupName)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-	d.Set("arn", subnetGroup.DBSubnetGroupArn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Subnet Group (%s): %s", d.Id(), err)
+	}
 
-	subnets := make([]string, 0, len(subnetGroup.Subnets))
-	for _, s := range subnetGroup.Subnets {
-		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
+	d.Set("arn", subnetGroup.DBSubnetGroupArn)
+	d.Set("description", subnetGroup.DBSubnetGroupDescription)
+	d.Set("name", subnetGroup.DBSubnetGroupName)
+	var subnetIDs []string
+	for _, v := range subnetGroup.Subnets {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
 	}
-	if err := d.Set("subnet_ids", subnets); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
+	d.Set("subnet_ids", subnetIDs)
 
 	return diags
 }
@@ -196,39 +180,74 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitForSubnetGroupDeletion(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (interface{}, error) {
+		return FindDBSubnetGroupByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Subnet Group (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func WaitForSubnetGroupDeletion(ctx context.Context, conn *docdb.DocDB, name string) error {
-	params := &docdb.DescribeDBSubnetGroupsInput{
+func FindDBSubnetGroupByName(ctx context.Context, conn *docdb.DocDB, name string) (*docdb.DBSubnetGroup, error) {
+	input := &docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
+	output, err := findDBSubnetGroup(ctx, conn, input)
 
-	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-		_, err := conn.DescribeDBSubnetGroupsWithContext(ctx, params)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return retry.RetryableError(fmt.Errorf("DocumentDB Subnet Group (%s) still exists", name))
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeDBSubnetGroupsWithContext(ctx, params)
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("deleting DocumentDB subnet group: %s", err)
+		return nil, err
 	}
-	return nil
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBSubnetGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBSubnetGroup(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBSubnetGroupsInput) (*docdb.DBSubnetGroup, error) {
+	output, err := findDBSubnetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBSubnetGroups(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBSubnetGroupsInput) ([]*docdb.DBSubnetGroup, error) {
+	var output []*docdb.DBSubnetGroup
+
+	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
