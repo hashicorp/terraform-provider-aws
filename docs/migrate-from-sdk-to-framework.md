@@ -4,7 +4,7 @@ With the introduction of [Terraform Plugin Framework](https://developer.hashicor
 
 ## Migration Tooling
 
-Tooling has been created that will scaffold an existing resource into a Framework resource. This tool is meant to be used as a starting point but additional editing will be needed.
+Tooling has been created that will scaffold an existing resource into a Framework resource. This tool is meant to be used as a starting point so additional editing will be needed.
 
 Build:
 
@@ -16,7 +16,7 @@ Convert a resource:
 
 The following pattern is used to generate a file:  `tfsdk2fw [-resource <resource-type>|-data-source <data-source-type>] <package-name> <name> <generated-file>`
 
-Example
+Example:
 
 ```console
 tfsdk2fw -resource aws_example_resource examplepackage ResourceName internal/service/examplepackage/resource_name_fw.go
@@ -28,21 +28,29 @@ Terraform Plugin Framework introduced `null` values, which differ from `zero` va
 
 ### Custom Types
 
-The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow the practitioner to implement custom validation. The following attribute types will require a state upgrade to utilize these custom types.
+The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow  custom validation on basic types. The following attribute types will require a state upgrade to utilize these custom types.
 
 - ARNs
 - CIDR Blocks
 - Duration
 - Timestamps
 
-## Plan Modifiers
+## Tagging
+
+Tagging in the Plugin Framework is done by implementing the `ModifyPlan()` method on a resource.
+
+```go
+func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+```
 
 ## Testing
 
 It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
 
 ```go
-func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
+func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 	ctx := acctest.Context(t)
 	var example service.ExampleResourceOutput
 	resourceName := "aws_example_resource.test"
