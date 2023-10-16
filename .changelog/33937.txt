@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_transfer_server: Change pre/post login header limit to 4096
+```
+
