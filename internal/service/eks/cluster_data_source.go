@@ -5,8 +5,9 @@ package eks
 
 import (
 	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -190,11 +191,11 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	client := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	cluster, err := FindClusterByName(ctx, conn, name)
+	cluster, err := FindClusterByName(ctx, client, name)
 
 	if err != nil {
 		return diag.Errorf("reading EKS Cluster (%s): %s", name, err)
@@ -209,7 +210,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
-	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
+	d.Set("created_at", aws.ToTime(cluster.CreatedAt).Format(time.RFC3339))
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
 	}

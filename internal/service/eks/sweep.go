@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -51,73 +52,64 @@ func RegisterSweepers() {
 
 func sweepAddons(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	sweepClient, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.EKSConn(ctx)
-	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	client := sweepClient.EKSClient(ctx)
+
+	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Print(fmt.Errorf("[WARN] Skipping EKS Add-Ons sweep for %s: %w", region, err))
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := aws.StringValue(v)
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
+		}
+
+		for _, cluster := range page.Clusters {
 			input := &eks.ListAddonsInput{
-				ClusterName: aws.String(clusterName),
+				ClusterName: &cluster,
 			}
 
-			err := conn.ListAddonsPagesWithContext(ctx, input, func(page *eks.ListAddonsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			paginator := eks.NewListAddonsPaginator(client, input)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
 				}
 
-				for _, v := range page.Addons {
+				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+				// ¯\_(ツ)_/¯
+				if errs.IsA[*types.ResourceNotFoundException](err) {
+					log.Print(fmt.Errorf("[WARN] Skipping cluster %s not found: %w", region, err))
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
+				}
+
+				for _, addon := range page.Addons {
 					r := ResourceAddon()
 					d := r.Data(nil)
-					d.SetId(AddonCreateResourceID(clusterName, aws.StringValue(v)))
+					d.SetId(AddonCreateResourceID(cluster, addon))
 
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, sweepClient))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
-			// ¯\_(ツ)_/¯
-			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Print(fmt.Errorf("[WARN] Skipping EKS Add-Ons sweep for %s: %w", region, err))
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Add-Ons (%s): %w", region, err))
 	}
 
@@ -126,42 +118,37 @@ func sweepAddons(region string) error {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	sweepClient, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EKSConn(ctx)
-	input := &eks.ListClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	client := sweepClient.EKSClient(ctx)
+
+	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EKS Clusters (%s): %w", region, err)
 		}
 
 		for _, cluster := range page.Clusters {
 			r := ResourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(cluster))
+			d.SetId(cluster)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, sweepClient))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing EKS Clusters (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping EKS Clusters (%s): %w", region, err)
 	}
 
@@ -170,66 +157,60 @@ func sweepClusters(region string) error {
 
 func sweepFargateProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	sweepClient, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EKSConn(ctx)
-	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	client := sweepClient.EKSClient(ctx)
+
+	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Fargate Profiles sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 		}
 
 		for _, cluster := range page.Clusters {
 			input := &eks.ListFargateProfilesInput{
-				ClusterName: cluster,
+				ClusterName: &cluster,
 			}
 
-			err := conn.ListFargateProfilesPagesWithContext(ctx, input, func(page *eks.ListFargateProfilesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			paginator := eks.NewListFargateProfilesPaginator(client, input)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+				// ¯\_(ツ)_/¯
+				if errs.IsA[*types.ResourceNotFoundException](err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
 				}
 
 				for _, profile := range page.FargateProfileNames {
 					r := ResourceFargateProfile()
 					d := r.Data(nil)
-					d.SetId(FargateProfileCreateResourceID(aws.StringValue(cluster), aws.StringValue(profile)))
+					d.SetId(FargateProfileCreateResourceID(cluster, profile))
 
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, sweepClient))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
-			// ¯\_(ツ)_/¯
-			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Fargate Profiles sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -243,72 +224,63 @@ func sweepFargateProfiles(region string) error {
 
 func sweepIdentityProvidersConfig(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	sweepClient, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.EKSConn(ctx)
-	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	client := sweepClient.EKSClient(ctx)
+
+	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Print(fmt.Errorf("[WARN] Skipping EKS Identity Provider Configs sweep for %s: %w", region, err))
+			return sweeperErrs // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 		}
 
 		for _, cluster := range page.Clusters {
 			input := &eks.ListIdentityProviderConfigsInput{
-				ClusterName: cluster,
+				ClusterName: &cluster,
 			}
 
-			err := conn.ListIdentityProviderConfigsPagesWithContext(ctx, input, func(page *eks.ListIdentityProviderConfigsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			paginator := eks.NewListIdentityProviderConfigsPaginator(client, input)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+				// ¯\_(ツ)_/¯
+				if errs.IsA[*types.ResourceNotFoundException](err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
 				}
 
 				for _, identityProviderConfig := range page.IdentityProviderConfigs {
 					r := ResourceIdentityProviderConfig()
 					d := r.Data(nil)
-					d.SetId(IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
+					d.SetId(IdentityProviderConfigCreateResourceID(cluster, aws.ToString(identityProviderConfig.Name)))
 
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, sweepClient))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
-			// ¯\_(ツ)_/¯
-			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Print(fmt.Errorf("[WARN] Skipping EKS Identity Provider Configs sweep for %s: %w", region, err))
-		return sweeperErrs // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Identity Provider Configs (%s): %w", region, err))
 	}
 
@@ -317,71 +289,62 @@ func sweepIdentityProvidersConfig(region string) error {
 
 func sweepNodeGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	sweepClient, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EKSConn(ctx)
-	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	client := sweepClient.EKSClient(ctx)
+
+	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Node Groups sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 		}
 
 		for _, cluster := range page.Clusters {
 			input := &eks.ListNodegroupsInput{
-				ClusterName: cluster,
+				ClusterName: &cluster,
 			}
 
-			err := conn.ListNodegroupsPagesWithContext(ctx, input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			paginator := eks.NewListNodegroupsPaginator(client, input)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+				// ¯\_(ツ)_/¯
+				if errs.IsA[*types.ResourceNotFoundException](err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
 				}
 
 				for _, nodeGroup := range page.Nodegroups {
 					r := ResourceNodeGroup()
 					d := r.Data(nil)
-					d.SetId(NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
+					d.SetId(NodeGroupCreateResourceID(cluster, nodeGroup))
 
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, sweepClient))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
-			// ¯\_(ツ)_/¯
-			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Node Groups sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Node Groups (%s): %w", region, err))
 	}
 

@@ -6,18 +6,21 @@ package eks
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -81,8 +84,8 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.LogType](),
 				},
 				Set: schema.HashString,
 			},
@@ -111,7 +114,7 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(Resources_Values(), false),
+								ValidateFunc: validation.StringInSlice([]string{"secrets"}, false),
 							},
 						},
 					},
@@ -150,11 +153,11 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip_family": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(eks.IpFamily_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.IpFamily](),
 						},
 						"service_ipv4_cidr": {
 							Type:     schema.TypeString,
@@ -292,7 +295,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	client := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &eks.CreateClusterInput{
@@ -318,31 +321,30 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateClusterWithContext(ctx, input)
+			return client.CreateCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
-			// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
-			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
-				return true, err
-			}
-
-			// InvalidParameterException: Error in role params
-			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
-				return true, err
-			}
-
-			// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
-				return true, err
-			}
-
-			// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
-			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
-				return true, err
+			if errs.IsA[*types.InvalidParameterException](err) {
+				// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
+				if strings.Contains(err.Error(), "does not exist") {
+					return true, err
+				}
+				// InvalidParameterException: Error in role params
+				if strings.Contains(err.Error(), "Error in role params") {
+					return true, err
+				}
+				if strings.Contains(err.Error(), "Role could not be assumed because the trusted entity is not correct") {
+					return true, err
+				}
+				// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it.
+				// Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+				if strings.Contains(err.Error(), "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
+					return true, err
+				}
+				// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
+				if strings.Contains(err.Error(), "IAM role's policy must include") {
+					return true, err
+				}
 			}
 
 			return false, err
@@ -353,9 +355,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("creating EKS Cluster (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*eks.CreateClusterOutput).Cluster.Name))
+	d.SetId(aws.ToString(outputRaw.(*eks.CreateClusterOutput).Cluster.Name))
 
-	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	waiter := eks.NewClusterActiveWaiter(client)
+	waiterParams := &eks.DescribeClusterInput{
+		Name: aws.String(d.Id()),
+	}
+
+	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
 		return diag.Errorf("waiting for EKS Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -363,9 +371,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	client := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	cluster, err := FindClusterByName(ctx, conn, d.Id())
+	cluster, err := FindClusterByName(ctx, client, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
@@ -385,7 +393,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
-	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
+	d.Set("created_at", aws.ToTime(cluster.CreatedAt).Format(time.RFC3339))
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
 	}
@@ -417,7 +425,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	client := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	// Do any version update first.
 	if d.HasChange("version") {
@@ -426,15 +434,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Version: aws.String(d.Get("version").(string)),
 		}
 
-		output, err := conn.UpdateClusterVersionWithContext(ctx, input)
+		output, err := client.UpdateClusterVersion(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating EKS Cluster (%s) version: %s", d.Id(), err)
 		}
 
-		updateID := aws.StringValue(output.Update.Id)
+		updateID := aws.ToString(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(ctx, client, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
@@ -450,15 +458,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				EncryptionConfig: expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 			}
 
-			output, err := conn.AssociateEncryptionConfigWithContext(ctx, input)
+			output, err := client.AssociateEncryptionConfig(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("associating EKS Cluster (%s) encryption config: %s", d.Id(), err)
 			}
 
-			updateID := aws.StringValue(output.Update.Id)
+			updateID := aws.ToString(output.Update.Id)
 
-			_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitClusterUpdateSuccessful(ctx, client, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 			if err != nil {
 				return diag.Errorf("waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
@@ -472,15 +480,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Name:    aws.String(d.Id()),
 		}
 
-		output, err := conn.UpdateClusterConfigWithContext(ctx, input)
+		output, err := client.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating EKS Cluster (%s) logging: %s", d.Id(), err)
 		}
 
-		updateID := aws.StringValue(output.Update.Id)
+		updateID := aws.ToString(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(ctx, client, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
@@ -493,15 +501,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ResourcesVpcConfig: expandVPCConfigRequestForUpdate(d.Get("vpc_config").([]interface{})),
 		}
 
-		output, err := conn.UpdateClusterConfigWithContext(ctx, input)
+		output, err := client.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating EKS Cluster (%s) VPC config: %s", d.Id(), err)
 		}
 
-		updateID := aws.StringValue(output.Update.Id)
+		updateID := aws.ToString(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(ctx, client, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", d.Id(), updateID, err)
@@ -512,7 +520,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	client := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
 
@@ -525,9 +533,9 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *retry.RetryError {
 		var err error
 
-		_, err = conn.DeleteClusterWithContext(ctx, input)
+		_, err = client.DeleteCluster(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceInUseException, "in progress") {
+		if errs.IsA[*types.ResourceInUseException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -539,43 +547,59 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteClusterWithContext(ctx, input)
+		_, err = client.DeleteCluster(ctx, input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-		return nil
+	if errs.IsA[*types.ClientException](err) {
+		if strings.Contains(err.Error(), "No cluster found for name:") {
+			return nil
+		}
 	}
 
 	if err != nil {
 		return diag.Errorf("deleting EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	waiter := eks.NewClusterDeletedWaiter(client)
+	waiterParams := &eks.DescribeClusterInput{
+		Name: aws.String(d.Id()),
+	}
+
+	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutDelete))
+	if err != nil {
 		return diag.Errorf("waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cluster, error) {
+func FindClusterByName(ctx context.Context, client *eks.Client, name string) (*types.Cluster, error) {
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeClusterWithContext(ctx, input)
+	output, err := client.DescribeCluster(ctx, input)
 
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
+		}
+	}
+	if errs.IsA[*types.ClientException](err) {
+		if strings.Contains(err.Error(), "No cluster found for name:") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 	}
 
@@ -590,15 +614,15 @@ func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cl
 	return output.Cluster, nil
 }
 
-func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id string) (*eks.Update, error) {
+func findClusterUpdateByTwoPartKey(ctx context.Context, client *eks.Client, name, id string) (*types.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:     aws.String(name),
 		UpdateId: aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdateWithContext(ctx, input)
+	output, err := client.DescribeUpdate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -616,9 +640,9 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	return output.Update, nil
 }
 
-func statusCluster(ctx context.Context, conn *eks.EKS, name string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, client *eks.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByName(ctx, conn, name)
+		output, err := FindClusterByName(ctx, client, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -628,13 +652,13 @@ func statusCluster(ctx context.Context, conn *eks.EKS, name string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) retry.StateRefreshFunc {
+func statusClusterUpdate(ctx context.Context, client *eks.Client, name, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
+		output, err := findClusterUpdateByTwoPartKey(ctx, client, name, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -644,56 +668,22 @@ func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) re
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
+func waitClusterUpdateSuccessful(ctx context.Context, client *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.ClusterStatusPending, eks.ClusterStatusCreating},
-		Target:  []string{eks.ClusterStatusActive},
-		Refresh: statusCluster(ctx, conn, name),
+		Pending: enum.Slice(types.UpdateStatusInProgress),
+		Target:  enum.Slice(types.UpdateStatusSuccessful),
+		Refresh: statusClusterUpdate(ctx, client, name, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.UpdateStatusInProgress},
-		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: statusClusterUpdate(ctx, conn, name, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Update); ok {
-		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
+	if output, ok := outputRaw.(*types.Update); ok {
+		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
 			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
 		}
 
@@ -703,12 +693,12 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.EKS, name, id st
 	return nil, err
 }
 
-func expandEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
+func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*eks.EncryptionConfig
+	var apiObjects []types.EncryptionConfig
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -717,28 +707,35 @@ func expandEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
 			continue
 		}
 
-		apiObject := &eks.EncryptionConfig{
+		apiObject := &types.EncryptionConfig{
 			Provider: expandProvider(tfMap["provider"].([]interface{})),
 		}
 
 		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
-			apiObject.Resources = flex.ExpandStringSet(v)
+			apiObject.Resources = make([]string, v.Len())
+			for i, r := range v.List() {
+				apiObject.Resources[i] = r.(string)
+			}
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandProvider(tfList []interface{}) *eks.Provider {
+func expandProvider(tfList []interface{}) *types.Provider {
+	if len(tfList) == 0 {
+		return nil
+	}
+
 	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {
 		return nil
 	}
 
-	apiObject := &eks.Provider{}
+	apiObject := &types.Provider{}
 
 	if v, ok := tfMap["key_arn"].(string); ok && v != "" {
 		apiObject.KeyArn = aws.String(v)
@@ -747,14 +744,18 @@ func expandProvider(tfList []interface{}) *eks.Provider {
 	return apiObject
 }
 
-func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
-	tfMap, ok := l[0].(map[string]interface{})
+func expandOutpostConfigRequest(tfList []interface{}) *types.OutpostConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {
 		return nil
 	}
 
-	outpostConfigRequest := &eks.OutpostConfigRequest{}
+	outpostConfigRequest := &types.OutpostConfigRequest{}
 
 	if v, ok := tfMap["control_plane_instance_type"].(string); ok && v != "" {
 		outpostConfigRequest.ControlPlaneInstanceType = aws.String(v)
@@ -765,13 +766,17 @@ func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
 	}
 
 	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
-		outpostConfigRequest.OutpostArns = flex.ExpandStringSet(v)
+		outpostArns := make([]string, 0, v.Len())
+		for _, outpostArn := range flex.ExpandStringSet(v) {
+			outpostArns = append(outpostArns, *outpostArn)
+		}
+		outpostConfigRequest.OutpostArns = outpostArns
 	}
 
 	return outpostConfigRequest
 }
 
-func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacementRequest {
+func expandControlPlanePlacement(tfList []interface{}) *types.ControlPlanePlacementRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -782,7 +787,7 @@ func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacemen
 		return nil
 	}
 
-	apiObject := &eks.ControlPlanePlacementRequest{}
+	apiObject := &types.ControlPlanePlacementRequest{}
 
 	if v, ok := tfMap["group_name"].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
@@ -791,100 +796,133 @@ func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacemen
 	return apiObject
 }
 
-func expandVPCConfigRequestForCreate(l []interface{}) *eks.VpcConfigRequest {
-	if len(l) == 0 {
+func expandVPCConfigRequestForCreate(tfList []interface{}) *types.VpcConfigRequest {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := tfList[0].(map[string]interface{})
 
-	vpcConfigRequest := &eks.VpcConfigRequest{
+	securityGroupIds := flex.ExpandStringSet(m["security_group_ids"].(*schema.Set))
+	securityGroupIdsSlice := make([]string, len(securityGroupIds))
+	for i, id := range securityGroupIds {
+		securityGroupIdsSlice[i] = *id
+	}
+
+	subnetIds := flex.ExpandStringSet(m["subnet_ids"].(*schema.Set))
+	subnetIdsSlice := make([]string, len(subnetIds))
+	for i, id := range subnetIds {
+		subnetIdsSlice[i] = *id
+	}
+
+	vpcConfigRequest := &types.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
-		SecurityGroupIds:      flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:             flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds:      securityGroupIdsSlice,
+		SubnetIds:             subnetIdsSlice,
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
+		publicAccessCidrs := flex.ExpandStringSet(v)
+		vpcConfigRequest.PublicAccessCidrs = make([]string, len(publicAccessCidrs))
+		for i, cidr := range publicAccessCidrs {
+			vpcConfigRequest.PublicAccessCidrs[i] = *cidr
+		}
 	}
 
 	return vpcConfigRequest
 }
 
-func expandVPCConfigRequestForUpdate(l []interface{}) *eks.VpcConfigRequest {
-	if len(l) == 0 {
+func expandVPCConfigRequestForUpdate(tfList []interface{}) *types.VpcConfigRequest {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := tfList[0].(map[string]interface{})
 
-	vpcConfigRequest := &eks.VpcConfigRequest{
+	vpcConfigRequest := &types.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
+		publicAccessCidrs := flex.ExpandStringSet(v)
+		vpcConfigRequest.PublicAccessCidrs = make([]string, len(publicAccessCidrs))
+		for i, cidr := range publicAccessCidrs {
+			vpcConfigRequest.PublicAccessCidrs[i] = *cidr
+		}
 	}
 
 	return vpcConfigRequest
 }
 
-func expandKubernetesNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
-	tfMap, ok := tfList[0].(map[string]interface{})
-
-	if !ok {
+func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.KubernetesNetworkConfigRequest {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObject := &eks.KubernetesNetworkConfigRequest{}
+	m := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["service_ipv4_cidr"].(string); ok && v != "" {
+	apiObject := &types.KubernetesNetworkConfigRequest{}
+
+	if v, ok := m["service_ipv4_cidr"].(string); ok && v != "" {
 		apiObject.ServiceIpv4Cidr = aws.String(v)
 	}
 
-	if v, ok := tfMap["ip_family"].(string); ok && v != "" {
-		apiObject.IpFamily = aws.String(v)
+	if v, ok := m["ip_family"]; ok && v != "" {
+		apiObject.IpFamily = v.(types.IpFamily)
 	}
 
 	return apiObject
 }
 
-func expandLogging(vEnabledLogTypes *schema.Set) *eks.Logging {
-	vEksLogTypes := []interface{}{}
-	for _, eksLogType := range eks.LogType_Values() {
-		vEksLogTypes = append(vEksLogTypes, eksLogType)
-	}
-	vAllLogTypes := schema.NewSet(schema.HashString, vEksLogTypes)
+func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
+	logTypes := []interface{}{}
 
-	return &eks.Logging{
-		ClusterLogging: []*eks.LogSetup{
+	for _, logType := range enum.Values[types.LogType]() {
+		logTypes = append(logTypes, logType)
+	}
+	aLogTypes := schema.NewSet(schema.HashString, logTypes)
+
+	enabledLogTypes := make([]types.LogType, len(vEnabledLogTypes.List()))
+	for i, s := range vEnabledLogTypes.List() {
+		enabledLogTypes[i] = types.LogType(s.(string))
+	}
+
+	diff := aLogTypes.Difference(vEnabledLogTypes)
+
+	disabledLogTypes := make([]types.LogType, len(diff.List()))
+	for i, s := range diff.List() {
+		disabledLogTypes[i] = types.LogType(s.(string))
+	}
+
+	return &types.Logging{
+		ClusterLogging: []types.LogSetup{
 			{
 				Enabled: aws.Bool(true),
-				Types:   flex.ExpandStringSet(vEnabledLogTypes),
+				Types:   enabledLogTypes,
 			},
 			{
 				Enabled: aws.Bool(false),
-				Types:   flex.ExpandStringSet(vAllLogTypes.Difference(vEnabledLogTypes)),
+				Types:   disabledLogTypes,
 			},
 		},
 	}
 }
 
-func flattenCertificate(certificate *eks.Certificate) []map[string]interface{} {
+func flattenCertificate(certificate *types.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"data": aws.StringValue(certificate.Data),
+		"data": certificate.Data,
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenIdentity(identity *eks.Identity) []map[string]interface{} {
+func flattenIdentity(identity *types.Identity) []map[string]interface{} {
 	if identity == nil {
 		return []map[string]interface{}{}
 	}
@@ -896,19 +934,19 @@ func flattenIdentity(identity *eks.Identity) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenOIDC(oidc *eks.OIDC) []map[string]interface{} {
+func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	if oidc == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"issuer": aws.StringValue(oidc.Issuer),
+		"issuer": oidc.Issuer,
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
+func flattenEncryptionConfig(apiObjects []types.EncryptionConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -918,7 +956,7 @@ func flattenEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
 			"provider":  flattenProvider(apiObject.Provider),
-			"resources": aws.StringValueSlice(apiObject.Resources),
+			"resources": apiObject.Resources,
 		}
 
 		tfList = append(tfList, tfMap)
@@ -927,43 +965,58 @@ func flattenEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
 	return tfList
 }
 
-func flattenProvider(apiObject *eks.Provider) []interface{} {
+func flattenProvider(apiObject *types.Provider) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"key_arn": aws.StringValue(apiObject.KeyArn),
+		"key_arn": apiObject.KeyArn,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenVPCConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]interface{} {
+func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]interface{} {
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
 
+	securityGroupIds := make([]*string, len(vpcConfig.SecurityGroupIds))
+	for i, id := range vpcConfig.SecurityGroupIds {
+		securityGroupIds[i] = aws.String(id)
+	}
+
+	subnetIds := make([]*string, len(vpcConfig.SubnetIds))
+	for i, id := range vpcConfig.SubnetIds {
+		subnetIds[i] = aws.String(id)
+	}
+
+	publicAccessCidrs := make([]*string, len(vpcConfig.PublicAccessCidrs))
+	for i, cidr := range vpcConfig.PublicAccessCidrs {
+		publicAccessCidrs[i] = aws.String(cidr)
+	}
+
 	m := map[string]interface{}{
-		"cluster_security_group_id": aws.StringValue(vpcConfig.ClusterSecurityGroupId),
-		"endpoint_private_access":   aws.BoolValue(vpcConfig.EndpointPrivateAccess),
-		"endpoint_public_access":    aws.BoolValue(vpcConfig.EndpointPublicAccess),
-		"security_group_ids":        flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnet_ids":                flex.FlattenStringSet(vpcConfig.SubnetIds),
-		"public_access_cidrs":       flex.FlattenStringSet(vpcConfig.PublicAccessCidrs),
-		"vpc_id":                    aws.StringValue(vpcConfig.VpcId),
+		"cluster_security_group_id": vpcConfig.ClusterSecurityGroupId,
+		"endpoint_private_access":   vpcConfig.EndpointPrivateAccess,
+		"endpoint_public_access":    vpcConfig.EndpointPublicAccess,
+		"security_group_ids":        flex.FlattenStringSet(securityGroupIds),
+		"subnet_ids":                flex.FlattenStringSet(subnetIds),
+		"public_access_cidrs":       flex.FlattenStringSet(publicAccessCidrs),
+		"vpc_id":                    vpcConfig.VpcId,
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenLogging(logging *eks.Logging) *schema.Set {
-	enabledLogTypes := []*string{}
+func flattenLogging(logging *types.Logging) *schema.Set {
+	enabledLogTypes := []types.LogType{}
 
 	if logging != nil {
 		logSetups := logging.ClusterLogging
 		for _, logSetup := range logSetups {
-			if logSetup == nil || !aws.BoolValue(logSetup.Enabled) {
+			if !aws.ToBool(logSetup.Enabled) {
 				continue
 			}
 
@@ -971,44 +1024,49 @@ func flattenLogging(logging *eks.Logging) *schema.Set {
 		}
 	}
 
-	return flex.FlattenStringSet(enabledLogTypes)
+	enabledLogTypePointers := make([]*string, len(enabledLogTypes))
+	for i, logType := range enabledLogTypes {
+		enabledLogTypePointers[i] = aws.String(string(logType))
+	}
+
+	return flex.FlattenStringSet(enabledLogTypePointers)
 }
 
-func flattenKubernetesNetworkConfigResponse(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {
+func flattenKubernetesNetworkConfigResponse(apiObject *types.KubernetesNetworkConfigResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
-		"service_ipv6_cidr": aws.StringValue(apiObject.ServiceIpv6Cidr),
-		"ip_family":         aws.StringValue(apiObject.IpFamily),
+		"service_ipv4_cidr": apiObject.ServiceIpv4Cidr,
+		"service_ipv6_cidr": apiObject.ServiceIpv6Cidr,
+		"ip_family":         apiObject.IpFamily,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenOutpostConfigResponse(apiObject *eks.OutpostConfigResponse) []interface{} {
+func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"control_plane_instance_type": aws.StringValue(apiObject.ControlPlaneInstanceType),
+		"control_plane_instance_type": apiObject.ControlPlaneInstanceType,
 		"control_plane_placement":     flattenControlPlanePlacementResponse(apiObject.ControlPlanePlacement),
-		"outpost_arns":                aws.StringValueSlice(apiObject.OutpostArns),
+		"outpost_arns":                apiObject.OutpostArns,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenControlPlanePlacementResponse(apiObject *eks.ControlPlanePlacementResponse) []interface{} {
+func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacementResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"group_name": aws.StringValue(apiObject.GroupName),
+		"group_name": apiObject.GroupName,
 	}
 
 	return []interface{}{tfMap}
