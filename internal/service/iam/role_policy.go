@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,28 +32,16 @@ const (
 // @SDKResource("aws_iam_role_policy")
 func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
-		// PutRolePolicy API is idempotent, so these can be the same.
 		CreateWithoutTimeout: resourceRolePolicyPut,
-		UpdateWithoutTimeout: resourceRolePolicyPut,
-
 		ReadWithoutTimeout:   resourceRolePolicyRead,
+		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
-					return json
-				},
-			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -64,9 +53,21 @@ func ResourceRolePolicy() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
+			},
+			"policy": {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"role": {
 				Type:         schema.TypeString,
@@ -84,29 +85,27 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.PutRolePolicyInput{
-		RoleName:       aws.String(d.Get("role").(string)),
+	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	roleName := d.Get("role").(string)
+	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
+		PolicyName:     aws.String(policyName),
+		RoleName:       aws.String(roleName),
 	}
 
-	var policyName string
-	if v, ok := d.GetOk("name"); ok {
-		policyName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = id.PrefixedUniqueId(v.(string))
-	} else {
-		policyName = id.UniqueId()
-	}
-	request.PolicyName = aws.String(policyName)
+	_, err = conn.PutRolePolicyWithContext(ctx, input)
 
-	if _, err := conn.PutRolePolicyWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting IAM role policy %s: %s", *request.PolicyName, err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting IAM Role (%s) Policy (%s): %s", roleName, policyName, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", *request.RoleName, *request.PolicyName))
+	if d.IsNewResource() {
+		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+	}
+
 	return append(diags, resourceRolePolicyRead(ctx, d, meta)...)
 }
 
