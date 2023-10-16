@@ -181,22 +181,25 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	role, name, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM role policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.DeleteRolePolicyInput{
-		PolicyName: aws.String(name),
-		RoleName:   aws.String(role),
+	log.Printf("[INFO] Deleting IAM Role Policy: %s", d.Id())
+	_, err = conn.DeleteRolePolicyWithContext(ctx, &iam.DeleteRolePolicyInput{
+		PolicyName: aws.String(policyName),
+		RoleName:   aws.String(roleName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteRolePolicyWithContext(ctx, request); err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting IAM role policy (%s): %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Role Policy (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
