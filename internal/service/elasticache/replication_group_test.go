@@ -276,6 +276,45 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				// TODO: This will break if there's a Redis 6.x version higher than 6.2.
+				// If we create an `aws_elasticache_engine_versions` data source, we can use that to get the expected version
+				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
+					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
