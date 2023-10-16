@@ -303,7 +303,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -324,7 +324,7 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
