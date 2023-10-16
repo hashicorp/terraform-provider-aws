@@ -21,3 +21,11 @@ resource/aws_docdb_subnet_group: Support import of `name_prefix` argument
 ```release-note:enhancement
 resource/aws_elb: Support import of `name_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_alb: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_lb: Support import of `name_prefix` argument
+```
