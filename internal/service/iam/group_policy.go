@@ -95,14 +95,14 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
-	}
 
-	_, err = tfresource.RetryUntilEqual(ctx, propagationTimeout, policyDoc, func() (string, error) {
-		return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
-	})
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+			return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+		})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IAM Group Policy (%s) put: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IAM Group Policy (%s) create: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceGroupPolicyRead(ctx, d, meta)...)
