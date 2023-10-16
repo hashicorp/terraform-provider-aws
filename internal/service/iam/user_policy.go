@@ -105,7 +105,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	return diags
+	return append(diags, resourceUserPolicyRead(ctx, d, meta)...)
 }
 
 func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
