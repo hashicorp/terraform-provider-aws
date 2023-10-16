@@ -104,6 +104,14 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+			return FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IAM Role Policy (%s) create: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceRolePolicyRead(ctx, d, meta)...)
@@ -113,40 +121,15 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	role, name, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.GetRolePolicyInput{
-		PolicyName: aws.String(name),
-		RoleName:   aws.String(role),
-	}
+	policyDocument, err := FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
-	var getResp *iam.GetRolePolicyOutput
-
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		getResp, err = conn.GetRolePolicyWithContext(ctx, request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetRolePolicyWithContext(ctx, request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Role Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Role Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -155,24 +138,20 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.PolicyDocument == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): empty response", d.Id())
-	}
-
-	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
+	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): setting policy: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	d.Set("name", policyName)
+	d.Set("name_prefix", create.NamePrefixFromName(policyName))
 	d.Set("policy", policyToSet)
-
-	d.Set("name", name)
-	d.Set("role", role)
+	d.Set("role", roleName)
 
 	return diags
 }
@@ -201,6 +180,32 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, roleName, policyName string) (string, error) {
+	input := &iam.GetRolePolicyInput{
+		PolicyName: aws.String(policyName),
+		RoleName:   aws.String(roleName),
+	}
+
+	output, err := conn.GetRolePolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return "", &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.PolicyDocument == nil {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(output.PolicyDocument), nil
 }
 
 func RolePolicyParseID(id string) (roleName, policyName string, err error) {
