@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,11 +26,9 @@ import (
 // @SDKResource("aws_iam_group_policy")
 func ResourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
-		// PutGroupPolicy API is idempotent, so these can be the same.
 		CreateWithoutTimeout: resourceGroupPolicyPut,
-		UpdateWithoutTimeout: resourceGroupPolicyPut,
-
 		ReadWithoutTimeout:   resourceGroupPolicyRead,
+		UpdateWithoutTimeout: resourceGroupPolicyPut,
 		DeleteWithoutTimeout: resourceGroupPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -38,16 +36,10 @@ func ResourceGroupPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
-					return json
-				},
+			"group": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -59,13 +51,20 @@ func ResourceGroupPolicy() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
-			"group": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"policy": {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 		},
 	}
@@ -77,30 +76,28 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyDoc, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	groupName := d.Get("group").(string)
+	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	request := &iam.PutGroupPolicyInput{
-		GroupName:      aws.String(d.Get("group").(string)),
+		GroupName:      aws.String(groupName),
 		PolicyDocument: aws.String(policyDoc),
+		PolicyName:     aws.String(policyName),
 	}
 
-	var policyName string
-	if v, ok := d.GetOk("name"); ok {
-		policyName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = id.PrefixedUniqueId(v.(string))
-	} else {
-		policyName = id.UniqueId()
-	}
-	request.PolicyName = aws.String(policyName)
+	_, err = conn.PutGroupPolicyWithContext(ctx, request)
 
-	if _, err := conn.PutGroupPolicyWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting IAM group policy %s: %s", *request.PolicyName, err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting IAM Group (%s) Policy (%s): %s", groupName, policyName, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", *request.GroupName, *request.PolicyName))
-	return diags
+	if d.IsNewResource() {
+		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
+	}
+
+	return append(diags, resourceGroupPolicyRead(ctx, d, meta)...)
 }
 
 func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
