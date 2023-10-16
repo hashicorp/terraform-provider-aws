@@ -172,22 +172,25 @@ func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	user, name, err := UserPolicyParseID(d.Id())
+	userName, policyName, err := UserPolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy %s: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.DeleteUserPolicyInput{
-		PolicyName: aws.String(name),
-		UserName:   aws.String(user),
+	log.Printf("[INFO] Deleting IAM User Policy: %s", d.Id())
+	_, err = conn.DeleteUserPolicyWithContext(ctx, &iam.DeleteUserPolicyInput{
+		PolicyName: aws.String(policyName),
+		UserName:   aws.String(userName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteUserPolicyWithContext(ctx, request); err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy %s: %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
