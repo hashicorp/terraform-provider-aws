@@ -97,6 +97,14 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
 	}
 
+	_, err = tfresource.RetryUntilEqual(ctx, propagationTimeout, policyDoc, func() (string, error) {
+		return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Group Policy (%s) put: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceGroupPolicyRead(ctx, d, meta)...)
 }
 
@@ -104,40 +112,15 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	group, name, err := GroupPolicyParseID(d.Id())
+	groupName, policyName, err := GroupPolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.GetGroupPolicyInput{
-		PolicyName: aws.String(name),
-		GroupName:  aws.String(group),
-	}
+	policyDocument, err := FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 
-	var getResp *iam.GetGroupPolicyOutput
-
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		getResp, err = conn.GetGroupPolicyWithContext(ctx, request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetGroupPolicyWithContext(ctx, request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Group Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Group Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -146,29 +129,20 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.PolicyDocument == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): empty response", d.Id())
-	}
-
-	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
+	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Group Policy (%s): setting policy: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	d.Set("group", groupName)
+	d.Set("name", policyName)
+	d.Set("name_prefix", create.NamePrefixFromName(policyName))
 	d.Set("policy", policyToSet)
-
-	if err := d.Set("name", name); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
-	}
-
-	if err := d.Set("group", group); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting group: %s", err)
-	}
 
 	return diags
 }
@@ -197,6 +171,32 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, policyName string) (string, error) {
+	input := &iam.GetGroupPolicyInput{
+		GroupName:  aws.String(groupName),
+		PolicyName: aws.String(policyName),
+	}
+
+	output, err := conn.GetGroupPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return "", &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.PolicyDocument == nil {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(output.PolicyDocument), nil
 }
 
 func GroupPolicyParseID(id string) (groupName, policyName string, err error) {
