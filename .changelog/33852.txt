@@ -17,3 +17,7 @@ resource/aws_docdb_cluster_parameter_group: Support import of `name_prefix` argu
 ```release-note:enhancement
 resource/aws_docdb_subnet_group: Support import of `name_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_elb: Support import of `name_prefix` argument
+```
