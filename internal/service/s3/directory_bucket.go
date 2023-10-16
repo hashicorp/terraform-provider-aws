@@ -28,7 +28,7 @@ import (
 
 var (
 	// e.g. example--usw2-az2--x-s3
-	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)-x-s3$`)
+	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
 )
 
 // @FrameworkResource(name="Directory Bucket")
@@ -57,7 +57,7 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(directoryBucketNameRegex, `must be in the format [bucket_name]--[azid]-x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
+					stringvalidator.RegexMatches(directoryBucketNameRegex, `must be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
 				},
 			},
 			"force_destroy": schema.BoolAttribute{

@@ -112,7 +112,7 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 func testAccDirectoryBucketConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 locals {
-  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}-x-s3"
+  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}--x-s3"
 }
 `, rName))
 }
