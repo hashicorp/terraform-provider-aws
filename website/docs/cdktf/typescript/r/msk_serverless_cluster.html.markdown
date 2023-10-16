@@ -82,6 +82,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the serverless cluster.
+* `clusterUuid` - UUID of the serverless cluster, for use in IAM policies.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -113,4 +114,4 @@ Using `terraform import`, import MSK serverless clusters using the cluster `arn`
 % terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8807c571de266f2699657c0b19d1f7bf987718d4b5d3d3fd379338924541ca87 -->
+<!-- cache-key: cdktf-0.18.0 input-e874f0cb80a0744435c987dbba0dd6d2b31f5d0aeda927db3722774f9b044561 -->
