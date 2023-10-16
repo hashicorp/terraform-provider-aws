@@ -177,22 +177,25 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	group, name, err := GroupPolicyParseID(d.Id())
+	groupName, policyName, err := GroupPolicyParseID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[INFO] Deleting IAM Group Policy: %s", d.Id())
+	_, err = conn.DeleteGroupPolicyWithContext(ctx, &iam.DeleteGroupPolicyInput{
+		GroupName:  aws.String(groupName),
+		PolicyName: aws.String(policyName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Policy (%s): %s", d.Id(), err)
 	}
 
-	request := &iam.DeleteGroupPolicyInput{
-		PolicyName: aws.String(name),
-		GroupName:  aws.String(group),
-	}
-
-	if _, err := conn.DeleteGroupPolicyWithContext(ctx, request); err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Policy (%s): %s", d.Id(), err)
-	}
 	return diags
 }
 
