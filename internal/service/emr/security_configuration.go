@@ -25,11 +25,22 @@ func ResourceSecurityConfiguration() *schema.Resource {
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
 		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"configuration": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsJSON,
+			},
+			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -41,21 +52,10 @@ func ResourceSecurityConfiguration() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
-			},
-
-			"configuration": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
