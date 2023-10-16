@@ -45,3 +45,7 @@ resource/aws_emr_security_configuration: Support import of `name_prefix` argumen
 ```release-note:enhancement
 resource/aws_iam_group_policy: Support import of `name_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_iam_role_policy: Support import of `name_prefix` argument
+```
