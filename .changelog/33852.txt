@@ -37,3 +37,7 @@ resource/aws_alb_target_group: Support import of `name_prefix` argument
 ```release-note:enhancement
 resource/aws_lb_target_group: Support import of `name_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_emr_security_configuration: Support import of `name_prefix` argument
+```
