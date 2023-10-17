@@ -56,7 +56,7 @@ func (o *blueGreenOrchestratorCluster) createDeploymentCluster(ctx context.Conte
 }
 
 func (o *blueGreenOrchestratorCluster) waitForDeploymentAvailable(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
-	dep, err := waitBlueGreenDeploymentAvailable(ctx, o.conn, identifier, timeout)
+	dep, err := waitBlueGreenDeploymentClusterAvailable(ctx, o.conn, identifier, timeout)
 	if err != nil {
 		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
 	}
@@ -121,6 +121,7 @@ func (h *clusterHandler) precondition(ctx context.Context, d *schema.ResourceDat
 			return fmt.Errorf("setting pre-conditions: %s", err)
 		}
 	}
+
 	return nil
 }
 

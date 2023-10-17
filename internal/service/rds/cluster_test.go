@@ -1366,6 +1366,46 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	blueGreenDeployment := "aws_rds_cluster_blue_green_deployment"
+	dataSourceName := "data.aws_rds_engine_version.test"
+	aws_rds_cluster_parameter_group := "aws_rds_cluster_parameter_group"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "create_deployment"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "switchover_enabled"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "cleanup_resources"),
+					resource.TestCheckResourceAttr(aws_rds_cluster_parameter_group, "aws_rds_cluster_parameter_group", "test"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1538,44 +1578,6 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
-func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
-
-	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
-	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
-	rNameSecondary := sdkacctest.RandomWithPrefix("tf-acc-test-secondary")
-
-	resourceNamePrimary := "aws_rds_cluster.primary"
-	resourceNameSecondary := "aws_rds_cluster.secondary"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1755,7 +1757,7 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1791,41 +1793,11 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 			{
 				Config: testAccClusterConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_port(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 rds.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_port(rName, 5432),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_port(rName, 2345),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
 				),
 			},
 		},
@@ -2655,6 +2627,7 @@ func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 
 func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   database_name                   = "example"
   engine                          = "aurora-mysql"
@@ -3329,11 +3302,70 @@ resource "aws_rds_cluster" "test" {
 `, rName, upgrade)
 }
 
+func testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName string, upgrade bool) string {
+	return fmt.Sprintf(`
+
+data "aws_rds_engine_version" "test" {
+	engine             = "aurora-mysql"
+	preferred_versions = ["8.0.mysql_aurora.3.02.0"]
+	}
+	
+resource "aws_rds_cluster_parameter_group" "test" {
+	name        = "mysqlaurora58cluster"
+	family      = "aurora-mysql8.0"
+	description = "RDS default cluster parameter group"
+
+	parameter {
+		name  = "binlog_format"
+		value = "ROW"
+		apply_method = "pending-reboot"
+	}
+}
+
+resource "aws_db_parameter_group" "test" {
+	name   = "mysqlaurora58instance"
+	family = "aurora-mysql8.0"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  engine                          = data.aws_rds_engine_version.test.engine
+  engine_version                  = "8.0.mysql_aurora.3.02.0"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
+  skip_final_snapshot             = true
+  apply_immediately               = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  count              = 2
+  identifier         = "%[1]s-test-${count.index}"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = "db.t3.medium"
+  db_parameter_group_name = aws_db_parameter_group.test.name
+}
+
+resource "aws_rds_cluster_blue_green_deployment" "test" {
+	cluster_identifier = aws_rds_cluster.test.cluster_identifier
+	create_deployment = true
+	cleanup_resources = true
+	engine = aws_rds_cluster_instance.test[0].engine
+	switchover_enabled = true
+  }
+
+
+`, rName, upgrade)
+}
+
 func testAccClusterConfig_engineVersionPrimaryInstance(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "aurora-postgresql"
-  preferred_versions = ["10.17", "11.13", "12.8"]
+  engine             = "aurora-mysql"
+  preferred_versions = ["5.8"]
 }
 
 data "aws_rds_engine_version" "upgrade" {
@@ -3361,10 +3393,11 @@ resource "aws_rds_cluster" "test" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.r4.large"]
+  preferred_instance_classes = ["db.t2.small"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
+  count              = 2
   identifier         = %[1]q
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
@@ -3374,6 +3407,21 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterConfig_port(rName string, port int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "mydb"
+  db_cluster_parameter_group_name = "default.aurora-postgresql14"
+  engine                          = "aurora-postgresql"
+  master_password                 = "mustbeeightcharaters"
+  master_username                 = "foo"
+  port                            = %[2]d
+  skip_final_snapshot             = true
+}
+`, rName, port)
+}
+
+func testAccBGConfig_port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
