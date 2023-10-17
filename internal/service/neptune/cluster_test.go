@@ -422,18 +422,18 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.0.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.0.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.5.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.5.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -454,18 +454,18 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.1.1.0", "default.neptune1"),
+				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.2.0.1", "default.neptune1.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -615,7 +615,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 				continue
 			}
 
-			_, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -649,7 +649,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *nep
 
 		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -685,7 +685,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err = tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

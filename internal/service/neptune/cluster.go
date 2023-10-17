@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -459,7 +460,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(clusterID)
 
-	if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -480,7 +481,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -492,7 +493,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	dbc, err := FindClusterByID(ctx, conn, d.Id())
+	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster (%s) not found, removing from state", d.Id())
@@ -563,7 +564,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
+	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
@@ -664,7 +665,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -758,7 +759,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDBClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) delete: %s", d.Id(), err)
 	}
 
@@ -810,12 +811,60 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Neptune, 
 	return nil
 }
 
-func FindClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBCluster, error) {
+func FindDBClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBCluster, error) {
 	input := &neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*neptune.DBCluster]())
 
-	output, err := conn.DescribeDBClustersWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findClusterByARN(ctx context.Context, conn *neptune.Neptune, arn string) (*neptune.DBCluster, error) {
+	input := &neptune.DescribeDBClustersInput{}
+
+	return findDBCluster(ctx, conn, input, func(v *neptune.DBCluster) bool {
+		return aws.StringValue(v.DBClusterArn) == arn
+	})
+}
+
+func findDBCluster(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[*neptune.DBCluster]) (*neptune.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[*neptune.DBCluster]) ([]*neptune.DBCluster, error) {
+	var output []*neptune.DBCluster
+
+	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusters {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -828,60 +877,12 @@ func FindClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*ne
 		return nil, err
 	}
 
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbCluster, nil
-}
-
-func findClusterByARN(ctx context.Context, conn *neptune.Neptune, arn string) (*neptune.DBCluster, error) {
-	input := &neptune.DescribeDBClustersInput{}
-	var output *neptune.DBCluster
-
-	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.DBClusters {
-			if v == nil {
-				continue
-			}
-
-			if aws.StringValue(v.DBClusterArn) == arn {
-				output = v
-
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByID(ctx, conn, id)
+		output, err := FindDBClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -895,7 +896,7 @@ func statusCluster(ctx context.Context, conn *neptune.Neptune, id string) retry.
 	}
 }
 
-func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) { //nolint:unparam
+func waitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"creating",
@@ -907,7 +908,7 @@ func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string,
 			"upgrading",
 		},
 		Target:     []string{"available"},
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -922,7 +923,7 @@ func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string,
 	return nil, err
 }
 
-func waitClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+func waitDBClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"available",
@@ -931,7 +932,7 @@ func waitClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, t
 			"modifying",
 		},
 		Target:     []string{},
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

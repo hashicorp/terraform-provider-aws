@@ -371,7 +371,7 @@ The `rootBlockDevice` block supports the following:
 * `tags` - (Optional) Map of tags to assign to the device.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volumeType` of `gp3`.
 * `volumeSize` - (Optional) Size of the volume in gibibytes (GiB).
-* `volumeType` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
+* `volumeType` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to the volume type that the AMI uses.
 
 Modifying the `encrypted` or `kmsKeyId` settings of the `rootBlockDevice` requires resource replacement.
 
@@ -539,4 +539,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc6e84a33180e395d0a7b0651f94bc00dfeb97561313983ab817ad1aed676117 -->
+<!-- cache-key: cdktf-0.18.0 input-3c65e83e2786a585ff91f7f409ce62e768ad71e9ab841a301904e25fdc0f6666 -->

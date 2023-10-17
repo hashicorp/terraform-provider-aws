@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -225,6 +226,35 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 
 		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
 			filters = append(filters, &ec2.Filter{
+				Name:   flex.StringFromFramework(ctx, data.Name),
+				Values: v,
+			})
+		}
+	}
+
+	return filters
+}
+
+func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.Filter {
+	if filterSet.IsNull() || filterSet.IsUnknown() {
+		return nil
+	}
+
+	var filters []awstypes.Filter
+
+	for _, v := range filterSet.Elements() {
+		var data customFilterData
+
+		if tfsdk.ValueAs(ctx, v, &data).HasError() {
+			continue
+		}
+
+		if data.Name.IsNull() || data.Name.IsUnknown() {
+			continue
+		}
+
+		if v := flex.ExpandFrameworkStringValueSet(ctx, data.Values); v != nil {
+			filters = append(filters, awstypes.Filter{
 				Name:   flex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})

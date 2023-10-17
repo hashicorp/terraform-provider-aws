@@ -419,7 +419,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 

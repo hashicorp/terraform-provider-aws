@@ -95,6 +95,7 @@ class MyConvertedCode extends TerraformStack {
             ],
           },
         ],
+        outdatedInstancesStrategy: "UPDATE",
         serviceRoleArn: Token.asString(awsIamRoleExample.arn),
         triggerConfiguration: [
           {
@@ -260,6 +261,7 @@ This resource supports the following arguments:
 * `loadBalancerInfo` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `update` and `ignore`. Defaults to `update`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
@@ -439,4 +441,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.18.0 input-46f2050d9d2076e9d804e62804a258b5077f9808e5f7a8f6923e4d590eebf8d8 -->
+<!-- cache-key: cdktf-0.18.0 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->
