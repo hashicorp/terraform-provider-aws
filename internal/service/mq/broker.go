@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -1206,5 +1206,5 @@ func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput 
 
 var ValidateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )

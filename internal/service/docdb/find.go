@@ -62,35 +62,6 @@ func findGlobalClusterIDByARN(ctx context.Context, conn *docdb.DocDB, arn string
 	return ""
 }
 
-func FindDBClusterById(ctx context.Context, conn *docdb.DocDB, dBClusterID string) (*docdb.DBCluster, error) {
-	var dBCluster *docdb.DBCluster
-
-	input := &docdb.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dBClusterID),
-	}
-
-	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, dbc := range page.DBClusters {
-			if dbc == nil {
-				continue
-			}
-
-			if aws.StringValue(dbc.DBClusterIdentifier) == dBClusterID {
-				dBCluster = dbc
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dBCluster, err
-}
-
 func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) (*docdb.DBClusterSnapshot, error) {
 	var dBClusterSnapshot *docdb.DBClusterSnapshot
 
@@ -118,35 +89,6 @@ func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBCluster
 	})
 
 	return dBClusterSnapshot, err
-}
-
-func FindDBInstanceById(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) (*docdb.DBInstance, error) {
-	var dBInstance *docdb.DBInstance
-
-	input := &docdb.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(dBInstanceID),
-	}
-
-	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, dbi := range page.DBInstances {
-			if dbi == nil {
-				continue
-			}
-
-			if aws.StringValue(dbi.DBInstanceIdentifier) == dBInstanceID {
-				dBInstance = dbi
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dBInstance, err
 }
 
 func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalClusterID string) (*docdb.GlobalCluster, error) {

@@ -9,10 +9,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -559,7 +559,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				break
 			}
 
-			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
+			re := regexache.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
 			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
 				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
 				input.Attributes = removeAttribute(input.Attributes, sm[2])
@@ -858,7 +858,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 }
 
 func getLBNameFromARN(arn string) (string, error) {
-	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
+	re := regexache.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("unexpected ARN format: %q", arn)
@@ -901,7 +901,7 @@ func SuffixFromARN(arn *string) string {
 		return ""
 	}
 
-	if arnComponents := regexp.MustCompile(`arn:.*:loadbalancer/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
+	if arnComponents := regexache.MustCompile(`arn:.*:loadbalancer/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
 		if len(arnComponents[0]) == 2 {
 			return arnComponents[0][1]
 		}

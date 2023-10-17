@@ -6,9 +6,9 @@ package memorydb_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +37,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexp.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -54,14 +54,14 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "shards.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexp.MustCompile(`^000[12]$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexache.MustCompile(`^000[12]$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.slots", "0-8191"),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "shards.0.nodes.0.availability_zone"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "shards.0.nodes.0.create_time"),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexp.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
-					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexp.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexache.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexache.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
@@ -827,7 +827,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_securityGroups(rName, 2, 0), // attempt to remove all
-				ExpectError: regexp.MustCompile(`removing all security groups is not possible`),
+				ExpectError: regexache.MustCompile(`removing all security groups is not possible`),
 			},
 			{
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),

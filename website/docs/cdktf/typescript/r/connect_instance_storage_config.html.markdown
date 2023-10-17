@@ -178,7 +178,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `resourceType` - (Required) A valid resource type. Valid Values: `agentEvents` | `attachments` | `callRecordings` | `chatTranscripts` | `contactEvaluations` | `contactTraceRecords` | `mediaStreams` | `realTimeContactAnalysisSegments` | `scheduledReports`.
+* `resourceType` - (Required) A valid resource type. Valid Values: `agentEvents` | `attachments` | `callRecordings` | `chatTranscripts` | `contactEvaluations` | `contactTraceRecords` | `mediaStreams` | `realTimeContactAnalysisSegments` | `scheduledReports` | `screenRecordings`.
 * `storageConfig` - (Required) Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storageConfig`
@@ -255,4 +255,4 @@ Using `terraform import`, import Amazon Connect Instance Storage Configs using t
 % terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d5475393de212f5f99957ac1c0e2ba03879478ebd0b1fbf4c1981b99d1bb04a -->
+<!-- cache-key: cdktf-0.18.0 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->

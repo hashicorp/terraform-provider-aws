@@ -5,17 +5,17 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -244,7 +244,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	var errs *multierror.Error
+	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
 	for _, sp := range servicePackages(ctx) {
@@ -256,7 +256,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
-				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
+				errs = append(errs, fmt.Errorf("duplicate data source: %s", typeName))
 				continue
 			}
 
@@ -264,7 +264,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Read != nil || r.ReadContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 
@@ -273,6 +273,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -286,11 +287,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				// Ensure that the schema look OK.
 				if v, ok := schema[names.AttrTags]; ok {
 					if !v.Computed {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
 
@@ -320,7 +321,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
-				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
+				errs = append(errs, fmt.Errorf("duplicate resource: %s", typeName))
 				continue
 			}
 
@@ -328,19 +329,19 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
 				continue
 			}
 			if r.Read != nil || r.ReadContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 			if r.Update != nil || r.UpdateContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
 				continue
 			}
 			if r.Delete != nil || r.DeleteContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
 				continue
 			}
 
@@ -349,6 +350,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -362,20 +364,20 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				// Ensure that the schema look OK.
 				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
 				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
 					continue
 				}
 
@@ -425,7 +427,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		}
 	}
 
-	if err := errs.ErrorOrNil(); err != nil {
+	if err := errors.Join(errs...); err != nil {
 		return nil, err
 	}
 
@@ -593,7 +595,7 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "A unique identifier that might be required when you assume a role in another account.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 1224),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+						validation.StringMatch(regexache.MustCompile(`[\w+=,.@:\/\-]*`), ""),
 					),
 				},
 				"policy": {

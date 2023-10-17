@@ -93,6 +93,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const example = new S3Bucket(this, "example", {
       bucket: "example",
+      forceDestroy: true,
     });
     const acmpcaBucketAccess = new DataAwsIamPolicyDocument(
       this,
@@ -141,6 +142,7 @@ class MyConvertedCode extends TerraformStack {
             enabled: true,
             expirationInDays: 7,
             s3BucketName: example.id,
+            s3ObjectAcl: "BUCKET_OWNER_FULL_CONTROL",
           },
         },
       }
@@ -250,4 +252,4 @@ Using `terraform import`, import `awsAcmpcaCertificateAuthority` using the certi
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6e34f8e8d6b5f35f42228dc6dd5821798129f8f7ca85131b3ed051e6ea6e8db -->
+<!-- cache-key: cdktf-0.18.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->

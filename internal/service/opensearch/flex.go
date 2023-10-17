@@ -203,6 +203,33 @@ func flattenSnapshotOptions(snapshotOptions *opensearchservice.SnapshotOptions) 
 	return []map[string]interface{}{m}
 }
 
+func expandSoftwareUpdateOptions(in []interface{}) *opensearchservice.SoftwareUpdateOptions {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+
+	var out opensearchservice.SoftwareUpdateOptions
+	if v, ok := m["auto_software_update_enabled"].(bool); ok {
+		out.AutoSoftwareUpdateEnabled = aws.Bool(v)
+	}
+
+	return &out
+}
+
+func flattenSoftwareUpdateOptions(softwareUpdateOptions *opensearchservice.SoftwareUpdateOptions) []interface{} {
+	if softwareUpdateOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"auto_software_update_enabled": aws.BoolValue(softwareUpdateOptions.AutoSoftwareUpdateEnabled),
+	}
+
+	return []interface{}{m}
+}
+
 func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOptions {
 	if tfMap == nil {
 		return nil

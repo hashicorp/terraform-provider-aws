@@ -8,9 +8,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"fmt"
 	"math/rand"
 	"reflect"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -307,7 +307,7 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
-	nameRegex := regexp.MustCompile("^tfacc-")
+	nameRegex := regexache.MustCompile("^tfacc-")
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -330,7 +330,7 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
-	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
+	generatedNameRegexp := regexache.MustCompile("^tf-lb-")
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -505,7 +505,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
-	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
+	generatedNameRegexp := regexache.MustCompile("^tf-lb-")
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -581,7 +581,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerConfig_listenerIAMServerCertificate(rName, certificate, key, "tcp"),
-				ExpectError: regexp.MustCompile(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`),
+				ExpectError: regexache.MustCompile(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`),
 			},
 			{
 				Config: testAccLoadBalancerConfig_listenerIAMServerCertificate(rName, certificate, key, "https"),
@@ -592,7 +592,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 			},
 			{
 				Config:      testAccLoadBalancerConfig_listenerIAMServerCertificateAddInvalidListener(rName, certificate, key),
-				ExpectError: regexp.MustCompile(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`),
+				ExpectError: regexache.MustCompile(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`),
 			},
 		},
 	})

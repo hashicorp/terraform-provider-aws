@@ -88,6 +88,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
+* `checksumMode` - (Optional) To retrieve the object's checksum, this argument must be `enabled`. If you enable `checksumMode` and the object is encrypted with KMS, you must have permission to use the `kms:decrypt` action. Valid values: `enabled`
 * `key` - (Required) Full path to the object inside the bucket
 * `versionId` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -98,6 +99,10 @@ This data source exports the following attributes in addition to the arguments a
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucketKeyEnabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cacheControl` - Caching behavior along the request/reply chain.
+* `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
+* `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
+* `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `contentDisposition` - Presentational information for the object.
 * `contentEncoding` - What content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
 * `contentLanguage` - Language the content is in.
@@ -107,7 +112,7 @@ This data source exports the following attributes in addition to the arguments a
 * `expiration` - If the object expiration is configured (see [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)), the field includes this header. It includes the expiry-date and rule-id key value pairs providing object expiration information. The value of the rule-id is URL encoded.
 * `expires` - Date and time at which the object is no longer cacheable.
 * `lastModified` - Last modified date of the object in RFC1123 format (e.g., `Mon, 02 Jan 2006 15:04:05 MST`)
-* `metadata` - Map of metadata stored with the object in S3
+* `metadata` - Map of metadata stored with the object in S3. [Keys](https://developer.hashicorp.com/terraform/language/expressions/types#maps-objects) are always returned in lowercase.
 * `objectLockLegalHoldStatus` - Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
 * `objectLockMode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
 * `objectLockRetainUntilDate` - The date and time when this object's object lock will expire.
@@ -120,4 +125,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/indexHtml` and `indexHtml` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.18.0 input-477721cf0e0f258fb25290372ff7c82e99e64abe0db5f6d2d1810585782fefa3 -->
+<!-- cache-key: cdktf-0.18.0 input-222e50e78a98cdd8982d72d096abde0605f9c9d699620754eb3607023a2f5858 -->

@@ -6,9 +6,9 @@ package emrserverless_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +36,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexp.MustCompile(`/applications/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
@@ -186,8 +186,8 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	firstVersionRegex := regexp.MustCompile(`1\.0\.0`)
-	secondVersionRegex := regexp.MustCompile(`1\.0\.1`)
+	firstVersionRegex := regexache.MustCompile(`1\.0\.0`)
+	secondVersionRegex := regexache.MustCompile(`1\.0\.1`)
 
 	firstImageConfig, err := testAccApplicationConfig_imageConfiguration(rName, "1.0.0", "1.0.1", "1.0.0")
 	if err != nil {

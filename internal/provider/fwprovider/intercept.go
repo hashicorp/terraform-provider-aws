@@ -173,6 +173,9 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Configure(ctx, request, response)
 }

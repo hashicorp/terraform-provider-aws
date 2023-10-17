@@ -90,6 +90,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Policy Name, Policy Path, Permission Set Amazon Resource Name (ARN), and SSO Instance ARN, each separated by a comma (`,`).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Managed Policy Attachments using the `name`, `path`, `permission_set_arn`, and `instance_arn` separated by a comma (`,`). For example:
@@ -109,4 +116,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `name`
 % terraform import aws_ssoadmin_customer_managed_policy_attachment.example TestPolicy,/,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-41a4bd5a958dc424e251653fd59d3f5124d3e3ea56e77ff91c795f6c16096ab9 -->
+<!-- cache-key: cdktf-0.18.0 input-a04c10d6fcfe1554e5e21b7e379b1eef18d14ec57155c17e159d69d18e318c3e -->

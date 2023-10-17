@@ -45,6 +45,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `readOnlyAdmins` – List of ARNs of AWS Lake Formation principals (IAM users or roles) with only view access to the resources.
 * `createDatabaseDefaultPermissions` - Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `createTableDefaultPermissions` - Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
 * `trustedResourceOwners` – List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `permissions` - List of permissions granted to the principal.
 * `principal` - Principal who is granted permissions.
 
-<!-- cache-key: cdktf-0.18.0 input-6d61473b26a90ec664bc3e6b488b6f54a682da8776aa17c8ca1c78d9bbddb354 -->
+<!-- cache-key: cdktf-0.18.0 input-f9ed67609f11fe3dc75d11e8316427f119ef11af97f179f341207047f1fe3023 -->

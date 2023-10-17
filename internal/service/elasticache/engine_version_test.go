@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
 )
 
@@ -730,7 +731,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			isNew:       true,
 			paramOld:    "old",
 			paramNew:    "",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		// new resource with version changes can only be verified at apply-time
@@ -751,7 +752,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.0",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, version spurious diff": {
@@ -760,7 +761,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			versionOld:       "6.0",
 			versionNew:       "6.0",
 			versionHasChange: true,
-			expectError:      regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError:      regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, minor version change": {
@@ -768,7 +769,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.2",
-			expectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+			expectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
 		},
 
 		"update, param group change, major version change": {

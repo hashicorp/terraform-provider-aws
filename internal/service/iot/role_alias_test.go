@@ -6,9 +6,9 @@ package iot_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -59,7 +59,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName2),
 				),
-				ExpectError: regexp.MustCompile("Role alias .+? already exists for this account"),
+				ExpectError: regexache.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{
 				Config: testAccRoleAliasConfig_update4(alias2),
@@ -71,7 +71,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Config: testAccRoleAliasConfig_update5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName2),
-					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
+					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexache.MustCompile("role/rolebogus")),
 				),
 			},
 			{

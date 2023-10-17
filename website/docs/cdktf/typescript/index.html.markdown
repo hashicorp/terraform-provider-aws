@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1243 resources and 513 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1263 resources and 518 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -345,30 +345,33 @@ credential_process = custom-process --username jdoe
 |Retry Mode|`retryMode`|`awsRetryMode`|`retryMode`|
 |Shared Config Files|`sharedConfigFiles`|`awsConfigFile`|N/A|
 |Shared Credentials Files|`sharedCredentialsFiles`|`awsSharedCredentialsFile`|N/A|
+|S3 Use Regional Endpoint for `usEast1`|`s3UsEast1RegionalEndpoint`|`awsS3UsEast1RegionalEndpoint`|`s3UsEast1RegionalEndpoint`|
 |Use DualStack Endpoints|`useDualstackEndpoint`|`awsUseDualstackEndpoint`|`useDualstackEndpoint`|
 |Use FIPS Endpoints|`useFipsEndpoint`|`awsUseFipsEndpoint`|`useFipsEndpoint`|
+
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
 
 ### Assume Role Configuration Reference
 
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assumeRole` block.
 
+Note that environment variables are not supported for assuming IAM roles.
+
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|--------|-----------------------|
-|Role ARN|`roleArn`|`awsRoleArn`|`roleArn`|
-|Duration|`duration`|N/A|`durationSeconds`|
-|External ID|`externalId`|N/A|`externalId`|
-|Policy|`policy`|N/A|N/A|
-|Policy ARNs|`policyArns`|N/A|N/A|
-|Session Name|`sessionName`|`awsRoleSessionName`|`roleSessionName`|
-|Source Identity|`sourceIdentity`|N/A|N/A|
-|Tags|`tags`|N/A|N/A|
-|Transitive Tag Keys|`transitiveTagKeys`|N/A|N/A|
-
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`roleArn`|`roleArn`|
+|Duration|`duration`|`durationSeconds`|
+|External ID|`externalId`|`externalId`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policyArns`|N/A|
+|Session Name|`sessionName`|`roleSessionName`|
+|Source Identity|`sourceIdentity`|N/A|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitiveTagKeys`|N/A|
 
 ### Assume Role with Web Identity Configuration Reference
 
@@ -430,7 +433,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `retryMode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `awsRetryMode` environment variable or the shared config file parameter `retryMode`.
-* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3AmazonawsCom/bucket/key`. By default, the S3 client will use virtual hosted bucket addressing, `https://bucketS3AmazonawsCom/key`, when possible. Specific to the Amazon S3 service.
+* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3AmazonawsCom/bucket/key`.
+  By default, the S3 client will use virtual hosted bucket addressing, `https://bucketS3AmazonawsCom/key`, when possible.
+  Specific to the Amazon S3 service.
+* `s3UsEast1RegionalEndpoint` - (Optional) Specifies whether S3 API calls in the `usEast1` region use the legacy global endpoint or a regional endpoint.
+  Valid values are `legacy` or `regional`.
+  Can also be configured using the `awsS3UsEast1RegionalEndpoint` environment variable or the `s3UsEast1RegionalEndpoint` shared config file parameter.
+  Specific to the Amazon S3 service.
 * `secretKey` - (Optional) AWS secret key. Can also be set with the `awsSecretAccessKey` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `accessKey`.
 * `sharedConfigFiles` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/Aws/config]`. A single value can also be set with the `awsConfigFile` environment variable.
 * `sharedCredentialsFiles` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/Aws/credentials]`. A single value can also be set with the `awsSharedCredentialsFile` environment variable.
@@ -820,4 +829,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:getCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.18.0 input-0a975c869cb168c1a1c68d976082a828e30e926fcd3bef9666993e410522dc28 -->
+<!-- cache-key: cdktf-0.18.0 input-665c4e4439dc7c828a5d3c77d30a4b5652ec06dbb14b462ed28eab6764716669 -->

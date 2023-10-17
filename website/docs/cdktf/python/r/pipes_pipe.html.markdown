@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
         source = SqsQueue(self, "source")
         target = SqsQueue(self, "target")
         main = DataAwsCallerIdentity(self, "main")
-        test = IamRole(self, "test",
+        example = IamRole(self, "example",
             assume_role_policy=Token.as_string(
                 Fn.jsonencode({
                     "Statement": {
@@ -71,7 +71,7 @@ class MyConvertedCode(TerraformStack):
                     ],
                     "Version": "2012-10-17"
                 })),
-            role=test.id
+            role=example.id
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_iam_role_policy_source.override_logical_id("source")
@@ -86,17 +86,19 @@ class MyConvertedCode(TerraformStack):
                     ],
                     "Version": "2012-10-17"
                 })),
-            role=test.id
+            role=example.id
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_iam_role_policy_target.override_logical_id("target")
-        PipesPipe(self, "example",
+        aws_pipes_pipe_example = PipesPipe(self, "example_6",
             depends_on=[aws_iam_role_policy_source, aws_iam_role_policy_target],
             name="example-pipe",
-            role_arn=Token.as_string(aws_iam_role_example.arn),
+            role_arn=example.arn,
             source=source.arn,
             target=target.arn
         )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_pipes_pipe_example.override_logical_id("example")
 ```
 
 ### Enrichment Usage
@@ -117,15 +119,16 @@ class MyConvertedCode(TerraformStack):
             enrichment=Token.as_string(aws_cloudwatch_event_api_destination_example.arn),
             enrichment_parameters=PipesPipeEnrichmentParameters(
                 http_parameters=PipesPipeEnrichmentParametersHttpParameters(
-                    example-header="example-value",
-                    second-example-header="second-example-value"
-                ),
-                path_parameter_values=["example-path-param"],
-                query_string_parameters=[{
-                    "example-query-string": "example-value",
-                    "second-example-query-string": "second-example-value"
-                }
-                ]
+                    header_parameters={
+                        "example-header": "example-value",
+                        "second-example-header": "second-example-value"
+                    },
+                    path_parameter_values=["example-path-param"],
+                    query_string_parameters={
+                        "example-query-string": "example-value",
+                        "second-example-query-string": "second-example-value"
+                    }
+                )
             ),
             name="example-pipe",
             role_arn=Token.as_string(aws_iam_role_example.arn),
@@ -588,4 +591,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e93e107d34790863cac856616a4c5a95ac55081516dd2a2417d72cfb6472a99d -->
+<!-- cache-key: cdktf-0.18.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->

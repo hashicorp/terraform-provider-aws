@@ -13,23 +13,26 @@ import (
 
 func testAccDetectorDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "data.aws_guardduty_detector.test"
+	resourceName := "aws_guardduty_detector.test"
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:                acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorDataSourceConfig_basicResource(),
-				Check:  resource.ComposeTestCheckFunc(),
-			},
-			{
-				Config: testAccDetectorDataSourceConfig_basicResource2(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
-					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
-					acctest.CheckResourceAttrGlobalARN("data.aws_guardduty_detector.test", "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "finding_publishing_frequency", "aws_guardduty_detector.test", "finding_publishing_frequency"),
+				Config: testAccDetectorDataSourceConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
+					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
+					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
 				),
 			},
 		},
@@ -38,44 +41,43 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 
 func testAccDetectorDataSource_ID(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "data.aws_guardduty_detector.test"
+	resourceName := "aws_guardduty_detector.test"
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorDataSourceConfig_explicit(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
-					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
-					acctest.CheckResourceAttrGlobalARN("data.aws_guardduty_detector.test", "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "finding_publishing_frequency", "aws_guardduty_detector.test", "finding_publishing_frequency"),
+				Config: testAccDetectorDataSourceConfig_id,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
+					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
+					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDetectorDataSourceConfig_basicResource() string {
-	return `
-resource "aws_guardduty_detector" "test" {}
-`
-}
-
-func testAccDetectorDataSourceConfig_basicResource2() string {
-	return `
+const testAccDetectorDataSourceConfig_basic = `
 resource "aws_guardduty_detector" "test" {}
 
-data "aws_guardduty_detector" "test" {}
-`
+data "aws_guardduty_detector" "test" {
+  depends_on = [aws_guardduty_detector.test]
 }
+`
 
-func testAccDetectorDataSourceConfig_explicit() string {
-	return `
+const testAccDetectorDataSourceConfig_id = `
 resource "aws_guardduty_detector" "test" {}
 
 data "aws_guardduty_detector" "test" {
   id = aws_guardduty_detector.test.id
 }
 `
-}

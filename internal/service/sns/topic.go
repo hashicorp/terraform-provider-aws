@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -407,9 +408,9 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		var re *regexp.Regexp
 
 		if fifoTopic {
-			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,251}\.fifo$`)
+			re = regexache.MustCompile(`^[0-9A-Za-z_-]{1,251}\.fifo$`)
 		} else {
-			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
+			re = regexache.MustCompile(`^[0-9A-Za-z_-]{1,256}$`)
 		}
 
 		if !re.MatchString(name) {

@@ -117,6 +117,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are optional:
 
 * `admins` – (Optional) Set of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `readOnlyAdmins` – (Optional) Set of ARNs of AWS Lake Formation principals (IAM users or roles) with only view access to the resources.
 * `catalogId` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 * `createDatabaseDefaultPermissions` - (Optional) Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `createTableDefaultPermissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
@@ -145,4 +146,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-857cf5de5ad957baea8d82329c82a42f5f8e2025953cd699dfce997d429a5b71 -->
+<!-- cache-key: cdktf-0.18.0 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->

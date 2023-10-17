@@ -68,6 +68,7 @@ This argument supports the following arguments:
 * `autoMinorVersionUpgrade` - (Optional) This parameter does not apply to Amazon DocumentDB. Amazon DocumentDB does not perform minor version upgrades regardless of the value set (see [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_DBInstance.html)). Default `true`.
 * `availabilityZone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_CreateDBInstance.html) about the details.
 * `clusterIdentifier` - (Required) The identifier of the [`awsDocdbCluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
+* `copyTagsToSnapshot` – (Optional, boolean) Copy all DB instance `tags` to snapshots. Default is `false`.
 * `enablePerformanceInsights` - (Optional) A value that indicates whether to enable Performance Insights for the DB Instance. Default `false`. See [docs] (https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html) about the details.
 * `engine` - (Optional) The name of the database engine to be used for the DocumentDB instance. Defaults to `docdb`. Valid Values: `docdb`.
 * `identifier` - (Optional, Forces new resource) The identifier for the DocumentDB instance, if omitted, Terraform will assign a random, unique identifier.
@@ -75,6 +76,13 @@ This argument supports the following arguments:
 * `instanceClass` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocumentDB Instances][2].
   DocumentDB currently supports the below instance classes.
   Please see [AWS Documentation][4] for complete details.
+    - db.r6g.large
+    - db.r6g.xlarge
+    - db.r6g.2xlarge
+    - db.r6g.4xlarge
+    - db.r6g.8xlarge
+    - db.r6g.12xlarge
+    - db.r6g.16xlarge
     - db.r5.large
     - db.r5.xlarge
     - db.r5.2xlarge
@@ -87,6 +95,7 @@ This argument supports the following arguments:
     - db.r4.4xlarge
     - db.r4.8xlarge
     - db.r4.16xlarge
+    - db.t4g.medium
     - db.t3.medium
 * `performanceInsightsKmsKeyId` - (Optional) The KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. If you do not specify a value for PerformanceInsightsKMSKeyId, then Amazon DocumentDB uses your default KMS key.
 * `preferredMaintenanceWindow` - (Optional) The window to perform maintenance in.
@@ -148,4 +157,4 @@ Using `terraform import`, import DocumentDB Cluster Instances using the `identif
 % terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9001d18e22768d2e49a85d0c81f631138ad3372c56e7119d64b069973b71706f -->
+<!-- cache-key: cdktf-0.18.0 input-9a6c6904f8952b2942358908c66b371b4c5097186378f30754ea569b6e4e1d71 -->

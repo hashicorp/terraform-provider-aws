@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package grafana
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_grafana_workspace", &resource.Sweeper{
 		Name: "aws_grafana_workspace",
 		F:    sweepWorkSpaces,
@@ -43,7 +41,6 @@ func sweepWorkSpaces(region string) error {
 			return false
 		}
 		for _, workspace := range page.Workspaces {
-
 			id := aws.StringValue(workspace.Id)
 			log.Printf("[INFO] Deleting Grafana Workspace: %s", id)
 			r := ResourceWorkspace()
@@ -69,7 +66,7 @@ func sweepWorkSpaces(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Grafana Workspace for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Grafana Workspace sweep for %s: %s", region, errs)
 		return nil
 	}

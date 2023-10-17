@@ -7,9 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -307,7 +307,7 @@ func TestAccLambdaPermission_statementIDDuplicate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionConfig_statementIDDuplicate(rName),
-				ExpectError: regexp.MustCompile(`ResourceConflictException`),
+				ExpectError: regexache.MustCompile(`ResourceConflictException`),
 			},
 		},
 	})

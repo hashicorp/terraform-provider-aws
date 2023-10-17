@@ -6,73 +6,56 @@ package flex
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func ExpandFrameworkStringMap(ctx context.Context, set types.Map) map[string]*string {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringMap(ctx context.Context, v types.Map) map[string]*string {
+	var output map[string]*string
 
-	var m map[string]*string
+	panicOnError(Expand(ctx, v, &output))
 
-	if set.ElementsAs(ctx, &m, false).HasError() {
-		return nil
-	}
-
-	return m
+	return output
 }
 
-func ExpandFrameworkStringValueMap(ctx context.Context, set types.Map) map[string]string {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringValueMap(ctx context.Context, v types.Map) map[string]string {
+	var output map[string]string
 
-	var m map[string]string
+	panicOnError(Expand(ctx, v, &output))
 
-	if set.ElementsAs(ctx, &m, false).HasError() {
-		return nil
-	}
-
-	return m
+	return output
 }
 
 // FlattenFrameworkStringMap converts a map of string pointers to a framework Map value.
 //
 // A nil map is converted to a null Map.
 // An empty map is converted to a null Map.
-func FlattenFrameworkStringMap(_ context.Context, m map[string]*string) types.Map {
-	if len(m) == 0 {
+func FlattenFrameworkStringMap(ctx context.Context, v map[string]*string) types.Map {
+	if len(v) == 0 {
 		return types.MapNull(types.StringType)
 	}
 
-	elems := make(map[string]attr.Value, len(m))
+	var output types.Map
 
-	for k, v := range m {
-		elems[k] = types.StringValue(aws.ToString(v))
-	}
+	panicOnError(Flatten(ctx, v, &output))
 
-	return types.MapValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringValueMap converts a map of strings to a framework Map value.
 //
 // A nil map is converted to a null Map.
 // An empty map is converted to a null Map.
-func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) types.Map {
-	if len(m) == 0 {
+func FlattenFrameworkStringValueMap(ctx context.Context, v map[string]string) types.Map {
+	if len(v) == 0 {
 		return types.MapNull(types.StringType)
 	}
 
-	elems := make(map[string]attr.Value, len(m))
+	var output types.Map
 
-	for k, v := range m {
-		elems[k] = types.StringValue(v)
-	}
+	panicOnError(Flatten(ctx, v, &output))
 
-	return types.MapValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringValueMapLegacy has no Plugin SDK equivalent as schema.ResourceData.Set can be passed string value maps directly.

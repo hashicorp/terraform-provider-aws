@@ -30,4 +30,4 @@ EOF
     export AWS_PROFILE=sweeper
 fi
 
-go test ./internal/sweep -v -tags=sweep -sweep="%SWEEPER_REGIONS%" -sweep-allow-failures -timeout=4h
+go test ./internal/sweep -v -sweep="%SWEEPER_REGIONS%" -sweep-allow-failures -timeout=4h

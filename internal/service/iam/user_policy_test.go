@@ -6,10 +6,10 @@ package iam_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -37,14 +37,14 @@ func TestAccIAMUserPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserPolicyConfig_name(rName, strconv.Quote("NonJSONString")),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 			{
 				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy1)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicy(ctx, userResourceName, policyResourceName),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%[1]s:%[1]s$", rName))),
+					resource.TestMatchResourceAttr(policyResourceName, "id", regexache.MustCompile(fmt.Sprintf("^%[1]s:%[1]s$", rName))),
 					resource.TestCheckResourceAttr(policyResourceName, "name", rName),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
 					resource.TestCheckResourceAttr(policyResourceName, "user", rName),
@@ -110,7 +110,7 @@ func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicy(ctx, userResourceName, policyResourceName),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%s:%s.+$", rName, acctest.ResourcePrefix))),
+					resource.TestMatchResourceAttr(policyResourceName, "id", regexache.MustCompile(fmt.Sprintf("^%s:%s.+$", rName, acctest.ResourcePrefix))),
 					resource.TestCheckResourceAttr(policyResourceName, "name_prefix", acctest.ResourcePrefix),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
 				),
@@ -152,7 +152,7 @@ func TestAccIAMUserPolicy_generatedName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicy(ctx, userResourceName, policyResourceName),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%s:.+$", rName))),
+					resource.TestMatchResourceAttr(policyResourceName, "id", regexache.MustCompile(fmt.Sprintf("^%s:.+$", rName))),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
 				),
 			},

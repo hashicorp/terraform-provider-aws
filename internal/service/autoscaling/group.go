@@ -8,11 +8,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -208,10 +208,22 @@ func ResourceGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"scale_in_protected_instances": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      autoscaling.ScaleInProtectedInstancesIgnore,
+										ValidateFunc: validation.StringInSlice(autoscaling.ScaleInProtectedInstances_Values(), false),
+									},
 									"skip_matching": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
+									},
+									"standby_instances": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      autoscaling.StandbyInstancesIgnore,
+										ValidateFunc: validation.StringInSlice(autoscaling.StandbyInstances_Values(), false),
 									},
 								},
 							},
@@ -687,7 +699,7 @@ func ResourceGroup() *schema.Resource {
 												"weighted_capacity": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
+													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
 												},
 											},
 										},
@@ -3243,8 +3255,16 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
 	}
 
+	if v, ok := tfMap["scale_in_protected_instances"].(string); ok {
+		apiObject.ScaleInProtectedInstances = aws.String(v)
+	}
+
 	if v, ok := tfMap["skip_matching"].(bool); ok {
 		apiObject.SkipMatching = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["standby_instances"].(string); ok {
+		apiObject.StandbyInstances = aws.String(v)
 	}
 
 	return apiObject

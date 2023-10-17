@@ -51,7 +51,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Required) A friendly name of the rule group
+* `name` - (Optional) Name of the rule group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
 * `activated_rule` - (Optional) A list of activated rules, see below
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -95,4 +96,4 @@ Using `terraform import`, import WAF Rule Group using the id. For example:
 % terraform import aws_waf_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-df72309c06537dc4f1038c21cf9b71a856e5b52190bc6a73f8f654ba76f7f521 -->
+<!-- cache-key: cdktf-0.18.0 input-55ab96b827dc2a0f93ec875d666102ecc7d13a2de2d65c381747b9a8c9c72a79 -->

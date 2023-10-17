@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -225,7 +225,7 @@ func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRolePolicyConfig_invalidJSON(rName),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 		},
 	})
@@ -243,7 +243,7 @@ func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRolePolicyConfig_invalidResource(rName),
-				ExpectError: regexp.MustCompile("MalformedPolicyDocument"),
+				ExpectError: regexache.MustCompile("MalformedPolicyDocument"),
 			},
 		},
 	})

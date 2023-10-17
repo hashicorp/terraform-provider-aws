@@ -4,8 +4,7 @@
 package pipes
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -185,7 +184,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
 								),
 							},
 						},
@@ -276,7 +275,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 															),
 														},
 													},
@@ -288,7 +287,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																validation.StringMatch(regexache.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 															),
 														},
 													},
@@ -530,7 +529,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 50),
-									validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9\-]+[\.][A-Za-z0-9\-]+$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
 								),
 							},
 							"resources": {
@@ -554,7 +553,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
 								),
 							},
 						},
@@ -738,7 +737,7 @@ func targetParametersSchema() *schema.Schema {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 											),
 										},
 										"value": {

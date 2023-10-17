@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
@@ -96,7 +96,7 @@ func ResourceBudgetAction() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
+					validation.StringMatch(regexache.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
 				),
 			},
 			"definition": {
@@ -208,7 +208,7 @@ func ResourceBudgetAction() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 2147483647),
-								validation.StringMatch(regexp.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
+								validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
 							)},
 						"subscription_type": {
 							Type:         schema.TypeString,

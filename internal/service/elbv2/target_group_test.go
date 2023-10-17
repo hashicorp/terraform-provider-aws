@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -667,11 +667,11 @@ timeout  = 4
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_nlbDefaults(rName, healthCheckInvalid1),
-				ExpectError: regexp.MustCompile("health_check.path is not supported for target_groups with TCP protocol"),
+				ExpectError: regexache.MustCompile("health_check.path is not supported for target_groups with TCP protocol"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_nlbDefaults(rName, healthCheckInvalid2),
-				ExpectError: regexp.MustCompile("health_check.matcher is not supported for target_groups with TCP protocol"),
+				ExpectError: regexache.MustCompile("health_check.matcher is not supported for target_groups with TCP protocol"),
 			},
 			{
 				Config: testAccTargetGroupConfig_nlbDefaults(rName, healthCheckValid),
@@ -773,7 +773,7 @@ func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
 				Config: testAccTargetGroupConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile("^tf-")),
 				),
 			},
 		},
@@ -1186,15 +1186,15 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "source_ip", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "source_ip", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TLS", "lb_cookie", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
 				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false),
@@ -1217,19 +1217,19 @@ func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", false),
-				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "lb_cookie", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", true),
-				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 		},
 	})
@@ -1918,15 +1918,15 @@ func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_albMissingPort(rName),
-				ExpectError: regexp.MustCompile(`port should be set when target type is`),
+				ExpectError: regexache.MustCompile(`port should be set when target type is`),
 			},
 			{
 				Config:      testAccTargetGroupConfig_albMissingProtocol(rName),
-				ExpectError: regexp.MustCompile(`protocol should be set when target type is`),
+				ExpectError: regexache.MustCompile(`protocol should be set when target type is`),
 			},
 			{
 				Config:      testAccTargetGroupConfig_albMissingVPC(rName),
-				ExpectError: regexp.MustCompile(`vpc_id should be set when target type is`),
+				ExpectError: regexache.MustCompile(`vpc_id should be set when target type is`),
 			},
 		},
 	})
@@ -1948,7 +1948,7 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 				Config: testAccTargetGroupConfig_albNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile("^tf-")),
 				),
 			},
 		},
@@ -2276,7 +2276,7 @@ func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
 			},
 			{
 				Config:      testAccTargetGroupConfig_duplicateNameFirstAndSecond(tgName),
-				ExpectError: regexp.MustCompile("ELBv2 Target Group (.*?) already exist"),
+				ExpectError: regexache.MustCompile("ELBv2 Target Group (.*?) already exist"),
 			},
 		},
 	})

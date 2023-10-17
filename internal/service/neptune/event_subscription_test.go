@@ -6,9 +6,9 @@ package neptune_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -68,7 +68,7 @@ func TestAccNeptuneEventSubscription_withPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()
-	startsWithPrefix := regexp.MustCompile("^tf-acc-test-neptune-event-subs-")
+	startsWithPrefix := regexache.MustCompile("^tf-acc-test-neptune-event-subs-")
 
 	resourceName := "aws_neptune_event_subscription.test"
 

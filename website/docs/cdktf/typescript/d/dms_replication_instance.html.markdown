@@ -52,6 +52,7 @@ This data source exports the following attributes in addition to the arguments a
 * `engineVersion` - The engine version number of the replication instance.
 * `kmsKeyArn` - The Amazon Resource Name (ARN) for the KMS key used to encrypt the connection parameters.
 * `multiAz` - Specifies if the replication instance is a multi-az deployment.
+* `networkType` - The type of IP address protocol used by the replication instance.
 * `preferredMaintenanceWindow` - The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 * `publiclyAccessible` - Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
 * `replicationInstanceArn` - The Amazon Resource Name (ARN) of the replication instance.
@@ -61,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `replicationSubnetGroupId` - A subnet group to associate with the replication instance.
 * `vpcSecurityGroupIds` - A set of VPC security group IDs that are used with the replication instance.
 
-<!-- cache-key: cdktf-0.18.0 input-eaca2881da6d3e757a79c4d04c7b032c622b5293e104c3998a35a31f13e22e49 -->
+<!-- cache-key: cdktf-0.18.0 input-5aba05f196697c06b58151a68778040ed73677e99368add1ba52d699e7516fbc -->

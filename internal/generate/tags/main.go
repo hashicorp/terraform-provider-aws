@@ -10,10 +10,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
@@ -51,6 +51,7 @@ var (
 	listTagsInIDElem        = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice   = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
 	listTagsOp              = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
+	listTagsOpPaginated     = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem     = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 	setTagsOutFunc          = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
 	tagInCustomVal          = flag.String("TagInCustomVal", "", "tagInCustomVal")
@@ -164,6 +165,7 @@ type TemplateData struct {
 	ListTagsInIDElem        string
 	ListTagsInIDNeedSlice   string
 	ListTagsOp              string
+	ListTagsOpPaginated     bool
 	ListTagsOutTagsElem     string
 	ParentNotFoundErrCode   string
 	ParentNotFoundErrMsg    string
@@ -318,6 +320,7 @@ func main() {
 		ListTagsInIDElem:        *listTagsInIDElem,
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
 		ListTagsOp:              *listTagsOp,
+		ListTagsOpPaginated:     *listTagsOpPaginated,
 		ListTagsOutTagsElem:     *listTagsOutTagsElem,
 		ParentNotFoundErrCode:   *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:    *parentNotFoundErrMsg,
@@ -417,8 +420,8 @@ func main() {
 }
 
 func toSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
+	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
 }
 

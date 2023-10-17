@@ -231,6 +231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_role_association",
 		},
 		{
+			Factory:  ResourceCustomDBEngineVersion,
+			TypeName: "aws_rds_custom_db_engine_version",
+			Name:     "Custom DB Engine Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 		},
@@ -262,7 +270,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

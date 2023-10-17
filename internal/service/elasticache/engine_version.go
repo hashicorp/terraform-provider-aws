@@ -9,6 +9,7 @@ import (
 	"math"
 	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
@@ -20,7 +21,7 @@ const (
 	versionStringRegexpPattern         = "^" + versionStringRegexpInternalPattern + "$"
 )
 
-var versionStringRegexp = regexp.MustCompile(versionStringRegexpPattern)
+var versionStringRegexp = regexache.MustCompile(versionStringRegexpPattern)
 
 func validMemcachedVersionString(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -40,8 +41,8 @@ const (
 )
 
 var (
-	redisVersionRegexp       = regexp.MustCompile(redisVersionRegexpPattern)
-	redisVersionPostV6Regexp = regexp.MustCompile(redisVersionPostV6RegexpPattern)
+	redisVersionRegexp       = regexache.MustCompile(redisVersionRegexpPattern)
+	redisVersionPostV6Regexp = regexache.MustCompile(redisVersionPostV6RegexpPattern)
 )
 
 func validRedisVersionString(v interface{}, k string) (ws []string, errors []error) {

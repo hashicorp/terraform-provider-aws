@@ -73,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
     awsIotPolicyDevicePolicy.overrideLogicalId("device_policy");
     new IotProvisioningTemplate(this, "fleet", {
       description: "My provisioning template",
+      enabled: true,
       name: "FleetTemplate",
       provisioningRoleArn: iotFleetProvisioning.arn,
       templateBody: Token.asString(
@@ -156,4 +157,4 @@ Using `terraform import`, import IoT fleet provisioning templates using the `nam
 % terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7af56109ad7a10168e9f1d55ceba0bdbd7fbdb52c825efedc754265c43d2b0e5 -->
+<!-- cache-key: cdktf-0.18.0 input-c0fefe4e33dd930777b9688f3ebe24a5338e567f5874edf869781d9ab532a26a -->

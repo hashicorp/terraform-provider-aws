@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCanonicalUserID,
+			Factory:  dataSourceCanonicalUserID,
 			TypeName: "aws_canonical_user_id",
 		},
 		{

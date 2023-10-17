@@ -6,10 +6,10 @@ package neptune_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,7 +41,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "address"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
+					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexache.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "address"),
@@ -118,7 +118,7 @@ func TestAccNeptuneClusterInstance_nameGenerated(t *testing.T) {
 				Config: testAccClusterInstanceConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 			{
@@ -303,7 +303,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -324,7 +324,7 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
