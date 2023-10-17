@@ -61,3 +61,7 @@ resource/aws_neptune_cluster: Support import of `cluster_identifier_prefix` argu
 ```release-note:enhancement
 resource/aws_neptune_cluster_instance: Support import of `identifier_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_neptune_cluster_parameter_group: Support import of `name_prefix` argument
+```
