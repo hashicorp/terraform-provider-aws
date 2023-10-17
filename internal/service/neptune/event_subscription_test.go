@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -100,8 +99,8 @@ func TestAccNeptuneEventSubscription_nameGenerated(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
 				),
 			},
 			{
@@ -439,7 +438,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_neptune_parameter_group" "test" {
   count = 2
 
-  name   = %[1]s-${count.index}
+  name   = "%[1]s-${count.index}"
   family = "neptune1"
 }
 `, rName)
@@ -485,6 +484,7 @@ resource "aws_neptune_event_subscription" "test" {
   name          = %[1]q
   sns_topic_arn = aws_sns_topic.test.arn
   source_type   = "db-instance"
+  enabled       = false
 
   event_categories = [
     "availability",
