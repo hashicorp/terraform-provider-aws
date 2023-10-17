@@ -52,11 +52,11 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
@@ -99,11 +99,11 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
@@ -121,11 +121,11 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_exclude.#", "1"),
@@ -555,7 +555,7 @@ resource "aws_msk_replicator" "test" {
   description                = "test-description"
   service_execution_role_arn = aws_iam_role.source.arn
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.source.arn
     }
@@ -566,7 +566,7 @@ resource "aws_msk_replicator" "test" {
     }
   }
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.target.arn
     }
@@ -606,7 +606,7 @@ resource "aws_msk_replicator" "test" {
   description                = "test-description"
   service_execution_role_arn = aws_iam_role.source.arn
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.source.arn
     }
@@ -617,7 +617,7 @@ resource "aws_msk_replicator" "test" {
     }
   }
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.target.arn
     }
@@ -663,7 +663,7 @@ resource "aws_msk_replicator" "test" {
   description                = "test-description"
   service_execution_role_arn = aws_iam_role.source.arn
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.source.arn
     }
@@ -674,7 +674,7 @@ resource "aws_msk_replicator" "test" {
     }
   }
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.target.arn
     }
@@ -718,7 +718,7 @@ resource "aws_msk_replicator" "test" {
   description                = "test-description"
   service_execution_role_arn = aws_iam_role.source.arn
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.source.arn
     }
@@ -729,7 +729,7 @@ resource "aws_msk_replicator" "test" {
     }
   }
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.target.arn
     }

@@ -20,7 +20,7 @@ resource "aws_msk_replicator" "test" {
   description                = "test-description"
   service_execution_role_arn = aws_iam_role.source.arn
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.source.arn
     }
@@ -31,7 +31,7 @@ resource "aws_msk_replicator" "test" {
     }
   }
 
-  kafka_clusters {
+  kafka_cluster {
     amazon_msk_cluster {
       msk_cluster_arn = aws_msk_cluster.target.arn
     }
@@ -64,12 +64,12 @@ resource "aws_msk_replicator" "test" {
 The following arguments are required:
 
 * `replicator_name` - (Required) The name of the replicator.
-* `kafka_clusters` - (Required) A list of Kafka clusters which are targets of the replicator.
+* `kafka_cluster` - (Required) A list of Kafka clusters which are targets of the replicator.
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
 
-### kafka_clusters Argument Reference
+### kafka_cluster Argument Reference
 
 * `amazon_msk_cluster` - (Required) Details of an Amazon MSK cluster.
 * `vpc_config` - (Required) Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.

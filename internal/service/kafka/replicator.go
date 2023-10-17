@@ -58,7 +58,7 @@ func ResourceReplicator() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"kafka_clusters": {
+			"kafka_cluster": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -237,7 +237,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	in := &kafka.CreateReplicatorInput{
-		KafkaClusters:           expandClusters(d.Get("kafka_clusters").([]interface{})),
+		KafkaClusters:           expandClusters(d.Get("kafka_cluster").([]interface{})),
 		ReplicationInfoList:     expandReplicationInfoList(d.Get("replication_info_list").([]interface{})),
 		ReplicatorName:          aws.String(d.Get("replicator_name").(string)),
 		ServiceExecutionRoleArn: aws.String(d.Get("service_execution_role_arn").(string)),
@@ -304,7 +304,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("replicator_name", out.ReplicatorName)
 	d.Set("description", out.ReplicatorDescription)
 	d.Set("service_execution_role_arn", out.ServiceExecutionRoleArn)
-	d.Set("kafka_clusters", flattenClusters(out.KafkaClusters))
+	d.Set("kafka_cluster", flattenClusters(out.KafkaClusters))
 	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, sourceARN, targetARN))
 
 	setTagsOutV2(ctx, out.Tags)
