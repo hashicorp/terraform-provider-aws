@@ -311,19 +311,8 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceEventSubscriptionRefreshFunc(ctx, d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err = stateConf.WaitForStateContext(ctx)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) delete: %s", d.Id(), err)
+	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for Neptune Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -431,4 +420,37 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Neptune, input *n
 	}
 
 	return output, nil
+}
+
+func statusEventSubscription(ctx context.Context, conn *neptune.Neptune, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEventSubscriptionByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"deleting"},
+		Target:  []string{},
+		Refresh: statusEventSubscription(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
