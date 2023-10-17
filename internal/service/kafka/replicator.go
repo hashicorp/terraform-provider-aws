@@ -26,18 +26,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_msk_replicator", name="Replicator")
-// Tagging annotations are used for "transparent tagging".
-// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")
 func ResourceReplicator() *schema.Resource {
 	return &schema.Resource{
-
 		CreateWithoutTimeout: resourceReplicatorCreate,
 		ReadWithoutTimeout:   resourceReplicatorRead,
 		UpdateWithoutTimeout: resourceReplicatorUpdate,
 		DeleteWithoutTimeout: resourceReplicatorDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
