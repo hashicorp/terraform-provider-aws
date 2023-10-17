@@ -38,12 +38,12 @@ func DataSourceVPCLink() *schema.Resource {
 				Computed: true,
 			},
 			"security_group_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subnet_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -83,10 +83,10 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("security_group_ids", output.SecurityGroupIds)
 	d.Set("subnet_ids", output.SubnetIds)
 
-	if err := d.Set("security_group_ids", flex.FlattenStringList(output.SecurityGroupIds)); err != nil {
+	if err := d.Set("security_group_ids", flex.FlattenStringSet(output.SecurityGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_group_ids: %s", err)
 	}
-	if err := d.Set("subnet_ids", flex.FlattenStringList(output.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(output.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
