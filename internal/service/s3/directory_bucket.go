@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,9 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,12 +63,64 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 					stringvalidator.RegexMatches(directoryBucketNameRegex, `must be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
 				},
 			},
+			"data_redundancy": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  enum.FrameworkDefault(awstypes.DataRedundancySingleAvailabilityZone),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.DataRedundancy](),
+				},
+			},
 			"force_destroy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
+			"type": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  enum.FrameworkDefault(awstypes.BucketTypeDirectory),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.BucketType](),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"location": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceDirectoryBucketLocationData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"type": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  enum.FrameworkDefault(awstypes.LocationTypeAvailabilityZone),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.LocationType](),
+							},
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
+				},
+			},
 		},
 	}
 }
@@ -79,20 +134,28 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 		return
 	}
 
+	locationData, diags := data.Location.ToPtr(ctx)
+
+	response.Diagnostics.Append(diags...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3Client(ctx)
 
 	input := &s3.CreateBucketInput{
 		Bucket: flex.StringFromFramework(ctx, data.Bucket),
 		CreateBucketConfiguration: &awstypes.CreateBucketConfiguration{
 			Bucket: &awstypes.BucketInfo{
-				DataRedundancy: awstypes.DataRedundancySingleAvailabilityZone,
-				Type:           awstypes.BucketTypeDirectory,
+				DataRedundancy: awstypes.DataRedundancy(data.DataRedundancy.ValueString()),
+				Type:           awstypes.BucketType(data.Type.ValueString()),
+			},
+			Location: &awstypes.LocationInfo{
+				Name: flex.StringFromFramework(ctx, locationData.Name),
+				Type: awstypes.LocationType(locationData.Type.ValueString()),
 			},
 		},
-	}
-
-	if region := r.Meta().Region; region != names.USEast1RegionID {
-		input.CreateBucketConfiguration.LocationConstraint = awstypes.BucketLocationConstraint(region)
 	}
 
 	_, err := conn.CreateBucket(ctx, input, useRegionalEndpointInUSEast1)
@@ -139,6 +202,15 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 	// Set attributes for import.
 	data.ARN = types.StringValue(r.arn(data.ID.ValueString()))
 	data.Bucket = data.ID
+	// No API to return bucket type, location etc.
+	data.DataRedundancy = flex.StringValueToFramework(ctx, awstypes.DataRedundancySingleAvailabilityZone)
+	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
+		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &resourceDirectoryBucketLocationData{
+			Name: flex.StringValueToFramework(ctx, matches[2]),
+			Type: flex.StringValueToFramework(ctx, awstypes.LocationTypeAvailabilityZone),
+		})
+	}
+	data.Type = flex.StringValueToFramework(ctx, awstypes.BucketTypeDirectory)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -210,8 +282,16 @@ func (r *resourceDirectoryBucket) arn(bucket string) string {
 }
 
 type resourceDirectoryBucketData struct {
-	ARN          types.String `tfsdk:"arn"`
-	Bucket       types.String `tfsdk:"bucket"`
-	ForceDestroy types.Bool   `tfsdk:"force_destroy"`
-	ID           types.String `tfsdk:"id"`
+	ARN            types.String                                                         `tfsdk:"arn"`
+	Bucket         types.String                                                         `tfsdk:"bucket"`
+	DataRedundancy types.String                                                         `tfsdk:"data_redundancy"`
+	ForceDestroy   types.Bool                                                           `tfsdk:"force_destroy"`
+	Location       fwtypes.ListNestedObjectValueOf[resourceDirectoryBucketLocationData] `tfsdk:"location"`
+	ID             types.String                                                         `tfsdk:"id"`
+	Type           types.String                                                         `tfsdk:"type"`
+}
+
+type resourceDirectoryBucketLocationData struct {
+	Name types.String `tfsdk:"name"`
+	Type types.String `tfsdk:"type"`
 }
