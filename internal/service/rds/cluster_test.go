@@ -37,6 +37,46 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	blueGreenDeployment := "aws_rds_cluster_blue_green_deployment"
+	dataSourceName := "data.aws_rds_engine_version.test"
+	aws_rds_cluster_parameter_group := "aws_rds_cluster_parameter_group"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "create_deployment"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "switchover_enabled"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "cleanup_resources"),
+					resource.TestCheckResourceAttr(aws_rds_cluster_parameter_group, "aws_rds_cluster_parameter_group", "test"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
@@ -4737,4 +4777,58 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, rName, password)
+}
+
+func testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName string, upgrade bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+	engine             = "aurora-mysql"
+	preferred_versions = ["8.0.mysql_aurora.3.02.0"]
+	}
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+	name        = "mysqlaurora58cluster"
+	family      = "aurora-mysql8.0"
+	description = "RDS default cluster parameter group"
+	parameter {
+		name  = "binlog_format"
+		value = "ROW"
+		apply_method = "pending-reboot"
+	}
+}
+
+resource "aws_db_parameter_group" "test" {
+	name   = "mysqlaurora58instance"
+	family = "aurora-mysql8.0"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  engine                          = data.aws_rds_engine_version.test.engine
+  engine_version                  = "8.0.mysql_aurora.3.02.0"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
+  skip_final_snapshot             = true
+  apply_immediately               = true
+}
+resource "aws_rds_cluster_instance" "test" {
+  count              = 2
+  identifier         = "%[1]s-test-${count.index}"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = "db.t3.medium"
+  db_parameter_group_name = aws_db_parameter_group.test.name
+}
+resource "aws_rds_cluster_blue_green_deployment" "test" {
+	cluster_identifier = aws_rds_cluster.test.cluster_identifier
+	create_deployment = true
+	cleanup_resources = true
+	engine = aws_rds_cluster_instance.test[0].engine
+	switchover_enabled = true
+  }
+`, rName, upgrade)
 }
