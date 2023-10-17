@@ -38,6 +38,22 @@ func ResourceKeyPair() *schema.Resource {
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_private_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -48,25 +64,16 @@ func ResourceKeyPair() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
-
-			// optional fields
 			"pgp_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			// additional info returned from the API
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			// fields returned from CreateKey
-			"fingerprint": {
+			"private_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,23 +83,10 @@ func ResourceKeyPair() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"private_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			// encrypted fields if pgp_key is given
-			"encrypted_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_private_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
