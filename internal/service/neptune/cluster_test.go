@@ -29,7 +29,6 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportStateVerifyIgnore: []string{
 			"allow_major_version_upgrade",
 			"apply_immediately",
-			"cluster_identifier_prefix",
 			"final_snapshot_identifier",
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
@@ -41,7 +40,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 func TestAccNeptuneCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,20 +53,158 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
+					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster:.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.2"),
+					resource.TestCheckNoResourceAttr(resourceName, "neptune_instance_parameter_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "port", "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "replication_source_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "cluster_identifier", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "cluster_identifier", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
@@ -106,30 +243,6 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccNeptuneCluster_namePrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v neptune.DBCluster
-	rName := "tf-test-"
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_namePrefix(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
-				),
-			},
-			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -179,48 +292,6 @@ func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 				),
 			},
 			testAccClusterImportStep(resourceName),
-		},
-	})
-}
-
-func TestAccNeptuneCluster_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			testAccClusterImportStep(resourceName),
-			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
 		},
 	})
 }
@@ -544,30 +615,6 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneCluster_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_neptune_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster neptune.DBCluster
@@ -722,33 +769,17 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_copyTags(rName string, copy bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+func testAccClusterConfig_identifierGenerated() string {
+	return `
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
-  copy_tags_to_snapshot                = %[2]t
 }
-`, rName, copy))
-}
-
-func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-  deletion_protection                  = %[2]t
-}
-`, rName, isProtected))
+`
 }
 
-func testAccClusterConfig_namePrefix(rName string) string {
+func testAccClusterConfig_identifierPrefix(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier_prefix            = %[1]q
@@ -756,35 +787,7 @@ resource "aws_neptune_cluster" "test" {
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 }
-`, rName)
-}
-
-func testAccClusterConfig_serverlessConfiguration(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier_prefix            = %[1]q
-  engine                               = "neptune"
-  engine_version                       = "1.2.0.1"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  skip_final_snapshot                  = true
-
-  serverless_v2_scaling_configuration {
-    min_capacity = 4.5
-    max_capacity = 12.5
-  }
-}
-`, rName)
-}
-
-func testAccClusterConfig_finalSnapshot(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
-  final_snapshot_identifier            = %[1]q
-}
-`, rName))
+`, prefix)
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -818,6 +821,60 @@ resource "aws_neptune_cluster" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccClusterConfig_copyTags(rName string, copy bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[1]q
+  availability_zones                   = local.availability_zone_names
+  engine                               = "neptune"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+  copy_tags_to_snapshot                = %[2]t
+}
+`, rName, copy))
+}
+
+func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[1]q
+  availability_zones                   = local.availability_zone_names
+  engine                               = "neptune"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+  deletion_protection                  = %[2]t
+}
+`, rName, isProtected))
+}
+
+func testAccClusterConfig_serverlessConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier_prefix            = %[1]q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+
+  serverless_v2_scaling_configuration {
+    min_capacity = 4.5
+    max_capacity = 12.5
+  }
+}
+`, rName)
+}
+
+func testAccClusterConfig_finalSnapshot(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[1]q
+  availability_zones                   = local.availability_zone_names
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  final_snapshot_identifier            = %[1]q
+}
+`, rName))
 }
 
 func testAccClusterConfig_includingIAMRoles(rName string) string {
