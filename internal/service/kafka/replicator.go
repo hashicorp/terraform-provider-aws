@@ -58,119 +58,6 @@ func ResourceReplicator() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"replicator_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"replication_info_list": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"source_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"target_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_compression_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"topic_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"copy_topic_configurations": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"copy_access_control_lists_for_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"detect_and_copy_new_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"topics_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"topics_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"consumer_group_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"consumer_groups_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"consumer_groups_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"detect_and_copy_new_consumer_groups": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"synchronise_consumer_group_offsets": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"service_execution_role_arn": {
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
-				Required:     true,
-			},
 			"kafka_clusters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -199,17 +86,17 @@ func ResourceReplicator() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"subnet_ids": {
+									"security_groups_ids": {
 										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
-									"security_groups_ids": {
+									"subnet_ids": {
 										Type:     schema.TypeSet,
-										Optional: true,
+										Required: true,
+										ForceNew: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -219,6 +106,119 @@ func ResourceReplicator() *schema.Resource {
 						},
 					},
 				},
+			},
+			"replication_info_list": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"source_kafka_cluster_alias": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"source_kafka_cluster_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_compression_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"target_kafka_cluster_alias": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"target_kafka_cluster_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"topic_replication": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"copy_access_control_lists_for_topics": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"copy_topic_configurations": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"detect_and_copy_new_topics": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"topics_to_exclude": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"topics_to_replicate": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"consumer_group_replication": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"consumer_groups_to_exclude": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"consumer_groups_to_replicate": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"detect_and_copy_new_consumer_groups": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"synchronise_consumer_group_offsets": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"replicator_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"service_execution_role_arn": {
+				Type:         schema.TypeString,
+				ValidateFunc: verify.ValidARN,
+				Required:     true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
