@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package dms
 
 import (
@@ -14,9 +11,10 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dms_endpoint", &resource.Sweeper{
 		Name: "aws_dms_endpoint",
 		F:    sweepEndpoints,
@@ -77,7 +75,7 @@ func sweepEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DMS Endpoint sweep for %s: %s", region, err)
 		return nil
 	}
@@ -121,7 +119,7 @@ func sweepReplicationConfigs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DMS Replication Config sweep for %s: %s", region, err)
 		return nil
 	}
@@ -166,7 +164,7 @@ func sweepReplicationInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -210,7 +208,7 @@ func sweepReplicationSubnetGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DMS Replication Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -257,7 +255,7 @@ func sweepReplicationTasks(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DMS Replication Task sweep for %s: %s", region, err)
 		return nil
 	}
