@@ -8,7 +8,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	// "github.com/aws/aws-sdk-go/service/chime"
+
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,8 +44,8 @@ func ResourceVoiceConnector() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				Default:      chime.VoiceConnectorAwsRegionUsEast1,
-				ValidateFunc: validation.StringInSlice([]string{chime.VoiceConnectorAwsRegionUsEast1, chime.VoiceConnectorAwsRegionUsWest2}, false),
+				Default:      chimesdkvoice.VoiceConnectorAwsRegionUsEast1,
+				ValidateFunc: validation.StringInSlice([]string{chimesdkvoice.VoiceConnectorAwsRegionUsEast1, chimesdkvoice.VoiceConnectorAwsRegionUsWest2}, false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -68,9 +70,9 @@ func ResourceVoiceConnector() *schema.Resource {
 
 func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	createInput := &chime.CreateVoiceConnectorInput{
+	createInput := &chimesdkvoice.CreateVoiceConnectorInput{
 		Name:              aws.String(d.Get("name").(string)),
 		RequireEncryption: aws.Bool(d.Get("require_encryption").(bool)),
 	}
@@ -96,14 +98,14 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	getInput := &chime.GetVoiceConnectorInput{
+	getInput := &chimesdkvoice.GetVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 		d.SetId("")
 		return diags
@@ -124,10 +126,10 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges("name", "require_encryption") {
-		updateInput := &chime.UpdateVoiceConnectorInput{
+		updateInput := &chimesdkvoice.UpdateVoiceConnectorInput{
 			VoiceConnectorId:  aws.String(d.Id()),
 			Name:              aws.String(d.Get("name").(string)),
 			RequireEncryption: aws.Bool(d.Get("require_encryption").(bool)),
@@ -143,14 +145,14 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.DeleteVoiceConnectorInput{
+	input := &chimesdkvoice.DeleteVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteVoiceConnectorWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 			return diags
 		}
