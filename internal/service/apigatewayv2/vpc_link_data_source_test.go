@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAPIGatewayV2VPCLinkDataSource(t *testing.T) {
+func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_vpc_link.test"
 	resourceName := "aws_apigatewayv2_vpc_link.test"
