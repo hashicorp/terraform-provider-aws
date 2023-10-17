@@ -9247,7 +9247,7 @@ func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, all
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "postgres13" {
   engine         = "postgres"
-  engine_version = "13.5"
+  engine_version = "13.12"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
@@ -9272,7 +9272,7 @@ resource "aws_db_snapshot" "test" {
 
 data "aws_rds_orderable_db_instance" "postgres14" {
   engine         = "postgres"
-  engine_version = "14.1"
+  engine_version = "14.9"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
