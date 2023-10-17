@@ -5,15 +5,8 @@ page_title: "AWS: aws_msk_replicator"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka Replicator.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
-# Resource: aws_kafka_replicator
+
+# Resource: aws_msk_replicator
 
 Terraform resource for managing an AWS Managed Streaming for Kafka Replicator.
 
@@ -77,17 +70,21 @@ The following arguments are required:
 * `description` - (Optional) A summary description of the replicator.
 
 ### kafka_clusters Argument Reference
+
 * `amazon_msk_cluster` - (Required) Details of an Amazon MSK cluster.
 * `vpc_config` - (Required) Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.
 
 ### amazon_msk_cluster Argument Reference
+
 * `msk_cluster_arn` - (Required) The ARN of an Amazon MSK cluster.
 
 ### vpc_config Argument Reference
+
 * `subnet_ids` - (Required) The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
 * `security_groups_ids` - (Required) The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.
 
 ### replication_info_list Argument Reference
+
 * `source_kafka_cluster_arn` - (Required) The ARN of the source Kafka cluster.
 * `target_kafka_cluster_arn` - (Required) The ARN of the target Kafka cluster.
 * `target_compression_type` - (Required) The type of compression to use writing records to target Kafka cluster.
@@ -95,6 +92,7 @@ The following arguments are required:
 * `consumer_group_replication` - (Required) Confguration relating to consumer group replication.
 
 ### topic_replication Argument Reference
+
 * `topics_to_replicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topics_to_exclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detect_and_copy_new_topics` - (Optional) Whether to periodically check for new topics and partitions.
@@ -102,15 +100,15 @@ The following arguments are required:
 * `copy_topic_configurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
 
 ### consumer_group_replication Argument Reference
+
 * `consumer_groups_to_replicate` - (Required) List of regular expression patterns indicating the consumer groups to copy.
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Replicator. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
@@ -124,8 +122,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Managed Streaming for Kafka Replicator can be imported using the `example_id_arg`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK relicators using the replicator ARN. For example:
 
+```terraform
+import {
+  to = aws_msk_replicator.example
+  id = "arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_kafka_replicator.example rft-8012925589
+
+Using `terraform import`, import MSK replicators using the replicator ARN. For example:
+
+```console
+% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
