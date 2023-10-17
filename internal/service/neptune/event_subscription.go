@@ -140,21 +140,8 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	log.Println("[INFO] Waiting for Neptune Event Subscription to be ready")
-
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"active"},
-		Refresh:    resourceEventSubscriptionRefreshFunc(ctx, d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription state to be \"active\": %s", err)
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Neptune Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
@@ -438,12 +425,52 @@ func statusEventSubscription(ctx context.Context, conn *neptune.Neptune, name st
 	}
 }
 
+func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"creating"},
+		Target:     []string{"active"},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"modifying"},
+		Target:     []string{"active"},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"deleting"},
-		Target:  []string{},
-		Refresh: statusEventSubscription(ctx, conn, name),
-		Timeout: timeout,
+		Pending:    []string{"deleting"},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
