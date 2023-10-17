@@ -5,11 +5,11 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.25
+	github.com/aws/aws-sdk-go v1.45.26
 	github.com/aws/aws-sdk-go-v2 v1.21.2
-	github.com/aws/aws-sdk-go-v2/config v1.18.45
+	github.com/aws/aws-sdk-go-v2/config v1.19.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.90
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.91
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/acm v1.19.2
@@ -62,7 +62,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.2
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.3
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/signer v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.17.2
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/xray v1.18.2
+	github.com/aws/aws-sdk-go-v2/service/xray v1.19.0
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
