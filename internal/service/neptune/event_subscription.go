@@ -354,7 +354,7 @@ func statusEventSubscription(ctx context.Context, conn *neptune.Neptune, name st
 	}
 }
 
-func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"active"},
@@ -373,7 +373,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, na
 	return nil, err
 }
 
-func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"modifying"},
 		Target:     []string{"active"},
@@ -392,7 +392,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, na
 	return nil, err
 }
 
-func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) { //nolint:unparam
+func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
