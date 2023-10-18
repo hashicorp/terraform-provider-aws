@@ -81,3 +81,7 @@ resource/aws_db_option_group: Support import of `name_prefix` argument
 ```release-note:enhancement
 resource/aws_rds_cluster: Support import of `cluster_identifier_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Support import of `identifier_prefix` argument
+```
