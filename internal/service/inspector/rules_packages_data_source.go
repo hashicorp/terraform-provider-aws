@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
@@ -29,12 +32,12 @@ func DataSourceRulesPackages() *schema.Resource {
 
 func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	output, err := findRulesPackageARNs(ctx, conn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Inspector Rules Packages: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
 
 	arns := aws.StringValueSlice(output)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -120,6 +123,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				ExactlyOneOf: []string{
 					"catalog_resource",
@@ -132,6 +136,12 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Computed: true,
+						},
 						"key": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -141,19 +151,12 @@ func ResourcePermissions() *schema.Resource {
 						"values": {
 							Type:     schema.TypeSet,
 							Required: true,
+							ForceNew: true,
 							MinItems: 1,
-							MaxItems: 15,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
 							},
-							Set: schema.HashString,
-						},
-						"catalog_id": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
 						},
 					},
 				},
@@ -162,6 +165,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				ExactlyOneOf: []string{
 					"catalog_resource",
@@ -181,27 +185,26 @@ func ResourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidAccountID,
 						},
 						"expression": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									"values": {
 										Type:     schema.TypeSet,
 										Required: true,
+										ForceNew: true,
 										MinItems: 1,
-										MaxItems: 15,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -209,6 +212,7 @@ func ResourcePermissions() *schema.Resource {
 						"resource_type": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
 						},
 					},
@@ -320,7 +324,6 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -339,7 +342,6 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -380,7 +382,7 @@ func ResourcePermissions() *schema.Resource {
 
 func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -447,7 +449,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
@@ -471,7 +473,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -683,7 +685,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -888,8 +890,8 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *lakeformation.LFTa
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["expression"]; ok && v != nil {
-		apiObject.Expression = ExpandLFTagExpression(v.([]interface{}))
+	if v, ok := tfMap["expression"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Expression = ExpandLFTagExpression(v.List())
 	}
 
 	if v, ok := tfMap["resource_type"].(string); ok && v != "" {

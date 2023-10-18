@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package slices
 
 import "golang.org/x/exp/slices"
@@ -38,10 +41,11 @@ func ApplyToAll[T, U any](s []T, f func(T) U) []U {
 	return v
 }
 
-type FilterFunc[T any] func(T) bool
+// Predicate represents a predicate (boolean-valued function) of one argument.
+type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`
-func Filter[T any](s []T, f FilterFunc[T]) []T {
+func Filter[T any](s []T, f Predicate[T]) []T {
 	v := make([]T, 0, len(s))
 
 	for _, e := range s {
@@ -51,6 +55,26 @@ func Filter[T any](s []T, f FilterFunc[T]) []T {
 	}
 
 	return slices.Clip(v)
+}
+
+// All returns `true` if the filter function `f` retruns `true` for all items
+func All[T any](s []T, f Predicate[T]) bool {
+	for _, e := range s {
+		if !f(e) {
+			return false
+		}
+	}
+	return true
+}
+
+// Any returns `true` if the filter function `f` retruns `true` for any item
+func Any[T any](s []T, f Predicate[T]) bool {
+	for _, e := range s {
+		if f(e) {
+			return true
+		}
+	}
+	return false
 }
 
 // Chunks returns a slice of S, each of the specified size (or less).
@@ -68,4 +92,24 @@ func Chunks[S ~[]E, E any](s S, size int) []S {
 	}
 
 	return chunks
+}
+
+// AppendUnique appends unique (not already in the slice) values to a slice.
+func AppendUnique[T comparable](s []T, vs ...T) []T {
+	for _, v := range vs {
+		var exists bool
+
+		for _, e := range s {
+			if e == v {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			s = append(s, v)
+		}
+	}
+
+	return s
 }

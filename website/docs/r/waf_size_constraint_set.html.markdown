@@ -30,7 +30,7 @@ resource "aws_waf_size_constraint_set" "size_constraint_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the Size Constraint Set.
 * `size_constraints` - (Optional) Specifies the parts of web requests that you want to inspect the size of.
@@ -65,17 +65,26 @@ The following arguments are supported:
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Size Constraint Set.
 * `arn` - Amazon Resource Name (ARN)
 
 ## Import
 
-AWS WAF Size Constraint Set can be imported using their ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS WAF Size Constraint Set using their ID. For example:
 
+```terraform
+import {
+  to = aws_waf_size_constraint_set.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_waf_size_constraint_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import AWS WAF Size Constraint Set using their ID. For example:
+
+```console
+% terraform import aws_waf_size_constraint_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

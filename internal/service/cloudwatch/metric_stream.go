@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -53,11 +57,18 @@ func ResourceMetricStream() *schema.Resource {
 				Computed: true,
 			},
 			"exclude_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"include_filter"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"metric_names": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
 						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -65,6 +76,7 @@ func ResourceMetricStream() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"include_filter"},
 			},
 			"firehose_arn": {
 				Type:         schema.TypeString,
@@ -72,11 +84,18 @@ func ResourceMetricStream() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"include_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"exclude_filter"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"metric_names": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
 						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -84,6 +103,11 @@ func ResourceMetricStream() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"exclude_filter"},
+			},
+			"include_linked_accounts_metrics": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"last_update_date": {
 				Type:     schema.TypeString,
@@ -132,16 +156,16 @@ func ResourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.All(
 									validation.Any(
 										validation.StringMatch(
-											regexp.MustCompile(`(^IQM$)|(^(p|tc|tm|ts|wm)(100|\d{1,2})(\.\d{0,10})?$)|(^[ou]\d+(\.\d*)?$)`),
+											regexache.MustCompile(`(^IQM$)|(^(p|tc|tm|ts|wm)(100|\d{1,2})(\.\d{0,10})?$)|(^[ou]\d+(\.\d*)?$)`),
 											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 										),
 										validation.StringMatch(
-											regexp.MustCompile(`^(TM|TC|TS|WM)\(((((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?:((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%|((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%:(((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?)\)|(TM|TC|TS|WM|PR)\(((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)):((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?|((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?:(\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))\)$`),
+											regexache.MustCompile(`^(TM|TC|TS|WM)\(((((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?:((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%|((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%:(((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?)\)|(TM|TC|TS|WM|PR)\(((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)):((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?|((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?:(\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))\)$`),
 											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 										),
 									),
 									validation.StringDoesNotMatch(
-										regexp.MustCompile(`^p0(\.0{0,10})?|p100(\.\d{0,10})?$`),
+										regexache.MustCompile(`^p0(\.0{0,10})?|p100(\.\d{0,10})?$`),
 										"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 									),
 								),
@@ -175,15 +199,16 @@ func ResourceMetricStream() *schema.Resource {
 }
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatch.PutMetricStreamInput{
-		FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
-		Name:         aws.String(name),
-		OutputFormat: aws.String(d.Get("output_format").(string)),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         GetTagsIn(ctx),
+		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
+		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
+		Name:                         aws.String(name),
+		OutputFormat:                 aws.String(d.Get("output_format").(string)),
+		RoleArn:                      aws.String(d.Get("role_arn").(string)),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -200,9 +225,8 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := conn.PutMetricStreamWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating CloudWatch Metric Stream (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.PutMetricStreamWithContext(ctx, input)
@@ -218,18 +242,17 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
 	}
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, aws.StringValue(output.Arn), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.StringValue(output.Arn), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return resourceMetricStreamRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return diag.Errorf("adding tags after create for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+			return diag.Errorf("setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -237,7 +260,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	output, err := FindMetricStreamByName(ctx, conn, d.Id())
 
@@ -254,6 +277,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", output.Arn)
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("firehose_arn", output.FirehoseArn)
+	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
 	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
@@ -283,14 +307,15 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatch.PutMetricStreamInput{
-			FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
-			Name:         aws.String(d.Id()),
-			OutputFormat: aws.String(d.Get("output_format").(string)),
-			RoleArn:      aws.String(d.Get("role_arn").(string)),
+			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
+			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
+			Name:                         aws.String(d.Id()),
+			OutputFormat:                 aws.String(d.Get("output_format").(string)),
+			RoleArn:                      aws.String(d.Get("role_arn").(string)),
 		}
 
 		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -320,7 +345,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
 	_, err := conn.DeleteMetricStreamWithContext(ctx, &cloudwatch.DeleteMetricStreamInput{
@@ -421,7 +446,7 @@ func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, n
 func validateMetricStreamName(v interface{}, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(regexp.MustCompile(`^[\-_A-Za-z0-9]*$`), "must match [\\-_A-Za-z0-9]"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must match [0-9A-Za-z_-]"),
 	)(v, k)
 }
 
@@ -432,10 +457,12 @@ func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
 		filter := &cloudwatch.MetricStreamFilter{}
 		mFilter := filterRaw.(map[string]interface{})
 
+		if v, ok := mFilter["metric_names"].(*schema.Set); ok && v.Len() > 0 {
+			filter.MetricNames = flex.ExpandStringSet(v)
+		}
 		if v, ok := mFilter["namespace"].(string); ok && v != "" {
 			filter.Namespace = aws.String(v)
 		}
-
 		filters = append(filters, filter)
 	}
 
@@ -448,8 +475,8 @@ func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string
 	for _, bd := range s {
 		if bd.Namespace != nil {
 			stage := make(map[string]interface{})
+			stage["metric_names"] = aws.StringValueSlice(bd.MetricNames)
 			stage["namespace"] = aws.StringValue(bd.Namespace)
-
 			filters = append(filters, stage)
 		}
 	}

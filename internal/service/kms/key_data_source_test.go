@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -131,19 +134,24 @@ func TestAccKMSKeyDataSource_byAliasID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "cloud_hsm_cluster_id", ""),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
+					resource.TestCheckResourceAttr(dataSourceName, "custom_key_store_id", ""),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
+					resource.TestCheckResourceAttr(dataSourceName, "key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key_usage", resourceName, "key_usage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_region", resourceName, "multi_region"),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "origin", "AWS_KMS"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_deletion_window_in_days", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "valid_to"),
+					resource.TestCheckResourceAttr(dataSourceName, "xks_key_configuration.#", "0"),
 				),
 			},
 		},

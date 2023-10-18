@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -82,7 +86,7 @@ func ResourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
 					if err := diff.SetNewComputed("stream_arn"); err != nil {
-						return fmt.Errorf("error setting stream_arn to computed: %s", err)
+						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
 				}
 				return nil
@@ -303,6 +307,75 @@ func ResourceTable() *schema.Resource {
 					},
 				},
 			},
+			"import_table": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"restore_source_name"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_compression_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.InputCompressionType_Values(), false),
+						},
+						"input_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.InputFormat_Values(), false),
+						},
+						"input_format_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"csv": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delimiter": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"header_list": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3_bucket_source": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bucket": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"bucket_owner": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"key_prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"restore_date_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -310,8 +383,9 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
 			"restore_source_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"import_table"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -402,7 +476,7 @@ func ResourceTable() *schema.Resource {
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get(names.AttrName).(string)
 	keySchemaMap := map[string]interface{}{
@@ -483,12 +557,76 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
+	} else if vit, ok := d.GetOk("import_table"); ok && len(vit.([]interface{})) > 0 && vit.([]interface{})[0] != nil {
+		input := expandImportTable(vit.([]interface{})[0].(map[string]interface{}))
+
+		tcp := &dynamodb.TableCreationParameters{
+			TableName:   aws.String(tableName),
+			BillingMode: aws.String(d.Get("billing_mode").(string)),
+			KeySchema:   expandKeySchema(keySchemaMap),
+		}
+
+		capacityMap := map[string]interface{}{
+			"write_capacity": d.Get("write_capacity"),
+			"read_capacity":  d.Get("read_capacity"),
+		}
+
+		billingMode := d.Get("billing_mode").(string)
+
+		tcp.ProvisionedThroughput = expandProvisionedThroughput(capacityMap, billingMode)
+
+		if v, ok := d.GetOk("attribute"); ok {
+			aSet := v.(*schema.Set)
+			tcp.AttributeDefinitions = expandAttributes(aSet.List())
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			tcp.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]interface{})
+				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
+					return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
+			}
+			tcp.GlobalSecondaryIndexes = globalSecondaryIndexes
+		}
+
+		input.TableCreationParameters = tcp
+
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
+			return conn.ImportTableWithContext(ctx, input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+		if err != nil {
+			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
+		}
 	} else {
 		input := &dynamodb.CreateTableInput{
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
 			TableName:   aws.String(tableName),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		billingMode := d.Get("billing_mode").(string)
@@ -603,7 +741,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), KeyValueTags(ctx, GetTagsIn(ctx)), meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), KeyValueTags(ctx, getTagsIn(ctx)), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
@@ -613,7 +751,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	table, err := FindTableByName(ctx, conn, d.Id())
 
@@ -735,7 +873,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	o, n := d.GetChange("billing_mode")
 	billingMode := n.(string)
 	oldBillingMode := o.(string)
@@ -1008,7 +1146,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
@@ -1218,12 +1356,12 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.DynamoDB, rn string, 
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			oldTags, err := ListTags(ctx, conn, repARN)
+			oldTags, err := listTags(ctx, conn, repARN)
 			if err != nil {
 				return fmt.Errorf("listing tags (%s): %w", repARN, err)
 			}
 
-			if err := UpdateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
+			if err := updateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
@@ -1403,7 +1541,7 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	return nil
 }
 
-func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) ([]*dynamodb.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -1414,11 +1552,13 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
 		// validate throughput input early, to avoid unnecessary processing
-		if e = validateGSIProvisionedThroughput(m, billingMode); e != nil {
-			return
+		if err := validateGSIProvisionedThroughput(m, billingMode); err != nil {
+			return nil, err
 		}
 		newGsis[m[names.AttrName].(string)] = m
 	}
+
+	var ops []*dynamodb.GlobalSecondaryIndexUpdate
 
 	for _, data := range newGsi {
 		newMap := data.(map[string]interface{})
@@ -2019,6 +2159,30 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 	return indexes
 }
 
+func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
+	a := &dynamodb.ImportTableInput{
+		ClientToken: aws.String(id.UniqueId()),
+	}
+
+	if v, ok := data["input_compression_type"].(string); ok {
+		a.InputCompressionType = aws.String(v)
+	}
+
+	if v, ok := data["input_format"].(string); ok {
+		a.InputFormat = aws.String(v)
+	}
+
+	if v, ok := data["input_format_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.InputFormatOptions = expandInputFormatOptions(v)
+	}
+
+	if v, ok := data["s3_bucket_source"].([]interface{}); ok && len(v) > 0 {
+		a.S3BucketSource = expandS3BucketSource(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
 	return &dynamodb.GlobalSecondaryIndex{
 		IndexName:             aws.String(data[names.AttrName].(string)),
@@ -2107,6 +2271,53 @@ func expandEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecificati
 	options.Enabled = aws.Bool(enabled)
 
 	return options
+}
+
+func expandInputFormatOptions(data []interface{}) *dynamodb.InputFormatOptions {
+	if data == nil {
+		return nil
+	}
+
+	m := data[0].(map[string]interface{})
+	a := &dynamodb.InputFormatOptions{}
+
+	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
+		a.Csv = &dynamodb.CsvOptions{}
+
+		csv := v[0].(map[string]interface{})
+
+		if s, ok := csv["delimiter"].(string); ok && s != "" {
+			a.Csv.Delimiter = aws.String(s)
+		}
+
+		if s, ok := csv["header_list"].(*schema.Set); ok && s.Len() > 0 {
+			a.Csv.HeaderList = flex.ExpandStringSet(s)
+		}
+	}
+
+	return a
+}
+
+func expandS3BucketSource(data map[string]interface{}) *dynamodb.S3BucketSource {
+	if data == nil {
+		return nil
+	}
+
+	a := &dynamodb.S3BucketSource{}
+
+	if s, ok := data["bucket"].(string); ok && s != "" {
+		a.S3Bucket = aws.String(s)
+	}
+
+	if s, ok := data["bucket_owner"].(string); ok && s != "" {
+		a.S3BucketOwner = aws.String(s)
+	}
+
+	if s, ok := data["key_prefix"].(string); ok && s != "" {
+		a.S3KeyPrefix = aws.String(s)
+	}
+
+	return a
 }
 
 // validators

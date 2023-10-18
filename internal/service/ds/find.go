@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -196,7 +199,21 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		SharedDirectoryIds: aws.StringSlice([]string{sharedDirectoryID}),
 	}
 
-	output, err := conn.DescribeSharedDirectoriesWithContext(ctx, input)
+	var output []*directoryservice.SharedDirectory
+
+	err := conn.DescribeSharedDirectoriesPagesWithContext(ctx, input, func(page *directoryservice.DescribeSharedDirectoriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.SharedDirectories {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 		return nil, &retry.NotFoundError{
@@ -209,15 +226,15 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		return nil, err
 	}
 
-	if output == nil || len(output.SharedDirectories) == 0 || output.SharedDirectories[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.SharedDirectories); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	sharedDirectory := output.SharedDirectories[0]
+	sharedDirectory := output[0]
 
 	if status := aws.StringValue(sharedDirectory.ShareStatus); status == directoryservice.ShareStatusDeleted {
 		return nil, &retry.NotFoundError{

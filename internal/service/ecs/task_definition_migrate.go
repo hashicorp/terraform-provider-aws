@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -13,7 +16,8 @@ import (
 )
 
 func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	conn := meta.(*conns.AWSClient).ECSConn()
+	ctx := context.Background()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	switch v {
 	case 0:

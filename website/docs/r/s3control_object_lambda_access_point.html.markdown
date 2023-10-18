@@ -44,7 +44,7 @@ resource "aws_s3control_object_lambda_access_point" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the owner of the bucket for which you want to create an Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `configuration` - (Required) A configuration block containing details about the Object Lambda Access Point. See [Configuration](#configuration) below for more details.
@@ -79,17 +79,27 @@ The `aws_lambda` block supports the following:
 * `function_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Lambda function.
 * `function_payload` - (Optional) Additional JSON that provides supplemental data to the Lambda function used to transform objects.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `alias` - Alias for the S3 Object Lambda Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
 
 ## Import
 
-Object Lambda Access Points can be imported using the `account_id` and `name`, separated by a colon (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Object Lambda Access Points using the `account_id` and `name`, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_object_lambda_access_point.example
+  id = "123456789012:example"
+}
 ```
-$ terraform import aws_s3control_object_lambda_access_point.example 123456789012:example
+
+Using `terraform import`, import Object Lambda Access Points using the `account_id` and `name`, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_object_lambda_access_point.example 123456789012:example
 ```

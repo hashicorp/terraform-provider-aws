@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package build
 
 import (
@@ -10,14 +13,21 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+var v1_21 = version.Must(version.NewVersion("1.21"))
+
 // installGoVersion installs given version of Go using Go
 // according to https://golang.org/doc/manage-install
 func (gb *GoBuild) installGoVersion(ctx context.Context, v *version.Version) (Go, error) {
-	versionString := v.Core().String()
+	goVersion := v.String()
 
-	// trim 0 patch versions as that's how Go does it :shrug:
-	shortVersion := strings.TrimSuffix(versionString, ".0")
-	pkgURL := fmt.Sprintf("golang.org/dl/go%s", shortVersion)
+	// trim 0 patch versions as that's how Go does it
+	// for versions prior to 1.21
+	// See https://github.com/golang/go/issues/62136
+	if v.LessThan(v1_21) {
+		versionString := v.Core().String()
+		goVersion = strings.TrimSuffix(versionString, ".0")
+	}
+	pkgURL := fmt.Sprintf("golang.org/dl/go%s", goVersion)
 
 	gb.log().Printf("go getting %q", pkgURL)
 	cmd := exec.CommandContext(ctx, "go", "get", pkgURL)
@@ -33,7 +43,7 @@ func (gb *GoBuild) installGoVersion(ctx context.Context, v *version.Version) (Go
 		return Go{}, fmt.Errorf("unable to install Go %s: %w\n%s", v, err, out)
 	}
 
-	cmdName := fmt.Sprintf("go%s", shortVersion)
+	cmdName := fmt.Sprintf("go%s", goVersion)
 
 	gb.log().Printf("downloading go %q", v)
 	cmd = exec.CommandContext(ctx, cmdName, "download")

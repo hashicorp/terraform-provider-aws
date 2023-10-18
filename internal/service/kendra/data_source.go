@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -106,7 +109,7 @@ func ResourceDataSource() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(3, 63),
 											validation.StringMatch(
-												regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+												regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 												"Must be a valid bucket name",
 											),
 										),
@@ -287,7 +290,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -314,7 +317,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -363,7 +366,7 @@ func ResourceDataSource() *schema.Resource {
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 200),
 														validation.StringMatch(
-															regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+															regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 														),
 													),
@@ -420,7 +423,7 @@ func ResourceDataSource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -431,7 +434,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 10),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z-]*`),
+						regexache.MustCompile(`[A-Za-z-]*`),
 						"Must have alphanumeric characters or hyphens.",
 					),
 				),
@@ -442,7 +445,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -499,7 +502,7 @@ func hookConfigurationSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 63),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+							regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 							"Must be a valid bucket name",
 						),
 					),
@@ -522,7 +525,7 @@ func documentAttributeConditionSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+							regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 						),
 					),
@@ -588,14 +591,14 @@ func documentAttributeValueSchema() *schema.Schema {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &kendra.CreateDataSourceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.DataSourceType(d.Get("type").(string)),
 	}
 
@@ -661,7 +664,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
@@ -714,7 +717,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
@@ -785,7 +788,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Data Source %s", d.Id())
 

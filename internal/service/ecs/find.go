@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -52,59 +55,6 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	return capacityProvider, nil
 }
 
-func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {
-	input := &ecs.DescribeClustersInput{
-		Clusters: aws.StringSlice([]string{nameOrARN}),
-		Include:  aws.StringSlice([]string{ecs.ClusterFieldTags, ecs.ClusterFieldConfigurations, ecs.ClusterFieldSettings}),
-	}
-
-	output, err := conn.DescribeClustersWithContext(ctx, input)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed describing ECS Cluster (%s) including tags: %s; retrying without tags", nameOrARN, err)
-
-		input.Include = aws.StringSlice([]string{ecs.ClusterFieldConfigurations, ecs.ClusterFieldSettings})
-		output, err = conn.DescribeClustersWithContext(ctx, input)
-	}
-
-	// Some partitions (i.e., ISO) may not support describe including configuration, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed describing ECS Cluster (%s) including configuration: %s; retrying without configuration", nameOrARN, err)
-
-		input.Include = aws.StringSlice([]string{ecs.ClusterFieldSettings})
-		output, err = conn.DescribeClustersWithContext(ctx, input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Clusters); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	if status := aws.StringValue(output.Clusters[0].Status); status == clusterStatusInactive {
-		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	return output.Clusters[0], nil
-}
-
 func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(cluster),
@@ -117,8 +67,10 @@ func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*e
 
 func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(cluster),
 		Services: aws.StringSlice([]string{id}),
+	}
+	if cluster != "" {
+		input.Cluster = aws.String(cluster)
 	}
 
 	return FindService(ctx, conn, input)

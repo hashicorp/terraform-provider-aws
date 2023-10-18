@@ -34,14 +34,14 @@ These will map the AWS API response to the data source schema. You will also nee
 
 ### Register Data Source to the provider
 
-Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make servicepackages` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make gen` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 ```
 package something
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-// @SDKDataSource("aws_something_example")
+// @SDKDataSource("aws_something_example", name="Example")
 func DataSourceExample() *schema.Resource {
 	return &schema.Resource{
 	    // some configuration
@@ -50,6 +50,7 @@ func DataSourceExample() *schema.Resource {
 ```
 
 ### Write Passing Acceptance Tests
+
 In order to adequately test the data source we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
 You will need at minimum:

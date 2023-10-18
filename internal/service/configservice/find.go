@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -23,13 +26,33 @@ func FindConfigRule(ctx context.Context, conn *configservice.ConfigService, name
 		}
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
 	if output == nil || output.ConfigRules == nil || len(output.ConfigRules) == 0 || output.ConfigRules[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.ConfigRules[0], nil
+}
+
+func FindOrganizationConfigRule(ctx aws.Context, conn *configservice.ConfigService, name string) (*configservice.OrganizationConfigRule, error) {
+	input := &configservice.DescribeOrganizationConfigRulesInput{
+		OrganizationConfigRuleNames: []*string{aws.String(name)},
+	}
+
+	output, err := conn.DescribeOrganizationConfigRulesWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	if output == nil || output.OrganizationConfigRules == nil || len(output.OrganizationConfigRules) == 0 || output.OrganizationConfigRules[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.OrganizationConfigRules[0], nil
 }

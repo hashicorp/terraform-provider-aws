@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -87,7 +90,7 @@ func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
+						"aws_docdb_subnet_group.test", "name", regexache.MustCompile("^tf_test-")),
 				),
 			},
 			{
@@ -165,7 +168,7 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_subnet_group" {
@@ -178,7 +181,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 			if err == nil {
 				if len(resp.DBSubnetGroups) != 0 &&
 					aws.StringValue(resp.DBSubnetGroups[0].DBSubnetGroupName) == rs.Primary.ID {
-					return fmt.Errorf("DocDB Subnet Group %s still exists", rs.Primary.ID)
+					return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
 				}
 			}
 
@@ -196,7 +199,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 func testAccCheckSubnetGroupDisappears(ctx context.Context, group *docdb.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		params := &docdb.DeleteDBSubnetGroupInput{
 			DBSubnetGroupName: group.DBSubnetGroupName,
@@ -222,7 +225,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *docdb.DBSub
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return err

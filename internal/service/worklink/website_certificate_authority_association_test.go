@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
@@ -37,7 +40,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
 						"aws_worklink_fleet.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr(resourceName, "certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{
@@ -109,7 +112,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing
 
 func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_worklink_website_certificate_authority_association" {
@@ -146,7 +149,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDisappears(ctx context.Co
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -191,7 +194,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx context.Contex
 			return fmt.Errorf("WorkLink Fleet ARN is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err

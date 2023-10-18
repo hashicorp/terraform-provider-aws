@@ -27,7 +27,7 @@ resource "aws_sagemaker_device_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet (must be unique).
 * `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
@@ -41,9 +41,9 @@ The following arguments are supported:
 * `s3_output_location` - (Required) The Amazon Simple Storage (S3) bucker URI.
 * `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt data on the storage volume after compilation job. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Device Fleet.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device Fleet.
@@ -51,8 +51,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Device Fleets can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Device Fleets using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_device_fleet.example
+  id = "my-fleet"
+}
 ```
-$ terraform import aws_sagemaker_device_fleet.example my-fleet
+
+Using `terraform import`, import SageMaker Device Fleets using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_device_fleet.example my-fleet
 ```

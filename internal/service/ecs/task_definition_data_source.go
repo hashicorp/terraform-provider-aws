@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -28,6 +30,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Computed: true,
 			},
 			"arn_without_revision": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"execution_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,36 +63,29 @@ func DataSourceTaskDefinition() *schema.Resource {
 
 func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	params := &ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: aws.String(d.Get("task_definition").(string)),
+	taskDefinitionName := d.Get("task_definition").(string)
+	input := &ecs.DescribeTaskDefinitionInput{
+		TaskDefinition: aws.String(taskDefinitionName),
 	}
-	log.Printf("[DEBUG] Reading ECS Task Definition: %s", params)
-	desc, err := conn.DescribeTaskDefinitionWithContext(ctx, params)
+
+	output, err := conn.DescribeTaskDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting task definition %q: %s", d.Get("task_definition").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", taskDefinitionName, err)
 	}
 
-	if desc == nil || desc.TaskDefinition == nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition: empty response")
-	}
-
-	taskDefinition := desc.TaskDefinition
-
+	taskDefinition := output.TaskDefinition
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
+	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("revision", taskDefinition.Revision)
 	d.Set("status", taskDefinition.Status)
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-
-	if d.Id() == "" {
-		return sdkdiag.AppendErrorf(diags, "task definition %q not found", d.Get("task_definition").(string))
-	}
 
 	return diags
 }

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -84,14 +87,19 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
-			"s3_force_path_style": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-				DeprecationMessage: "Use s3_use_path_style instead.",
+			"retry_mode": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_us_east_1_regional_endpoint": schema.StringAttribute{
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
 			},
 			"secret_key": schema.StringAttribute{
 				Optional:    true,
@@ -102,11 +110,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 			},
-			"shared_credentials_file": schema.StringAttribute{
-				Optional:           true,
-				Description:        "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-				DeprecationMessage: "Use shared_credentials_files instead.",
-			},
 			"shared_credentials_files": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -115,11 +118,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"skip_credentials_validation": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": schema.StringAttribute{
 				Optional:    true,
@@ -161,11 +159,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							CustomType:  fwtypes.DurationType,
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-						},
-						"duration_seconds": schema.Int64Attribute{
-							Optional:           true,
-							Description:        "The duration, in seconds, of the role session.",
-							DeprecationMessage: "Use assume_role.duration instead",
 						},
 						"external_id": schema.StringAttribute{
 							Optional:    true,
@@ -298,6 +291,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // The data source type name is determined by the DataSource implementing
 // the Metadata method. All data sources must have unique names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var errs []error
 	var dataSources []func() datasource.DataSource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
@@ -316,20 +310,51 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
+			metadataResponse := datasource.MetadataResponse{}
+			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
+
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
 				}
 
 				return ctx
 			}
+			interceptors := dataSourceInterceptors{}
+
+			if v.Tags != nil {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := datasource.SchemaResponse{}
+				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner)
+				return newWrappedDataSource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		tflog.Warn(ctx, "registering data sources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return dataSources
@@ -341,7 +366,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // The resource type name is determined by the Resource implementing
 // the Metadata method. All resources must have unique names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
-	var errs *multierror.Error
+	var errs []error
 	var resources []func() resource.Resource
 
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
@@ -352,7 +377,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("creating resource: %w", err))
+				errs = append(errs, fmt.Errorf("creating resource: %w", err))
 				continue
 			}
 
@@ -362,9 +387,10 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -379,24 +405,24 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
 					if v.IsComputed() {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
 					if !v.IsComputed() {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTagsAll, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTagsAll, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
 					continue
 				}
 
-				interceptors = append(interceptors, tagsInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
 			}
 
 			resources = append(resources, func() resource.Resource {
@@ -405,7 +431,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 		}
 	}
 
-	if err := errs.ErrorOrNil(); err != nil {
+	if err := errors.Join(errs...); err != nil {
 		tflog.Warn(ctx, "registering resources", map[string]interface{}{
 			"error": err.Error(),
 		})

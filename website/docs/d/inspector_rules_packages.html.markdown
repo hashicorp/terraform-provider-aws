@@ -1,15 +1,15 @@
 ---
-subcategory: "Inspector"
+subcategory: "Inspector Classic"
 layout: "aws"
 page_title: "AWS: aws_inspector_rules_packages"
 description: |-
-    Provides a list of AWS Inspector Rules packages which can be used by AWS Inspector.
+    Provides a list of Amazon Inspector Classic Rules packages which can be used by Amazon Inspector Classic.
 ---
 
 # Data Source: aws_inspector_rules_packages
 
-The AWS Inspector Rules Packages data source allows access to the list of AWS
-Inspector Rules Packages which can be used by AWS Inspector within the region
+The Amazon Inspector Classic Rules Packages data source allows access to the list of AWS
+Inspector Rules Packages which can be used by Amazon Inspector Classic within the region
 configured in the provider.
 
 ## Example Usage
@@ -39,9 +39,9 @@ resource "aws_inspector_assessment_template" "assessment" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `arns` - List of the AWS Inspector Rules Packages arns available in the AWS region.
+* `arns` - List of the Amazon Inspector Classic Rules Packages arns available in the AWS region.

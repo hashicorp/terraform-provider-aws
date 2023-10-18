@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -222,7 +225,7 @@ func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRolePolicyConfig_invalidJSON(rName),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 		},
 	})
@@ -240,7 +243,7 @@ func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRolePolicyConfig_invalidResource(rName),
-				ExpectError: regexp.MustCompile("MalformedPolicyDocument"),
+				ExpectError: regexache.MustCompile("MalformedPolicyDocument"),
 			},
 		},
 	})
@@ -277,7 +280,7 @@ func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
 
 func testAccCheckRolePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role_policy" {
@@ -315,7 +318,7 @@ func testAccCheckRolePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckRolePolicyDisappears(ctx context.Context, out *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		params := &iam.DeleteRolePolicyInput{
 			PolicyName: out.PolicyName,
@@ -346,7 +349,7 @@ func testAccCheckRolePolicyExists(ctx context.Context,
 			return fmt.Errorf("Not Found: %s", iamRolePolicyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		role, name, err := tfiam.RolePolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
@@ -759,11 +762,6 @@ resource "aws_iam_role" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "test" {

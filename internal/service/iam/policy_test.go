@@ -1,25 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccIAMPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	expectedPolicyText := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -54,7 +56,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 
 func TestAccIAMPolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -82,7 +84,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 
 func TestAccIAMPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -128,7 +130,7 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 
 func TestAccIAMPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -152,7 +154,7 @@ func TestAccIAMPolicy_disappears(t *testing.T) {
 
 func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,7 +167,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
 			{
@@ -180,7 +182,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 
 func TestAccIAMPolicy_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -208,7 +210,7 @@ func TestAccIAMPolicy_path(t *testing.T) {
 
 func TestAccIAMPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	policy1 := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -222,7 +224,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyConfig_basic(rName, "not-json"),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy1),
@@ -250,7 +252,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/28833
 func TestAccIAMPolicy_diffs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.GetPolicyOutput
+	var out iam.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -336,27 +338,44 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, resource string, res *iam.GetPolicyOutput) resource.TestCheckFunc {
+func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyConfig_policyDuplicateKeys(rName),
+				ExpectError: regexache.MustCompile(`"policy" contains duplicate JSON keys: duplicate key "Statement.0.Condition.StringEquals"`),
+			},
+		},
+	})
+}
+
+func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resource]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resource)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Policy name is set")
+			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-		resp, err := conn.GetPolicyWithContext(ctx, &iam.GetPolicyInput{
-			PolicyArn: aws.String(rs.Primary.Attributes["arn"]),
-		})
+		output, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *resp
+		*v = *output
 
 		return nil
 	}
@@ -364,18 +383,16 @@ func testAccCheckPolicyExists(ctx context.Context, resource string, res *iam.Get
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy" {
 				continue
 			}
 
-			_, err := conn.GetPolicyWithContext(ctx, &iam.GetPolicyInput{
-				PolicyArn: aws.String(rs.Primary.ID),
-			})
+			_, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -383,7 +400,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("IAM Policy (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("IAM Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -616,4 +633,33 @@ resource "aws_iam_policy" "test" {
   %[2]s
 }
 `, rName, tags)
+}
+
+func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": ["one/", "two/"]
+        },
+        "StringEquals": {
+          "s3:versionid": "abc123"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+`, rName)
 }

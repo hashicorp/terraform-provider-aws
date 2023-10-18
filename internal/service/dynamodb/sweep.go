@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
 
@@ -14,14 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dynamodb_table", &resource.Sweeper{
 		Name: "aws_dynamodb_table",
 		F:    sweepTables,
@@ -35,13 +36,13 @@ func init() {
 
 func sweepTables(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn()
+	conn := client.DynamoDBConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -62,7 +63,7 @@ func sweepTables(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in `replica` attribute
-				err := sweep.ReadResource(ctx, r, d, client)
+				err := sdk.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					return err
@@ -92,11 +93,11 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Tables sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -106,13 +107,13 @@ func sweepTables(region string) error {
 
 func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn()
+	conn := client.DynamoDBConn(ctx)
 	sweepables := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -148,11 +149,11 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Backups sweep for %s: %s", region, errs)
 		return nil
 	}

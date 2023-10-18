@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -330,7 +333,7 @@ func ResourceNetworkInterface() *schema.Resource {
 
 func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
@@ -412,8 +415,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
-	tags := KeyValueTags(ctx, GetTagsIn(ctx))
-	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
+	if !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
 		input.TagSpecifications = getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInterface)
 	}
 
@@ -450,9 +452,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
+		if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -485,9 +487,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -554,14 +556,14 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	SetTagsOut(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
 
 func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -731,8 +733,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv4_prefix_count")
 		ipv4Prefixes := d.Get("ipv4_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv4Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv4Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv4PrefixCount:    aws.Int64(int64(diff)),
@@ -965,8 +967,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv6_prefix_count")
 		ipv6Prefixes := d.Get("ipv6_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv6Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv6Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignIpv6AddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv6PrefixCount:    aws.Int64(int64(diff)),
@@ -1036,7 +1038,7 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
@@ -1474,6 +1476,8 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.EC2, filterName, resourc
 
 	err = multierror.Append(err, deleteLingeringComprehendENIs(ctx, &g, conn, filterName, resourceId, timeout))
 
+	err = multierror.Append(err, deleteLingeringDMSENIs(ctx, &g, conn, filterName, resourceId, timeout))
+
 	return multierror.Append(err, g.Wait()).ErrorOrNil()
 }
 
@@ -1552,6 +1556,54 @@ func deleteLingeringComprehendENIs(ctx context.Context, g *multierror.Group, con
 	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
 	for _, v := range enis {
 		if strings.HasSuffix(aws.StringValue(v.RequesterId), ":Comprehend") {
+			networkInterfaces = append(networkInterfaces, v)
+		}
+	}
+
+	for _, v := range networkInterfaces {
+		v := v
+		g.Go(func() error {
+			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+
+			if v.Attachment != nil {
+				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+
+				if err != nil {
+					return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
+				}
+			}
+
+			err := DeleteNetworkInterface(ctx, conn, networkInterfaceID)
+
+			if err != nil {
+				return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
+			}
+
+			return nil
+		})
+	}
+
+	return nil
+}
+
+func deleteLingeringDMSENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	enis, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			filterName: resourceId,
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
+	}
+
+	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
+	for _, v := range enis {
+		if aws.StringValue(v.Description) == "DMSNetworkInterface" {
 			networkInterfaces = append(networkInterfaces, v)
 		}
 	}

@@ -45,8 +45,8 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { {{ if not (eq .ServicePackage "ec2") }}// nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create{{- end }}
+	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 
 	identifier := d.Get("{{ .IDAttribName }}").(string)
 	key := d.Get("key").(string)
@@ -66,7 +66,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -93,7 +93,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -108,7 +108,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {

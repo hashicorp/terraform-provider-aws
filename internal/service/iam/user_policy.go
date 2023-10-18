@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -69,7 +72,7 @@ func ResourceUserPolicy() *schema.Resource {
 
 func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	p, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -106,7 +109,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
@@ -174,7 +177,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {

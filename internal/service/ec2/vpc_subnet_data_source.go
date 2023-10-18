@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -64,6 +67,10 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -128,7 +135,7 @@ func DataSourceSubnet() *schema.Resource {
 
 func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSubnetsInput{}
@@ -196,6 +203,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
 	d.Set("ipv6_native", subnet.Ipv6Native)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.

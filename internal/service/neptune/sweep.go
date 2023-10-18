@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package neptune
 
@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_neptune_event_subscription", &resource.Sweeper{
 		Name: "aws_neptune_event_subscription",
 		F:    sweepEventSubscriptions,
@@ -42,11 +42,11 @@ func init() {
 
 func sweepEventSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.NeptuneConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, &neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -85,7 +85,7 @@ func sweepEventSubscriptions(region string) error {
 
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Event Subscriptions sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -98,11 +98,11 @@ func sweepEventSubscriptions(region string) error {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.NeptuneConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -142,7 +142,7 @@ func sweepClusters(region string) error {
 
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Cluster sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -150,7 +150,7 @@ func sweepClusters(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing Neptune Clusters (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping Neptune Clusters (%s): %w", region, err))
 	}
@@ -160,11 +160,11 @@ func sweepClusters(region string) error {
 
 func sweepClusterInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.NeptuneConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &neptune.DescribeDBInstancesInput{}
@@ -186,7 +186,7 @@ func sweepClusterInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Cluster Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -195,7 +195,7 @@ func sweepClusterInstances(region string) error {
 		return fmt.Errorf("listing Neptune Cluster Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Neptune Cluster Instances (%s): %w", region, err)

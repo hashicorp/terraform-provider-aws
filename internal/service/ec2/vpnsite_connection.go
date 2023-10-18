@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -6,11 +9,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"regexp"
 	"sort"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -185,6 +188,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel1_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -398,6 +405,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel2_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -628,11 +639,12 @@ func ResourceVPNConnection() *schema.Resource {
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
-	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
-	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
+	defaultVPNTunnelOptionsDPDTimeoutAction             = vpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutSeconds            = 30
+	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
+	defaultVPNTunnelOptionsIKEVersions                  = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsPhase1DHGroupNumbers         = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms   = []string{
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
@@ -667,7 +679,7 @@ var (
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
@@ -703,7 +715,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
 
@@ -761,7 +773,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	SetTagsOut(ctx, vpnConnection.Tags)
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)
@@ -840,7 +852,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -928,7 +940,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{
@@ -1008,6 +1020,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_seconds"); ok {
 		apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
+		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(prefix + "ike_versions"); ok {
@@ -1153,6 +1169,16 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 		} else {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "enable_tunnel_lifecycle_control"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+		} else {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(defaultVPNTunnelOptionsEnableTunnelLifecycleControl)
 		}
 
 		hasChange = true
@@ -1347,6 +1373,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
+	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
@@ -1399,7 +1426,6 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
-
 	d.Set(prefix+"rekey_fuzz_percentage", apiObject.RekeyFuzzPercentage)
 	d.Set(prefix+"rekey_margin_time_seconds", apiObject.RekeyMarginTimeSeconds)
 	d.Set(prefix+"replay_window_size", apiObject.ReplayWindowSize)
@@ -1645,8 +1671,8 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1665,7 +1691,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 
 	return validation.All(
 		validation.IsCIDRNetwork(30, 30),
-		validation.StringMatch(regexp.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
+		validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
 		validation.StringNotInSlice(disallowedCidrs, false),
 	)
 }
@@ -1673,7 +1699,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
 }
 

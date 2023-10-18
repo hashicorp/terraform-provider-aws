@@ -57,7 +57,7 @@ locals {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description for the IPAM.
 * `operating_regions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
@@ -68,9 +68,9 @@ The following arguments are supported:
 
 * `region_name` - (Required) The name of the Region you want to add to the IPAM.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of IPAM
 * `id` - The ID of the IPAM
@@ -84,8 +84,17 @@ IP space. The public scope is intended for all internet-routable IP space.
 
 ## Import
 
-IPAMs can be imported using the `ipam id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the IPAM `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam.example
+  id = "ipam-0178368ad2146a492"
+}
 ```
-$ terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
+
+Using `terraform import`, import IPAMs using the IPAM `id`. For example:
+
+```console
+% terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```

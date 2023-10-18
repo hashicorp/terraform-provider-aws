@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,10 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -157,6 +160,11 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.AmdSevSnpSpecification_Values(), false),
+						},
 						"core_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -667,7 +675,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_protocol_ipv6": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataProtocolIpv6Disabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataProtocolIpv6_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -685,7 +693,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataTagsState_Values(), false),
 						},
 					},
@@ -970,7 +978,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 
 func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
@@ -986,14 +994,13 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, err := expandRequestLaunchTemplateData(ctx, conn, d); err == nil {
 		input.LaunchTemplateData = v
 	} else {
-		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Launch Template: %s", input)
 	output, err := conn.CreateLaunchTemplateWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.LaunchTemplate.LaunchTemplateId))
@@ -1003,7 +1010,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	lt, err := FindLaunchTemplateByID(ctx, conn, d.Id())
 
@@ -1039,17 +1046,17 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	SetTagsOut(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }
 
 func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	updateKeys := []string{
 		"block_device_mappings",
@@ -1099,7 +1106,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		if v, err := expandRequestLaunchTemplateData(ctx, conn, d); err == nil {
 			input.LaunchTemplateData = v
 		} else {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		output, err := conn.CreateLaunchTemplateVersionWithContext(ctx, input)
@@ -1134,7 +1141,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
 	_, err := conn.DeleteLaunchTemplateWithContext(ctx, &ec2.DeleteLaunchTemplateInput{
@@ -1146,7 +1153,7 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Launch Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1425,6 +1432,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *ec2.La
 	}
 
 	apiObject := &ec2.LaunchTemplateCpuOptionsRequest{}
+
+	if v, ok := tfMap["amd_sev_snp"].(string); ok && v != "" {
+		apiObject.AmdSevSnp = aws.String(v)
+	}
 
 	if v, ok := tfMap["core_count"].(int); ok && v != 0 {
 		apiObject.CoreCount = aws.Int64(int64(v))
@@ -2186,18 +2197,18 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	instanceType := aws.StringValue(apiObject.InstanceType)
 
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("error setting block_device_mappings: %w", err)
+		return fmt.Errorf("setting block_device_mappings: %w", err)
 	}
 	if apiObject.CapacityReservationSpecification != nil {
 		if err := d.Set("capacity_reservation_specification", []interface{}{flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject.CapacityReservationSpecification)}); err != nil {
-			return fmt.Errorf("error setting capacity_reservation_specification: %w", err)
+			return fmt.Errorf("setting capacity_reservation_specification: %w", err)
 		}
 	} else {
 		d.Set("capacity_reservation_specification", nil)
 	}
 	if apiObject.CpuOptions != nil {
 		if err := d.Set("cpu_options", []interface{}{flattenLaunchTemplateCPUOptions(apiObject.CpuOptions)}); err != nil {
-			return fmt.Errorf("error setting cpu_options: %w", err)
+			return fmt.Errorf("setting cpu_options: %w", err)
 		}
 	} else {
 		d.Set("cpu_options", nil)
@@ -2211,7 +2222,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 
 		if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 			if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
-				return fmt.Errorf("error setting credit_specification: %w", err)
+				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		}
 	} // Don't overwrite any configured value.
@@ -2223,10 +2234,10 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		d.Set("ebs_optimized", "")
 	}
 	if err := d.Set("elastic_gpu_specifications", flattenElasticGpuSpecificationResponses(apiObject.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("error setting elastic_gpu_specifications: %w", err)
+		return fmt.Errorf("setting elastic_gpu_specifications: %w", err)
 	}
 	if err := d.Set("elastic_inference_accelerator", flattenLaunchTemplateElasticInferenceAcceleratorResponses(apiObject.ElasticInferenceAccelerators)); err != nil {
-		return fmt.Errorf("error setting elastic_inference_accelerator: %w", err)
+		return fmt.Errorf("setting elastic_inference_accelerator: %w", err)
 	}
 	if apiObject.EnclaveOptions != nil {
 		tfMap := map[string]interface{}{
@@ -2234,7 +2245,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		}
 
 		if err := d.Set("enclave_options", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("error setting enclave_options: %w", err)
+			return fmt.Errorf("setting enclave_options: %w", err)
 		}
 	} else {
 		d.Set("enclave_options", nil)
@@ -2245,14 +2256,14 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		}
 
 		if err := d.Set("hibernation_options", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("error setting hibernation_options: %w", err)
+			return fmt.Errorf("setting hibernation_options: %w", err)
 		}
 	} else {
 		d.Set("hibernation_options", nil)
 	}
 	if apiObject.IamInstanceProfile != nil {
 		if err := d.Set("iam_instance_profile", []interface{}{flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject.IamInstanceProfile)}); err != nil {
-			return fmt.Errorf("error setting iam_instance_profile: %w", err)
+			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}
 	} else {
 		d.Set("iam_instance_profile", nil)
@@ -2261,14 +2272,14 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	d.Set("instance_initiated_shutdown_behavior", apiObject.InstanceInitiatedShutdownBehavior)
 	if apiObject.InstanceMarketOptions != nil {
 		if err := d.Set("instance_market_options", []interface{}{flattenLaunchTemplateInstanceMarketOptions(apiObject.InstanceMarketOptions)}); err != nil {
-			return fmt.Errorf("error setting instance_market_options: %w", err)
+			return fmt.Errorf("setting instance_market_options: %w", err)
 		}
 	} else {
 		d.Set("instance_market_options", nil)
 	}
 	if apiObject.InstanceRequirements != nil {
 		if err := d.Set("instance_requirements", []interface{}{flattenInstanceRequirements(apiObject.InstanceRequirements)}); err != nil {
-			return fmt.Errorf("error setting instance_requirements: %w", err)
+			return fmt.Errorf("setting instance_requirements: %w", err)
 		}
 	} else {
 		d.Set("instance_requirements", nil)
@@ -2277,18 +2288,18 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	d.Set("kernel_id", apiObject.KernelId)
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {
-		return fmt.Errorf("error setting license_specification: %w", err)
+		return fmt.Errorf("setting license_specification: %w", err)
 	}
 	if apiObject.MaintenanceOptions != nil {
 		if err := d.Set("maintenance_options", []interface{}{flattenLaunchTemplateInstanceMaintenanceOptions(apiObject.MaintenanceOptions)}); err != nil {
-			return fmt.Errorf("error setting maintenance_options: %w", err)
+			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
 		d.Set("maintenance_options", nil)
 	}
 	if apiObject.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenLaunchTemplateInstanceMetadataOptions(apiObject.MetadataOptions)}); err != nil {
-			return fmt.Errorf("error setting metadata_options: %w", err)
+			return fmt.Errorf("setting metadata_options: %w", err)
 		}
 	} else {
 		d.Set("metadata_options", nil)
@@ -2299,24 +2310,24 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		}
 
 		if err := d.Set("monitoring", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("error setting monitoring: %w", err)
+			return fmt.Errorf("setting monitoring: %w", err)
 		}
 	} else {
 		d.Set("monitoring", nil)
 	}
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
-		return fmt.Errorf("error setting network_interfaces: %w", err)
+		return fmt.Errorf("setting network_interfaces: %w", err)
 	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []interface{}{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
-			return fmt.Errorf("error setting placement: %w", err)
+			return fmt.Errorf("setting placement: %w", err)
 		}
 	} else {
 		d.Set("placement", nil)
 	}
 	if apiObject.PrivateDnsNameOptions != nil {
 		if err := d.Set("private_dns_name_options", []interface{}{flattenLaunchTemplatePrivateDNSNameOptions(apiObject.PrivateDnsNameOptions)}); err != nil {
-			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {
 		d.Set("private_dns_name_options", nil)
@@ -2324,7 +2335,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	d.Set("ram_disk_id", apiObject.RamDiskId)
 	d.Set("security_group_names", aws.StringValueSlice(apiObject.SecurityGroups))
 	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
-		return fmt.Errorf("error setting tag_specifications: %w", err)
+		return fmt.Errorf("setting tag_specifications: %w", err)
 	}
 	d.Set("user_data", apiObject.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiObject.SecurityGroupIds))
@@ -2442,6 +2453,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *ec2.LaunchTemplateCpuOptions) ma
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AmdSevSnp; v != nil {
+		tfMap["amd_sev_snp"] = aws.StringValue(v)
+	}
 
 	if v := apiObject.CoreCount; v != nil {
 		tfMap["core_count"] = aws.Int64Value(v)

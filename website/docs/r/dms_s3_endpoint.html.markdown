@@ -85,6 +85,7 @@ resource "aws_dms_s3_endpoint" "example" {
   timestamp_column_name                       = "tx_commit_time"
   use_csv_no_sup_value                        = false
   use_task_start_time_for_full_load_timestamp = true
+  glue_catalog_generation                     = true
 
   depends_on = [aws_iam_role_policy.example]
 }
@@ -106,7 +107,7 @@ The following arguments are optional:
 * `add_column_name` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
 * `add_trailing_padding_character` - (Optional) Whether to add padding. Default is `false`. (Ignored for source endpoints.)
 * `bucket_folder` - (Optional) S3 object prefix.
-* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `NONE`, `PRIVATE`, `PUBLIC_READ`, `PUBLIC_READ_WRITE`, `AUTHENTICATED_READ`, `AWS_EXEC_READ`, `BUCKET_OWNER_READ`, and `BUCKET_OWNER_FULL_CONTROL`. (AWS default is `NONE`.)
+* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `none`, `private`, `public-read`, `public-read-write`, `authenticated-read`, `aws-exec-read`, `bucket-owner-read`, and `bucket-owner-full-control`. Default is `none`.
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)
@@ -129,6 +130,7 @@ The following arguments are optional:
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
 * `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
+* `glue_catalog_generation` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
 * `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `kms_key_arn` - (Optional) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
@@ -145,9 +147,9 @@ The following arguments are optional:
 * `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log. (Ignored for source endpoints.)
 * `use_task_start_time_for_full_load_timestamp` - (Optional) When set to `true`, uses the task start time as the timestamp column value instead of the time data is written to target. For full load, when set to `true`, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time.When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `endpoint_arn` - ARN for the endpoint.
 * `engine_display_name` - Expanded name for the engine name.
@@ -164,8 +166,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoints can be imported using the `endpoint_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoints using the `endpoint_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_s3_endpoint.example
+  id = "example-dms-endpoint-tf"
+}
 ```
-$ terraform import aws_dms_s3_endpoint.example example-dms-endpoint-tf
+
+Using `terraform import`, import endpoints using the `endpoint_id`. For example:
+
+```console
+% terraform import aws_dms_s3_endpoint.example example-dms-endpoint-tf
 ```

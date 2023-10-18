@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package keyspaces_test
 
 import (
@@ -6,15 +9,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/keyspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKeyspacesTable_basic(t *testing.T) {
@@ -26,7 +30,7 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,6 +41,7 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "comment.0.message", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_time_to_live", "0"),
@@ -80,7 +85,7 @@ func TestAccKeyspacesTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +110,7 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,6 +148,36 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 	})
 }
 
+func TestAccKeyspacesTable_clientSideTimestamps(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_clientSideTimestamps(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
@@ -152,7 +187,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +211,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "name",
+						"name": "n",
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -196,7 +231,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "pay_scale",
+						"name": "pay_scale0",
 						"type": "int",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -224,7 +259,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"name": "role",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
-						"name": "pay_scale",
+						"name": "pay_scale0",
 					}),
 				),
 			},
@@ -247,7 +282,7 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -320,7 +355,7 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -387,7 +422,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -447,7 +482,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_keyspaces_table" {
@@ -488,7 +523,7 @@ func testAccCheckTableExists(ctx context.Context, n string, v *keyspaces.GetTabl
 			return fmt.Errorf("No Keyspaces Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
 		keyspaceName, tableName, err := tfkeyspaces.TableParseResourceID(rs.Primary.ID)
 
@@ -510,7 +545,7 @@ func testAccCheckTableExists(ctx context.Context, n string, v *keyspaces.GetTabl
 
 func testAccCheckTableNotRecreated(i, j *keyspaces.GetTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTimestamp).Equal(aws.TimeValue(j.CreationTimestamp)) {
+		if !aws.ToTime(i.CreationTimestamp).Equal(aws.ToTime(j.CreationTimestamp)) {
 			return errors.New("Keyspaces Table was recreated")
 		}
 
@@ -520,7 +555,7 @@ func testAccCheckTableNotRecreated(i, j *keyspaces.GetTableOutput) resource.Test
 
 func testAccCheckTableRecreated(i, j *keyspaces.GetTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTimestamp).Equal(aws.TimeValue(j.CreationTimestamp)) {
+		if aws.ToTime(i.CreationTimestamp).Equal(aws.ToTime(j.CreationTimestamp)) {
 			return errors.New("Keyspaces Table was not recreated")
 		}
 
@@ -609,6 +644,34 @@ resource "aws_keyspaces_table" "test" {
 `, rName1, rName2, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
+func testAccTableConfig_clientSideTimestamps(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  client_side_timestamps {
+    status = "ENABLED"
+  }
+}
+`, rName1, rName2)
+}
+
 func testAccTableConfig_multipleColumns(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
@@ -626,7 +689,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "name"
+      name = "n"
       type = "text"
     }
 
@@ -651,7 +714,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "pay_scale"
+      name = "pay_scale0"
       type = "int"
     }
 
@@ -694,7 +757,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     static_column {
-      name = "pay_scale"
+      name = "pay_scale0"
     }
   }
 }

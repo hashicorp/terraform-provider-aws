@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -52,10 +55,10 @@ func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 			{
 				Config: testAccGroupsDataSourceConfig_noPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
 				),

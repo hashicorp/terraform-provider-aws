@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -63,7 +66,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.ECS, arn string)
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running. Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -112,7 +115,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 }
 
 // waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
@@ -123,41 +126,6 @@ func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*ecs.Service); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusProvisioning},
-		Target:  []string{clusterStatusActive},
-		Refresh: statusCluster(ctx, conn, arn),
-		Timeout: clusterAvailableTimeout,
-		Delay:   clusterAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ecs.Cluster); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, arn),
-		Timeout: clusterDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ecs.Cluster); ok {
 		return v, err
 	}
 

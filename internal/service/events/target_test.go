@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
@@ -35,23 +38,26 @@ func TestAccEventsTarget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-
+					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input", ""),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 				),
 			},
 			{
@@ -137,13 +143,12 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 		t.Skipf("EventBridge Target EventBus ARNs are not supported in %s partition", got)
 	}
 
-	resourceName := "aws_cloudwatch_event_target.test"
-
-	var target eventbridge.Target
+	var v eventbridge.Target
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	targetID := sdkacctest.RandomWithPrefix("tf-acc-test-target")
 	originEventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	destinationEventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -154,10 +159,10 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 			{
 				Config: testAccTargetConfig_busARN(ruleName, originEventBusName, targetID, destinationEventBusName, sdkacctest.RandomWithPrefix("tf-acc-test-target"), sdkacctest.RandomWithPrefix("tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &target),
+					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -173,12 +178,11 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 
 func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
-	snsTopicResourceName := "aws_sns_topic.test"
-
 	var v eventbridge.Target
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-missing-target-id")
 	snsTopicName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_cloudwatch_event_target.test"
+	snsTopicResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -245,13 +249,12 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 
 func TestAccEventsTarget_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
-	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	var v eventbridge.Target
-
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
 	ssmDocumentName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
 	targetID := sdkacctest.RandomWithPrefix("tf-acc-cw-target-full")
+	resourceName := "aws_cloudwatch_event_target.test"
+	kinesisStreamResourceName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -282,9 +285,9 @@ func TestAccEventsTarget_full(t *testing.T) {
 
 func TestAccEventsTarget_ssmDocument(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -314,10 +317,9 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 
 func TestAccEventsTarget_http(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
-
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_http_target")
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -351,10 +353,9 @@ func TestAccEventsTarget_http(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/23805
 func TestAccEventsTarget_http_params(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
-
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_http_target")
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -426,6 +427,7 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
@@ -693,12 +695,47 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_ecsPlacementStrategy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.0.type", "spread"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.0.field", "attribute:ecs.availability-zone"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.1.type", "spread"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.1.field", "instanceId"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_batch(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
-	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_batch_target")
+	resourceName := "aws_cloudwatch_event_target.test"
+	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -727,9 +764,9 @@ func TestAccEventsTarget_batch(t *testing.T) {
 
 func TestAccEventsTarget_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_kinesis_target")
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -784,6 +821,41 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_sageMakerPipeline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sagemaker_pipeline.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.*", map[string]string{
+						"name":  "key",
+						"value": "value",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_Input_transformer(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -820,7 +892,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
-				ExpectError: regexp.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
+				ExpectError: regexache.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
 			},
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
@@ -844,9 +916,8 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 
 func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target eventbridge.Target
+	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -858,7 +929,7 @@ func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 			{
 				Config: testAccTargetConfig_inputTransformerJSONString(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &target),
+					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.instance", "$.detail.instance"),
@@ -877,7 +948,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var target eventbridge.Target
+	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -891,11 +962,43 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 			{
 				Config: testAccTargetConfig_partnerBus(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &target),
+					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_ecsNoPropagateTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", ""),
 				),
 			},
 			{
@@ -915,7 +1018,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 
@@ -931,7 +1034,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_target" {
@@ -1792,6 +1895,90 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
+func testAccTargetConfig_ecsPlacementStrategy(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccTargetConfig_ecsBase(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn       = aws_ecs_cluster.test.id
+  rule      = aws_cloudwatch_event_rule.test.id
+  role_arn  = aws_iam_role.test.arn
+  target_id = %[1]q
+
+  ecs_target {
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    launch_type         = "EC2"
+
+    ordered_placement_strategy {
+      type  = "spread"
+      field = "attribute:ecs.availability-zone"
+    }
+
+    ordered_placement_strategy {
+      type  = "spread"
+      field = "instanceId"
+    }
+
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  name                = %[1]q
+  desired_capacity    = 0
+  max_size            = 0
+  min_size            = 0
+  vpc_zone_identifier = [aws_subnet.test[0].id]
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = ""
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "test" {
+  name = %[1]q
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
+    managed_termination_protection = "DISABLED"
+
+    managed_scaling {
+      maximum_scaling_step_size = 1
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+      target_capacity           = 1
+    }
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "test" {
+  cluster_name       = aws_ecs_cluster.test.name
+  capacity_providers = ["%[1]s"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = %[1]q
+    base              = 1
+    weight            = 100
+  }
+}
+
+
+`, rName))
+}
+
 func testAccTargetConfig_batch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
@@ -2034,6 +2221,107 @@ resource "aws_sqs_queue" "test" {
 `, rName)
 }
 
+func testAccTargetConfig_sageMakerPipeline(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_sagemaker_pipeline.test.arn
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  sagemaker_pipeline_target {
+    pipeline_parameter_list {
+      name  = "key"
+      value = "value"
+    }
+  }
+
+  target_id = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sagemaker:*",
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role" "sagemaker" {
+  name               = "%[1]s-2"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_sagemaker_pipeline" "test" {
+  pipeline_name         = %[1]q
+  pipeline_display_name = %[1]q
+  role_arn              = aws_iam_role.sagemaker.arn
+
+  pipeline_definition = jsonencode({
+    Version = "2020-12-01"
+    Steps = [{
+      Name = "Test"
+      Type = "Fail"
+      Arguments = {
+        ErrorMessage = "test"
+      }
+    }]
+  })
+}
+`, rName)
+}
+
 func testAccTargetConfig_inputTransformer(rName string, inputPathKeys []string) string {
 	var inputPaths, inputTemplates strings.Builder
 
@@ -2159,4 +2447,23 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 `, rName, eventBusName)
+}
+
+func testAccTargetConfig_ecsNoPropagateTags(rName string) string {
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    launch_type         = "FARGATE"
+
+    network_configuration {
+      subnets = aws_subnet.test[*].id
+    }
+  }
+}
+`)
 }

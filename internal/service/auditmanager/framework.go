@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -20,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -101,7 +104,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceFramework) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -124,7 +127,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	in := auditmanager.CreateAssessmentFrameworkInput{
 		Name:        aws.String(plan.Name.ValueString()),
 		ControlSets: csInput,
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if !plan.ComplianceType.IsNull() {
@@ -156,7 +159,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -186,7 +189,7 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan, state resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -246,7 +249,7 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -378,7 +381,7 @@ func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *aws
 	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

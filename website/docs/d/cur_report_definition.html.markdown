@@ -24,11 +24,13 @@ data "aws_cur_report_definition" "report_definition" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `report_name` - (Required) Name of the report definition to match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.

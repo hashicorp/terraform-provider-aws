@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
@@ -121,6 +124,10 @@ func TestValidParamGroupName(t *testing.T) {
 		Value    string
 		ErrCount int
 	}{
+		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
 		{
 			Value:    "tEsting123",
 			ErrCount: 1,

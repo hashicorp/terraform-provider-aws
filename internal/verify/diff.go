@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -26,29 +29,76 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 
 	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
-	if defaultTagsConfig.TagsEqual(resourceTags) {
-		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
-	}
-
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
 	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
 	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
-	// otherwise we mark the attribute as "Computed" only when their is a known diff (excluding an empty map)
+	// otherwise we mark the attribute as "Computed" only when there is a known diff (excluding an empty map)
 	// or a change for "tags_all".
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005
-	if len(allTags) > 0 {
-		if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
-			return fmt.Errorf("error setting new tags_all diff: %w", err)
+
+	if !diff.GetRawPlan().GetAttr("tags").IsWhollyKnown() {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("setting tags_all to computed: %w", err)
+		}
+		return nil
+	}
+
+	if diff.HasChange("tags") {
+		_, n := diff.GetChange("tags")
+		newTags := tftags.New(ctx, n.(map[string]interface{}))
+
+		if newTags.HasZeroValue() {
+			if err := diff.SetNewComputed("tags_all"); err != nil {
+				return fmt.Errorf("setting tags_all to computed: %w", err)
+			}
+		}
+
+		if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
+			}
+		}
+
+		if len(allTags) == 0 {
+			if err := diff.SetNewComputed("tags_all"); err != nil {
+				return fmt.Errorf("setting tags_all to computed: %w", err)
+			}
+		}
+	} else if !diff.HasChange("tags") {
+		if len(allTags) > 0 && !allTags.HasZeroValue() {
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
+			}
+			return nil
+		}
+
+		var ta tftags.KeyValueTags
+		if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
+			ta = tftags.New(ctx, tagsAll)
+		}
+		if len(allTags) > 0 && !ta.DeepEqual(allTags) && allTags.HasZeroValue() {
+			if err := diff.SetNewComputed("tags_all"); err != nil {
+				return fmt.Errorf("setting tags_all to computed: %w", err)
+			}
+			return nil
+		}
+	} else if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
+		ta := tftags.New(ctx, tagsAll)
+		if !ta.DeepEqual(allTags) {
+			if allTags.HasZeroValue() {
+				if err := diff.SetNewComputed("tags_all"); err != nil {
+					return fmt.Errorf("setting tags_all to computed: %w", err)
+				}
+			}
 		}
 	} else if len(diff.Get("tags_all").(map[string]interface{})) > 0 {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
+			return fmt.Errorf("setting tags_all to computed: %w", err)
 		}
 	} else if diff.HasChange("tags_all") {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
+			return fmt.Errorf("setting tags_all to computed: %w", err)
 		}
 	}
 

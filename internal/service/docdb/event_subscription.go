@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -96,14 +99,14 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
@@ -118,35 +121,34 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceType = aws.String(v.(string))
 	}
 
-	log.Println("[DEBUG] Creating DocDB Event Subscription:", input)
 	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating DocDB Event Subscription (%s): %s", name, err)
+		return diag.Errorf("creating DocumentDB Event Subscription (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
 	if _, err := waitEventSubscriptionActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for DocDB Event Subscription (%s) to become active: %s", d.Id(), err)
+		return diag.Errorf("waiting for DocumentDB Event Subscription (%s) to become active: %s", d.Id(), err)
 	}
 
 	return resourceEventSubscriptionRead(ctx, d, meta)
 }
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	output, err := FindEventSubscriptionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DocDB Event Subscription (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DocumentDB Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading DocDB Event Subscription (%s): %s", d.Id(), err)
+		return diag.Errorf("reading DocumentDB Event Subscription (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.EventSubscriptionArn)
@@ -163,7 +165,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &docdb.ModifyEventSubscriptionInput{
@@ -187,15 +189,14 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
-		log.Printf("[DEBUG] Updating DocDB Event Subscription: %s", input)
 		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating DocDB Event Subscription (%s): %s", d.Id(), err)
+			return diag.Errorf("updating DocumentDB Event Subscription (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEventSubscriptionActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for DocDB Event Subscription (%s) to become active: %s", d.Id(), err)
+			return diag.Errorf("waiting for DocumentDB Event Subscription (%s) to become active: %s", d.Id(), err)
 		}
 	}
 
@@ -221,7 +222,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				})
 
 				if err != nil {
-					return diag.Errorf("removing DocDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
+					return diag.Errorf("removing DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
@@ -234,7 +235,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				})
 
 				if err != nil {
-					return diag.Errorf("adding DocDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
+					return diag.Errorf("adding DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
@@ -244,9 +245,9 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	log.Printf("[DEBUG] Deleting DocDB Event Subscription: %s", d.Id())
+	log.Printf("[DEBUG] Deleting DocumentDB Event Subscription: %s", d.Id())
 	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &docdb.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	})
@@ -256,11 +257,11 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting DocDB Event Subscription (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting DocumentDB Event Subscription (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for DocDB Event Subscription (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for DocumentDB Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -181,7 +184,7 @@ func DataSourceRouteTable() *schema.Resource {
 
 func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
@@ -259,7 +262,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if gatewayID := aws.StringValue(r.GatewayId); gatewayID == "local" || gatewayID == "VpcLattice" {
+		if gatewayID := aws.StringValue(r.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 

@@ -1,21 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -56,7 +58,7 @@ func ResourceAddon() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					// Regular expression taken from: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-					validation.StringMatch(regexp.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`), "must follow semantic version format"),
+					validation.StringMatch(regexache.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`), "must follow semantic version format"),
 				),
 			},
 			"arn": {
@@ -90,6 +92,22 @@ func ResourceAddon() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				Deprecated:   `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
+			},
+			"resolve_conflicts_on_create": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					eks.ResolveConflictsNone,
+					eks.ResolveConflictsOverwrite,
+				}, false),
+				ConflictsWith: []string{"resolve_conflicts"},
+			},
+			"resolve_conflicts_on_update": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
@@ -103,23 +121,30 @@ func ResourceAddon() *schema.Resource {
 }
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
-	addonId := AddonCreateResourceID(clusterName, addonName)
+	id := AddonCreateResourceID(clusterName, addonName)
 	input := &eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ClusterName:        aws.String(clusterName),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addon_version"); ok {
 		input.AddonVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("configuration_values"); ok {
+		input.ConfigurationValues = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("resolve_conflicts"); ok {
+		input.ResolveConflicts = aws.String(v.(string))
+	} else if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
 		input.ResolveConflicts = aws.String(v.(string))
 	}
 
@@ -127,41 +152,30 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ServiceAccountRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("configuration_values"); ok {
-		input.ConfigurationValues = aws.String(v.(string))
-	}
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateAddonWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
+				return true, err
+			}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateAddonWithContext(ctx, input)
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateAddonWithContext(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("creating EKS Add-On (%s): %w", addonId, err))
+		return sdkdiag.AppendErrorf(diags, "creating EKS Add-On (%s): %s", id, err)
 	}
 
-	d.SetId(addonId)
+	d.SetId(id)
 
-	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
 		// might result in a failed creation, if unmanaged version of addon is already deployed
 		// and there are configuration conflicts:
@@ -171,20 +185,21 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		// Re-creating like this will resolve the error, but it will also purge any
 		// configurations that were applied by the user (that were conflicting). This might we an unwanted
 		// side effect and should be left for the user to decide how to handle it.
-		return diag.FromErr(fmt.Errorf("unexpected EKS Add-On (%s) state returned during creation: %w\n[WARNING] Running terraform apply again will remove the kubernetes add-on and attempt to create it again effectively purging previous add-on configuration",
-			d.Id(), err))
+		diags = sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendWarningf(diags, "Running terraform apply again will remove the kubernetes add-on and attempt to create it again effectively purging previous add-on configuration")
 	}
 
-	return resourceAddonRead(ctx, d, meta)
+	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
@@ -196,7 +211,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On (%s): %s", d.Id(), err)
 	}
 
 	d.Set("addon_name", addon.AddonName)
@@ -208,24 +223,25 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	SetTagsOut(ctx, addon.Tags)
+	setTagsOut(ctx, addon.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 		}
 
@@ -237,7 +253,15 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
+		var conflictResolutionAttr, conflictResolution string
+
 		if v, ok := d.GetOk("resolve_conflicts"); ok {
+			conflictResolutionAttr = "resolve_conflicts"
+			conflictResolution = v.(string)
+			input.ResolveConflicts = aws.String(v.(string))
+		} else if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
+			conflictResolutionAttr = "resolve_conflicts_on_update"
+			conflictResolution = v.(string)
 			input.ResolveConflicts = aws.String(v.(string))
 		}
 
@@ -250,36 +274,33 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err := conn.UpdateAddonWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating EKS Add-On (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating EKS Add-On (%s): %s", d.Id(), err)
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
-
-		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
+		if _, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if conflictResolution != eks.ResolveConflictsOverwrite {
 				// Changing addon version w/o setting resolve_conflicts to "OVERWRITE"
 				// might result in a failed update if there are conflicts:
 				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-				return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) update (%s): %w, consider setting attribute %q to %q",
-					d.Id(), updateID, err, "resolve_conflicts", eks.ResolveConflictsOverwrite))
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting attribute %q to %q", d.Id(), updateID, err, conflictResolutionAttr, eks.ResolveConflictsOverwrite)
 			}
 
-			return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) update (%s): %w", d.Id(), updateID, err))
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
-	return resourceAddonRead(ctx, d, meta)
+	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &eks.DeleteAddonInput{
@@ -295,14 +316,12 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = conn.DeleteAddonWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting EKS Add-On (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))
+	if _, err := waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

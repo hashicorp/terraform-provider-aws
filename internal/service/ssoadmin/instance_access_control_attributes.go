@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
@@ -77,7 +80,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 
 func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	input := &ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
@@ -100,7 +103,7 @@ func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.Resour
 
 func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	output, err := FindInstanceAttributeControlAttributesByARN(ctx, conn, d.Id())
 
@@ -126,7 +129,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 
 func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	input := &ssoadmin.UpdateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),
@@ -146,7 +149,7 @@ func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.Resour
 
 func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	_, err := conn.DeleteInstanceAccessControlAttributeConfigurationWithContext(ctx, &ssoadmin.DeleteInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),

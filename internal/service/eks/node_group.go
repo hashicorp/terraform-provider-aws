@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -125,6 +128,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(0, 63),
 			},
 			"node_group_name_prefix": {
 				Type:          schema.TypeString,
@@ -132,6 +136,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
+				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
@@ -288,7 +293,7 @@ func ResourceNodeGroup() *schema.Resource {
 }
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
@@ -299,7 +304,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
 		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
@@ -368,7 +373,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -385,7 +390,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Node Group (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EKS Node Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ami_type", nodeGroup.AmiType)
@@ -395,15 +400,15 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("disk_size", nodeGroup.DiskSize)
 
 	if err := d.Set("instance_types", aws.StringValueSlice(nodeGroup.InstanceTypes)); err != nil {
-		return diag.Errorf("error setting instance_types: %s", err)
+		return diag.Errorf("setting instance_types: %s", err)
 	}
 
 	if err := d.Set("labels", aws.StringValueMap(nodeGroup.Labels)); err != nil {
-		return diag.Errorf("error setting labels: %s", err)
+		return diag.Errorf("setting labels: %s", err)
 	}
 
 	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return diag.Errorf("error setting launch_template: %s", err)
+		return diag.Errorf("setting launch_template: %s", err)
 	}
 
 	d.Set("node_group_name", nodeGroup.NodegroupName)
@@ -412,16 +417,16 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return diag.Errorf("error setting remote_access: %s", err)
+		return diag.Errorf("setting remote_access: %s", err)
 	}
 
 	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return diag.Errorf("error setting resources: %s", err)
+		return diag.Errorf("setting resources: %s", err)
 	}
 
 	if nodeGroup.ScalingConfig != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return diag.Errorf("error setting scaling_config: %s", err)
+			return diag.Errorf("setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
@@ -430,16 +435,16 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("status", nodeGroup.Status)
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets)); err != nil {
-		return diag.Errorf("error setting subnets: %s", err)
+		return diag.Errorf("setting subnets: %s", err)
 	}
 
 	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("error setting taint: %s", err)
+		return diag.Errorf("setting taint: %s", err)
 	}
 
 	if nodeGroup.UpdateConfig != nil {
 		if err := d.Set("update_config", []interface{}{flattenNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
-			return diag.Errorf("error setting update_config: %s", err)
+			return diag.Errorf("setting update_config: %s", err)
 		}
 	} else {
 		d.Set("update_config", nil)
@@ -447,13 +452,13 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("version", nodeGroup.Version)
 
-	SetTagsOut(ctx, nodeGroup.Tags)
+	setTagsOut(ctx, nodeGroup.Tags)
 
 	return nil
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -501,7 +506,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		output, err := conn.UpdateNodegroupVersionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating EKS Node Group (%s) version: %s", d.Id(), err)
+			return diag.Errorf("updating EKS Node Group (%s) version: %s", d.Id(), err)
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
@@ -509,7 +514,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return diag.Errorf("error waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
+			return diag.Errorf("waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -540,7 +545,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		output, err := conn.UpdateNodegroupConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating EKS Node Group (%s) config: %s", d.Id(), err)
+			return diag.Errorf("updating EKS Node Group (%s) config: %s", d.Id(), err)
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
@@ -548,7 +553,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return diag.Errorf("error waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
+			return diag.Errorf("waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -556,7 +561,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -575,13 +580,13 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EKS Node Group (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for EKS Node Group (%s) to delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for EKS Node Group (%s) to delete: %s", d.Id(), err)
 	}
 
 	return nil

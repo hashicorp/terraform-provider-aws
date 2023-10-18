@@ -24,7 +24,9 @@ data "aws_eks_node_group" "example" {
 * `cluster_name` - (Required) Name of the cluster.
 * `node_group_name` - (Required) Name of the node group.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
@@ -33,6 +35,10 @@ data "aws_eks_node_group" "example" {
 * `disk_size` - Disk size in GiB for worker nodes.
 * `instance_types` - Set of instance types associated with the EKS Node Group.
 * `labels` - Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
+* `launch_template` - Nested attribute containing information about the launch template used to create the EKS Node Group.
+    * `id` - The ID of the launch template.
+    * `name` - The name of the launch template.
+    * `version` - The version number of the launch template.
 * `node_role_arn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
 * `release_version` – AMI version of the EKS Node Group.
 * `remote_access` - Configuration block with remote access settings.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -6,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
 )
 
@@ -139,6 +143,42 @@ func TestValidRedisVersionString(t *testing.T) {
 			version: "6.y",
 			valid:   false,
 		},
+		{
+			version: "7.0",
+			valid:   true,
+		},
+		{
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			version: "7.2.x",
+			valid:   false,
+		},
+		{
+			version: "7.5.0",
+			valid:   false,
+		},
+		{
+			version: "7.5.",
+			valid:   false,
+		},
+		{
+			version: "7.",
+			valid:   false,
+		},
+		{
+			version: "7",
+			valid:   false,
+		},
+		{
+			version: "7.y",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -191,6 +231,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  "",
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineMemcached,
@@ -207,6 +252,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  engineMemcached,
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineRedis,
@@ -221,6 +271,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		{
 			engine:  engineRedis,
 			version: "6.0",
+			valid:   true,
+		},
+		{
+			engine:  engineRedis,
+			version: "7.0",
 			valid:   true,
 		},
 	}
@@ -277,17 +332,17 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:      "5.0.6",
+			new:      "6.x",
+			expected: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:      "5.0.6",
+			new:      "6.0",
+			expected: false,
+		},
 
 		"downgrade minor versions": {
 			old:      "1.3.5",
@@ -319,15 +374,15 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:      "7.x",
+		"downgrade from major 7.digit to 6.x": {
+			old:      "7.2",
 			new:      "6.x",
 			expected: true,
 		},
 
-		"downgrade from major 7.digit to 6.x": {
+		"downgrade from major 7.digit to 6.digit": {
 			old:      "7.2",
-			new:      "6.x",
+			new:      "6.2",
 			expected: true,
 		},
 	}
@@ -419,17 +474,23 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:            "5.0.6",
+			new:            "6.x",
+			expectForceNew: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:            "5.0.6",
+			new:            "6.0",
+			expectForceNew: false,
+		},
+
+		"upgrade major 7.digit": {
+			old:            "6.x",
+			new:            "7.0",
+			expectForceNew: false,
+		},
 
 		"downgrade minor versions": {
 			old:            "1.3.5",
@@ -461,15 +522,21 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:            "7.x",
+		"downgrade from major 7.digit to 6.x": {
+			old:            "7.2",
 			new:            "6.x",
 			expectForceNew: true,
 		},
 
-		"downgrade from major 7.digit to 6.x": {
+		"downgrade from major 7.digit to 6.digit": {
 			old:            "7.2",
-			new:            "6.x",
+			new:            "6.2",
+			expectForceNew: true,
+		},
+
+		"downgrade major 7.digit": {
+			old:            "7.2",
+			new:            "7.0",
 			expectForceNew: true,
 		},
 	}
@@ -530,7 +597,16 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			valid:      true,
 		},
 		{
+			version:    "7.2",
+			normalized: "7.2.0",
+			valid:      true,
+		},
+		{
 			version: "5.x",
+			valid:   false,
+		},
+		{
+			version: "7.x",
 			valid:   false,
 		},
 	}
@@ -655,7 +731,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			isNew:       true,
 			paramOld:    "old",
 			paramNew:    "",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		// new resource with version changes can only be verified at apply-time
@@ -676,7 +752,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.0",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, version spurious diff": {
@@ -685,7 +761,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			versionOld:       "6.0",
 			versionNew:       "6.0",
 			versionHasChange: true,
-			expectError:      regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError:      regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, minor version change": {
@@ -693,7 +769,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.2",
-			expectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+			expectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
 		},
 
 		"update, param group change, major version change": {

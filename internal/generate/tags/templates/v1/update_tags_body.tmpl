@@ -3,18 +3,28 @@
 // it may also be a different identifier depending on the service.
 {{if  .TagTypeAddBoolElem -}}
 func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any) error {
-	oldTags := KeyValueTags(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-	newTags := KeyValueTags(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-{{- else }}
+	oldTags := {{ .KeyValueTagsFunc }}(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	newTags := {{ .KeyValueTagsFunc }}(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+{{- else -}}
 func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
-	{{- if eq (.TagOp) (.UntagOp) }}
-	removedTags := oldTags.Removed(newTags)
-	updatedTags := oldTags.Updated(newTags)
 
-	// Ensure we do not send empty requests
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	{{- if eq (.TagOp) (.UntagOp) }}
+
+	removedTags := oldTags.Removed(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	updatedTags := oldTags.Updated(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+
+	// Ensure we do not send empty requests.
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
 		return nil
 	}
@@ -23,6 +33,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedSlice }}
 		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+		{{- else if .TagInIDNeedValueSlice }}
+		{{ .TagInIDElem }}:   []string{identifier},
 		{{- else }}
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
@@ -33,14 +45,14 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .TagInTagsElem }} = {{ .TagsFunc }}(updatedTags)
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .UntagInTagsElem }} = {{ .TagsFunc }}(removedTags)
 		{{- else if .UntagInNeedTagKeyType }}
-		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .UntagInTagsElem }} = TagKeys(removedTags)
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
@@ -56,7 +68,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{- else }}
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	if len(removedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
@@ -64,6 +80,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
 			{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+			{{- else if .TagInIDNeedValueSlice }}
+			{{ .TagInIDElem }}:   []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
@@ -72,13 +90,13 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .UntagInTagsElem }}:       {{ .TagsFunc }}(removedTags),
 			{{- else if .UntagInNeedTagKeyType }}
-			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .UntagInTagsElem }}:       TagKeys(removedTags),
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       aws.StringSlice(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}).Keys()),
+			{{ .UntagInTagsElem }}:       aws.StringSlice(removedTags.Keys()),
 			{{- end }}
 		}
 
@@ -92,7 +110,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	if len(updatedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
@@ -100,6 +122,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
 			{{ .TagInIDElem }}: aws.StringSlice([]string{identifier}),
+			{{- else if .TagInIDNeedValueSlice }}
+			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
@@ -110,7 +134,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .TagInTagsElem }}:       {{ .TagsFunc }}(updatedTags),
 			{{- end }}
 		}
 
@@ -126,22 +150,21 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{- end }}
 
+	{{ if .WaitForPropagation }}
+	if len(removedTags) > 0 || len(updatedTags) > 0 {
+		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags); err != nil {
+			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+		}
+	}
+	{{- end }}
+
 	return nil
 }
 
-{{- if ne .CreateTagsFunc "" }}
-// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
-func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []*{{ .TagPackage }}.{{ .TagType }}) error {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, KeyValueTags(ctx, tags))
+{{- if .IsDefaultUpdateTags }}
+// {{ .UpdateTagsFunc | Title }} updates {{ .ServicePackage }} service tags.
+// It is called from outside this package.
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }
 {{- end }}
-
-// {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
-// It is called from outside this package.
-func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
-	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
-}

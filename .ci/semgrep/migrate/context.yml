@@ -2,13 +2,13 @@ rules:
   - id: aws-api-context
     languages: [go]
     message: All AWS API calls should use the WithContext version
-    paths: &paths
+    paths:
       include:
         - internal/service/*
         - internal/acctest/*
       exclude:
-        # `pattern-not` not working
-        - internal/service/kafkaconnect
+        - "internal/service/*/service_package.go"
+        - "internal/service/*/service_package_gen.go"
     patterns:
       - pattern: |
           $CONN.$API(...)
@@ -18,47 +18,41 @@ rules:
       - metavariable-regex:
           metavariable: $API
           # This weird construction is to get around greedy matching
-          regex: ^(?!.*WithContext).*$
+          regex: ^(?!.*(WithContext|_Values|Paginator)).*$
       - pattern-not: |
           $CONN.$APIV2(ctx, ...)
-      - pattern-not: connect.$API(...)
+      - pattern-not: tfcodestarconnections.$API()
       - pattern-not: tfconnect.$API(...)
-      - pattern-not: codestarconnections.$API(...)
-      - pattern-not: tfcodestarconnections.$API(...)
-      - pattern-not: tfdirectconnect.$API(...)
-      - pattern-not: kafkaconnect.$API(...)
-      - pattern-not: tfkafkaconnect.$API(...)
+      - pattern-not: tfdirectconnect.$API()
+      - pattern-not: tfkafkaconnect.$API()
       - pattern-not: conn.Handlers.$X(...)
       - pattern-not: conn.Handlers.$X.$Y(...)
-    severity: ERROR
-  - id: aws-helpers-context
-    languages: [go]
-    message: All AWS helper functions should take a context.Context
-    paths: *paths
-    patterns:
-      - pattern: |
-          $INNER(conn, ...)
-      - pattern-not: $V2(conn, ...)
-      - metavariable-regex:
-          metavariable: $V2
-          regex: ^New\w+Paginator$
     severity: ERROR
   - id: context-todo
     languages: [go]
     message: Should not use `context.TODO()`
-    paths: *paths
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
     pattern: context.TODO()
     severity: ERROR
   - id: schema-noop
     languages: [go]
     message: Should use `schema.NoopContext` instead of `schema.Noop`
-    paths: *paths
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
     pattern: schema.Noop
     severity: ERROR
   - id: direct-CRUD-calls
     languages: [go]
     message: Avoid direct calls to `schema.Resource` CRUD calls
-    paths: *paths
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
     patterns:
       - pattern-either:
           - pattern: $D.Create($DATA, $META)

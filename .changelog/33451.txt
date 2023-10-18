@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_cluster: Fix regression for `redis` engine types caused by the new `transit_encryption_enabled` argument
+```

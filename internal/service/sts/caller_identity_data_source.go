@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sts
 
 import (
@@ -7,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 // @FrameworkDataSource
@@ -61,7 +64,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn()
+	conn := d.Meta().STSConn(ctx)
 
 	output, err := FindCallerIdentity(ctx, conn)
 

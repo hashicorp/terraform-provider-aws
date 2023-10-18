@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -74,20 +77,6 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"permissions_with_grant_option": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"lf_tag": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -95,6 +84,11 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"key": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -104,17 +98,10 @@ func DataSourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 15,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
 							},
-							Set: schema.HashString,
-						},
-						"catalog_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
 						},
 					},
 				},
@@ -133,10 +120,9 @@ func DataSourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidAccountID,
 						},
 						"expression": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
@@ -148,12 +134,10 @@ func DataSourcePermissions() *schema.Resource {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
-										MaxItems: 15,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -164,6 +148,20 @@ func DataSourcePermissions() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
 						},
 					},
+				},
+			},
+			"permissions": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"permissions_with_grant_option": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"principal": {
@@ -217,7 +215,6 @@ func DataSourcePermissions() *schema.Resource {
 						"column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -230,7 +227,6 @@ func DataSourcePermissions() *schema.Resource {
 						"excluded_column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -253,7 +249,7 @@ func DataSourcePermissions() *schema.Resource {
 
 func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{

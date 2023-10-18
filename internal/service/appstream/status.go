@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -8,22 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// statusStackState fetches the fleet and its state
-func statusStackState(ctx context.Context, conn *appstream.AppStream, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		stack, err := FindStackByName(ctx, conn, name)
-		if err != nil {
-			return nil, "Unknown", err
-		}
-
-		if stack == nil {
-			return stack, "NotFound", nil
-		}
-
-		return stack, "AVAILABLE", nil
-	}
-}
 
 // statusFleetState fetches the fleet and its state
 func statusFleetState(ctx context.Context, conn *appstream.AppStream, name string) retry.StateRefreshFunc {

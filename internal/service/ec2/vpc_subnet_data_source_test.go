@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -185,6 +188,26 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dsResourceName := "data.aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVPCSubnetDataSourceConfig_basic(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -247,6 +270,40 @@ data "aws_subnet" "by_az_id" {
   availability_zone_id = aws_subnet.test.availability_zone_id
 }
 `, rName, rInt)
+}
+
+func testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName string, deviceIndex int) string {
+	return fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone          = data.aws_outposts_outpost.test.availability_zone
+  cidr_block                 = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  enable_lni_at_device_index = %[2]d
+  outpost_arn                = data.aws_outposts_outpost.test.arn
+  vpc_id                     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_subnet" "test" {
+  id = aws_subnet.test.id
+}
+`, rName, deviceIndex)
 }
 
 func testAccVPCSubnetDataSourceConfig_ipv6(rName string, rInt int) string {

@@ -21,15 +21,15 @@ resource "aws_vpc_network_performance_metric_subscription" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination` - (Required) The target Region or Availability Zone that the metric subscription is enabled for. For example, `eu-west-1`.
 * `metric` - (Optional) The metric used for the enabled subscription. Valid values: `aggregate-latency`. Default: `aggregate-latency`.
 * `source` - (Required) The source Region or Availability Zone that the metric subscription is enabled for. For example, `us-east-1`.
 * `statistic` - (Optional) The statistic used for the enabled subscription. Valid values: `p50`. Default: `p50`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `period` - The data aggregation time for the subscription.

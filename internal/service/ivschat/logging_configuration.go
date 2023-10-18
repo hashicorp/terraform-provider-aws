@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -70,7 +73,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"log_group_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\.\-_/#A-Za-z0-9]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
 									},
 								},
 							},
@@ -93,7 +96,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"delivery_stream_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
 									},
 								},
 							},
@@ -116,7 +119,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"bucket_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-.]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
 									},
 								},
 							},
@@ -145,11 +148,11 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -175,7 +178,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
@@ -202,7 +205,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -238,7 +241,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
 

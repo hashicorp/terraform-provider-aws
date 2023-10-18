@@ -8,16 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists kinesis service tags.
+// listTags lists kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesis.ListTagsForStreamInput{
 		StreamName: aws.String(identifier),
 	}
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier stri
 // ListTags lists kinesis service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KinesisConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +78,9 @@ func KeyValueTags(ctx context.Context, tags []*kinesis.Tag) tftags.KeyValueTags 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns kinesis service tags from Context.
+// getTagsIn returns kinesis service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*kinesis.Tag {
+func getTagsIn(ctx context.Context) []*kinesis.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,26 +90,38 @@ func GetTagsIn(ctx context.Context) []*kinesis.Tag {
 	return nil
 }
 
-// SetTagsOut sets kinesis service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*kinesis.Tag) {
+// setTagsOut sets kinesis service tags in Context.
+func setTagsOut(ctx context.Context, tags []*kinesis.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates kinesis service tags.
+// createTags creates kinesis service tags for new resources.
+func createTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, tags []*kinesis.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
+// updateTags updates kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Kinesis)
+	if len(removedTags) > 0 {
 		for _, removedTags := range removedTags.Chunks(10) {
 			input := &kinesis.RemoveTagsFromStreamInput{
 				StreamName: aws.String(identifier),
-				TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.Kinesis).Keys()),
+				TagKeys:    aws.StringSlice(removedTags.Keys()),
 			}
 
 			_, err := conn.RemoveTagsFromStreamWithContext(ctx, input)
@@ -118,7 +132,9 @@ func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Kinesis)
+	if len(updatedTags) > 0 {
 		for _, updatedTags := range updatedTags.Chunks(10) {
 			input := &kinesis.AddTagsToStreamInput{
 				StreamName: aws.String(identifier),
@@ -139,5 +155,5 @@ func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 // UpdateTags updates kinesis service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier, oldTags, newTags)
 }

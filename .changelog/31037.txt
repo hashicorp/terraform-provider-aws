@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_directory_service_trust
+```
+
+```release-note:enhancement
+resource/aws_directory_service_conditional_forwarder: Add plan time validation for `remote_domain_name`
+```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Correct plan time validation for `remote_domain_name`
+```

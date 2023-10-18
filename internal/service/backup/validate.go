@@ -1,13 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
 	"fmt"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validReportPlanName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[a-zA-Z]{1}[_a-zA-Z0-9]{0,255}$`).MatchString(value) {
+	if !regexache.MustCompile(`^[A-Za-z]{1}[0-9A-Za-z_]{0,255}$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q (%q) must be must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.", k, v))
 	}
 	return
@@ -16,7 +20,7 @@ func validReportPlanName(v interface{}, k string) (ws []string, errors []error) 
 // The pattern for framework and report plan name is the same but separate functions are used in the event that there are future differences
 func validFrameworkName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[a-zA-Z]{1}[_a-zA-Z0-9]{0,255}$`).MatchString(value) {
+	if !regexache.MustCompile(`^[A-Za-z]{1}[0-9A-Za-z_]{0,255}$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q (%q) must be must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.", k, v))
 	}
 	return

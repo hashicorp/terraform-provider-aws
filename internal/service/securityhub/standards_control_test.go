@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
@@ -78,7 +81,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStandardsControlConfig_enabledStatus(),
-				ExpectError: regexp.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
+				ExpectError: regexache.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
 			},
 		},
 	})
@@ -95,7 +98,7 @@ func testAccCheckStandardsControlExists(ctx context.Context, n string, control *
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -85,6 +88,11 @@ func ResourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"enable_lni_at_device_index": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -149,7 +157,7 @@ func ResourceSubnet() *schema.Resource {
 
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSubnet),
@@ -218,9 +226,9 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, SubnetPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -243,6 +251,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
 	d.Set("ipv6_native", subnet.Ipv6Native)
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
@@ -272,14 +281,14 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	SetTagsOut(ctx, subnet.Tags)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }
 
 func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// You cannot modify multiple subnet attributes in the same request,
 	// except CustomerOwnedIpv4Pool and MapCustomerOwnedIpOnLaunch.
@@ -291,8 +300,28 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
+	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
+		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
+	if d.HasChange("ipv6_cidr_block") {
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	if d.HasChange("enable_dns64") {
 		if err := modifySubnetEnableDNS64(ctx, conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("enable_lni_at_device_index") {
+		if err := modifySubnetEnableLniAtDeviceIndex(ctx, conn, d.Id(), int64(d.Get("enable_lni_at_device_index").(int))); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -321,19 +350,6 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
-	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && d.Get("assign_ipv6_address_on_creation").(bool) {
 		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), true); err != nil {
@@ -346,7 +362,7 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 
@@ -428,6 +444,12 @@ func modifySubnetAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *schem
 		}
 	}
 
+	if new, old := int64(d.Get("enable_lni_at_device_index").(int)), aws.Int64Value(subnet.EnableLniAtDeviceIndex); old != new && new != 0 {
+		if err := modifySubnetEnableLniAtDeviceIndex(ctx, conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
 	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
 		if new, old := d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool), aws.BoolValue(subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord); old != new {
 			if err := modifySubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx, conn, d.Id(), new); err != nil {
@@ -491,6 +513,23 @@ func modifySubnetEnableDNS64(ctx context.Context, conn *ec2.EC2, subnetID string
 
 	if _, err := waitSubnetEnableDNS64Updated(ctx, conn, subnetID, v); err != nil {
 		return fmt.Errorf("waiting for EC2 Subnet (%s) EnableDns64 update: %w", subnetID, err)
+	}
+
+	return nil
+}
+
+func modifySubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.EC2, subnetID string, deviceIndex int64) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		EnableLniAtDeviceIndex: aws.Int64(deviceIndex),
+		SubnetId:               aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttributeWithContext(ctx, input); err != nil {
+		return fmt.Errorf("modifying EC2 Subnet (%s) EnableLniAtDeviceIndex: %w", subnetID, err)
+	}
+
+	if _, err := waitSubnetEnableLniAtDeviceIndexUpdated(ctx, conn, subnetID, deviceIndex); err != nil {
+		return fmt.Errorf("waiting for EC2 Subnet (%s) EnableLniAtDeviceIndex update: %w", subnetID, err)
 	}
 
 	return nil
