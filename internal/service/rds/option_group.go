@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -207,6 +206,7 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
 		if o == nil {
@@ -233,37 +233,25 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		// Ensure there is actually something to update
 		// InvalidParameterValue: At least one option must be added, modified, or removed.
 		if len(optionsToInclude) > 0 || len(optionsToRemove) > 0 {
-			modifyOpts := &rds.ModifyOptionGroupInput{
-				OptionGroupName:  aws.String(d.Id()),
+			input := &rds.ModifyOptionGroupInput{
 				ApplyImmediately: aws.Bool(true),
+				OptionGroupName:  aws.String(d.Id()),
 			}
 
 			if len(optionsToInclude) > 0 {
-				modifyOpts.OptionsToInclude = optionsToInclude
+				input.OptionsToInclude = optionsToInclude
 			}
 
 			if len(optionsToRemove) > 0 {
-				modifyOpts.OptionsToRemove = optionsToRemove
+				input.OptionsToRemove = optionsToRemove
 			}
 
-			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				return conn.ModifyOptionGroupWithContext(ctx, input)
+			}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
-			err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-				_, err := conn.ModifyOptionGroupWithContext(ctx, modifyOpts)
-				if err != nil {
-					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
-					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return retry.RetryableError(err)
-					}
-					return retry.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.ModifyOptionGroupWithContext(ctx, modifyOpts)
-			}
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying DB Option Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "modifying RDS DB Option Group (%s): %s", d.Id(), err)
 			}
 		}
 	}
