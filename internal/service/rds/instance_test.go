@@ -919,7 +919,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v1, v2 rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -937,7 +937,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
 				),
 			},
@@ -955,7 +955,8 @@ func TestAccRDSInstance_password(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
 				),
 			},
@@ -4718,6 +4719,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4823,6 +4825,7 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4873,6 +4876,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4977,14 +4981,14 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
 	})
 }
 
-// TODO: When the only change is to disable deletion_protection, bypass Blue/Green
-func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
+func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -5019,14 +5023,14 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					// TODO: This should bypass Blue/Green Deployment
-					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
@@ -5042,7 +5046,43 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+				),
 			},
 		},
 	})
@@ -5084,6 +5124,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
@@ -5107,14 +5148,14 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_updateInstanceClassWithDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
-					// TODO: This should bypass Blue/Green Deployment
-					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					testAccCheckDBInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
@@ -7527,7 +7568,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_password(rName, password string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -9074,7 +9117,7 @@ func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, all
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "postgres13" {
   engine         = "postgres"
-  engine_version = "13.5"
+  engine_version = "13.12"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
@@ -9099,7 +9142,7 @@ resource "aws_db_snapshot" "test" {
 
 data "aws_rds_orderable_db_instance" "postgres14" {
   engine         = "postgres"
-  engine_version = "14.1"
+  engine_version = "14.9"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
@@ -10625,6 +10668,30 @@ data "aws_rds_orderable_db_instance" "updated" {
   preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
 }
 `, rName, deletionProtection))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_password(rName, password string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = %[2]q
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled = true
+  }
+}
+`, rName, password))
 }
 
 func testAccInstanceConfig_gp3(rName string, orderableClassConfig func() string, allocatedStorage int) string {
