@@ -20,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -36,12 +38,6 @@ func ResourceSigningProfilePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"profile_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 64),
-			},
 			"action": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,6 +52,12 @@ func ResourceSigningProfilePermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"profile_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(2, 64),
 			},
 			"profile_version": {
 				Type:         schema.TypeString,
@@ -75,6 +77,7 @@ func ResourceSigningProfilePermission() *schema.Resource {
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id"},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
@@ -315,4 +318,58 @@ func resourceSigningProfilePermissionImport(ctx context.Context, d *schema.Resou
 	d.Set("statement_id", statementId)
 	d.SetId(statementId)
 	return []*schema.ResourceData{d}, nil
+}
+
+func findPermissionByTwoPartKey(ctx context.Context, conn *signer.Client, profileName, statementID string) (*types.Permission, error) {
+	input := &signer.ListProfilePermissionsInput{
+		ProfileName: aws.String(profileName),
+	}
+
+	return findPermission(ctx, conn, input, func(v types.Permission) bool {
+		return aws.ToString(v.StatementId) == statementID
+	})
+}
+
+func findPermission(ctx context.Context, conn *signer.Client, input *signer.ListProfilePermissionsInput, filter tfslices.Predicate[types.Permission]) (*types.Permission, error) {
+	output, err := findPermissions(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPermissions(ctx context.Context, conn *signer.Client, input *signer.ListProfilePermissionsInput, filter tfslices.Predicate[types.Permission]) ([]types.Permission, error) {
+	var permissions []types.Permission
+
+	// No paginator in the AWS SDK for Go v2.
+	for {
+		output, err := conn.ListProfilePermissions(ctx, input)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range output.Permissions {
+			if filter(v) {
+				permissions = append(permissions, v)
+			}
+		}
+
+		if aws.ToString(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return permissions, nil
 }
