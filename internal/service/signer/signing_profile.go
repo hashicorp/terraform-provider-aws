@@ -5,7 +5,6 @@ package signer
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -192,7 +191,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	signingProfileOutput, err := findSigningProfileByName(ctx, conn, d.Id())
+	output, err := findSigningProfileByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
@@ -201,57 +200,37 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Signer signing profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
+	d.Set("arn", output.Arn)
+	d.Set("name", output.ProfileName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.ProfileName)))
+	d.Set("platform_display_name", output.PlatformDisplayName)
+	d.Set("platform_id", output.PlatformId)
+	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(output.RevocationRecord)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting revocation_record: %s", err)
 	}
-	if signingProfileOutput.SignatureValidityPeriod != nil {
+	if v := output.SignatureValidityPeriod; v != nil {
 		if err := d.Set("signature_validity_period", []interface{}{
 			map[string]interface{}{
-				"value": signingProfileOutput.SignatureValidityPeriod.Value,
-				"type":  signingProfileOutput.SignatureValidityPeriod.Type,
+				"value": v.Value,
+				"type":  v.Type,
 			},
 		}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
 		}
 	}
-
-	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
-	}
-
-	if err := d.Set("name", signingProfileOutput.ProfileName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile name: %s", err)
-	}
-
-	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
-	}
-
-	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
-	}
-
-	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
-	}
-
-	if err := d.Set("status", signingProfileOutput.Status); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
-	}
-	if signingProfileOutput.SigningMaterial != nil {
-		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting signer signing profile material: %s", err)
+	if output.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(output.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
 		}
 	}
+	d.Set("status", output.Status)
+	d.Set("version", output.ProfileVersion)
+	d.Set("version_arn", output.ProfileVersionArn)
 
-	setTagsOut(ctx, signingProfileOutput.Tags)
-
-	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -343,27 +322,33 @@ func PlatformID_Values() []string {
 }
 
 func findSigningProfileByName(ctx context.Context, conn *signer.Client, name string) (*signer.GetSigningProfileOutput, error) {
-	in := &signer.GetSigningProfileInput{
+	input := &signer.GetSigningProfileInput{
 		ProfileName: aws.String(name),
 	}
 
-	out, err := conn.GetSigningProfile(ctx, in)
+	output, err := conn.GetSigningProfile(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+			LastError:   err,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	var nfe *types.ResourceNotFoundException
-	if errors.As(err, &nfe) {
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Status; status == types.SigningProfileStatusCanceled {
 		return nil, &retry.NotFoundError{
-			LastRequest: in,
-			LastError:   err,
+			Message:     string(status),
+			LastRequest: input,
 		}
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	return output, nil
 }
