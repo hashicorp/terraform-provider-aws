@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -34,6 +35,10 @@ func ResourceOptionGroup() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -143,7 +148,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateOptionGroupWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DB Option Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Option Group (%s): %s", name, err)
 	}
 
 	d.SetId(strings.ToLower(name))
@@ -270,28 +275,21 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	deleteOpts := &rds.DeleteOptionGroupInput{
-		OptionGroupName: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting RDS DB Option Group: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteOptionGroupWithContext(ctx, &rds.DeleteOptionGroupInput{
+			OptionGroupName: aws.String(d.Id()),
+		})
+	}, rds.ErrCodeInvalidOptionGroupStateFault)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting RDS Option Group: %s", d.Id())
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.DeleteOptionGroupWithContext(ctx, deleteOpts)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
-				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteOptionGroupWithContext(ctx, deleteOpts)
-	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting DB Option Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Option Group (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
