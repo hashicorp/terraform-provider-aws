@@ -122,6 +122,7 @@ const (
 	errCodeVolumeInUse                                       = "VolumeInUse"
 	errCodeVPNConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
+	errCodeInvalidVerifiedAccessEndpointIdNotFound           = "InvalidVerifiedAccessEndpointId.NotFound"
 )
 
 func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
