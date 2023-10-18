@@ -2297,7 +2297,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifier_ManagedMasterPasswordKmsKey(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_ManagedMasterPasswordKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2318,7 +2318,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManagedMasterPasswordKmsKey(t *testin
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_snapshotID_ManagedMasterPasswordKmsKey(rName),
+				Config: testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
@@ -9038,7 +9038,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_snapshotID_ManagedMasterPasswordKmsKey(rName string) string {
+func testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
