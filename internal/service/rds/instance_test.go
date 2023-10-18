@@ -2297,6 +2297,56 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_SnapshotIdentifier_ManagedMasterPasswordKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"manage_master_user_password",
+					"master_user_secret_kms_key_id",
+					"snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4340,6 +4390,54 @@ func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_RestoreToPointInTime_ManagedMasterPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	sourceName := "aws_db_instance.test"
+	resourceName := "aws_db_instance.restore"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"delete_automated_backups",
+					"final_snapshot_identifier",
+					"latest_restorable_time", // dynamic value of a DBInstance
+					"manage_master_user_password",
+					"password",
+					"restore_to_point_in_time",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -6690,6 +6788,25 @@ resource "aws_db_instance" "restore" {
 `, rName, monitoringInterval))
 }
 
+func testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseForPITR(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "restore" {
+  identifier     = "%[1]s-restore"
+  instance_class = aws_db_instance.test.instance_class
+
+  restore_to_point_in_time {
+    source_db_instance_identifier = aws_db_instance.test.identifier
+    use_latest_restorable_time    = true
+  }
+
+  skip_final_snapshot         = true
+  manage_master_user_password = true
+}
+`, rName))
+}
+
 func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -8919,6 +9036,62 @@ resource "aws_db_instance" "test" {
   instance_class      = aws_db_instance.source.instance_class
   snapshot_identifier = aws_db_snapshot.test.id
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = "%[1]s-source"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.identifier
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  identifier                    = %[1]q
+  instance_class                = aws_db_instance.source.instance_class
+  snapshot_identifier           = aws_db_snapshot.test.id
+  skip_final_snapshot           = true
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = aws_kms_key.example.arn
 }
 `, rName))
 }
