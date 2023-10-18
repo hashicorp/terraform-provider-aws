@@ -232,12 +232,12 @@ func resourceSigningProfilePermissionImport(ctx context.Context, d *schema.Resou
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected PROFILE_NAME/STATEMENT_ID", d.Id())
 	}
 
-	profileName := idParts[0]
-	statementId := idParts[1]
+	profileName, statementID := idParts[0], idParts[1]
 
 	d.Set("profile_name", profileName)
-	d.Set("statement_id", statementId)
-	d.SetId(statementId)
+	d.Set("statement_id", statementID)
+	d.SetId(fmt.Sprintf("%s/%s", profileName, statementID))
+
 	return []*schema.ResourceData{d}, nil
 }
 

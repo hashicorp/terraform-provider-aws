@@ -89,3 +89,7 @@ resource/aws_rds_cluster_instance: Support import of `identifier_prefix` argumen
 ```release-note:enhancement
 resource/aws_signer_signing_profile: Support import of `name_prefix` argument
 ```
+
+```release-note:enhancement
+resource/aws_signer_signing_profile_permission: Support import of `statement_id_prefix` argument
+```

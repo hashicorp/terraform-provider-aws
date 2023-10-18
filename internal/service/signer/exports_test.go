@@ -5,6 +5,7 @@ package signer
 
 // Exports for use in tests only.
 var (
-	FindSigningJobByID       = findSigningJobByID
-	FindSigningProfileByName = findSigningProfileByName
+	FindPermissionByTwoPartKey = findPermissionByTwoPartKey
+	FindSigningJobByID         = findSigningJobByID
+	FindSigningProfileByName   = findSigningProfileByName
 )
