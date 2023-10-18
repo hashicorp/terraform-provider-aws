@@ -4,9 +4,7 @@
 package rds
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -19,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,6 +32,7 @@ func ResourceOptionGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceOptionGroupRead,
 		UpdateWithoutTimeout: resourceOptionGroupUpdate,
 		DeleteWithoutTimeout: resourceOptionGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,6 +45,16 @@ func ResourceOptionGroup() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"engine_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"major_engine_version": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -64,28 +72,16 @@ func ResourceOptionGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validOptionGroupNamePrefix,
 			},
-			"engine_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"major_engine_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"option_group_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
-
 			"option": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"db_security_group_memberships": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"option_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -110,27 +106,24 @@ func ResourceOptionGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"db_security_group_memberships": {
-							Type:     schema.TypeSet,
+						"version": {
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"vpc_security_group_memberships": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
-				Set: resourceOptionHash,
 			},
-
+			"option_group_description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -336,33 +329,4 @@ func flattenOptionNames(configured []interface{}) []*string {
 	}
 
 	return optionNames
-}
-
-func resourceOptionHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["option_name"].(string)))
-	if _, ok := m["port"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", m["port"].(int)))
-	}
-
-	for _, oRaw := range m["option_settings"].(*schema.Set).List() {
-		o := oRaw.(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", o["name"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", o["value"].(string)))
-	}
-
-	for _, vpcRaw := range m["vpc_security_group_memberships"].(*schema.Set).List() {
-		buf.WriteString(fmt.Sprintf("%s-", vpcRaw.(string)))
-	}
-
-	for _, sgRaw := range m["db_security_group_memberships"].(*schema.Set).List() {
-		buf.WriteString(fmt.Sprintf("%s-", sgRaw.(string)))
-	}
-
-	if v, ok := m["version"]; ok && v.(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return create.StringHashcode(buf.String())
 }
