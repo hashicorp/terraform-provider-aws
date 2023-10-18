@@ -109,12 +109,21 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 	}
 }
 
+// TODO Remove hardcoding of AZ ID.
+// func testAccDirectoryBucketConfig_base(rName string) string {
+// 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+// locals {
+//   bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}--x-s3"
+// }
+// `, rName))
+// }
+
 func testAccDirectoryBucketConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 locals {
-  bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}--x-s3"
+  bucket = "%[1]s--usw2-az2--x-s3"
 }
-`, rName))
+`, rName)
 }
 
 func testAccDirectoryBucketConfig_basic(rName string) string {
