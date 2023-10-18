@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -267,19 +268,19 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
+	log.Printf("[DEBUG] Deleting Signer Signing Profile: %s", d.Id())
 	_, err := conn.CancelSigningProfile(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "canceling Signer signing profile (%s): %s", d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Signer signing profile %q canceled", d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
