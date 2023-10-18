@@ -120,8 +120,10 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 			"dns_record_client_routing_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "any_availability_zone",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
 				ValidateFunc: validation.StringInSlice([]string{
 					"availability_zone_affinity",
 					"partial_availability_zone_affinity",

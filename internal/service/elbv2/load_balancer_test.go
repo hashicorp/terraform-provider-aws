@@ -128,6 +128,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/net/%s/.+", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "dns_record_client_routing_policy", "any_availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "internal", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
