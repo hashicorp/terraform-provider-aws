@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -159,46 +161,27 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	params := &rds.DescribeOptionGroupsInput{
-		OptionGroupName: aws.String(d.Id()),
-	}
+	option, err := FindOptionGroupByName(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
-	options, err := conn.DescribeOptionGroupsWithContext(ctx, params)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
-		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Describing DB Option Group: %s", err)
-	}
-
-	var option *rds.OptionGroup
-	for _, ogl := range options.OptionGroupsList {
-		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
-			option = ogl
-			break
-		}
-	}
-
-	if option == nil {
-		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Option Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", option.OptionGroupArn)
-	d.Set("name", option.OptionGroupName)
-	d.Set("major_engine_version", option.MajorEngineVersion)
 	d.Set("engine_name", option.EngineName)
-	d.Set("option_group_description", option.OptionGroupDescription)
-
+	d.Set("major_engine_version", option.MajorEngineVersion)
+	d.Set("name", option.OptionGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
 	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfiguration(d.Get("option").(*schema.Set).List()))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}
+	d.Set("option_group_description", option.OptionGroupDescription)
 
 	return diags
 }
@@ -279,6 +262,67 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func FindOptionGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.OptionGroup, error) {
+	input := &rds.DescribeOptionGroupsInput{
+		OptionGroupName: aws.String(name),
+	}
+	output, err := findOptionGroup(ctx, conn, input, tfslices.PredicateTrue[*rds.OptionGroup]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.OptionGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findOptionGroup(ctx context.Context, conn *rds.RDS, input *rds.DescribeOptionGroupsInput, filter tfslices.Predicate[*rds.OptionGroup]) (*rds.OptionGroup, error) {
+	output, err := findOptionGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findOptionGroups(ctx context.Context, conn *rds.RDS, input *rds.DescribeOptionGroupsInput, filter tfslices.Predicate[*rds.OptionGroup]) ([]*rds.OptionGroup, error) {
+	var output []*rds.OptionGroup
+
+	err := conn.DescribeOptionGroupsPagesWithContext(ctx, input, func(page *rds.DescribeOptionGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.OptionGroupsList {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func optionInList(optionName string, list []*string) bool {
