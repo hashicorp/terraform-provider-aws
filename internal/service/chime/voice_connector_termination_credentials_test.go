@@ -19,7 +19,19 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorTerminationCredentials_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":      testAccVoiceConnectorTerminationCredentials_basic,
+		"disappears": testAccVoiceConnectorTerminationCredentials_disappears,
+		"update":     testAccVoiceConnectorTerminationCredentials_update,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
@@ -50,7 +62,7 @@ func TestAccChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
+func testAccVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
@@ -76,7 +88,7 @@ func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
+func testAccVoiceConnectorTerminationCredentials_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"

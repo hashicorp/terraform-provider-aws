@@ -19,7 +19,19 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccChimeVoiceConnectorTermination_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorTermination_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":      testAccVoiceConnectorTermination_basic,
+		"disappears": testAccVoiceConnectorTermination_disappears,
+		"update":     testAccVoiceConnectorTermination_update,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccVoiceConnectorTermination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
@@ -52,7 +64,7 @@ func TestAccChimeVoiceConnectorTermination_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorTermination_disappears(t *testing.T) {
+func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
@@ -78,7 +90,7 @@ func TestAccChimeVoiceConnectorTermination_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorTermination_update(t *testing.T) {
+func testAccVoiceConnectorTermination_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
