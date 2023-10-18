@@ -217,32 +217,35 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
+	if d.HasChangesExcept("tags", "tags_all") {
+		appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
-	//if d.HasChange("cloudwatch_metrics_enabled") {
-	//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
-	//}
+		if d.HasChange("campaign_hook") {
+			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
+		}
 
-	if d.HasChange("campaign_hook") {
-		appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
-	}
+		//if d.HasChange("cloudwatch_metrics_enabled") {
+		//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
+		//}
 
-	if d.HasChange("limits") {
-		appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
-	}
+		if d.HasChange("limits") {
+			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
+		}
 
-	if d.HasChange("quiet_time") {
-		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
-	}
+		if d.HasChange("quiet_time") {
+			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
+		}
 
-	req := pinpoint.UpdateApplicationSettingsInput{
-		ApplicationId:                   aws.String(d.Id()),
-		WriteApplicationSettingsRequest: appSettings,
-	}
+		input := &pinpoint.UpdateApplicationSettingsInput{
+			ApplicationId:                   aws.String(d.Id()),
+			WriteApplicationSettingsRequest: appSettings,
+		}
 
-	_, err := conn.UpdateApplicationSettingsWithContext(ctx, &req)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Application (%s): %s", d.Id(), err)
+		_, err := conn.UpdateApplicationSettingsWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
@@ -252,7 +255,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint Application: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Pinpoint App: %s", d.Id())
 	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -262,7 +265,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint App (%s): %s", d.Id(), err)
 	}
 
 	return diags
