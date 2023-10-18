@@ -5,7 +5,6 @@ package signer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -137,6 +136,15 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", profileName, statementID))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Signer Signing Profile Permission (%s) create: %s", d.Id(), err)
+	}
+
 	d.Set("statement_id", statementID)
 
 	return append(diags, resourceSigningProfilePermissionRead(ctx, d, meta)...)
@@ -177,68 +185,43 @@ func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.Resou
 	conns.GlobalMutexKV.Lock(profileName)
 	defer conns.GlobalMutexKV.Unlock(profileName)
 
-	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
+	output, err := conn.ListProfilePermissions(ctx, &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(profileName),
-	}
+	})
 
-	listProfilePermissionsOutput, err := conn.ListProfilePermissions(ctx, listProfilePermissionsInput)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			log.Printf("[WARN] No Signer Signing Profile Permission found for: %v", listProfilePermissionsInput)
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile Permission (%s): %s", d.Id(), err)
-	}
-
-	revisionId := aws.ToString(listProfilePermissionsOutput.RevisionId)
-
-	statementId := d.Get("statement_id").(string)
-	permission := getProfilePermission(listProfilePermissionsOutput.Permissions, statementId)
-	if permission == (types.Permission{}) {
-		log.Printf("[WARN] No Signer Signing Profile Permission found matching statement id: %s", statementId)
-		return diags
-	}
-
-	removeProfilePermissionInput := &signer.RemoveProfilePermissionInput{
-		ProfileName: aws.String(profileName),
-		RevisionId:  aws.String(revisionId),
-		StatementId: permission.StatementId,
-	}
-
-	_, err = conn.RemoveProfilePermission(ctx, removeProfilePermissionInput)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			log.Printf("[WARN] No Signer Signing Profile Permission found: %v", removeProfilePermissionInput)
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile Permission (%s): %s", d.Id(), err)
-	}
-
-	params := &signer.ListProfilePermissionsInput{
-		ProfileName: aws.String(profileName),
-	}
-
-	resp, err := conn.ListProfilePermissions(ctx, params)
-
-	var nfe *types.ResourceNotFoundException
-	if errors.As(err, &nfe) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Signer Signing Profile Permissions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s) Permissions: %s", profileName, err)
 	}
 
-	if len(resp.Permissions) > 0 {
-		permission := getProfilePermission(resp.Permissions, statementId)
-		if permission != (types.Permission{}) {
-			return sdkdiag.AppendErrorf(diags, "to delete Signer singing profile permission with ID %q", statementId)
-		}
+	revisionID := aws.ToString(output.RevisionId)
+	statementID := d.Get("statement_id").(string)
+
+	log.Printf("[DEBUG] Deleting Signer Signing Profile Permission: %s", d.Id())
+	_, err = conn.RemoveProfilePermission(ctx, &signer.RemoveProfilePermissionInput{
+		ProfileName: aws.String(profileName),
+		RevisionId:  aws.String(revisionID),
+		StatementId: aws.String(statementID),
+	})
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Signer Signing Profile Permission with ID %q removed", statementId)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile Permission (%s): %s", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Signer Signing Profile Permission (%s) delete: %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -256,20 +239,6 @@ func resourceSigningProfilePermissionImport(ctx context.Context, d *schema.Resou
 	d.Set("statement_id", statementId)
 	d.SetId(statementId)
 	return []*schema.ResourceData{d}, nil
-}
-
-func getProfilePermission(permissions []types.Permission, statementId string) types.Permission {
-	for _, permission := range permissions {
-		if permission == (types.Permission{}) {
-			continue
-		}
-
-		if aws.ToString(permission.StatementId) == statementId {
-			return permission
-		}
-	}
-
-	return types.Permission{}
 }
 
 func findPermissionByTwoPartKey(ctx context.Context, conn *signer.Client, profileName, statementID string) (*types.Permission, error) {
