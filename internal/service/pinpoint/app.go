@@ -34,37 +34,19 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			//"cloudwatch_metrics_enabled": {
-			//	Type:     schema.TypeBool,
-			//	Optional: true,
-			//	Default:  false,
-			//},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"campaign_hook": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -72,12 +54,9 @@ func ResourceApp() *schema.Resource {
 							Optional: true,
 						},
 						"mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								pinpoint.ModeDelivery,
-								pinpoint.ModeFilter,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(pinpoint.Mode_Values(), false),
 						},
 						"web_url": {
 							Type:     schema.TypeString,
@@ -86,16 +65,16 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
+			//"cloudwatch_metrics_enabled": {
+			//	Type:     schema.TypeBool,
+			//	Optional: true,
+			//	Default:  false,
+			//},
 			"limits": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -121,16 +100,23 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-			"quiet_time": {
-				Type:     schema.TypeList,
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+			},
+			"name_prefix": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				ForceNew: true,
+			},
+			"quiet_time": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {
@@ -143,10 +129,6 @@ func ResourceApp() *schema.Resource {
 						},
 					},
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
