@@ -178,7 +178,7 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_docdb_cluster.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
