@@ -6795,11 +6795,13 @@ func testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName strin
 resource "aws_db_instance" "restore" {
   identifier     = "%[1]s-restore"
   instance_class = aws_db_instance.test.instance_class
+
   restore_to_point_in_time {
     source_db_instance_identifier = aws_db_instance.test.identifier
     use_latest_restorable_time    = true
   }
-  skip_final_snapshot = true
+
+  skip_final_snapshot         = true
   manage_master_user_password = true
 }
 `, rName))
@@ -9084,10 +9086,10 @@ resource "aws_db_snapshot" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier          			= %[1]q
-  instance_class      			= aws_db_instance.source.instance_class
-  snapshot_identifier 			= aws_db_snapshot.test.id
-  skip_final_snapshot 			= true
+  identifier                    = %[1]q
+  instance_class                = aws_db_instance.source.instance_class
+  snapshot_identifier           = aws_db_snapshot.test.id
+  skip_final_snapshot           = true
   manage_master_user_password   = true
   master_user_secret_kms_key_id = aws_kms_key.example.arn
 }
