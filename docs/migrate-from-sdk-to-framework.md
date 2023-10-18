@@ -70,7 +70,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 				},
 				Config: testAccExampleResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &example),
+					testAccCheckExampleResourceExists(ctx, resourceName, &example),
 				),
 			},
 			{
