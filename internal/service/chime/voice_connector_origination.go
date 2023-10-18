@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,7 +59,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(chime.OriginationRouteProtocol_Values(), false),
+							ValidateFunc: validation.StringInSlice(chimesdkvoice.OriginationRouteProtocol_Values(), false),
 						},
 						"weight": {
 							Type:         schema.TypeInt,
@@ -79,13 +79,13 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 }
 
 func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
-	input := &chime.PutVoiceConnectorOriginationInput{
+	input := &chimesdkvoice.PutVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(vcId),
-		Origination: &chime.Origination{
+		Origination: &chimesdkvoice.Origination{
 			Routes: expandOriginationRoutes(d.Get("route").(*schema.Set).List()),
 		},
 	}
@@ -104,15 +104,15 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.GetVoiceConnectorOriginationInput{
+	input := &chimesdkvoice.GetVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) origination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -137,12 +137,12 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges("route", "disabled") {
-		input := &chime.PutVoiceConnectorOriginationInput{
+		input := &chimesdkvoice.PutVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(d.Id()),
-			Origination: &chime.Origination{
+			Origination: &chimesdkvoice.Origination{
 				Routes: expandOriginationRoutes(d.Get("route").(*schema.Set).List()),
 			},
 		}
@@ -162,15 +162,15 @@ func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.DeleteVoiceConnectorOriginationInput{
+	input := &chimesdkvoice.DeleteVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteVoiceConnectorOriginationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		return nil
 	}
 
@@ -181,12 +181,12 @@ func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func expandOriginationRoutes(data []interface{}) []*chime.OriginationRoute {
-	var originationRoutes []*chime.OriginationRoute
+func expandOriginationRoutes(data []interface{}) []*chimesdkvoice.OriginationRoute {
+	var originationRoutes []*chimesdkvoice.OriginationRoute
 
 	for _, rItem := range data {
 		item := rItem.(map[string]interface{})
-		originationRoutes = append(originationRoutes, &chime.OriginationRoute{
+		originationRoutes = append(originationRoutes, &chimesdkvoice.OriginationRoute{
 			Host:     aws.String(item["host"].(string)),
 			Port:     aws.Int64(int64(item["port"].(int))),
 			Priority: aws.Int64(int64(item["priority"].(int))),
@@ -198,7 +198,7 @@ func expandOriginationRoutes(data []interface{}) []*chime.OriginationRoute {
 	return originationRoutes
 }
 
-func flattenOriginationRoutes(routes []*chime.OriginationRoute) []interface{} {
+func flattenOriginationRoutes(routes []*chimesdkvoice.OriginationRoute) []interface{} {
 	var rawRoutes []interface{}
 
 	for _, route := range routes {
