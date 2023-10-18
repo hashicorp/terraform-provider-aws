@@ -125,6 +125,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bedrock</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
@@ -413,4 +414,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0112c9f167cfd048cc5a94aa64874964d28a0f6a6dc2d8b62a2962fbc15c3718 -->
+<!-- cache-key: cdktf-0.18.0 input-0e0dec25d22a19f39d4881dd603482a4765f842b794421afb1763a74aeea1795 -->

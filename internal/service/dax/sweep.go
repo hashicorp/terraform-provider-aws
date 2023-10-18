@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package dax
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dax_cluster", &resource.Sweeper{
 		Name: "aws_dax_cluster",
 		F:    sweepClusters,
@@ -35,7 +33,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 			return nil
 		}

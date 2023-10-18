@@ -257,8 +257,8 @@ The following arguments are optional:
 * `replicas_per_node_group` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Valid values are 0 to 5.
-* `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
-* `security_group_names` - (Optional) List of cache security group names to associate with this replication group.
+* `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
+* `security_group_names` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `snapshot_arns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
 * `snapshot_name` - (Optional) Name of a snapshot from which to restore data into the new node group. Changing the `snapshot_name` forces a new resource.
 * `snapshot_retention_limit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of `snapshot_retention_limit` is set to zero (0), backups are turned off. Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes
@@ -318,4 +318,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-838c3b8ba5cc3840d101659aeb93473b7f65080bd2395085ab60d60f8e44c650 -->
+<!-- cache-key: cdktf-0.18.0 input-fccb3d63e5830db5019158ec507620f9063a780bbec1d69f7c40eaf7d9b89a0e -->

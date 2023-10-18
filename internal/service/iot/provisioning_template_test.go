@@ -43,6 +43,7 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
+					resource.TestCheckResourceAttr(resourceName, "type", "FLEET_PROVISIONING"),
 				),
 			},
 			{
