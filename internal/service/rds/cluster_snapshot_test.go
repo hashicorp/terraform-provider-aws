@@ -174,13 +174,13 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  database_name                   = "test"
-  engine                          = "aurora-mysql"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  skip_final_snapshot             = true
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  database_name        = "test"
+  engine               = "aurora-mysql"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
 }
 `, rName))
 }
