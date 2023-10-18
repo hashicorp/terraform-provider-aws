@@ -1739,6 +1739,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusBackingUp,
 			ClusterStatusDeleting,
 			ClusterStatusModifying,
+			ClusterStatusPromoting,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),
