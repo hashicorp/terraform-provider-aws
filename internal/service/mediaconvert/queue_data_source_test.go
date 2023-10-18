@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -83,7 +83,9 @@ func TestAccMediaConvertQueueDataSource_withTags(t *testing.T) {
 }
 
 func testAccQueueDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccQueueConfig_basic(rName), `
+	return acctest.ConfigCompose(
+		testAccQueueConfig_basic(rName),
+		`
 data "aws_media_convert_queue" "test" {
 	id = aws_media_convert_queue.test.id
 }
@@ -91,7 +93,9 @@ data "aws_media_convert_queue" "test" {
 }
 
 func testAccQueueDataSourceConfig_status(rName, status string) string {
-	return acctest.ConfigCompose(testAccQueueConfig_status(rName, status), `
+	return acctest.ConfigCompose(
+		testAccQueueConfig_status(rName, status),
+		`
 data "aws_media_convert_queue" "test" {
 	id = aws_media_convert_queue.test.id
 }
@@ -99,7 +103,9 @@ data "aws_media_convert_queue" "test" {
 }
 
 func testAccQueueDataSourceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccQueueConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2), `
+	return acctest.ConfigCompose(
+		testAccQueueConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2),
+		`
 data "aws_media_convert_queue" "test" {
 	id = aws_media_convert_queue.test.id
 }
