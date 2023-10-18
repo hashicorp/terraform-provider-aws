@@ -119,15 +119,15 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// "dns_record_client_routing_policy": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	ValidateFunc: validation.StringInSlice([]string{
-			// 		"availability_zone_affinity",
-			// 		"partial_availability_zone_affinity",
-			// 		"any_availability_zone",
-			// 	}, false),
-			// },
+			"dns_record_client_routing_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"availability_zone_affinity",
+					"partial_availability_zone_affinity",
+					"any_availability_zone",
+				}, false),
+			},
 			"drop_invalid_header_fields": {
 				Type:             schema.TypeBool,
 				Optional:         true,
