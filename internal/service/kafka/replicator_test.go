@@ -294,8 +294,6 @@ func testAccReplicatorConfig_source(rName string) string {
 		testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-
-
 data "aws_caller_identity" "current" {}
 
 resource "aws_msk_cluster" "source" {
@@ -456,10 +454,6 @@ resource "aws_subnet" "source" {
     Name = %[1]q
   }
 }
-
-
-
-
 `, rName))
 }
 
@@ -539,8 +533,6 @@ resource "aws_subnet" "target" {
     Name = %[1]q
   }
 }
-
-
 `, rName))
 }
 
@@ -549,7 +541,6 @@ func testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster string) s
 		testAccReplicatorConfig_source(sourceCluster),
 		testAccReplicatorConfig_target(targetCluster),
 		fmt.Sprintf(`
-
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
@@ -600,7 +591,6 @@ func testAccReplicatorConfig_update(rName, sourceCluster, targetCluster string) 
 		testAccReplicatorConfig_source(sourceCluster),
 		testAccReplicatorConfig_target(targetCluster),
 		fmt.Sprintf(`
-
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
@@ -712,7 +702,6 @@ func testAccReplicatorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2
 		testAccReplicatorConfig_source(sourceCluster),
 		testAccReplicatorConfig_target(targetCluster),
 		fmt.Sprintf(`
-
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
