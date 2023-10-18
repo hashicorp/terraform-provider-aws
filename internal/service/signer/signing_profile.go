@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -154,35 +153,36 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	log.Printf("[DEBUG] Creating Signer signing profile")
-
-	profileName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	profileName = strings.Replace(profileName, "-", "_", -1)
-
-	signingProfileInput := &signer.PutSigningProfileInput{
-		ProfileName: aws.String(profileName),
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("terraform_"),
+	).Generate()
+	input := &signer.PutSigningProfileInput{
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
+		ProfileName: aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
 		signatureValidityPeriod := v.([]interface{})[0].(map[string]interface{})
-		signingProfileInput.SignatureValidityPeriod = &types.SignatureValidityPeriod{
+		input.SignatureValidityPeriod = &types.SignatureValidityPeriod{
 			Value: int32(signatureValidityPeriod["value"].(int)),
 			Type:  types.ValidityType(signatureValidityPeriod["type"].(string)),
 		}
 	}
 
 	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
-		signingProfileInput.SigningMaterial = expandSigningMaterial(v)
+		input.SigningMaterial = expandSigningMaterial(v)
 	}
 
-	_, err := conn.PutSigningProfile(ctx, signingProfileInput)
+	_, err := conn.PutSigningProfile(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Signer signing profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Signer Signing Profile (%s): %s", name, err)
 	}
 
-	d.SetId(profileName)
+	d.SetId(name)
 
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
