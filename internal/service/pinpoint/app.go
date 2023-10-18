@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -167,46 +169,35 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
+	app, err := FindAppByID(ctx, conn, d.Id())
 
-	app, err := conn.GetAppWithContext(ctx, &pinpoint.GetAppInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s): %s", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	settings, err := conn.GetApplicationSettingsWithContext(ctx, &pinpoint.GetApplicationSettingsInput{
-		ApplicationId: aws.String(d.Id()),
-	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s) settings: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(app.ApplicationResponse.Arn)
-	d.Set("name", app.ApplicationResponse.Name)
-	d.Set("application_id", app.ApplicationResponse.Id)
-	d.Set("arn", arn)
+	settings, err := findAppSettingsByID(ctx, conn, d.Id())
 
-	if err := d.Set("campaign_hook", flattenCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+	}
+
+	d.Set("application_id", app.Id)
+	d.Set("arn", app.Arn)
+	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
 	}
-	if err := d.Set("limits", flattenCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
+	if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
 	}
-	if err := d.Set("quiet_time", flattenQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
+	d.Set("name", app.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(app.Name)))
+	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
 	}
 
@@ -269,6 +260,56 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return diags
+}
+
+func FindAppByID(ctx context.Context, conn *pinpoint.Pinpoint, id string) (*pinpoint.ApplicationResponse, error) {
+	input := &pinpoint.GetAppInput{
+		ApplicationId: aws.String(id),
+	}
+
+	output, err := conn.GetAppWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationResponse, nil
+}
+
+func findAppSettingsByID(ctx context.Context, conn *pinpoint.Pinpoint, id string) (*pinpoint.ApplicationSettingsResource, error) {
+	input := &pinpoint.GetApplicationSettingsInput{
+		ApplicationId: aws.String(id),
+	}
+
+	output, err := conn.GetApplicationSettingsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationSettingsResource == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationSettingsResource, nil
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
