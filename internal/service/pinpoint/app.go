@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -108,9 +108,11 @@ func ResourceApp() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"quiet_time": {
 				Type:             schema.TypeList,
@@ -142,32 +144,21 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	var name string
-
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = id.PrefixedUniqueId(v.(string))
-	} else {
-		name = id.UniqueId()
-	}
-
-	log.Printf("[DEBUG] Pinpoint create app: %s", name)
-
-	req := &pinpoint.CreateAppInput{
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
 			Tags: getTagsIn(ctx),
 		},
 	}
 
-	output, err := conn.CreateAppWithContext(ctx, req)
+	output, err := conn.CreateAppWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Pinpoint app: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Pinpoint App (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ApplicationResponse.Id))
-	d.Set("arn", output.ApplicationResponse.Arn)
 
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
