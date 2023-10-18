@@ -90,7 +90,7 @@ func testAccQueueDataSourceConfig_basic(rName string) string {
 		testAccQueueConfig_basic(rName),
 		`
 data "aws_media_convert_queue" "test" {
-	id = aws_media_convert_queue.test.id
+  id = aws_media_convert_queue.test.id
 }
 `)
 }
@@ -100,7 +100,7 @@ func testAccQueueDataSourceConfig_status(rName, status string) string {
 		testAccQueueConfig_status(rName, status),
 		`
 data "aws_media_convert_queue" "test" {
-	id = aws_media_convert_queue.test.id
+  id = aws_media_convert_queue.test.id
 }
 `)
 }
@@ -110,7 +110,7 @@ func testAccQueueDataSourceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagVa
 		testAccQueueConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2),
 		`
 data "aws_media_convert_queue" "test" {
-	id = aws_media_convert_queue.test.id
+  id = aws_media_convert_queue.test.id
 }
 `)
 }
