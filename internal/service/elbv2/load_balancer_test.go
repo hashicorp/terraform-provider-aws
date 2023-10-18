@@ -2272,10 +2272,10 @@ resource "aws_subnet" "test" {
 func testAccLoadBalancerConfig_nlbDNSRecordClientRoutingPolicyAffinity(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name               = %[1]q
+  name                             = %[1]q
   dns_record_client_routing_policy = "availability_zone_affinity"
-  internal           = true
-  load_balancer_type = "network"
+  internal                         = true
+  load_balancer_type               = "network"
 
   subnet_mapping {
     subnet_id = aws_subnet.test[0].id
@@ -2291,10 +2291,10 @@ resource "aws_lb" "test" {
 func testAccLoadBalancerConfig_nlbDNSRecordClientRoutingPolicyAnyAvailabilityZone(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name               = %[1]q
+  name                             = %[1]q
   dns_record_client_routing_policy = "any_availability_zone"
-  internal           = true
-  load_balancer_type = "network"
+  internal                         = true
+  load_balancer_type               = "network"
 
   subnet_mapping {
     subnet_id = aws_subnet.test[0].id
@@ -2310,10 +2310,10 @@ resource "aws_lb" "test" {
 func testAccLoadBalancerConfig_nlbDNSRecordClientRoutingPolicyPartialAffinity(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name               = %[1]q
+  name                             = %[1]q
   dns_record_client_routing_policy = "partial_availability_zone_affinity"
-  internal           = true
-  load_balancer_type = "network"
+  internal                         = true
+  load_balancer_type               = "network"
 
   subnet_mapping {
     subnet_id = aws_subnet.test[0].id
