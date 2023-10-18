@@ -18,18 +18,6 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccChimeVoiceConnectorLogging_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccVoiceConnectorLogging_basic,
-		"disappears": testAccVoiceConnectorLogging_disappears,
-		"update":     testAccVoiceConnectorLogging_update,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccVoiceConnectorLogging_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
