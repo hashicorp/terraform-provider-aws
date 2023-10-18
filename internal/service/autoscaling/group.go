@@ -8,6 +8,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -1274,7 +1275,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("launch_template") {
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				tfMap := removeIdIfNameChanged(v.([]interface{})[0].(map[string]interface{}), d.HasChange("launch_template.0.name"), "name", "id", "")
+				input.LaunchTemplate = expandLaunchTemplateSpecification(tfMap)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1294,7 +1296,23 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("mixed_instances_policy") {
 			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+				tfMap := removeIdIfNameChanged(v.([]interface{})[0].(map[string]interface{}),
+					d.HasChange("mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+					"launch_template_name", "launch_template_id", "launch_template.0.launch_template_specification.0")
+
+				if d.HasChange("mixed_instances_policy.0.launch_template.0.override") {
+					if v, ok := d.GetOk("mixed_instances_policy.0.launch_template.0.override"); ok && len(v.([]interface{})) > 0 {
+						for i, v := range v.([]interface{}) {
+							overrideMap := v.(map[string]interface{})
+							if v, ok := overrideMap["launch_template_specification"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+								removeIdIfNameChanged(overrideMap,
+									d.HasChange("mixed_instances_policy.0.launch_template.0.override."+strconv.Itoa(i)+".launch_template_specification.0.launch_template_name"),
+									"launch_template_name", "launch_template_id", "launch_template_specification.0")
+							}
+						}
+					}
+				}
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(tfMap)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1493,7 +1511,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			var launchTemplate *autoscaling.LaunchTemplateSpecification
 
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				tfMap := removeIdIfNameChanged(v.([]interface{})[0].(map[string]interface{}), d.HasChange("launch_template.0.name"), "name", "id", "")
+				launchTemplate = expandLaunchTemplateSpecification(tfMap)
 			}
 
 			var mixedInstancesPolicy *autoscaling.MixedInstancesPolicy
@@ -3932,4 +3951,42 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+}
+func removeIdIfNameChanged(tfMap map[string]interface{}, changed bool, nameKey, idKey, address string) map[string]interface{} {
+	if !changed {
+		return tfMap
+	}
+	paths := strings.Split(address, ".")
+	var nestedResource interface{} = tfMap
+	if len(paths) > 0 {
+		nestedResource = extractNestedResource(paths, nestedResource)
+	}
+	resourceMap := nestedResource.(map[string]interface{})
+	// Remove ID if there are changes in name or else ID will be preferred.
+	if v, ok := resourceMap[nameKey]; ok && v != "" {
+		delete(resourceMap, idKey)
+	}
+	return tfMap
+}
+
+func extractNestedResource(paths []string, resource interface{}) interface{} {
+	for _, path := range paths {
+		if v, err := strconv.Atoi(path); err == nil {
+			// Path is index for list
+			val := reflect.ValueOf(resource)
+			if val.Len() > v {
+				resource = val.Index(v).Interface()
+			} else {
+				break
+			}
+		} else {
+			// Path is key for map
+			if v, ok := resource.(map[string]interface{})[path]; ok {
+				resource = v
+			} else {
+				break
+			}
+		}
+	}
+	return resource
 }

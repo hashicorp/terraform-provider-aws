@@ -1127,11 +1127,23 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig_launchTemplateName(rName),
+				Config: testAccGroupConfig_launchTemplateName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
+				),
+			},
+			{
+				Config: testAccGroupConfig_launchTemplateName(rName, rName+"-name-change"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName+"-name-change"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
@@ -1982,13 +1994,24 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, rName+"-name-change"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name", rName+"-name-change"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -2085,7 +2108,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -2095,6 +2118,20 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 					resource.TestCheckNoResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.launch_template_specification.#"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t4g.small"),
 					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_id", "aws_launch_template.test-arm", "id"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName, rName+"-name-change"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
+					resource.TestCheckNoResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.launch_template_specification.#"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t4g.small"),
+					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_id", "aws_launch_template.test-arm", "id"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_name", rName+"-name-change-arm"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -4801,8 +4838,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_launchTemplateName(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t2.micro"), fmt.Sprintf(`
+func testAccGroupConfig_launchTemplateName(rName, launchTemplateName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(launchTemplateName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   max_size           = 0
@@ -5718,8 +5755,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotMaxPrice))
 }
 
-func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t3.micro"), fmt.Sprintf(`
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, launchTemplateName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(launchTemplateName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
@@ -5803,7 +5840,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, instanceType))
 }
 
-func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName, overrideLaunchTemplateName string) string {
 	return acctest.ConfigCompose(
 		testAccGroupConfig_launchTemplateBase(rName, "t3.micro"),
 		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
@@ -5819,7 +5856,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %[1]q
+  name               = %[2]q
 
   mixed_instances_policy {
     launch_template {
@@ -5841,7 +5878,7 @@ resource "aws_autoscaling_group" "test" {
     }
   }
 }
-`, rName))
+`, overrideLaunchTemplateName, rName))
 }
 
 func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideWeightedCapacity(rName string) string {
