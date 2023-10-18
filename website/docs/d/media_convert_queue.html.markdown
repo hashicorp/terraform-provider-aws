@@ -26,6 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* `name` - The same as `id`.
 * `arn` - The Arn of the queue.
+* `name` - The same as `id`.
+* `status` - The status of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
