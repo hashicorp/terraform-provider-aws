@@ -1,6 +1,6 @@
 # Migrating from Terraform SDKv2 to Framework
 
-With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) it will become necessary to migrate existing resources to from SDKv2. The Provider currently implements both plugins so migration can be done at a resource level.
+With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) it will become necessary to migrate existing resources from SDKv2. The Provider currently implements both plugins so migration can be done at a resource level.
 
 ## Migration Tooling
 
@@ -28,7 +28,7 @@ Terraform Plugin Framework introduced `null` values, which differ from `zero` va
 
 ### Custom Types
 
-The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow  custom validation on basic types. The following attribute types will require a state upgrade to utilize these custom types.
+The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow custom validation on basic types. The following attribute types will require a state upgrade to utilize these custom types.
 
 - ARNs
 - CIDR Blocks
@@ -49,6 +49,8 @@ func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resour
 
 It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
 
+**Note**: `VersionConstraint` should be set to the most recently published version of the AWS Provider.
+
 ```go
 func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -65,7 +67,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.21.0",
+						VersionConstraint: "5.21.0", // always use most recently published version of the Provider
 					},
 				},
 				Config: testAccExampleResourceConfig_basic(rName),
