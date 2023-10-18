@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +26,7 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -62,7 +61,7 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -91,7 +90,7 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -132,7 +131,7 @@ func TestAccChimeVoiceConnector_tags(t *testing.T) {
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// Legacy chime resources are always created in us-east-1, and the ListTags operation
@@ -258,8 +257,8 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 			if rs.Type != "aws_chime_voice_connector" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
-			input := &chime.GetVoiceConnectorInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+			input := &chimesdkvoice.GetVoiceConnectorInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}
 			resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
@@ -275,9 +274,9 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.ListVoiceConnectorsInput{}
+	input := &chimesdkvoice.ListVoiceConnectorsInput{}
 
 	_, err := conn.ListVoiceConnectorsWithContext(ctx, input)
 
