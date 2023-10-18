@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -33,12 +32,7 @@ func DataSourceQueue() *schema.Resource {
 			},
 			"status": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  mediaconvert.QueueStatusActive,
-				ValidateFunc: validation.StringInSlice([]string{
-					mediaconvert.QueueStatusActive,
-					mediaconvert.QueueStatusPaused,
-				}, false),
+				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
