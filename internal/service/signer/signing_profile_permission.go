@@ -44,8 +44,9 @@ func ResourceSigningProfilePermission() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"signer:StartSigningJob",
 					"signer:GetSigningProfile",
-					"signer:RevokeSignature"},
-					false),
+					"signer:RevokeSignature",
+					"signer:SignPayload",
+				}, false),
 			},
 			"principal": {
 				Type:     schema.TypeString,
