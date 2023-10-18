@@ -35,6 +35,11 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3express", regexache.MustCompile(fmt.Sprintf(`bucket/%s--.*-x-s3`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleAvailabilityZone"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "location.0.name"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.type", "AvailabilityZone"),
+					resource.TestCheckResourceAttr(resourceName, "type", "Directory"),
 				),
 			},
 			{
@@ -113,7 +118,8 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 // func testAccDirectoryBucketConfig_base(rName string) string {
 // 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 // locals {
-//   bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}--x-s3"
+//   location_name = data.aws_availability_zones.available.zone_ids[0]
+//   bucket        = "%[1]s--${local.location_name}--x-s3"
 // }
 // `, rName))
 // }
@@ -121,7 +127,8 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 func testAccDirectoryBucketConfig_base(rName string) string {
 	return fmt.Sprintf(`
 locals {
-  bucket = "%[1]s--usw2-az2--x-s3"
+  location_name = "usw2-az2"
+  bucket        = "%[1]s--${local.location_name}--x-s3"
 }
 `, rName)
 }
@@ -130,6 +137,10 @@ func testAccDirectoryBucketConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 `)
 }
