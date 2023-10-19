@@ -2,11 +2,13 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_media_convert_queue` ([#27075](https://github.com/hashicorp/terraform-provider-aws/issues/27075))
 * **New Resource:** `aws_elasticsearch_vpc_endpoint` ([#33925](https://github.com/hashicorp/terraform-provider-aws/issues/33925))
 * **New Resource:** `aws_msk_replicator` ([#33973](https://github.com/hashicorp/terraform-provider-aws/issues/33973))
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute ([#34007](https://github.com/hashicorp/terraform-provider-aws/issues/34007))
 * resource/aws_alb: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_alb_target_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_cloudfront_public_key: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
@@ -15,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster_instance: Support import of `identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_docdb_cluster_parameter_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_docdb_subnet_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute ([#34007](https://github.com/hashicorp/terraform-provider-aws/issues/34007))
 * resource/aws_elb: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_emr_security_configuration: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_iam_group_policy: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
@@ -38,6 +41,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_dms_certificate: Fix crash when certificate not found ([#34012](https://github.com/hashicorp/terraform-provider-aws/issues/34012))
 * resource/aws_cloudformation_stack: Fix error when `computed` values are not set when there is no update ([#33969](https://github.com/hashicorp/terraform-provider-aws/issues/33969))
 * resource/aws_codecommit_repository: Doesn't force replacement when renaming ([#32207](https://github.com/hashicorp/terraform-provider-aws/issues/32207))
 * resource/aws_db_instance: Creating resource from snapshot or point-in-time recovery now handles `manage_master_user_password` and `master_user_secret_kms_key_id` attributes correctly ([#33699](https://github.com/hashicorp/terraform-provider-aws/issues/33699))
