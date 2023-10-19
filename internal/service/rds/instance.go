@@ -1819,7 +1819,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"skip_final_snapshot",
 		"tags", "tags_all",
 	) {
-		if d.Get("blue_green_update.0.enabled").(bool) {
+		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
+			"allow_major_version_upgrade",
+			"blue_green_update",
+			"delete_automated_backups",
+			"final_snapshot_identifier",
+			"replicate_source_db",
+			"skip_final_snapshot",
+			"tags", "tags_all",
+			"deletion_protection",
+			"password",
+		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
 			handler := newInstanceHandler(conn)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
