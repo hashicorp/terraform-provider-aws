@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.27
+	github.com/aws/aws-sdk-go v1.45.28
 	github.com/aws/aws-sdk-go-v2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/config v1.19.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.125.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.3
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/fis v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.7
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.7
@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.16.2
