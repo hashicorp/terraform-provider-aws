@@ -219,6 +219,10 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)
 	}

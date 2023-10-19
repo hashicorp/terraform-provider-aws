@@ -138,7 +138,7 @@ func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -309,6 +309,10 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_inventory" "test" {
