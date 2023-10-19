@@ -495,7 +495,7 @@ func TestAccS3BucketVersioning_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketVersioningConfig_directoryBucket(rName, string(types.BucketVersioningStatusEnabled)),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -618,6 +618,10 @@ func testAccBucketVersioningConfig_directoryBucket(rName, status string) string 
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_versioning" "test" {
