@@ -6,17 +6,17 @@ description: |-
   Provides a RDS MySQL Aurora blue/green deployment resource.
 ---
 
-# Resource: aws_rds_cluster_blue_green_deployment 
+# Resource: aws_rds_cluster_blue_green_deployment
 
-Provides a RDS MySQL Aurora blue/green deployment resource. Documentation of the available options for various configuration settings from AWS RDS Aurora 
+Provides a RDS MySQL Aurora blue/green deployment resource. Documentation of the available options for various configuration settings from AWS RDS Aurora
 Actions can be found at:
 
 * [RDS Aurora Blue/Green Deployment](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/blue-green-deployments-creating.html)
 
 This is similar to the blue/green database instance code and is based off of it, however, is for clusters and allows for proper testing due to
-being an external resource. There are several combinations of parameters that can be used for control flow that are supported in this resource 
-as well, for example, to pause deletion of old resources until proper testing has been implemented from a user perspective. Note binlog_format 
-must be enabled as demonstrated below, ROW is a good default however there are other supported options as well.   
+being an external resource. There are several combinations of parameters that can be used for control flow that are supported in this resource
+as well, for example, to pause deletion of old resources until proper testing has been implemented from a user perspective. Note binlog_format
+must be enabled as demonstrated below, ROW is a good default however there are other supported options as well.
 
 ## Example Usage
 
@@ -25,7 +25,6 @@ must be enabled as demonstrated below, ROW is a good default however there are o
 ```
 
 ~> **Note:** Any modifications to the `` are set to happen immediately as we default to applying immediately.
-
 
 ## Argument Reference
 
