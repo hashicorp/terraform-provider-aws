@@ -157,16 +157,16 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DeleteCertificateInput{
+	log.Printf("[DEBUG] Deleting DMS Certificate: %s", d.Id())
+	_, err := conn.DeleteCertificateWithContext(ctx, &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return diags
 	}
 
-	_, err := conn.DeleteCertificateWithContext(ctx, request)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Certificate (%s): %s", d.Id(), err)
 	}
 
