@@ -940,6 +940,10 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_policy" "test" {
