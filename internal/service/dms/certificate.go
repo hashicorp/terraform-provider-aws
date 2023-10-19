@@ -13,11 +13,13 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -188,4 +190,58 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
 		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
 	}
+}
+
+func FindCertificateByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Certificate, error) {
+	input := &dms.DescribeCertificatesInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("certificate-id"),
+				Values: []*string{aws.String(id)},
+			},
+		},
+	}
+
+	return findCertificate(ctx, conn, input)
+}
+
+func findCertificate(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeCertificatesInput) (*dms.Certificate, error) {
+	output, err := findCertificates(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findCertificates(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeCertificatesInput) ([]*dms.Certificate, error) {
+	var output []*dms.Certificate
+
+	err := conn.DescribeCertificatesPagesWithContext(ctx, input, func(page *dms.DescribeCertificatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Certificates {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
