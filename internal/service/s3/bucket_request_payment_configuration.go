@@ -74,6 +74,10 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		return conn.PutBucketRequestPayment(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "RequestPaymentConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Request Payment Configuration: %s", bucket, err)
 	}

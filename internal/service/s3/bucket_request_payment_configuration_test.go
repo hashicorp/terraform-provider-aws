@@ -189,7 +189,7 @@ func TestAccS3BucketRequestPaymentConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketRequestPaymentConfigurationConfig_directoryBucket(rName, string(types.PayerBucketOwner)),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -263,6 +263,10 @@ func testAccBucketRequestPaymentConfigurationConfig_directoryBucket(rName, payer
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_request_payment_configuration" "test" {
