@@ -54,16 +54,18 @@ func ResourceCertificate() *schema.Resource {
 				),
 			},
 			"certificate_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
 			},
 			"certificate_wallet": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -78,38 +80,31 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	certificateID := d.Get("certificate_id").(string)
-	request := &dms.ImportCertificateInput{
+	input := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
 		Tags:                  getTagsIn(ctx),
 	}
 
-	pem, pemSet := d.GetOk("certificate_pem")
-	wallet, walletSet := d.GetOk("certificate_wallet")
-
-	if !pemSet && !walletSet {
-		return sdkdiag.AppendErrorf(diags, "Must set either certificate_pem or certificate_wallet for DMS Certificate (%s)", certificateID)
-	}
-	if pemSet && walletSet {
-		return sdkdiag.AppendErrorf(diags, "Cannot set both certificate_pem and certificate_wallet for DMS Certificate (%s)", certificateID)
+	if v, ok := d.GetOk("certificate_pem"); ok {
+		input.CertificatePem = aws.String(v.(string))
 	}
 
-	if pemSet {
-		request.CertificatePem = aws.String(pem.(string))
-	}
-	if walletSet {
-		certWallet, err := base64.StdEncoding.DecodeString(wallet.(string))
+	if v, ok := d.GetOk("certificate_wallet"); ok {
+		certWallet, err := base64.StdEncoding.DecodeString(v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Base64 decoding certificate_wallet for DMS Certificate (%s): %s", certificateID, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		request.CertificateWallet = certWallet
+		input.CertificateWallet = certWallet
 	}
 
-	_, err := conn.ImportCertificateWithContext(ctx, request)
+	_, err := conn.ImportCertificateWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS certificate (%s): %s", certificateID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Certificate (%s): %s", certificateID, err)
 	}
 
 	d.SetId(certificateID)
+
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
