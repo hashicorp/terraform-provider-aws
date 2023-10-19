@@ -403,6 +403,10 @@ func testAccBucketPublicAccessBlockConfig_directoryBucket(bucketName, blockPubli
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket" {
