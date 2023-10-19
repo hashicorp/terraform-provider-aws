@@ -5,14 +5,7 @@ page_title: "AWS: aws_lexv2models_bot_locale"
 description: |-
   Terraform resource for managing an AWS Lex V2 Models Bot Locale.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_lexv2models_bot_locale
 
 Terraform resource for managing an AWS Lex V2 Models Bot Locale.
@@ -23,6 +16,10 @@ Terraform resource for managing an AWS Lex V2 Models Bot Locale.
 
 ```terraform
 resource "aws_lexv2models_bot_locale" "example" {
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.70
 }
 ```
 
@@ -30,26 +27,23 @@ resource "aws_lexv2models_bot_locale" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `bot_id` - Identifier of the bot to create the locale for.
+* `bot_version` - Version of the bot to create the locale for. This can only be the draft version of the bot.
+* `locale_id` - Identifier of the language and locale that the bot will be used in. The string must match one of the supported locales. All of the intents, slot types, and slots used in the bot must have the same locale. For more information, see Supported languages (https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html)
+* `n_lu_intent_confidence_threshold` - Determines the threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Bot Locale. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
+* `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
