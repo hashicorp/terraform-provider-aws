@@ -107,6 +107,10 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) CORS Configuration: %s", bucket, err)
 	}

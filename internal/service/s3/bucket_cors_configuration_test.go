@@ -324,7 +324,7 @@ func TestAccS3BucketCORSConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketCORSConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -483,6 +483,10 @@ func testAccBucketCORSConfigurationConfig_directoryBucket(rName string) string {
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
