@@ -418,7 +418,21 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
 			},
-			testAccClusterImportStep(resourceName),
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"engine_version",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -720,17 +734,17 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.m5d.2xlarge"),
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.m5d.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.m5d.2xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.m5d.large"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.r6gd.4xlarge"),
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.r6gd.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.4xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.large"),
 				),
 			},
 		},
@@ -2866,11 +2880,14 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_storageTypeIo1(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
   db_cluster_instance_class = "db.r6gd.xlarge"
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -2879,15 +2896,18 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_allocatedStorage(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
   db_cluster_instance_class = "db.r6gd.xlarge"
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -2896,15 +2916,18 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_iops(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
   db_cluster_instance_class = "db.r6gd.xlarge"
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -2913,15 +2936,18 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_dbClusterInstanceClass(rName, instanceClass string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
   db_cluster_instance_class = %[2]q
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -2930,7 +2956,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName, instanceClass)
+`, rName, instanceClass))
 }
 
 func testAccClusterConfig_backtrackWindow(backtrackWindow int) string {
@@ -2948,12 +2974,9 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_subnetGroupName(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   engine               = "aurora-mysql"
@@ -2990,12 +3013,9 @@ resource "aws_rds_cluster" "default" {
 }
 
 func testAccClusterConfig_baseForPITR(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   master_username      = "tfacctest"
@@ -3067,7 +3087,9 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   enabled_cloudwatch_logs_exports = [%[2]q]
@@ -3078,15 +3100,18 @@ resource "aws_rds_cluster" "test" {
   storage_type                    = "io1"
   iops                            = 1000
   db_cluster_instance_class       = "db.m5d.large"
+  db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = "postgres"
   engine_mode                     = "provisioned"
   engine_version                  = "13.12"
 }
-`, rName, enabledCloudwatchLogExports1)
+`, rName, enabledCloudwatchLogExports1))
 }
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
@@ -3097,11 +3122,12 @@ resource "aws_rds_cluster" "test" {
   storage_type                    = "io1"
   iops                            = 1000
   db_cluster_instance_class       = "db.m5d.large"
+  db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = "postgres"
   engine_mode                     = "provisioned"
   engine_version                  = "13.12"
 }
-`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
+`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
 
 func testAccClusterConfig_kmsKey(n int) string {
@@ -3561,6 +3587,12 @@ data "aws_rds_engine_version" "default" {
   engine = "aurora-mysql"
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   name        = %[1]q
   family      = data.aws_rds_engine_version.default.parameter_group_family
@@ -3587,7 +3619,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_rds_cluster_instance" "test" {
   identifier         = "%[1]s-primary"
   cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = "db.t2.small"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
 }
@@ -4657,4 +4689,16 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, password)
+}
+
+func testAccConfig_ClusterSubnetGroup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName),
+	)
 }
