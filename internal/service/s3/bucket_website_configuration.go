@@ -221,6 +221,10 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		return conn.PutBucketWebsite(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "WebsiteConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Website Configuration: %s", bucket, err)
 	}
