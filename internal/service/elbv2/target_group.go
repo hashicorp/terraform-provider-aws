@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -187,6 +187,7 @@ func ResourceTargetGroup() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validTargetGroupNamePrefix,
@@ -341,27 +342,23 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = id.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = id.PrefixedUniqueId("tf-")
-	}
-
-	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+	exist, err := FindTargetGroupByName(ctx, conn, name)
 
 	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
 	}
 
-	if existingTg != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", groupName)
+	if exist != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
 	}
 
 	input := &elbv2.CreateTargetGroupInput{
-		Name:       aws.String(groupName),
+		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
@@ -452,7 +449,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s): %s", name, err)
 	}
 
 	if len(output.TargetGroups) == 0 {
@@ -1026,9 +1023,10 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("target_type", targetGroup.TargetType)
 	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set("name", targetGroup.TargetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
+	d.Set("target_type", targetGroup.TargetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)

@@ -5,13 +5,14 @@ package servicequotas
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -134,7 +135,7 @@ func ResourceServiceQuota() *schema.Resource {
 
 func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -148,14 +149,14 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
-	quotaValue := aws.Float64Value(defaultQuota.Value)
+	quotaValue := aws.ToFloat64(defaultQuota.Value)
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
 	if serviceQuota != nil {
-		quotaValue = aws.Float64Value(serviceQuota.Value)
+		quotaValue = aws.ToFloat64(serviceQuota.Value)
 	}
 
 	if value > quotaValue {
@@ -165,7 +166,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 			ServiceCode:  aws.String(serviceCode),
 		}
 
-		output, err := conn.RequestServiceQuotaIncreaseWithContext(ctx, input)
+		output, err := conn.RequestServiceQuotaIncrease(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting Service Quota (%s) increase: %s", d.Id(), err)
@@ -183,7 +184,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
@@ -228,9 +229,10 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 			RequestId: aws.String(requestID),
 		}
 
-		output, err := conn.GetRequestedServiceQuotaChangeWithContext(ctx, input)
+		output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
+		var nsr *types.NoSuchResourceException
+		if errors.As(err, &nsr) {
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 			return diags
@@ -244,13 +246,12 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "getting Service Quotas Requested Service Quota Change (%s): empty result", requestID)
 		}
 
-		requestStatus := aws.StringValue(output.RequestedQuota.Status)
-		d.Set("request_status", requestStatus)
+		d.Set("request_status", output.RequestedQuota.Status)
 
-		switch requestStatus {
-		case servicequotas.RequestStatusApproved, servicequotas.RequestStatusCaseClosed, servicequotas.RequestStatusDenied:
+		switch output.RequestedQuota.Status {
+		case types.RequestStatusApproved, types.RequestStatusCaseClosed, types.RequestStatusDenied:
 			d.Set("request_id", "")
-		case servicequotas.RequestStatusCaseOpened, servicequotas.RequestStatusPending:
+		case types.RequestStatusCaseOpened, types.RequestStatusPending:
 			d.Set("value", output.RequestedQuota.DesiredValue)
 		}
 	}
@@ -260,7 +261,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
@@ -275,7 +276,7 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 		ServiceCode:  aws.String(serviceCode),
 	}
 
-	output, err := conn.RequestServiceQuotaIncreaseWithContext(ctx, input)
+	output, err := conn.RequestServiceQuotaIncrease(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting Service Quota (%s) increase: %s", d.Id(), err)

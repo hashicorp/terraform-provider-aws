@@ -405,6 +405,10 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"ignore_headers_row": {
 							Type:     schema.TypeInt,
 							Computed: true,

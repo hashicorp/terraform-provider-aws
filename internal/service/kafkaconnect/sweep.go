@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package kafkaconnect
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_mskconnect_connector", &resource.Sweeper{
 		Name: "aws_mskconnect_connector",
 		F:    sweepConnectors,
@@ -57,7 +55,7 @@ func sweepConnectors(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Connect Connector sweep for %s: %s", region, err)
 		return nil
 	}
@@ -101,7 +99,7 @@ func sweepCustomPlugins(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Connect Custom Plugin sweep for %s: %s", region, err)
 		return nil
 	}

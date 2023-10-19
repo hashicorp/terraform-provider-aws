@@ -228,6 +228,7 @@ Optional arguments:
 
 * `billingMode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `provisioned` and `payPerRequest`. Defaults to `provisioned`.
 * `deletionProtectionEnabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
+* `importTable` - (Optional) Import Amazon S3 data into a new table. See below.
 * `globalSecondaryIndex` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `localSecondaryIndex` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `pointInTimeRecovery` - (Optional) Enable point-in-time recovery options. See below.
@@ -252,7 +253,27 @@ Optional arguments:
 * `name` - (Required) Name of the attribute
 * `type` - (Required) Attribute type. Valid values are `s` (string), `n` (number), `b` (binary).
 
-#### `globalSecondaryIndex`
+### `importTable`
+
+* `inputFormat` - (Required) The format of the source data. Valid values are `csv`, `dynamodbJson` and `ion`.
+* `s3BucketSource` - (Required) Values for the S3 bucket the source file is imported from. See below.
+* `clientToken` - (Optional) Makes the import idempotent, meaning that multiple identical calls have the same effect as one single call (8 hours validity).
+* `inputCompressionType` - (Optional) Type of compression to be used on the input coming from the imported table. Valid values are `gzip`, `zstd` and `none`.
+* `inputFormatOptions` - (Optional) Describe the format options for the data that was imported into the target table. There is one value, `csv`. See below.
+
+#### `inputFormatOptions`
+
+* `csv` - (Optional) This block contains the processing options for the CSV file being imported:
+    * `delimiter` - (Optional) The delimiter used for separating items in the CSV file being imported.
+    * `headerList` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
+
+#### `s3BucketSource`
+
+* `bucket` - (Required) The S3 bucket that is being imported from.
+* `bucketOwner`- (Optional) The account number of the S3 bucket that is being imported from.
+* `keyPrefix` - (Optional) The key prefix shared by all S3 Objects that are being imported.
+
+### `globalSecondaryIndex`
 
 * `hashKey` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
 * `name` - (Required) Name of the index.
@@ -335,4 +356,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e3925cbe8e971022eb782ebe4015491c74d9d9263b8511d0e7f093fb1e1c7b8f -->
+<!-- cache-key: cdktf-0.18.0 input-331d28a11466721603dd7ef5ef376375b2685f617fa41cb89eac4c639b0b23d1 -->

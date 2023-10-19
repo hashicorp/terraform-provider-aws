@@ -95,6 +95,7 @@ class MyConvertedCode extends TerraformStack {
             ],
           },
         ],
+        outdatedInstancesStrategy: "UPDATE",
         serviceRoleArn: Token.asString(awsIamRoleExample.arn),
         triggerConfiguration: [
           {
@@ -260,6 +261,7 @@ This resource supports the following arguments:
 * `loadBalancerInfo` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `update` and `ignore`. Defaults to `update`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
@@ -279,7 +281,7 @@ _Only one `alarmConfiguration` is allowed_.
 You can configure a deployment group to automatically rollback when a deployment fails or when a monitoring threshold you specify is met. In this case, the last known good version of an application revision is deployed. `autoRollbackConfiguration` supports the following:
 
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
-* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `deploymentFailure` and `deploymentStopOnAlarm`.
+* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `deploymentFailure`, `deploymentStopOnAlarm` and `deploymentStopOnRequest`.
 
 _Only one `autoRollbackConfiguration` is allowed_.
 
@@ -439,4 +441,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.18.0 input-70b1ac8f959a8f0e332bcee83c9a8eb1cf2d53be3138362839841a095ccaa257 -->
+<!-- cache-key: cdktf-0.18.0 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->
