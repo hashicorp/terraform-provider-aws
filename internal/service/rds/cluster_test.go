@@ -1386,7 +1386,7 @@ func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Config: testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
@@ -1394,7 +1394,7 @@ func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName, false),
+				Config: testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "create_deployment"),
 					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "switchover_enabled"),
@@ -3302,7 +3302,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, upgrade)
 }
 
-func testAccClusterConfig_engineVersionTwoInstancesBlueGreen(rName string, upgrade bool) string {
+func testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-mysql"
