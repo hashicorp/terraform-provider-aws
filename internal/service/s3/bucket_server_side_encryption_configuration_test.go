@@ -424,7 +424,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_directoryBucket(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketServerSideEncryptionConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -603,6 +603,10 @@ func testAccBucketServerSideEncryptionConfigurationConfig_directoryBucket(rName 
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
