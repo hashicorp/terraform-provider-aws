@@ -246,12 +246,12 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
-	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {
 		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
 	}
+	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
