@@ -208,7 +208,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_directoryBucket(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketIntelligentTieringConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -428,6 +428,10 @@ func testAccBucketIntelligentTieringConfigurationConfig_directoryBucket(rName st
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {

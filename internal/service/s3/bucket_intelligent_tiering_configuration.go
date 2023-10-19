@@ -123,6 +123,10 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		return conn.PutBucketIntelligentTieringConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "IntelligentTieringConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Intelligent-Tiering Configuration (%s): %s", bucket, name, err)
 	}
