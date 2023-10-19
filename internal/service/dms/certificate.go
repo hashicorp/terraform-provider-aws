@@ -112,16 +112,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	response, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("certificate-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
-	})
+	certificate, err := FindCertificateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,16 +124,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", d.Id(), err)
 	}
 
-	if response == nil || len(response.Certificates) == 0 || response.Certificates[0] == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): not found", d.Id())
-		}
-		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	resourceCertificateSetState(d, response.Certificates[0])
+	resourceCertificateSetState(d, certificate)
 
 	return diags
 }
