@@ -3,6 +3,10 @@
 
 package s3
 
+import (
+	"errors"
+)
+
 // Error code constants missing from AWS Go SDK:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#pkg-constants
 
@@ -42,4 +46,8 @@ const (
 
 const (
 	ErrMessageBucketAlreadyExists = "bucket already exists"
+)
+
+var (
+	errDirectoryBucket = errors.New(`directory buckets are not supported`)
 )

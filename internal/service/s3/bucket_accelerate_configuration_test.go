@@ -181,7 +181,7 @@ func TestAccS3BucketAccelerateConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAccelerateConfigurationConfig_directoryBucket(bucketName, string(types.BucketAccelerateStatusEnabled)),
-				ExpectError: regexache.MustCompile(`directory buckets not supported`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})

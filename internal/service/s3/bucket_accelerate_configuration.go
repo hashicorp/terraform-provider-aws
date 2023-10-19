@@ -5,7 +5,6 @@ package s3
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -76,7 +75,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errors.New(`directory buckets not supported`)
+		err = errDirectoryBucket
 	}
 
 	if err != nil {

@@ -475,7 +475,7 @@ func TestAccS3BucketAnalyticsConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_directoryBucket(rName, rName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -740,6 +740,10 @@ func testAccBucketAnalyticsConfigurationConfig_directoryBucket(bucket, name stri
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucket), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_bucket_analytics_configuration" "test" {
