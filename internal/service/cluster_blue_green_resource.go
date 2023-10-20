@@ -81,14 +81,6 @@ func ResourceBlueGreenDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"cluster_identifier_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifierPrefix,
-				ConflictsWith: []string{"cluster_identifier"},
-			},
 
 			"cluster_members": {
 				Type:     schema.TypeSet,
@@ -228,7 +220,7 @@ func resourceClusterBlueGreenCreate(ctx context.Context, d *schema.ResourceData,
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 	dbc, _ := FindDBClusterByID(ctx, conn, d.Get("cluster_identifier").(string)) //d.Id())
 
-	log.Printf("[DEBUG] DBClusterARN CREATE: %s", aws.StringValue(dbc.DBClusterArn))
+	fmt.Printf("[DEBUG] DBClusterARN UPDATE: %s", aws.StringValue(dbc.DBClusterArn))
 	d.Set("arn", dbc.DBClusterArn)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	var clusterMembers []string
@@ -237,9 +229,10 @@ func resourceClusterBlueGreenCreate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+
 	setTagsOut(ctx, dbc.TagList)
 	var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
-	// orchestrator := newBlueGreenOrchestratorCluster(connv2)
+
 	defer func() {
 		if len(cleaupWaiters) == 0 {
 			return
@@ -254,198 +247,7 @@ func resourceClusterBlueGreenCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}()
 
-	defer func() {
-		// handler := newClusterHandler(connv2)
-		// err := handler.precondition(ctx, d)
-
-		createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-			Filters: []types.Filter{
-				{
-					Name:   aws.String("blue-green-deployment-name"),
-					Values: []string{d.Get("cluster_identifier").(string)},
-				},
-			},
-		}
-
-		bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
-		bluegreen := []string{}
-
-		for _, value := range bluegreenDescribe.BlueGreenDeployments {
-			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
-		}
-
-		orchestrator := newBlueGreenOrchestratorCluster(connv2)
-
-		if d.Get("switchover_enabled").(bool) {
-			log.Printf("[DEBUG] Switchover in progress")
-
-			log.Printf("[DEBUG] Updating Blue/Green deployment (%s): Switching over Blue/Green Deployment", bluegreen[0])
-			_, err := orchestrator.switchover(ctx, bluegreen[0], deadline.Remaining())
-
-			if err != nil {
-				log.Fatal("[ERROR]: Switchover failure")
-			}
-
-			_, err = orchestrator.waitForDeploymentAvailable(ctx, bluegreen[0], deadline.Remaining())
-			if err != nil {
-				log.Fatal("[ERROR]: Switchover wait failure")
-			}
-
-		}
-
-		if d.Get("cleanup_resources").(bool) {
-			/*
-				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-					BlueGreenDeploymentIdentifier: aws.String(d.Id()),
-				}
-			*/
-			if len(bluegreen) > 0 && aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) == "SWITCHOVER_COMPLETED" {
-				log.Printf("[DEBUG] Cleaning up resources: %s", d.Id())
-				// clusterARN, err := parseDBClusterARN(d.Get("cluster_identifier").(string))
-
-				// if err != nil {
-				//	log.Printf("[DEBUG] Cleaning up RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
-				// }
-
-				d.SetId(aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Source))
-
-				dbClusterInput := &rds_sdkv2.DescribeDBClustersInput{
-					DBClusterIdentifier: aws.String(d.Id()),
-				}
-
-				clusters, err := connv2.DescribeDBClusters(ctx, dbClusterInput)
-
-				if err != nil {
-					log.Printf("[ERROR] Updating RDS DB Instance (%s): describing Blue/Green Deployment source: disabling deletion protection: %s", d.Get("cluster_identifier").(string), err)
-				}
-
-				targetCluster := d.Id()
-
-				for _, cluster := range clusters.DBClusters {
-					if d.Get("deletion_protection").(bool) {
-						input := &rds_sdkv2.ModifyDBClusterInput{
-							ApplyImmediately:    true,
-							DBClusterIdentifier: aws.String(targetCluster),
-							DeletionProtection:  aws.Bool(false),
-						}
-
-						err := dbClusterModify(ctx, connv2, d.Id(), input, deadline.Remaining())
-						if err != nil {
-							log.Printf("[ERROR] Updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get("cluster_identifier").(string), err)
-						}
-					}
-
-					deleteInput := &rds_sdkv2.DeleteDBClusterInput{
-						DBClusterIdentifier: aws.String(d.Id()),
-					}
-
-					_, _ = tfresource.RetryWhen(ctx, 5*time.Minute,
-						func() (any, error) {
-							return connv2.DeleteDBCluster(ctx, deleteInput)
-						},
-						func(err error) (bool, error) {
-							// Retry for IAM eventual consistency.
-							if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-								return true, err
-							}
-
-							if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-								return true, err
-							}
-
-							cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-								_, err = waitBlueGreenClusterDeploymentDeleted(ctx, connv2, d.Id(), deadline.Remaining(), optFns...)
-								if err != nil {
-									diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
-								}
-							})
-
-							if aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) == "SWITCHOVER_COMPLETED" {
-
-								// instanceARN, err := parseDBInstanceARN(instance)
-								for _, instance := range cluster.DBClusterMembers {
-
-									deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
-										DBInstanceIdentifier: instance.DBInstanceIdentifier,
-										SkipFinalSnapshot:    true,
-									}
-
-									_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
-										func() (any, error) {
-											return connv2.DeleteDBInstance(ctx, deleteInput)
-										},
-
-										func(err error) (bool, error) {
-											// Retry for IAM eventual consistency.
-											if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-												return true, err
-											}
-
-											if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-												return true, err
-											}
-
-											return false, err
-										},
-									)
-									if err != nil {
-										return false, err
-									}
-
-									cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-										_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), aws.StringValue(instance.DBInstanceIdentifier), deadline.Remaining(), optFns...)
-										if err != nil {
-											diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", instance, err)
-										}
-									})
-								}
-								bginput := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-									BlueGreenDeploymentIdentifier: aws.String(bluegreen[0]),
-									DeleteTarget:                  aws.Bool(false),
-								}
-
-								if err != nil {
-									log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", aws.StringValue(&bluegreen[0]), err)
-								}
-
-								_, err := connv2.DeleteBlueGreenDeployment(ctx, bginput)
-
-								if err != nil {
-									log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", aws.StringValue(&bluegreen[0]), err)
-								}
-
-							}
-							return true, err
-						},
-					)
-				}
-			}
-		}
-
-		createOut = &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-			Filters: []types.Filter{
-				{
-					Name:   aws.String("blue-green-deployment-name"),
-					Values: []string{d.Get("cluster_identifier").(string)},
-				},
-			},
-		}
-
-		// handler := newClusterHandler(connv2)
-		// err := handler.precondition(ctx, d)
-
-		bluegreenDescribe, _ = connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
-		bluegreen = []string{}
-
-		for _, value := range bluegreenDescribe.BlueGreenDeployments {
-			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
-		}
-
-	}()
-
-	if d.Get("create_deployment").(bool) && !d.Get("switchover_enabled").(bool) {
+	if d.Get("create_deployment").(bool) {
 		log.Printf("[DEBUG] Describing blue/green deplyments...")
 		log.Printf("[DEBUG] Implementing handler...")
 		handler := newClusterHandler(connv2)
@@ -453,7 +255,45 @@ func resourceClusterBlueGreenCreate(ctx context.Context, d *schema.ResourceData,
 		createIn := handler.createBlueGreenInput(d)
 
 		orchestrator := newBlueGreenOrchestratorCluster(connv2)
+
 		_, err := orchestrator.createDeploymentCluster(ctx, createIn)
+		if err != nil {
+			log.Printf("[DEBUG] Something went wrong on handler precondition: %s", err)
+		}
+
+		createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+			Filters: []types.Filter{
+				{
+					Name:   aws.String("blue-green-deployment-name"),
+					Values: []string{d.Get("cluster_identifier").(string)},
+				},
+			},
+		}
+		// handler := newClusterHandler(connv2)
+		// err := handler.precondition(ctx, d)
+
+		bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
+
+		bluegreen := []string{}
+
+		for _, value := range bluegreenDescribe.BlueGreenDeployments {
+			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
+		}
+
+		_, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+		d.SetId(aws.StringValue(&bluegreen[0]))
+	}
+
+	if !d.Get("create_deployment").(bool) {
+		log.Printf("Deployment disabled, checking for switchover...")
+	}
+
+	if !d.Get("switchover_enabled").(bool) {
+		log.Printf("Switchover disabled. Make sure to delete dangling resources manually when done.")
+	}
+
+	defer func() {
+		log.Printf("[DEBUG] Verifying cleanup mode...")
 		createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
 			Filters: []types.Filter{
 				{
@@ -464,31 +304,168 @@ func resourceClusterBlueGreenCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
 		bluegreen := []string{}
+		// handler := newClusterHandler(connv2)
+		// err := handler.precondition(ctx, d)
 
 		for _, value := range bluegreenDescribe.BlueGreenDeployments {
 			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
 		}
 
-		if err != nil {
-			log.Printf("[DEBUG] Something went wrong on blue/green cluster creation: %s", err)
+		if d.Get("switchover_enabled").(bool) {
+			createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+				Filters: []types.Filter{
+					{
+						Name:   aws.String("blue-green-deployment-name"),
+						Values: []string{d.Get("cluster_identifier").(string)},
+					},
+				},
+			}
+			// handler := newClusterHandler(connv2)
+			// err := handler.precondition(ctx, d)
+
+			bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
+
+			bluegreen := []string{}
+
+			for _, value := range bluegreenDescribe.BlueGreenDeployments {
+				bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
+			}
+
+			orchestrator := newBlueGreenOrchestratorCluster(connv2)
+			log.Printf("[DEBUG] Updating Blue/Green deployment (%s): Switching over Blue/Green Deployment", bluegreen[0])
+
+			input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+				BlueGreenDeploymentIdentifier: aws.String(d.Id()),
+			}
+
+			if d.Get("switchover_enabled").(bool) {
+
+				_, err := orchestrator.switchover(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+				if aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) != "SWITCHOVER_COMPLETED" {
+
+					input.DeleteTarget = aws.Bool(d.Get("cleanup_resources").(bool))
+				}
+				_, err = waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+				if err != nil {
+					log.Printf("[DEBUG] Error switching over: %s", err)
+				}
+			}
+
+			if !d.Get("switchover_enabled").(bool) {
+				log.Printf("[DEBUG] Switchover disabled so we are finished. Make sure to manually delete previous resources when done.")
+			}
 		}
 
-		_, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
-		if err != nil {
-			log.Printf("[DEBUG] Something went wrong on handler precondition: %s", err)
-		}
-	}
+		// dep, err := waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
 
-	return append(diags, resourceClusterBlueGreenRead(ctx, d, meta)...)
+		identifier := d.Get("cluster_identifier").(string)
+
+		_, err := waitDBClusterAvailableSDKv2(ctx, connv2, identifier, deadline.Remaining())
+
+		if err != nil {
+			log.Printf("[ERROR] Updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
+		}
+
+		if err != nil {
+			fmt.Printf("[ERROR] updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
+		}
+
+		log.Printf("[DEBUG] Updating RDS DB Deployment (%s): Deleting Blue/Green Deployment", d.Id())
+
+		if len(d.Id()) < 1 {
+			log.Printf("[DEBUG] Updating RDS DB Cluster (%s): Deleting Blue/Green Deployment: deployment disappeared: %s", d.Get("cluster_identifier").(string), d.Id())
+		}
+
+		// Ensure that the Blue/Green Deployment is always cleaned up
+
+		input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+			BlueGreenDeploymentIdentifier: aws.String(d.Id()),
+		}
+
+		_, err = connv2.DeleteBlueGreenDeployment(ctx, input)
+
+		if err != nil {
+			diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: %s", d.Id(), err)
+			return
+		}
+
+		if err != nil {
+			diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: %s", d.Id(), err)
+			return
+		}
+
+		cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+			_, err = waitBlueGreenClusterDeploymentDeleted(ctx, connv2, d.Id(), deadline.Remaining(), optFns...)
+			if err != nil {
+				diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+			}
+		})
+
+		sourceARN, err := parseDBClusterARN(d.Get("cluster_identifier").(string))
+		if err != nil {
+			log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", d.Get("cluster_identifier").(string), err)
+		}
+
+		if d.Get("deletion_protection").(bool) {
+			input := &rds_sdkv2.ModifyDBClusterInput{
+				ApplyImmediately:    true,
+				DBClusterIdentifier: aws.String(sourceARN.dbClusterARN),
+				DeletionProtection:  aws.Bool(false),
+			}
+
+			err := dbClusterModify(ctx, connv2, sourceARN.dbClusterARN, input, deadline.Remaining())
+			if err != nil {
+				fmt.Printf("[ERROR] Updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get("identifier").(string), err)
+			}
+		}
+
+		deleteInput := &rds_sdkv2.DeleteDBClusterInput{
+			DBClusterIdentifier: aws.String(sourceARN.dbClusterARN),
+		}
+
+		_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
+			func() (any, error) {
+				return connv2.DeleteDBCluster(ctx, deleteInput)
+			},
+			func(err error) (bool, error) {
+				// Retry for IAM eventual consistency.
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					return true, err
+				}
+
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			log.Printf("[ERROR] updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get("icluster_dentifier").(string), err)
+		}
+
+		cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+			_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), aws.StringValue(&sourceARN.dbClusterARN), deadline.Remaining(), optFns...)
+			if err != nil {
+				diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
+			}
+		})
+
+		if diags.HasError() {
+			return
+		}
+	}()
+	return diags
 }
 
 func resourceClusterBlueGreenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
 	dbc, _ := FindDBClusterByID(ctx, conn, d.Get("cluster_identifier").(string)) //d.Id())
 
-	log.Printf("[DEBUG] DBClusterARN CREATE: %s", aws.StringValue(dbc.DBClusterArn))
+	fmt.Printf("[DEBUG] DBClusterARN READ: %s", aws.StringValue(dbc.DBClusterArn))
 	d.Set("arn", dbc.DBClusterArn)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	var clusterMembers []string
@@ -497,6 +474,7 @@ func resourceClusterBlueGreenRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+
 	setTagsOut(ctx, dbc.TagList)
 
 	return diags
@@ -905,7 +883,7 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 	dbc, _ := FindDBClusterByID(ctx, conn, d.Get("cluster_identifier").(string)) //d.Id())
 
-	log.Printf("[DEBUG] DBClusterARN CREATE: %s", aws.StringValue(dbc.DBClusterArn))
+	fmt.Printf("[DEBUG] DBClusterARN UPDATE: %s", aws.StringValue(dbc.DBClusterArn))
 	d.Set("arn", dbc.DBClusterArn)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	var clusterMembers []string
@@ -914,42 +892,9 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+
 	setTagsOut(ctx, dbc.TagList)
 	var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
-	createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-		Filters: []types.Filter{
-			{
-				Name:   aws.String("blue-green-deployment-name"),
-				Values: []string{d.Get("cluster_identifier").(string)},
-			},
-		},
-	}
-
-	bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
-	bluegreen := []string{}
-
-	for _, value := range bluegreenDescribe.BlueGreenDeployments {
-		bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
-	}
-	orchestrator := newBlueGreenOrchestratorCluster(connv2)
-
-	log.Printf("[DEBUG] Describing blue/green deplyments...")
-	log.Printf("[DEBUG] Implementing handler...")
-	handler := newClusterHandler(connv2)
-	log.Printf("[DEBUG] Creating input...")
-	createIn := handler.createBlueGreenInput(d)
-
-	_, err := orchestrator.createDeploymentCluster(ctx, createIn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): %s", d.Get("cluster_identifier").(string), err)
-	}
-
-	dep, err := orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
-
-	if err != nil {
-		log.Printf("[DEBUG] Wait For Deployment Error: %s:%s", aws.StringValue(dep.BlueGreenDeploymentIdentifier), err)
-	}
 
 	defer func() {
 		if len(cleaupWaiters) == 0 {
@@ -965,197 +910,7 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}()
 
-	defer func() {
-		// handler := newClusterHandler(connv2)
-		// err := handler.precondition(ctx, d)
-
-		createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-			Filters: []types.Filter{
-				{
-					Name:   aws.String("blue-green-deployment-name"),
-					Values: []string{d.Get("cluster_identifier").(string)},
-				},
-			},
-		}
-
-		bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
-		bluegreen := []string{}
-
-		for _, value := range bluegreenDescribe.BlueGreenDeployments {
-			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
-		}
-
-		if d.Get("switchover_enabled").(bool) {
-			log.Printf("[DEBUG] Switchover in progress")
-
-			log.Printf("[DEBUG] Updating Blue/Green deployment (%s): Switching over Blue/Green Deployment", aws.StringValue(&bluegreen[0]))
-			orchestrator := newBlueGreenOrchestratorCluster(connv2)
-			_, err := orchestrator.switchover(ctx, bluegreen[0], deadline.Remaining())
-
-			if err != nil {
-				log.Printf("[DEBUG]: Switchover failure")
-			}
-
-			_, err = orchestrator.waitForDeploymentAvailable(ctx, bluegreen[0], deadline.Remaining())
-			if err != nil {
-				log.Printf("[DEBUG]: Switchover wait failure")
-			}
-
-		}
-
-		if d.Get("cleanup_resources").(bool) {
-			/*
-				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-					BlueGreenDeploymentIdentifier: aws.String(d.Id()),
-				}
-			*/
-			if len(bluegreen) > 0 && aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) == "SWITCHOVER_COMPLETED" {
-				log.Printf("[DEBUG] Cleaning up resources: %s", d.Id())
-				// clusterARN, err := parseDBClusterARN(d.Get("cluster_identifier").(string))
-
-				// if err != nil {
-				//	log.Printf("[DEBUG] Cleaning up RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
-				// }
-
-				d.SetId(aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Source))
-
-				dbClusterInput := &rds_sdkv2.DescribeDBClustersInput{
-					DBClusterIdentifier: aws.String(d.Id()),
-				}
-
-				clusters, err := connv2.DescribeDBClusters(ctx, dbClusterInput)
-
-				if err != nil {
-					log.Printf("[ERROR] Updating RDS DB Instance (%s): describing Blue/Green Deployment source: disabling deletion protection: %s", d.Get("cluster_identifier").(string), err)
-				}
-
-				targetCluster := d.Id()
-
-				for _, cluster := range clusters.DBClusters {
-					if d.Get("deletion_protection").(bool) {
-						input := &rds_sdkv2.ModifyDBClusterInput{
-							ApplyImmediately:    true,
-							DBClusterIdentifier: aws.String(targetCluster),
-							DeletionProtection:  aws.Bool(false),
-						}
-
-						err := dbClusterModify(ctx, connv2, d.Id(), input, deadline.Remaining())
-						if err != nil {
-							log.Printf("[ERROR] Updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get("cluster_identifier").(string), err)
-						}
-					}
-
-					deleteInput := &rds_sdkv2.DeleteDBClusterInput{
-						DBClusterIdentifier: aws.String(d.Id()),
-					}
-
-					_, _ = tfresource.RetryWhen(ctx, 5*time.Minute,
-						func() (any, error) {
-							return connv2.DeleteDBCluster(ctx, deleteInput)
-						},
-						func(err error) (bool, error) {
-							// Retry for IAM eventual consistency.
-							if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-								return true, err
-							}
-
-							if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-								return true, err
-							}
-
-							cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-								_, err = waitBlueGreenClusterDeploymentDeleted(ctx, connv2, d.Id(), deadline.Remaining(), optFns...)
-								if err != nil {
-									diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
-								}
-							})
-
-							if aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) == "SWITCHOVER_COMPLETED" {
-
-								// instanceARN, err := parseDBInstanceARN(instance)
-								for _, instance := range cluster.DBClusterMembers {
-
-									deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
-										DBInstanceIdentifier: instance.DBInstanceIdentifier,
-										SkipFinalSnapshot:    true,
-									}
-
-									_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
-										func() (any, error) {
-											return connv2.DeleteDBInstance(ctx, deleteInput)
-										},
-
-										func(err error) (bool, error) {
-											// Retry for IAM eventual consistency.
-											if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-												return true, err
-											}
-
-											if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-												return true, err
-											}
-
-											return false, err
-										},
-									)
-									if err != nil {
-										return false, err
-									}
-
-									cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-										_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), aws.StringValue(instance.DBInstanceIdentifier), deadline.Remaining(), optFns...)
-										if err != nil {
-											diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", instance, err)
-										}
-									})
-								}
-								bginput := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-									BlueGreenDeploymentIdentifier: aws.String(bluegreen[0]),
-									DeleteTarget:                  aws.Bool(false),
-								}
-
-								if err != nil {
-									log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", aws.StringValue(&bluegreen[0]), err)
-								}
-
-								_, err := connv2.DeleteBlueGreenDeployment(ctx, bginput)
-
-								if err != nil {
-									log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", aws.StringValue(&bluegreen[0]), err)
-								}
-
-							}
-							return true, err
-						},
-					)
-				}
-			}
-		}
-
-		createOut = &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
-			Filters: []types.Filter{
-				{
-					Name:   aws.String("blue-green-deployment-name"),
-					Values: []string{d.Get("cluster_identifier").(string)},
-				},
-			},
-		}
-
-		// handler := newClusterHandler(connv2)
-		// err := handler.precondition(ctx, d)
-
-		bluegreenDescribe, _ = connv2.DescribeBlueGreenDeployments(ctx, createOut)
-
-		bluegreen = []string{}
-
-		for _, value := range bluegreenDescribe.BlueGreenDeployments {
-			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
-		}
-
-	}()
-
-	if d.Get("create_deployment").(bool) && !d.Get("switchover_enabled").(bool) {
+	if d.Get("create_deployment").(bool) {
 		log.Printf("[DEBUG] Describing blue/green deplyments...")
 		log.Printf("[DEBUG] Implementing handler...")
 		handler := newClusterHandler(connv2)
@@ -1163,7 +918,178 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 		createIn := handler.createBlueGreenInput(d)
 
 		orchestrator := newBlueGreenOrchestratorCluster(connv2)
+
 		_, err := orchestrator.createDeploymentCluster(ctx, createIn)
+		if err != nil {
+			log.Printf("[DEBUG] Something went wrong on handler precondition: %s", err)
+		}
+
+		defer func() {
+			log.Printf("[DEBUG] Verifying cleanup mode...")
+			createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+				Filters: []types.Filter{
+					{
+						Name:   aws.String("blue-green-deployment-name"),
+						Values: []string{d.Get("cluster_identifier").(string)},
+					},
+				},
+			}
+
+			bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
+			bluegreen := []string{}
+			// handler := newClusterHandler(connv2)
+			// err := handler.precondition(ctx, d)
+
+			for _, value := range bluegreenDescribe.BlueGreenDeployments {
+				bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
+			}
+
+			if d.Get("switchover_enabled").(bool) {
+				createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+					Filters: []types.Filter{
+						{
+							Name:   aws.String("blue-green-deployment-name"),
+							Values: []string{d.Get("cluster_identifier").(string)},
+						},
+					},
+				}
+				// handler := newClusterHandler(connv2)
+				// err := handler.precondition(ctx, d)
+
+				bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
+
+				bluegreen := []string{}
+
+				for _, value := range bluegreenDescribe.BlueGreenDeployments {
+					bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
+				}
+
+				orchestrator := newBlueGreenOrchestratorCluster(connv2)
+				log.Printf("[DEBUG] Updating Blue/Green deployment (%s): Switching over Blue/Green Deployment", bluegreen[0])
+
+				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+					BlueGreenDeploymentIdentifier: aws.String(d.Id()),
+				}
+
+				if d.Get("switchover_enabled").(bool) {
+
+					_, err := orchestrator.switchover(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+					if aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) != "SWITCHOVER_COMPLETED" {
+
+						input.DeleteTarget = aws.Bool(d.Get("cleanup_resources").(bool))
+					}
+					_, err = waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+					if err != nil {
+						log.Printf("[DEBUG] Error switching over: %s", err)
+					}
+				}
+
+				if !d.Get("switchover_enabled").(bool) {
+					log.Printf("[DEBUG] Switchover disabled so we are finished. Make sure to manually delete previous resources when done.")
+				}
+			}
+
+			// dep, err := waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+
+			identifier := d.Get("cluster_identifier").(string)
+
+			_, err := waitDBClusterAvailableSDKv2(ctx, connv2, identifier, deadline.Remaining())
+
+			if err != nil {
+				log.Printf("[ERROR] Updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
+			}
+
+			if err != nil {
+				fmt.Printf("[ERROR] updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
+			}
+
+			log.Printf("[DEBUG] Updating RDS DB Deployment (%s): Deleting Blue/Green Deployment", d.Id())
+
+			if len(d.Id()) < 1 {
+				log.Printf("[DEBUG] Updating RDS DB Cluster (%s): Deleting Blue/Green Deployment: deployment disappeared: %s", d.Get("cluster_identifier").(string), d.Id())
+			}
+
+			// Ensure that the Blue/Green Deployment is always cleaned up
+
+			input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+				BlueGreenDeploymentIdentifier: aws.String(d.Id()),
+			}
+
+			_, err = connv2.DeleteBlueGreenDeployment(ctx, input)
+
+			if err != nil {
+				diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: %s", d.Id(), err)
+				return
+			}
+
+			if err != nil {
+				diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: %s", d.Id(), err)
+				return
+			}
+
+			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+				_, err = waitBlueGreenClusterDeploymentDeleted(ctx, connv2, d.Id(), deadline.Remaining(), optFns...)
+				if err != nil {
+					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+				}
+			})
+
+			sourceARN, err := parseDBClusterARN(d.Get("cluster_identifier").(string))
+			if err != nil {
+				log.Printf("[ERROR] updating RDS DB Cluster (%s): deleting Blue/Green Deployment source: %s", d.Get("cluster_identifier").(string), err)
+			}
+
+			if d.Get("deletion_protection").(bool) {
+				input := &rds_sdkv2.ModifyDBClusterInput{
+					ApplyImmediately:    true,
+					DBClusterIdentifier: aws.String(sourceARN.dbClusterARN),
+					DeletionProtection:  aws.Bool(false),
+				}
+
+				err := dbClusterModify(ctx, connv2, sourceARN.dbClusterARN, input, deadline.Remaining())
+				if err != nil {
+					fmt.Printf("[ERROR] Updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get("identifier").(string), err)
+				}
+			}
+
+			deleteInput := &rds_sdkv2.DeleteDBClusterInput{
+				DBClusterIdentifier: aws.String(sourceARN.dbClusterARN),
+			}
+
+			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
+				func() (any, error) {
+					return connv2.DeleteDBCluster(ctx, deleteInput)
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+						return true, err
+					}
+
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if err != nil {
+				log.Printf("[ERROR] updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get("icluster_dentifier").(string), err)
+			}
+
+			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), aws.StringValue(&sourceARN.dbClusterARN), deadline.Remaining(), optFns...)
+				if err != nil {
+					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
+				}
+			})
+
+			if diags.HasError() {
+				return
+			}
+		}()
+
 		createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
 			Filters: []types.Filter{
 				{
@@ -1172,6 +1098,8 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 				},
 			},
 		}
+		// handler := newClusterHandler(connv2)
+		// err := handler.precondition(ctx, d)
 
 		bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
 
@@ -1181,15 +1109,18 @@ func resourceClusterBlueGreenUpdate(ctx context.Context, d *schema.ResourceData,
 			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
 		}
 
-		if err != nil {
-			log.Printf("[DEBUG] Something went wrong on blue/green cluster creation: %s", err)
-		}
-
 		_, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
-		if err != nil {
-			log.Printf("[DEBUG] Something went wrong on handler precondition: %s", err)
-		}
+		d.SetId(aws.StringValue(&bluegreen[0]))
 	}
+
+	if !d.Get("create_deployment").(bool) {
+		log.Printf("Deployment disabled, checking for switchover...")
+	}
+
+	if !d.Get("switchover_enabled").(bool) {
+		log.Printf("Switchover disabled. Make sure to delete dangling resources manually when done.")
+	}
+
 	return diags
 }
 
@@ -1199,7 +1130,7 @@ func resourceClusterBlueGreenDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	dbc, _ := FindDBClusterByID(ctx, conn, d.Get("cluster_identifier").(string)) //d.Id())
 
-	log.Printf("[DEBUG] DBClusterARN: %s", aws.StringValue(dbc.DBClusterArn))
+	fmt.Printf("[DEBUG] DBClusterARN: %s", aws.StringValue(dbc.DBClusterArn))
 	d.Set("arn", dbc.DBClusterArn)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	var clusterMembers []string
@@ -1246,6 +1177,51 @@ func resourceClusterBlueGreenDelete(ctx context.Context, d *schema.ResourceData,
 			bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
 		}
 
+		if d.Get("switchover_enabled").(bool) {
+			createOut := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+				Filters: []types.Filter{
+					{
+						Name:   aws.String("blue-green-deployment-name"),
+						Values: []string{d.Get("cluster_identifier").(string)},
+					},
+				},
+			}
+			// handler := newClusterHandler(connv2)
+			// err := handler.precondition(ctx, d)
+
+			bluegreenDescribe, _ := connv2.DescribeBlueGreenDeployments(ctx, createOut)
+
+			bluegreen := []string{}
+
+			for _, value := range bluegreenDescribe.BlueGreenDeployments {
+				bluegreen = append(bluegreen, aws.StringValue(value.BlueGreenDeploymentIdentifier))
+			}
+
+			orchestrator := newBlueGreenOrchestratorCluster(connv2)
+			log.Printf("[DEBUG] Updating Blue/Green deployment (%s): Switching over Blue/Green Deployment", bluegreen[0])
+
+			input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+				BlueGreenDeploymentIdentifier: aws.String(d.Id()),
+			}
+
+			if d.Get("switchover_enabled").(bool) {
+
+				_, err := orchestrator.switchover(ctx, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+				if aws.StringValue(bluegreenDescribe.BlueGreenDeployments[0].Status) != "SWITCHOVER_COMPLETED" {
+
+					input.DeleteTarget = aws.Bool(d.Get("cleanup_resources").(bool))
+				}
+				_, err = waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
+				if err != nil {
+					log.Printf("[DEBUG] Error switching over: %s", err)
+				}
+			}
+
+			if !d.Get("switchover_enabled").(bool) {
+				log.Printf("[DEBUG] Switchover disabled so we are finished. Make sure to manually delete previous resources when done.")
+			}
+		}
+
 		// dep, err := waitBlueGreenDeploymenClusterSwitchoverCompleted(ctx, connv2, aws.StringValue(&bluegreen[0]), deadline.Remaining())
 
 		identifier := d.Get("cluster_identifier").(string)
@@ -1257,7 +1233,7 @@ func resourceClusterBlueGreenDelete(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err != nil {
-			log.Printf("[ERROR] updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
+			fmt.Printf("[ERROR] updating RDS DB Cluster: creating Blue/Green Deployment: waiting for Green environment")
 		}
 
 		log.Printf("[DEBUG] Updating RDS DB Deployment (%s): Deleting Blue/Green Deployment", d.Id())
@@ -1269,7 +1245,7 @@ func resourceClusterBlueGreenDelete(ctx context.Context, d *schema.ResourceData,
 		// Ensure that the Blue/Green Deployment is always cleaned up
 
 		input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-			BlueGreenDeploymentIdentifier: aws.String(bluegreen[0]),
+			BlueGreenDeploymentIdentifier: aws.String(d.Id()),
 		}
 
 		_, err = connv2.DeleteBlueGreenDeployment(ctx, input)
@@ -1291,5 +1267,5 @@ func resourceClusterBlueGreenDelete(ctx context.Context, d *schema.ResourceData,
 			}
 		})
 	}()
-	return append(diags, resourceClusterBlueGreenRead(ctx, d, meta)...)
+	return diags
 }
