@@ -40,15 +40,6 @@ func ResourceConfigRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -57,6 +48,11 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
@@ -67,6 +63,10 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
+			},
+			"rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"scope": {
 				Type:     schema.TypeList,
