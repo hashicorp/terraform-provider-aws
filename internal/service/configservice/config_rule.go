@@ -287,6 +287,8 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("input_parameters", rule.InputParameters)
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
 
+	d.Set("evaluation_mode", flattenRuleEvaluationMode(rule.EvaluationModes))
+
 	if rule.Scope != nil {
 		d.Set("scope", flattenRuleScope(rule.Scope))
 	}

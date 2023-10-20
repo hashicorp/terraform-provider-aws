@@ -112,7 +112,7 @@ func expandRulesEvaluationModes(in []interface{}) []*configservice.EvaluationMod
 			continue
 		}
 
-		var e *configservice.EvaluationModeConfiguration
+		e := &configservice.EvaluationModeConfiguration{}
 		if v, ok := m["mode"].(string); ok && v != "" {
 			e.Mode = aws.String(v)
 		}
@@ -270,6 +270,23 @@ func flattenExclusionByResourceTypes(exclusionByResourceTypes *configservice.Exc
 	}
 
 	return []interface{}{m}
+}
+
+func flattenRuleEvaluationMode(in []*configservice.EvaluationModeConfiguration) []interface{} {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+	for _, v := range in {
+		m := map[string]interface{}{
+			"mode": aws.StringValue(v.Mode),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
 }
 
 func flattenRecordingGroupRecordingStrategy(recordingStrategy *configservice.RecordingStrategy) []interface{} {
