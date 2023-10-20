@@ -779,19 +779,30 @@ resource "aws_s3_object_copy" "test" {
 `, sourceBucket, sourceKey, targetBucket, targetKey, legalHoldStatus)
 }
 
+// TODO Remove hardcoding of AZ ID.
 func testAccObjectCopyConfig_directoryBucket(sourceBucket, sourceKey, targetBucket, targetKey string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 locals {
-  source_bucket = "%[1]s--${data.aws_availability_zones.available.zone_ids[0]}-d-s3"
-  target_bucket = "%[3]s--${data.aws_availability_zones.available.zone_ids[0]}-d-s3"
+  # location_name = data.aws_availability_zones.available.zone_ids[0]
+  location_name = "usw2-az2"
+  source_bucket = "%[1]s--${local.location_name}--x-s3"
+  target_bucket = "%[3]s--${local.location_name}--x-s3"
 }
 
 resource "aws_s3_directory_bucket" "source" {
   bucket = local.source_bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.target_bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_object" "source" {
