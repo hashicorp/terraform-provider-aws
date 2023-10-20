@@ -3109,18 +3109,18 @@ func testAccReplicationGroupConfig_ipDiscovery(rName, ipDiscovery string) string
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id        = %[1]q
-  description                 = "test description"
-  node_type                   = "cache.t3.small"
-  num_node_groups             = 2
-  replicas_per_node_group     = 1
-  port                        = 6379
-  parameter_group_name        = "default.redis7.cluster.on"
-  automatic_failover_enabled  = true
-  subnet_group_name           = aws_elasticache_subnet_group.test.name
-  ip_discovery                = %[2]q
-  network_type                = "dual_stack"
-  security_group_ids          = [aws_security_group.test.id]
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  ip_discovery               = %[2]q
+  network_type               = "dual_stack"
+  security_group_ids         = [aws_security_group.test.id]
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3149,18 +3149,18 @@ func testAccReplicationGroupConfig_networkType(rName, ipDiscovery, networkType s
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id        = %[1]q
-  description                 = "test description"
-  node_type                   = "cache.t3.small"
-  num_node_groups             = 2
-  replicas_per_node_group     = 1
-  port                        = 6379
-  parameter_group_name        = "default.redis7.cluster.on"
-  automatic_failover_enabled  = true
-  subnet_group_name           = aws_elasticache_subnet_group.test.name
-  ip_discovery                = %[2]q
-  network_type                = %[3]q
-  security_group_ids          = [aws_security_group.test.id]
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  ip_discovery               = %[2]q
+  network_type               = %[3]q
+  security_group_ids         = [aws_security_group.test.id]
 }
 
 resource "aws_elasticache_subnet_group" "test" {
