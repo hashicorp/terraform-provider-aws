@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Update launch template related attributes when there is change in launch template name
+```

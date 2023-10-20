@@ -3952,6 +3952,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
 }
+
 func removeIdIfNameChanged(tfMap map[string]interface{}, changed bool, nameKey, idKey, address string) map[string]interface{} {
 	if !changed {
 		return tfMap
