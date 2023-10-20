@@ -275,7 +275,7 @@ type dataSourceInstanceTypesFromInstanceRequirementsData struct {
 
 type instanceRequirementsData struct {
 	MemoryMiB                                 types.Object `tfsdk:"memory_mib"`
-	VCpuCount                                 types.Object `tfsdk:"vcpu_count"`
+	VCPUCount                                 types.Object `tfsdk:"vcpu_count"`
 	AcceleratorCount                          types.Object `tfsdk:"accelerator_count"`
 	AcceleratorManufacturers                  types.List   `tfsdk:"accelerator_manufacturers"`
 	AcceleratorNames                          types.List   `tfsdk:"accelerator_names"`
@@ -285,12 +285,12 @@ type instanceRequirementsData struct {
 	BareMetal                                 types.String `tfsdk:"bare_metal"`
 	BaselineEbsBandwidthMbps                  types.Object `tfsdk:"baseline_ebs_bandwidth_mbps"`
 	BurstablePerformance                      types.String `tfsdk:"burstable_performance"`
-	CpuManufacturers                          types.List   `tfsdk:"cpu_manufacturers"`
+	CPUManufacturers                          types.List   `tfsdk:"cpu_manufacturers"`
 	ExcludedInstanceTypes                     types.List   `tfsdk:"excluded_instance_types"`
 	InstanceGenerations                       types.List   `tfsdk:"instance_generations"`
 	LocalStorage                              types.String `tfsdk:"local_storage"`
 	LocalStorageTypes                         types.List   `tfsdk:"local_storage_types"`
-	MemoryGiBPerVCpu                          types.Object `tfsdk:"memory_gib_per_vcpu"`
+	MemoryGiBPerVCPU                          types.Object `tfsdk:"memory_gib_per_vcpu"`
 	NetworkBandwidthGbps                      types.Object `tfsdk:"network_bandwidth_gbps"`
 	NetworkInterfaceCount                     types.Object `tfsdk:"network_interface_count"`
 	OnDemandMaxPricePercentageOverLowestPrice types.Int64  `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
@@ -306,14 +306,14 @@ func (ir *instanceRequirementsData) expand(ctx context.Context, diags *diag.Diag
 
 	result := &ec2.InstanceRequirementsRequest{
 		MemoryMiB:                expandMemoryMiBData(ctx, ir.MemoryMiB, diags),
-		VCpuCount:                expandVcpuCountData(ctx, ir.VCpuCount, diags),
+		VCpuCount:                expandVCPUCountData(ctx, ir.VCPUCount, diags),
 		AcceleratorManufacturers: flex.ExpandFrameworkStringList(ctx, ir.AcceleratorManufacturers),
 		AcceleratorNames:         flex.ExpandFrameworkStringList(ctx, ir.AcceleratorNames),
 		AcceleratorTypes:         flex.ExpandFrameworkStringList(ctx, ir.AcceleratorTypes),
 		AllowedInstanceTypes:     flex.ExpandFrameworkStringList(ctx, ir.AllowedInstanceTypes),
 		BareMetal:                flex.StringFromFramework(ctx, ir.BareMetal),
 		BurstablePerformance:     flex.StringFromFramework(ctx, ir.BurstablePerformance),
-		CpuManufacturers:         flex.ExpandFrameworkStringList(ctx, ir.CpuManufacturers),
+		CpuManufacturers:         flex.ExpandFrameworkStringList(ctx, ir.CPUManufacturers),
 		ExcludedInstanceTypes:    flex.ExpandFrameworkStringList(ctx, ir.ExcludedInstanceTypes),
 		InstanceGenerations:      flex.ExpandFrameworkStringList(ctx, ir.InstanceGenerations),
 		LocalStorage:             flex.StringFromFramework(ctx, ir.LocalStorage),
@@ -335,8 +335,8 @@ func (ir *instanceRequirementsData) expand(ctx context.Context, diags *diag.Diag
 		result.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsData(ctx, ir.BaselineEbsBandwidthMbps, diags)
 	}
 
-	if !ir.MemoryGiBPerVCpu.IsNull() {
-		result.MemoryGiBPerVCpu = expandMemoryGiBPerVCpuData(ctx, ir.MemoryGiBPerVCpu, diags)
+	if !ir.MemoryGiBPerVCPU.IsNull() {
+		result.MemoryGiBPerVCpu = expandMemoryGiBPerVCPUData(ctx, ir.MemoryGiBPerVCPU, diags)
 	}
 
 	if !ir.NetworkBandwidthGbps.IsNull() {
@@ -393,7 +393,7 @@ func (v *vcpuCountData) expand(ctx context.Context) *ec2.VCpuCountRangeRequest {
 	}
 }
 
-func expandVcpuCountData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.VCpuCountRangeRequest {
+func expandVCPUCountData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.VCpuCountRangeRequest {
 	var options vcpuCountData
 	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
@@ -474,12 +474,12 @@ func expandBaselineEBSBandwidthMbpsData(ctx context.Context, object types.Object
 	return options.expand(ctx)
 }
 
-type memoryGiBPerVCpuData struct {
+type memoryGiBPerVCPUData struct {
 	Min types.Float64 `tfsdk:"min"`
 	Max types.Float64 `tfsdk:"max"`
 }
 
-func (m *memoryGiBPerVCpuData) expand(ctx context.Context) *ec2.MemoryGiBPerVCpuRequest {
+func (m *memoryGiBPerVCPUData) expand(ctx context.Context) *ec2.MemoryGiBPerVCpuRequest {
 	if m == nil {
 		return nil
 	}
@@ -489,8 +489,8 @@ func (m *memoryGiBPerVCpuData) expand(ctx context.Context) *ec2.MemoryGiBPerVCpu
 	}
 }
 
-func expandMemoryGiBPerVCpuData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.MemoryGiBPerVCpuRequest {
-	var options memoryGiBPerVCpuData
+func expandMemoryGiBPerVCPUData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.MemoryGiBPerVCpuRequest {
+	var options memoryGiBPerVCPUData
 	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil

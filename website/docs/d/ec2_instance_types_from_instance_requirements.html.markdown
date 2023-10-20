@@ -16,7 +16,7 @@ Get a list of EC2 Instance Types that match requirements.
 
 ```terraform
 data "aws_ec2_instance_types_from_instance_requirements" "example" {
-  architecture_types = ["x86_64"]
+  architecture_types   = ["x86_64"]
   virtualization_types = ["hvm"]
 
   instance_requirements {
