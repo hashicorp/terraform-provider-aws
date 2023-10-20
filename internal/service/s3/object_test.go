@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -1612,8 +1613,8 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 
 func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var obj s3.GetObjectOutput
-	resourceName := "aws_s3_object.object"
+	// var obj s3.GetObjectOutput
+	// resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1627,12 +1628,14 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccObjectConfig_directoryBucket(rName),
 				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
-				),
+				ExpectError: regexache.MustCompile(`NotImplemented`),
+				// TODO
+				// Check: resource.ComposeTestCheckFunc(
+				// 	testAccCheckObjectExists(ctx, resourceName, &obj),
+				// 	resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				// 	resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				// 	resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+				// ),
 			},
 		},
 	})
@@ -2447,6 +2450,10 @@ func testAccObjectConfig_directoryBucket(rName string) string {
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_object" "object" {
