@@ -386,6 +386,10 @@ func testAccObjectsDataSourceConfig_directoryBucket(rName string, n int) string 
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
 }
 
 resource "aws_s3_object" "test1" {
