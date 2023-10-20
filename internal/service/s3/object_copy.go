@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -383,7 +384,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
 		setTagsOut(ctx, Tags(tags))
-	} else if !tfawserr.ErrCodeEquals(err, errCodeNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 

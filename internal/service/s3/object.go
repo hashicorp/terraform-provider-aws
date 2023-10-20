@@ -270,7 +270,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
 		setTagsOut(ctx, Tags(tags))
-	} else if !tfawserr.ErrCodeEquals(err, errCodeNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 

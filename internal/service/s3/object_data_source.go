@@ -5,6 +5,7 @@ package s3
 
 import (
 	"context"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -254,7 +255,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
-	} else if !tfawserr.ErrCodeEquals(err, errCodeNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
