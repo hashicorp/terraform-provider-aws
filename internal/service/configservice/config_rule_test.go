@@ -60,6 +60,16 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
     mode = "DETECTIVE"
   }
 `
+
+	evaluationMode2 := `
+  evaluation_mode {
+    mode = "DETECTIVE"
+  }
+
+  evaluation_mode {
+    mode = "PROACTIVE"
+  }
+`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
@@ -77,17 +87,20 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
 					}),
 				),
 			},
-			//{
-			//	Config: testAccConfigRuleConfig_evaluationMode(rName, "PROACTIVE"),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-			//		testAccCheckConfigRuleName(resourceName, rName, &cr),
-			//		resource.TestCheckResourceAttr(resourceName, "name", rName),
-			//		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
-			//			"mode": "PROACTIVE",
-			//		}),
-			//	),
-			//},
+			{
+				Config: testAccConfigRuleConfig_evaluationMode(rName, evaluationMode2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
+					testAccCheckConfigRuleName(resourceName, rName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "DETECTIVE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "PROACTIVE",
+					}),
+				),
+			},
 		},
 	})
 }
