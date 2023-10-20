@@ -610,7 +610,7 @@ func TestAccS3BucketACL_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketACLConfig_directoryBucket(bucketName, string(types.BucketCannedACLPrivate)),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
