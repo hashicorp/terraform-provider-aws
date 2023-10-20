@@ -2342,6 +2342,54 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_targetHealthStateUnhealthyConnectionTermination(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "false"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "UDP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP_UDP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
@@ -3116,6 +3164,29 @@ resource "aws_vpc" "test" {
   }
 }
 `, protocol, stickyType, enabled, rName)
+}
+
+func testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, protocol string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = %[1]q
+  vpc_id      = aws_vpc.test.id
+
+  target_health_state {
+    enable_unhealthy_connection_termination = %[2]t
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[3]q
+  }
+}
+`, protocol, enabled, rName)
 }
 
 func testAccTargetGroupConfig_typeTCP(rName string) string {
