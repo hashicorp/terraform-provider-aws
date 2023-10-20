@@ -9,7 +9,7 @@
     * [Name it](naming.md)
     !!! tip
         Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework (e.g. the default `skaff` settings).
-        See [AWS Go SDK Versions](aws-go-sdk-versions.md), [Terraform Plugin Versions](terraform-plugin-versions.md), and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+        See [AWS Go SDK Versions](aws-go-sdk-versions.md), [Terraform Plugin Development Packages](terraform-plugin-development-packages.md), and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
 1. Use `skaff` to generate provider code
 1. Go through the generated code completing code and customizing for the AWS Go SDK API
 1. Run, test, refine
