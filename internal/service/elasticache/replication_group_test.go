@@ -792,6 +792,89 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	resourceName := "aws_elasticache_replication_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_ipDiscovery(rName, "ipv6"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis7.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	resourceName := "aws_elasticache_replication_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_networkType(rName, "ipv6", "dual_stack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis7.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "dual_stack"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3018,6 +3101,86 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_ipDiscovery(rName, ipDiscovery string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  ip_discovery               = %[2]q
+  network_type               = "dual_stack"
+  security_group_ids         = [aws_security_group.test.id]
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, ipDiscovery),
+	)
+}
+
+func testAccReplicationGroupConfig_networkType(rName, ipDiscovery, networkType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  ip_discovery               = %[2]q
+  network_type               = %[3]q
+  security_group_ids         = [aws_security_group.test.id]
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, ipDiscovery, networkType),
 	)
 }
 
