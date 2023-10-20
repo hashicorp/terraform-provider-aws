@@ -141,21 +141,3 @@ resource "aws_service_thing" "test" {
 ```markdown
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 ```
-
-## Resource name generation with suffix
-
-Some generated resource names require a fixed suffix (for example Amazon SNS FIFO topic names must end in `.fifo`).
-In these cases use `create.NameWithSuffix()` in the resource `Create` function and `create.NamePrefixFromNameWithSuffix()` in the resource `Read` function, e.g.
-
-```go
-name := create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), ".fifo")
-```
-
-and
-
-```go
-d.Set("name", resp.Name)
-d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(aws.StringValue(resp.Name), ".fifo"))
-```
-
-There are also functions `acctest.CheckResourceAttrNameWithSuffixGenerated` and `acctest.CheckResourceAttrNameWithSuffixFromPrefix` for use in tests.

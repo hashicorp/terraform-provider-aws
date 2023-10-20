@@ -38,7 +38,6 @@ func ResourceRepository() *schema.Resource {
 			"repository_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
@@ -137,7 +136,11 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("repository_name", out.RepositoryMetadata.RepositoryName)
 
 	if _, ok := d.GetOk("default_branch"); ok {
-		d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
+		// The default branch can only be set when there is code in the repository
+		// Preserve the configured value
+		if out.RepositoryMetadata.DefaultBranch != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+			d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
+		}
 	}
 
 	return diags
@@ -146,6 +149,12 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
+
+	if d.HasChange("repository_name") {
+		if err := resourceUpdateRepositoryName(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) name: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("default_branch") {
 		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
@@ -175,6 +184,25 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func resourceUpdateRepositoryName(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+	newName := d.Get("repository_name").(string)
+
+	branchInput := &codecommit.UpdateRepositoryNameInput{
+		OldName: aws.String(d.Id()),
+		NewName: aws.String(newName),
+	}
+
+	_, err := conn.UpdateRepositoryNameWithContext(ctx, branchInput)
+	if err != nil {
+		return fmt.Errorf("Updating Repository Name for CodeCommit Repository: %s", err.Error())
+	}
+
+	// The Id is the name
+	d.SetId(newName)
+
+	return nil
 }
 
 func resourceUpdateDescription(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {
@@ -211,8 +239,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 		DefaultBranchName: aws.String(d.Get("default_branch").(string)),
 	}
 
-	_, err = conn.UpdateDefaultBranchWithContext(ctx, branchInput)
-	if err != nil {
+	if _, err := conn.UpdateDefaultBranchWithContext(ctx, branchInput); err != nil {
 		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
 	}
 

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package iot
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_iot_certificate", &resource.Sweeper{
 		Name: "aws_iot_certificate",
 		F:    sweepCertifcates,
@@ -119,7 +117,7 @@ func sweepCertifcates(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Certificate for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -186,7 +184,7 @@ func sweepPolicyAttachments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy Attachment for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -233,7 +231,7 @@ func sweepPolicies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -280,7 +278,7 @@ func sweepRoleAliases(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Role Alias for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Role Alias sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -347,7 +345,7 @@ func sweepThingPrincipalAttachments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Principal Attachment for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -394,7 +392,7 @@ func sweepThings(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -441,7 +439,7 @@ func sweepThingTypes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Type for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -461,7 +459,7 @@ func sweepTopicRules(region string) error {
 
 	for {
 		output, err := conn.ListTopicRulesWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping IoT Topic Rules sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -523,7 +521,7 @@ func sweepThingGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IoT Thing Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -567,7 +565,7 @@ func sweepTopicRuleDestinations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IoT Topic Rule Destination sweep for %s: %s", region, err)
 		return nil
 	}

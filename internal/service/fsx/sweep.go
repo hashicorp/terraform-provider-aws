@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package fsx
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_fsx_backup", &resource.Sweeper{
 		Name: "aws_fsx_backup",
 		F:    sweepBackups,
@@ -114,7 +112,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Backups for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx Backups sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -163,7 +161,7 @@ func sweepLustreFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre File Systems for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx Lustre File System sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -212,7 +210,7 @@ func sweepONTAPFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx ONTAP File System sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -257,7 +255,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Storage Virtual Machine for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx ONTAP Storage Virtual Machine sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -311,7 +309,7 @@ func sweepONTAPVolumes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Volume for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx ONTAP Volume sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -360,7 +358,7 @@ func sweepOpenZFSFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx OpenZFS File Systems for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx OpenZFS File System sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -412,7 +410,7 @@ func sweepOpenZFSVolume(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx OpenZFS Volume for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx OpenZFS Volume sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -462,7 +460,7 @@ func sweepWindowsFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Windows File Systems for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx Windows File System sweep for %s: %s", region, errs)
 		return nil
 	}
