@@ -20,7 +20,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -196,6 +195,7 @@ func ResourceLoadBalancer() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
@@ -307,15 +307,11 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = id.PrefixedUniqueId(v.(string))
-	} else {
-		name = id.PrefixedUniqueId("tf-lb-")
-	}
-
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-lb-"),
+	).Generate()
 	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
 		Names: aws.StringSlice([]string{name}),
 	})
@@ -325,7 +321,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if exist != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Load Balancer (%s) already exists", name)
 	}
 
 	d.Set("name", name)
@@ -922,6 +918,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 	d.Set("name", lb.LoadBalancerName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)

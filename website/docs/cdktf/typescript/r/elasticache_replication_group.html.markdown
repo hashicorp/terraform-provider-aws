@@ -275,8 +275,8 @@ The following arguments are optional:
 * `replicasPerNodeGroup` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Valid values are 0 to 5.
-* `securityGroupIds` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
-* `securityGroupNames` - (Optional) List of cache security group names to associate with this replication group.
+* `securityGroupIds` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
+* `securityGroupNames` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `snapshotArns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
 * `snapshotName` - (Optional) Name of a snapshot from which to restore data into the new node group. Changing the `snapshotName` forces a new resource.
 * `snapshotRetentionLimit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of `snapshotRetentionLimit` is set to zero (0), backups are turned off. Please note that setting a `snapshotRetentionLimit` is not supported on cache.t1.micro cache nodes
@@ -339,4 +339,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-838c3b8ba5cc3840d101659aeb93473b7f65080bd2395085ab60d60f8e44c650 -->
+<!-- cache-key: cdktf-0.18.0 input-fccb3d63e5830db5019158ec507620f9063a780bbec1d69f7c40eaf7d9b89a0e -->

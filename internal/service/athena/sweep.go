@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package athena
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_athena_database", &resource.Sweeper{
 		Name: "aws_athena_database",
 		F:    sweepDatabases,
@@ -56,7 +54,7 @@ func sweepDatabases(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Athena Database sweep for %s: %s", region, err)
 		return nil
 	}

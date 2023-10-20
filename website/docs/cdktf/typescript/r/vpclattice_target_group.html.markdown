@@ -151,17 +151,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `config` - (Optional) The target group configuration. If type is set to `lambda,` this parameter should not be specified.
+* `config` - (Optional) The target group configuration.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Config (`config`) supports the following:
 
 * `healthCheck` - (Optional) The health check configuration.
-* `ipAddressType` - (Optional) The type of IP address used for the target group. Valid values: `ipv4` | `ipv6`
-* `port` - (Required) The port on which the targets are listening.
-* `protocol` - (Required) The protocol to use for routing traffic to the targets. Valid Values are `http` | `https`
+* `ipAddressType` - (Optional) The type of IP address used for the target group. Valid values: `ipv4` | `ipv6`.
+* `lambdaEventStructureVersion` - (Optional) The version of the event structure that the Lambda function receives. Supported only if `type` is `lambda`. Valid Values are `v1` | `v2`.
+* `port` - (Optional) The port on which the targets are listening.
+* `protocol` - (Optional) The protocol to use for routing traffic to the targets. Valid Values are `http` | `https`.
 * `protocolVersion` - (Optional) The protocol version. Valid Values are `http1` | `http2` | `grpc`. Default value is `http1`.
-* `vpcIdentifier` - (Required) The ID of the VPC.
+* `vpcIdentifier` - (Optional) The ID of the VPC.
 
 Health Check (`healthCheck`) supports the following:
 
@@ -215,4 +216,4 @@ Using `terraform import`, import VPC Lattice Target Group using the `id`. For ex
 % terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-41b7a5fa5700af426730c0164eae9858e211d656453b72a5be43cb08472ded0a -->
+<!-- cache-key: cdktf-0.18.0 input-8b0f63dce846bb387e0c2e47e763aeda9a0b71702c33c2b21f0f39c8cf773e37 -->

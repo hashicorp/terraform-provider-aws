@@ -245,6 +245,11 @@ func ResourceS3Endpoint() *schema.Resource {
 					return json
 				},
 			},
+			"glue_catalog_generation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ignore_header_rows": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -460,6 +465,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
 		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
 		d.Set("encryption_mode", s3settings.EncryptionMode)
+		d.Set("glue_catalog_generation", s3settings.GlueCatalogGeneration)
 		d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
 		d.Set("parquet_version", s3settings.ParquetVersion)
 		d.Set("preserve_transactions", s3settings.PreserveTransactions)
@@ -672,6 +678,10 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 
 	if v, ok := d.GetOk("external_table_definition"); ok {
 		s3s.ExternalTableDefinition = aws.String(v.(string))
+	}
+
+	if v, ok := d.Get("glue_catalog_generation").(bool); ok { // target
+		s3s.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	if v, ok := d.GetOk("ignore_header_rows"); ok {

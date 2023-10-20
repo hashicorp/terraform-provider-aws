@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package s3
 
 import (
@@ -26,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
 		Name: "aws_s3_object",
 		F:    sweepObjects,
@@ -78,11 +75,11 @@ func sweepObjects(region string) error {
 
 		var objectLockEnabled bool
 
-		if tfresource.NotFound(err) {
-		} else if err != nil {
-			log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
-			continue
-		} else {
+		if !tfresource.NotFound(err) {
+			if err != nil {
+				log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
+				continue
+			}
 			objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
 		}
 
@@ -189,6 +186,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tf-object-test",
 		"tf-test",
 		"tftest.applicationversion",
+		"terraform-remote-s3-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
