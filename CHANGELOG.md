@@ -1,9 +1,4 @@
 ## 5.23.0 (Unreleased)
-
-BUG FIXES:
-
-* resource/aws_ecs_task_definition: Fix avoiding aws_ecs_task_definition.volume.efs_volume_configuration.transit_encryption_port in the configuration, causing unintended diff in plan ([#23541](https://github.com/hashicorp/terraform-provider-aws/issues/23541) and [#19549](https://github.com/hashicorp/terraform-provider-aws/issues/19549))
-
 ## 5.22.0 (October 19, 2023)
 
 FEATURES:
