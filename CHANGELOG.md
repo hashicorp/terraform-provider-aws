@@ -1,22 +1,58 @@
-## 5.22.0 (Unreleased)
+## 5.23.0 (Unreleased)
+## 5.22.0 (October 19, 2023)
 
 FEATURES:
 
+* **New Data Source:** `aws_media_convert_queue` ([#27075](https://github.com/hashicorp/terraform-provider-aws/issues/27075))
 * **New Resource:** `aws_elasticsearch_vpc_endpoint` ([#33925](https://github.com/hashicorp/terraform-provider-aws/issues/33925))
+* **New Resource:** `aws_msk_replicator` ([#33973](https://github.com/hashicorp/terraform-provider-aws/issues/33973))
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute ([#34007](https://github.com/hashicorp/terraform-provider-aws/issues/34007))
+* resource/aws_alb: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_alb_target_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_cloudfront_public_key: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_db_option_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_docdb_cluster: Support import of `cluster_identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_docdb_cluster_instance: Support import of `identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_docdb_cluster_parameter_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_docdb_subnet_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute ([#34007](https://github.com/hashicorp/terraform-provider-aws/issues/34007))
+* resource/aws_elb: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_emr_security_configuration: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_iam_group_policy: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_iam_role_policy: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_iam_user_policy: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_iot_provisioning_template: Add `type` attribute ([#33950](https://github.com/hashicorp/terraform-provider-aws/issues/33950))
+* resource/aws_lb: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_lb_target_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_neptune_cluster: Support import of `cluster_identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_neptune_cluster_instance: Support import of `identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_neptune_cluster_parameter_group: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_neptune_event_subscription: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_pinpoint_app: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_rds_cluster: Support import of `cluster_identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_rds_cluster_instance: Support import of `identifier_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_signer_signing_profile: Support import of `name_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_signer_signing_profile_permission: Add `signer:SignPayload` as a valid `action` value ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
+* resource/aws_signer_signing_profile_permission: Support import of `statement_id_prefix` argument ([#33852](https://github.com/hashicorp/terraform-provider-aws/issues/33852))
 * resource/aws_transfer_server: Change `pre_authentication_login_banner` and `post_authentication_login_banner` length limits to 4096 ([#33937](https://github.com/hashicorp/terraform-provider-aws/issues/33937))
 * resource/aws_wafv2_web_acl: Add `ja3_fingerprint` to `field_to_match` configuration blocks ([#33933](https://github.com/hashicorp/terraform-provider-aws/issues/33933))
 
 BUG FIXES:
 
+* data-source/aws_dms_certificate: Fix crash when certificate not found ([#34012](https://github.com/hashicorp/terraform-provider-aws/issues/34012))
 * resource/aws_cloudformation_stack: Fix error when `computed` values are not set when there is no update ([#33969](https://github.com/hashicorp/terraform-provider-aws/issues/33969))
 * resource/aws_codecommit_repository: Doesn't force replacement when renaming ([#32207](https://github.com/hashicorp/terraform-provider-aws/issues/32207))
+* resource/aws_db_instance: Creating resource from snapshot or point-in-time recovery now handles `manage_master_user_password` and `master_user_secret_kms_key_id` attributes correctly ([#33699](https://github.com/hashicorp/terraform-provider-aws/issues/33699))
+* resource/aws_elasticache_replication_group: Fix error when switching `engine_version` from `6.x` to a specific `6.<digit>` version number ([#33954](https://github.com/hashicorp/terraform-provider-aws/issues/33954))
+* resource/aws_iam_role: Fix refreshing `permission_boundary` when deleted outside of Terraform ([#33963](https://github.com/hashicorp/terraform-provider-aws/issues/33963))
+* resource/aws_iam_user: Fix refreshing `permission_boundary` when deleted outside of Terraform ([#33963](https://github.com/hashicorp/terraform-provider-aws/issues/33963))
 * resource/aws_inspector2_enabler: Fix `Value at 'resourceTypes' failed to satisfy constraint` errors ([#33348](https://github.com/hashicorp/terraform-provider-aws/issues/33348))
 * resource/aws_neptune_cluster_instance: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `engine_version` ([#33487](https://github.com/hashicorp/terraform-provider-aws/issues/33487))
 * resource/aws_neptune_cluster_parameter_group: Fix condition where defined cluster parameters with system default values are seen as updates ([#33487](https://github.com/hashicorp/terraform-provider-aws/issues/33487))
+* resource/aws_s3_bucket_object_lock_configuration: Fix `found resource` errors on Delete ([#33966](https://github.com/hashicorp/terraform-provider-aws/issues/33966))
 
 ## 5.21.0 (October 12, 2023)
 

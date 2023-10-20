@@ -165,35 +165,33 @@ func sweepDBClusterSnapshots(region string) error {
 func sweepDBClusterParameterGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBClusterParameterGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
-		for _, dBClusterParameterGroup := range out.DBClusterParameterGroups {
-			name := aws.StringValue(dBClusterParameterGroup.DBClusterParameterGroupName)
-			input := &docdb.DeleteDBClusterParameterGroupInput{
-				DBClusterParameterGroupName: dBClusterParameterGroup.DBClusterParameterGroupName,
-			}
+	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterParameterGroups {
+			name := aws.StringValue(v.DBClusterParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping DocumentDB Parameter Group: %s", name)
+				log.Printf("[INFO] Skipping DocumentDB Cluster Parameter Group: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting DocumentDB Cluster Parameter Group: %s", name)
+			r := ResourceClusterParameterGroup()
+			d := r.Data(nil)
+			d.SetId(name)
 
-			_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocumentDB Parameter Group (%s): %s", name, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
 
@@ -203,7 +201,13 @@ func sweepDBClusterParameterGroups(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving DocumentDB Cluster Parameter Groups: %w", err)
+		return fmt.Errorf("error listing DocumentDB Cluster Parameter Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DocumentDB Cluster Parameter Groups (%s): %w", region, err)
 	}
 
 	return nil
@@ -302,34 +306,26 @@ func sweepGlobalClusters(region string) error {
 func sweepDBSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBSubnetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		for _, dBSubnetGroup := range out.DBSubnetGroups {
-			name := aws.StringValue(dBSubnetGroup.DBSubnetGroupName)
-			input := &docdb.DeleteDBSubnetGroupInput{
-				DBSubnetGroupName: dBSubnetGroup.DBSubnetGroupName,
-			}
-
-			log.Printf("[INFO] Deleting DocumentDB Subnet Group: %s", name)
-
-			_, err := conn.DeleteDBSubnetGroupWithContext(ctx, input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocumentDB Subnet Group (%s): %s", name, err)
-				continue
-			}
-
-			if err := WaitForDBSubnetGroupDeletion(ctx, conn, name, DBSubnetGroupDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocumentDB Subnet Group (%s) to be deleted: %s", name, err)
-			}
+	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.DBSubnetGroups {
+			r := ResourceSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DBSubnetGroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
 
@@ -339,7 +335,13 @@ func sweepDBSubnetGroups(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving DocumentDB Subnet Groups: %w", err)
+		return fmt.Errorf("error listing DocumentDB Subnet Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping DocumentDB Subnet Groups (%s): %w", region, err)
 	}
 
 	return nil

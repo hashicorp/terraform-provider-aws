@@ -3,6 +3,14 @@
 
 package dms
 
+import (
+	"time"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
 const (
 	endpointStatusDeleting = "deleting"
 

@@ -202,21 +202,13 @@ func ResourceQueue() *schema.Resource {
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
-	var name string
-	fifoQueue := d.Get("fifo_queue").(bool)
-	if fifoQueue {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOQueueNameSuffix)
-	} else {
-		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	}
-
+	name := queueName(d)
 	input := &sqs.CreateQueueInput{
 		QueueName: aws.String(name),
 		Tags:      getTagsIn(ctx),
 	}
 
 	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -281,15 +273,11 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	name, err := QueueNameFromURL(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	output := outputRaw.(map[string]string)
-
-	err = queueAttributeMap.APIAttributesToResourceData(output, d)
-
+	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[string]string), d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -315,7 +303,6 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -325,16 +312,13 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			QueueUrl:   aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Updating SQS Queue: %s", input)
 		_, err = conn.SetQueueAttributesWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
-
-		if err != nil {
+		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
 			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
@@ -358,9 +342,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	err = waitQueueDeleted(ctx, conn, d.Id())
-
-	if err != nil {
+	if err := waitQueueDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
@@ -373,15 +355,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 	if diff.Id() == "" {
 		// Create.
-
-		var name string
-
-		if fifoQueue {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), FIFOQueueNameSuffix)
-		} else {
-			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
-		}
-
+		name := queueName(diff)
 		var re *regexp.Regexp
 
 		if fifoQueue {
@@ -400,4 +374,12 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	}
 
 	return nil
+}
+
+func queueName(d interface{ Get(string) any }) string {
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	if d.Get("fifo_queue").(bool) {
+		optFns = append(optFns, create.WithSuffix(FIFOQueueNameSuffix))
+	}
+	return create.NewNameGenerator(optFns...).Generate()
 }

@@ -120,35 +120,6 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 	return globalCluster, err
 }
 
-func FindDBSubnetGroupByName(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) (*docdb.DBSubnetGroup, error) {
-	var dBSubnetGroup *docdb.DBSubnetGroup
-
-	input := &docdb.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(dBSubnetGroupName),
-	}
-
-	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, sg := range page.DBSubnetGroups {
-			if sg == nil {
-				continue
-			}
-
-			if aws.StringValue(sg.DBSubnetGroupName) == dBSubnetGroupName {
-				dBSubnetGroup = sg
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dBSubnetGroup, err
-}
-
 func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.EventSubscription, error) {
 	var eventSubscription *docdb.EventSubscription
 
