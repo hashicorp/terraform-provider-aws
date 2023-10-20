@@ -72,6 +72,17 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccConfigRuleConfig_evaluationMode(rName, "PROACTIVE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
+					testAccCheckConfigRuleName(resourceName, rName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "PROACTIVE",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -748,7 +759,7 @@ resource "aws_config_config_rule" "test" {
 
   source {
     owner             = "AWS"
-    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
+    source_identifier = "EIP_ATTACHED"
   }
 
   evaluation_mode {
