@@ -445,7 +445,7 @@ object Sweeper : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
@@ -582,7 +582,7 @@ object Sanity : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
@@ -650,7 +650,7 @@ object Performance : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
