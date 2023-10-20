@@ -100,7 +100,6 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	out, err := conn.CreateGroup(ctx, input)
-
 	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), err)
 	}
@@ -118,7 +117,6 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId, groupId, err := resourceGroupParseID(d.Id())
-
 	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
@@ -160,6 +158,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.Operations = append(in.Operations, types.AttributeOperation{
 			AttributePath:  aws.String("displayName"),
 			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
+		})
+	}
+
+	if d.HasChange("description") {
+		in.Operations = append(in.Operations, types.AttributeOperation{
+			AttributePath:  aws.String("description"),
+			AttributeValue: document.NewLazyDocument(d.Get("description").(string)),
 		})
 	}
 
