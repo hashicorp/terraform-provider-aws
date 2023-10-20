@@ -1042,7 +1042,7 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`NoSuchBucket`), // Waiting for resource migration to AWS SDK for Go v2.
 			},
 		},
 	})

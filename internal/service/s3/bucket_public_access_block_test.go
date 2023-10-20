@@ -284,7 +284,7 @@ func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketPublicAccessBlockConfig_directoryBucket(name, "false", "false", "false", "false"),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
+				ExpectError: regexache.MustCompile(`NoSuchBucket`), // Waiting for resource migration to AWS SDK for Go v2.
 			},
 		},
 	})
