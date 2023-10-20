@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloudfront
 
 import (
@@ -15,10 +12,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudfront_cache_policy", &resource.Sweeper{
 		Name: "aws_cloudfront_cache_policy",
 		F:    sweepCachePolicies,
@@ -141,7 +139,7 @@ func sweepCachePolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Cache Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -191,9 +189,9 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	if staging {
-		log.Printf("[INFO] Sweeping staging distributions")
+		log.Print("[INFO] Sweeping staging distributions")
 	} else {
-		log.Printf("[INFO] Sweeping production distributions")
+		log.Print("[INFO] Sweeping production distributions")
 	}
 
 	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
@@ -230,7 +228,7 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
 		return nil
 	}
@@ -262,14 +260,17 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	// ListContinuousDeploymentPolicies does not have a paginator
 	for {
 		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Continuous Deployment Policy sweep for %s: %s", region, err)
+			return result.ErrorOrNil()
+		}
 		if err != nil {
-			log.Printf("[WARN] %s", err)
-			result = multierror.Append(result, err)
+			result = multierror.Append(result, fmt.Errorf("listing CloudFront Continuous Deployment Policies: %w", err))
 			break
 		}
 
 		if output == nil || output.ContinuousDeploymentPolicyList == nil {
-			log.Printf("[WARN] CloudFront ListContinuousDeploymentPolicies empty response")
+			log.Printf("[WARN] CloudFront Continuous Deployment Policies: empty response")
 			break
 		}
 
@@ -332,7 +333,7 @@ func sweepFunctions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -361,7 +362,7 @@ func sweepKeyGroup(region string) error {
 	for {
 		output, err := conn.ListKeyGroupsWithContext(ctx, input)
 		if err != nil {
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping CloudFront key group sweep for %s: %s", region, err)
 				return nil
 			}
@@ -424,7 +425,7 @@ func sweepMonitoringSubscriptions(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudFront Monitoring Subscriptions sweep for %s: %s", region, err)
 			return nil
 		}
@@ -437,7 +438,6 @@ func sweepMonitoringSubscriptions(region string) error {
 	}
 
 	for _, distributionSummary := range distributionSummaries {
-
 		_, err := conn.GetMonitoringSubscriptionWithContext(ctx, &cloudfront.GetMonitoringSubscriptionInput{
 			DistributionId: distributionSummary.Id,
 		})
@@ -470,7 +470,7 @@ func sweepRealtimeLogsConfig(region string) error {
 	for {
 		output, err := conn.ListRealtimeLogConfigsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudFront Real-time Log Configs sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -544,7 +544,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Config sweep for %s: %s", region, err)
 		return nil
 	}
@@ -602,7 +602,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Profile sweep for %s: %s", region, err)
 		return nil
 	}
@@ -662,7 +662,7 @@ func sweepOriginRequestPolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Origin Request Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -722,7 +722,7 @@ func sweepResponseHeadersPolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Response Headers Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -780,7 +780,7 @@ func sweepOriginAccessControls(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Origin Access Control sweep for %s: %s", region, err)
 		return nil
 	}

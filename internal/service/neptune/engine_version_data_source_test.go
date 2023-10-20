@@ -19,7 +19,7 @@ import (
 func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
-	version := "1.0.2.1"
+	version := "1.1.0.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
@@ -60,7 +60,7 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "1.0.3.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "1.2.0.2"),
 				),
 			},
 		},
@@ -119,7 +119,7 @@ data "aws_neptune_engine_version" "test" {
 func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_neptune_engine_version" "test" {
-  preferred_versions = ["85.9.12", "1.0.3.0", "1.0.2.2"]
+  preferred_versions = ["85.9.12", "1.2.0.2", "1.1.0.0"]
 }
 `
 }

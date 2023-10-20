@@ -572,6 +572,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceImageBlockPublicAccess,
+			TypeName: "aws_ec2_image_block_public_access",
+			Name:     "Image Block Public Access",
+		},
+		{
 			Factory:  ResourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
 		},
@@ -958,6 +963,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstanceLoggingConfiguration,
+			TypeName: "aws_verifiedaccess_instance_logging_configuration",
+			Name:     "Verified Access Instance Logging Configuration",
 		},
 		{
 			Factory:  ResourceVerifiedAccessInstanceTrustProviderAttachment,

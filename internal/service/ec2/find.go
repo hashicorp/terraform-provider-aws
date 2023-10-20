@@ -7154,6 +7154,60 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client,
 	return output, nil
 }
 
+func FindVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	output, err := FindVerifiedAccessInstanceLoggingConfigurations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) ([]awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	var output []awstypes.VerifiedAccessInstanceLoggingConfiguration
+	paginator := ec2_sdkv2.NewDescribeVerifiedAccessInstanceLoggingConfigurationsPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LoggingConfigurations...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput{
+		VerifiedAccessInstanceIds: []string{id},
+	}
+	output, err := FindVerifiedAccessInstanceLoggingConfiguration(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessInstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2_sdkv2.Client, vaiID, vatpID string) error {
 	output, err := FindVerifiedAccessInstanceByID(ctx, conn, vaiID)
 
@@ -7224,4 +7278,19 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2_sdkv2.Cl
 	}
 
 	return output, nil
+}
+
+func FindImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client) (*string, error) {
+	input := &ec2_sdkv2.GetImageBlockPublicAccessStateInput{}
+	output, err := conn.GetImageBlockPublicAccessState(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImageBlockPublicAccessState == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ImageBlockPublicAccessState, nil
 }

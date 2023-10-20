@@ -27,6 +27,24 @@ func init() {
 	acctest.RegisterServiceErrorCheckFunc(rds.EndpointsID, testAccErrorCheckSkip)
 }
 
+func testAccClusterImportStep(n string) resource.TestStep {
+	return resource.TestStep{
+		ResourceName:      n,
+		ImportState:       true,
+		ImportStateVerify: true,
+		ImportStateVerifyIgnore: []string{
+			"allow_major_version_upgrade",
+			"apply_immediately",
+			"db_instance_parameter_group_name",
+			"enable_global_write_forwarding",
+			"manage_master_user_password",
+			"master_password",
+			"master_user_secret_kms_key_id",
+			"skip_final_snapshot",
+		},
+	}
+}
+
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"engine mode serverless you requested is currently unavailable",
@@ -55,9 +73,11 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql5.7"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql8.0"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
@@ -71,20 +91,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -113,6 +120,54 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "cluster_identifier", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccRDSCluster_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "cluster_identifier", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccRDSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
@@ -133,6 +188,7 @@ func TestAccRDSCluster_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
+			testAccClusterImportStep(resourceName),
 			{
 				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
@@ -148,50 +204,6 @@ func TestAccRDSCluster_tags(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_identifierGenerated(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_identifierGenerated(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-")),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSCluster_identifierPrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_identifierPrefix("tf-test-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 		},
@@ -229,20 +241,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2, true),
 				Check: resource.ComposeTestCheckFunc(
@@ -287,20 +286,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -389,20 +375,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, engine, engineVersion2, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -445,21 +418,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"engine_version",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -1684,20 +1643,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"manage_master_user_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -1730,21 +1676,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"manage_master_user_password",
-					"master_user_secret_kms_key_id",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -1774,20 +1706,7 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "manage_master_user_password"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
+			testAccClusterImportStep(resourceName),
 			{
 				Config: testAccClusterConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2661,10 +2580,70 @@ resource "aws_rds_cluster" "test" {
   engine                          = "aurora-mysql"
   master_username                 = "tfacctest"
   master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
+  db_cluster_parameter_group_name = "default.aurora-mysql8.0"
   skip_final_snapshot             = true
 }
 `, rName)
+}
+
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql8.0"
+  skip_final_snapshot             = true
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql8.0"
+  skip_final_snapshot             = true
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccClusterConfig_identifierGenerated() string {
+	return `
+resource "aws_rds_cluster" "test" {
+  engine              = "aurora-mysql"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+}
+`
+}
+
+func testAccClusterConfig_identifierPrefix(identifierPrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier_prefix = %[1]q
+  engine                    = "aurora-mysql"
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+}
+`, identifierPrefix)
 }
 
 func testAccClusterConfig_managedMasterPassword(rName string) string {
@@ -2720,66 +2699,6 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, rName)
-}
-
-func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "test"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  engine                          = "aurora-mysql"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  skip_final_snapshot             = true
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "test"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  engine                          = "aurora-mysql"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  skip_final_snapshot             = true
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccClusterConfig_identifierGenerated() string {
-	return `
-resource "aws_rds_cluster" "test" {
-  engine              = "aurora-mysql"
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
-  skip_final_snapshot = true
-}
-`
-}
-
-func testAccClusterConfig_identifierPrefix(identifierPrefix string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier_prefix = %[1]q
-  engine                    = "aurora-mysql"
-  master_username           = "tfacctest"
-  master_password           = "avoid-plaintext-passwords"
-  skip_final_snapshot       = true
-}
-`, identifierPrefix)
 }
 
 func testAccClusterConfig_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediately bool) string {

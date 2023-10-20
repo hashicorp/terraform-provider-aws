@@ -296,7 +296,7 @@ The `root_block_device` block supports the following:
 * `tags` - (Optional) Map of tags to assign to the device.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
-* `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
+* `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to the volume type that the AMI uses.
 
 Modifying the `encrypted` or `kms_key_id` settings of the `root_block_device` requires resource replacement.
 

@@ -3322,3 +3322,15 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Cli
 
 	return nil, err
 }
+
+func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client, target string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{target},
+		Refresh: StatusImageBlockPublicAccessState(ctx, conn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}

@@ -15,6 +15,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -411,4 +412,153 @@ func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigra
 	}
 
 	return nil
+}
+
+func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	input := &dms.DescribeReplicationTasksInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("replication-task-id"),
+				Values: []*string{aws.String(id)}, // Must use d.Id() to work with import.
+			},
+		},
+	}
+
+	var results []*dms.ReplicationTask
+
+	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, task := range page.ReplicationTasks {
+			if task == nil {
+				continue
+			}
+			results = append(results, task)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(results); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return results[0], nil
+}
+
+func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReplicationTaskByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+const (
+	replicationTaskRunningTimeout = 5 * time.Minute
+)
+
+func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusModifying},
+		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusCreating},
+		Target:     []string{replicationTaskStatusReady},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusStarting},
+		Target:     []string{replicationTaskStatusRunning},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    replicationTaskRunningTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
+		Target:     []string{replicationTaskStatusStopped},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    replicationTaskRunningTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      60 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
