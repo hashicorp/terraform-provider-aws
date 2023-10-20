@@ -401,7 +401,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_bareMetal(t *test
 	})
 }
 
-func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselineEbsBandwidthMbps(t *testing.T) {
+func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselineEBSBandwidthMbps(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 

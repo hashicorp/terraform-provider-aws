@@ -283,7 +283,7 @@ type instanceRequirementsData struct {
 	AcceleratorTypes                          types.List   `tfsdk:"accelerator_types"`
 	AllowedInstanceTypes                      types.List   `tfsdk:"allowed_instance_types"`
 	BareMetal                                 types.String `tfsdk:"bare_metal"`
-	BaselineEbsBandwidthMbps                  types.Object `tfsdk:"baseline_ebs_bandwidth_mbps"`
+	BaselineEBSBandwidthMbps                  types.Object `tfsdk:"baseline_ebs_bandwidth_mbps"`
 	BurstablePerformance                      types.String `tfsdk:"burstable_performance"`
 	CPUManufacturers                          types.List   `tfsdk:"cpu_manufacturers"`
 	ExcludedInstanceTypes                     types.List   `tfsdk:"excluded_instance_types"`
@@ -331,8 +331,8 @@ func (ir *instanceRequirementsData) expand(ctx context.Context, diags *diag.Diag
 		result.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBData(ctx, ir.AcceleratorTotalMemoryMiB, diags)
 	}
 
-	if !ir.BaselineEbsBandwidthMbps.IsNull() {
-		result.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsData(ctx, ir.BaselineEbsBandwidthMbps, diags)
+	if !ir.BaselineEBSBandwidthMbps.IsNull() {
+		result.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsData(ctx, ir.BaselineEBSBandwidthMbps, diags)
 	}
 
 	if !ir.MemoryGiBPerVCPU.IsNull() {
@@ -450,12 +450,12 @@ func expandAcceleratorTotalMemoryMiBData(ctx context.Context, object types.Objec
 	return options.expand(ctx)
 }
 
-type baselineEbsBandwidthMbpsData struct {
+type baselineEBSBandwidthMbpsData struct {
 	Min types.Int64 `tfsdk:"min"`
 	Max types.Int64 `tfsdk:"max"`
 }
 
-func (b *baselineEbsBandwidthMbpsData) expand(ctx context.Context) *ec2.BaselineEbsBandwidthMbpsRequest {
+func (b *baselineEBSBandwidthMbpsData) expand(ctx context.Context) *ec2.BaselineEbsBandwidthMbpsRequest {
 	if b == nil {
 		return nil
 	}
@@ -466,7 +466,7 @@ func (b *baselineEbsBandwidthMbpsData) expand(ctx context.Context) *ec2.Baseline
 }
 
 func expandBaselineEBSBandwidthMbpsData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.BaselineEbsBandwidthMbpsRequest {
-	var options baselineEbsBandwidthMbpsData
+	var options baselineEBSBandwidthMbpsData
 	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
