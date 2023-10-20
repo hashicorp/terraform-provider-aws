@@ -40,11 +40,11 @@ func TestAccKafkaBootstrapBrokersDataSourcebasic(t *testing.T) {
 func testAccBootstrapBrokersataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_serverless_cluster" "test" {
-  cluster_name           = %[1]q
+  cluster_name = %[1]q
 
   vpc_config {
-      subnet_ids = aws_subnet.test[*].id
-      security_groups = [aws_security_group.test.id]
+    subnet_ids = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
   }
 
   client_authentication {
