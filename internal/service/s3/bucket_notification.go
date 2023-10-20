@@ -305,7 +305,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "NotificationConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket
+		err = errDirectoryBucket(err)
 	}
 
 	if err != nil {

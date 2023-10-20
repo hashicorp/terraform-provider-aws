@@ -124,7 +124,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "IntelligentTieringConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket
+		err = errDirectoryBucket(err)
 	}
 
 	if err != nil {

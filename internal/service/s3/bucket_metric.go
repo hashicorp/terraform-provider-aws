@@ -98,7 +98,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "MetricsConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket
+		err = errDirectoryBucket(err)
 	}
 
 	if err != nil {

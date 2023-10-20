@@ -75,7 +75,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket
+		err = errDirectoryBucket(err)
 	}
 
 	if err != nil {

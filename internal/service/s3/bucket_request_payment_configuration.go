@@ -75,7 +75,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "RequestPaymentConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket
+		err = errDirectoryBucket(err)
 	}
 
 	if err != nil {

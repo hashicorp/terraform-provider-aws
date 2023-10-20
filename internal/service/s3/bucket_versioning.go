@@ -128,7 +128,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}, errCodeNoSuchBucket)
 
 		if tfawserr.ErrMessageContains(err, errCodeSerializationException, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
-			err = errDirectoryBucket
+			err = errDirectoryBucket(err)
 		}
 
 		if err != nil {

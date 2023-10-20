@@ -4,7 +4,7 @@
 package s3
 
 import (
-	"errors"
+	"fmt"
 )
 
 // Error code constants missing from AWS Go SDK:
@@ -48,6 +48,6 @@ const (
 	ErrMessageBucketAlreadyExists = "bucket already exists"
 )
 
-var (
-	errDirectoryBucket = errors.New(`directory buckets are not supported`)
-)
+func errDirectoryBucket(err error) error {
+	return fmt.Errorf("directory buckets are not supported: %w", err)
+}
