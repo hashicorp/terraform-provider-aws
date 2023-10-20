@@ -49,6 +49,21 @@ func ResourceConfigRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
+			"evaluation_mode": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(configservice.EvaluationMode_Values(), false),
+						},
+					},
+				},
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -206,9 +221,15 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("description"); ok {
 		ruleInput.Description = aws.String(v.(string))
 	}
+
+	if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
+		ruleInput.EvaluationModes = expandRulesEvaluationModes(v.List())
+	}
+
 	if v, ok := d.GetOk("input_parameters"); ok {
 		ruleInput.InputParameters = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
 		ruleInput.MaximumExecutionFrequency = aws.String(v.(string))
 	}
