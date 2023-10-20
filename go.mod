@@ -192,3 +192,173 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/aws/aws-sdk-go-v2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2
+
+replace github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream
+
+replace github.com/aws/aws-sdk-go-v2/config => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/config
+
+replace github.com/aws/aws-sdk-go-v2/credentials => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/credentials
+
+replace github.com/aws/aws-sdk-go-v2/feature/ec2/imds => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/feature/ec2/imds
+
+replace github.com/aws/aws-sdk-go-v2/feature/s3/manager => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/feature/s3/manager
+
+replace github.com/aws/aws-sdk-go-v2/internal/configsources => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/internal/configsources
+
+replace github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
+
+replace github.com/aws/aws-sdk-go-v2/internal/ini => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/internal/ini
+
+replace github.com/aws/aws-sdk-go-v2/internal/v4a => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/internal/v4a
+
+replace github.com/aws/aws-sdk-go-v2/service/accessanalyzer => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/accessanalyzer
+
+replace github.com/aws/aws-sdk-go-v2/service/account => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/account
+
+replace github.com/aws/aws-sdk-go-v2/service/acm => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/acm
+
+replace github.com/aws/aws-sdk-go-v2/service/appconfig => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/appconfig
+
+replace github.com/aws/aws-sdk-go-v2/service/auditmanager => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/auditmanager
+
+replace github.com/aws/aws-sdk-go-v2/service/cleanrooms => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/cleanrooms
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudcontrol => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/cloudcontrol
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs
+
+replace github.com/aws/aws-sdk-go-v2/service/codecatalyst => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/codecatalyst
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarconnections => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/codestarconnections
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarnotifications => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/codestarnotifications
+
+replace github.com/aws/aws-sdk-go-v2/service/comprehend => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/comprehend
+
+replace github.com/aws/aws-sdk-go-v2/service/computeoptimizer => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/computeoptimizer
+
+replace github.com/aws/aws-sdk-go-v2/service/directoryservice => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/directoryservice
+
+replace github.com/aws/aws-sdk-go-v2/service/docdbelastic => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/docdbelastic
+
+replace github.com/aws/aws-sdk-go-v2/service/dynamodb => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/dynamodb
+
+replace github.com/aws/aws-sdk-go-v2/service/ec2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ec2
+
+replace github.com/aws/aws-sdk-go-v2/service/emrserverless => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/emrserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/finspace => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/finspace
+
+replace github.com/aws/aws-sdk-go-v2/service/fis => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/fis
+
+replace github.com/aws/aws-sdk-go-v2/service/glacier => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/glacier
+
+replace github.com/aws/aws-sdk-go-v2/service/healthlake => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/healthlake
+
+replace github.com/aws/aws-sdk-go-v2/service/iam => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/iam
+
+replace github.com/aws/aws-sdk-go-v2/service/identitystore => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/identitystore
+
+replace github.com/aws/aws-sdk-go-v2/service/inspector2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/inspector2
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/checksum => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internal/checksum
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/presigned-url => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internal/presigned-url
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/s3shared => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internal/s3shared
+
+replace github.com/aws/aws-sdk-go-v2/service/internetmonitor => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/internetmonitor
+
+replace github.com/aws/aws-sdk-go-v2/service/ivschat => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ivschat
+
+replace github.com/aws/aws-sdk-go-v2/service/kafka => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/kafka
+
+replace github.com/aws/aws-sdk-go-v2/service/kendra => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/kendra
+
+replace github.com/aws/aws-sdk-go-v2/service/keyspaces => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/keyspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/lambda => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/lambda
+
+replace github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/lexmodelsv2
+
+replace github.com/aws/aws-sdk-go-v2/service/lightsail => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/lightsail
+
+replace github.com/aws/aws-sdk-go-v2/service/mediaconnect => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/mediaconnect
+
+replace github.com/aws/aws-sdk-go-v2/service/medialive => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/medialive
+
+replace github.com/aws/aws-sdk-go-v2/service/mediapackage => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/mediapackage
+
+replace github.com/aws/aws-sdk-go-v2/service/oam => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/oam
+
+replace github.com/aws/aws-sdk-go-v2/service/opensearchserverless => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/opensearchserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/pipes => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/pipes
+
+replace github.com/aws/aws-sdk-go-v2/service/pricing => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/pricing
+
+replace github.com/aws/aws-sdk-go-v2/service/qldb => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/qldb
+
+replace github.com/aws/aws-sdk-go-v2/service/rbin => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/rbin
+
+replace github.com/aws/aws-sdk-go-v2/service/rds => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/rds
+
+replace github.com/aws/aws-sdk-go-v2/service/redshiftdata => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/redshiftdata
+
+replace github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/resourceexplorer2
+
+replace github.com/aws/aws-sdk-go-v2/service/resourcegroups => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/resourcegroups
+
+replace github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi
+
+replace github.com/aws/aws-sdk-go-v2/service/rolesanywhere => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/rolesanywhere
+
+replace github.com/aws/aws-sdk-go-v2/service/route53domains => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/route53domains
+
+replace github.com/aws/aws-sdk-go-v2/service/s3 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/s3
+
+replace github.com/aws/aws-sdk-go-v2/service/s3control => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/s3control
+
+replace github.com/aws/aws-sdk-go-v2/service/scheduler => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/scheduler
+
+replace github.com/aws/aws-sdk-go-v2/service/securitylake => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/securitylake
+
+replace github.com/aws/aws-sdk-go-v2/service/servicequotas => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/servicequotas
+
+replace github.com/aws/aws-sdk-go-v2/service/sesv2 => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/sesv2
+
+replace github.com/aws/aws-sdk-go-v2/service/signer => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/signer
+
+replace github.com/aws/aws-sdk-go-v2/service/sqs => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/sqs
+
+replace github.com/aws/aws-sdk-go-v2/service/ssm => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ssm
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmcontacts => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ssmcontacts
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmincidents => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ssmincidents
+
+replace github.com/aws/aws-sdk-go-v2/service/sso => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/sso
+
+replace github.com/aws/aws-sdk-go-v2/service/ssooidc => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/ssooidc
+
+replace github.com/aws/aws-sdk-go-v2/service/sts => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/sts
+
+replace github.com/aws/aws-sdk-go-v2/service/swf => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/swf
+
+replace github.com/aws/aws-sdk-go-v2/service/timestreamwrite => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/timestreamwrite
+
+replace github.com/aws/aws-sdk-go-v2/service/transcribe => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/transcribe
+
+replace github.com/aws/aws-sdk-go-v2/service/verifiedpermissions => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/verifiedpermissions
+
+replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/vpclattice
+
+replace github.com/aws/aws-sdk-go-v2/service/workspaces => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/workspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/xray => /Users/ewbankkit/src/github.com/aws/aws-sdk-go-v2/service/xray
