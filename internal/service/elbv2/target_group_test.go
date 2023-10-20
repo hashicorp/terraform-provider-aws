@@ -2355,34 +2355,42 @@ func TestAccELBV2LoadBalancer_targetHealthStateUnhealthyConnectionTermination(t 
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP", true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
-				),
-			},
-			{
 				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "false"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "UDP", true),
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TCP_UDP", true),
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TLS", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "false"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, "TLS", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
 				),
 			},
@@ -3169,13 +3177,13 @@ resource "aws_vpc" "test" {
 func testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, protocol string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name_prefix = "tf-"
+  name        = %[1]q
   port        = 25
-  protocol    = %[1]q
+  protocol    = %[2]q
   vpc_id      = aws_vpc.test.id
 
   target_health_state {
-    enable_unhealthy_connection_termination = %[2]t
+    enable_unhealthy_connection_termination = %[3]t
   }
 }
 
@@ -3183,10 +3191,10 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %[3]q
+    Name = %[1]q
   }
 }
-`, protocol, enabled, rName)
+`, rName, protocol, enabled)
 }
 
 func testAccTargetGroupConfig_typeTCP(rName string) string {
