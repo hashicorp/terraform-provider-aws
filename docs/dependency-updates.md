@@ -38,7 +38,7 @@ CloudFront service client updates have previously caused an issue when a new fie
 
 Merge if CI passes.
 
-## Terraform Plugin SDK Updates
+## Terraform Plugin Development Package Updates (SDK V2 or Framework)
 
 Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
 
