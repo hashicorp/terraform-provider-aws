@@ -138,7 +138,7 @@ type foundationModelSummary struct {
 func flattenFoundationModelSummaries(ctx context.Context, models []bedrock_types.FoundationModelSummary) types.List {
 	attributeTypes := flex.AttributeTypesMust[foundationModelSummary](ctx)
 
-	// HACK: Reflection used above to build the attributeTypes cannot determing the ElemType
+	// HACK: Reflection used above to build the attributeTypes cannot determine the ElemType
 	attributeTypes["customizations_supported"] = types.SetType{ElemType: types.StringType}
 	attributeTypes["inference_types_supported"] = types.SetType{ElemType: types.StringType}
 	attributeTypes["input_modalities"] = types.SetType{ElemType: types.StringType}
