@@ -289,11 +289,11 @@ See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
 * `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
-  - RDS for MariaDB: `general-public-license`
-  - RDS for Microsoft SQL Server: `license-included`
-  - RDS for MySQL: `general-public-license`
-  - RDS for Oracle: `bring-your-own-license | license-included`
-  - RDS for PostgreSQL: `postgresql-license`
+    * RDS for MariaDB: `general-public-license`
+    * RDS for Microsoft SQL Server: `license-included`
+    * RDS for MySQL: `general-public-license`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresql-license`
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
