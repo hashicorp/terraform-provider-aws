@@ -73,13 +73,13 @@ func dataSourceUserGroupsRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(userPoolId)
-	if err := d.Set("groups", flattenUserGroups(ctx, resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
 		return append(diags, create.DiagError(names.CognitoIDP, create.ErrActionSetting, DSNameUserGroups, d.Id(), err)...)
 	}
 	return diags
 }
 
-func flattenUserGroups(ctx context.Context, groups []*cognitoidentityprovider.GroupType) []interface{} {
+func flattenUserGroups(groups []*cognitoidentityprovider.GroupType) []interface{} {
 	results := make([]interface{}, 0, len(groups))
 	for _, group := range groups {
 		results = append(results, map[string]interface{}{
