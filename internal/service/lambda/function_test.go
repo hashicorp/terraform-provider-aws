@@ -3937,7 +3937,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 
   vpc_config {
-	ipv6_allowed_for_dual_stack = true
+    ipv6_allowed_for_dual_stack = true
     subnet_ids                  = [aws_subnet.subnet_for_lambda[0].id]
     security_group_ids          = [aws_security_group.sg_for_lambda.id]
   }
