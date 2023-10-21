@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -18,12 +19,13 @@ import (
 // @FrameworkDataSource
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceARN{}
+	d.SetImpl(d)
 
 	return d, nil
 }
 
 type dataSourceARN struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithConfigureEx[dataSourceARNData]
 }
 
 // Metadata should return the full name of the data source, such as
@@ -63,19 +65,10 @@ func (d *dataSourceARN) Schema(ctx context.Context, req datasource.SchemaRequest
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceARNData
-
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
+func (d *dataSourceARN) OnRead(ctx context.Context, data *dataSourceARNData) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	arn := data.ARN.ValueARN()
-
 	data.Account = types.StringValue(arn.AccountID)
 	data.ID = types.StringValue(arn.String())
 	data.Partition = types.StringValue(arn.Partition)
@@ -83,7 +76,7 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 	data.Resource = types.StringValue(arn.Resource)
 	data.Service = types.StringValue(arn.Service)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	return diags
 }
 
 type dataSourceARNData struct {
