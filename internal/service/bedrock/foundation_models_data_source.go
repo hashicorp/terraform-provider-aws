@@ -6,12 +6,10 @@ package bedrock
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -102,25 +100,14 @@ func (d *dataSourceFoundationModels) Read(ctx context.Context, request datasourc
 	}
 
 	data.ID = flex.StringToFramework(ctx, &d.Meta().Region)
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, models)...)
+	data.ModelSummaries = flattenFoundationModelSummaries(ctx, models.ModelSummaries)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type foundationModels struct {
 	ID             types.String `tfsdk:"id"`
 	ModelSummaries types.List   `tfsdk:"model_summaries"`
-}
-
-func (fms *foundationModels) refreshFromOutput(ctx context.Context, out *bedrock.ListFoundationModelsOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	fms.ModelSummaries = flattenFoundationModelSummaries(ctx, out.ModelSummaries)
-
-	return diags
 }
 
 type foundationModelSummary struct {
