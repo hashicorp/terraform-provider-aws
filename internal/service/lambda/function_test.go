@@ -3918,8 +3918,8 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 
   vpc_config {
-    subnet_ids                  = [aws_subnet.subnet_for_lambda[0].id]
-    security_group_ids          = [aws_security_group.sg_for_lambda.id]
+    subnet_ids         = [aws_subnet.subnet_for_lambda[0].id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
   }
 }
 `, rName))
