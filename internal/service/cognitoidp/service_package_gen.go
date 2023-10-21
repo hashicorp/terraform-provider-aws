@@ -33,6 +33,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceUserGroup,
+			TypeName: "aws_cognito_user_group",
+			Name:     "User Group",
+		},
+		{
+			Factory:  DataSourceUserGroups,
+			TypeName: "aws_cognito_user_groups",
+			Name:     "User Groups",
+		},
+		{
 			Factory:  DataSourceUserPoolClient,
 			TypeName: "aws_cognito_user_pool_client",
 		},
