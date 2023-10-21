@@ -1,0 +1,6 @@
+```release-note:new-data-source
+cognito_user_group
+```
+```release-note:new-data-source
+cognito_user_groups
+```
