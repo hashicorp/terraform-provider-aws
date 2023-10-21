@@ -266,6 +266,28 @@ func TestAccImageBuilderImage_containerRecipeARN(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImage_imageScanningConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_imageScanningConfigurationEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderImage_outputResources_containers(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -562,7 +584,7 @@ resource "aws_imagebuilder_image" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccImageConfig_containerRecipe(rName string) string {
+func testAccImageConfig_containerRecipeBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -682,10 +704,36 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
   depends_on = [aws_default_route_table.test]
 }
+	`, rName)
+}
 
+func testAccImageConfig_containerRecipe(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageConfig_containerRecipeBase(rName),
+		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
 }
-`, rName)
+`))
+}
+
+func testAccImageConfig_imageScanningConfigurationEnabled(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageConfig_containerRecipeBase(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image" "test" {
+  container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+
+  image_scanning_configuration {
+    image_scanning_enabled = true
+
+    ecr_configuration {
+      repository_name = aws_ecr_repository.test.name
+      container_tags  = ["foo", "bar"]
+    }
+  }
+}
+`))
 }

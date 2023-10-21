@@ -73,6 +73,42 @@ func ResourceImage() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"repository_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -202,6 +238,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -270,6 +310,12 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
+	}
+
+	if image.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
 	}
 
 	if image.ImageTestsConfiguration != nil {
