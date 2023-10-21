@@ -102,6 +102,7 @@ func TestAccImageBuilderImageDataSource_ARN_containerRecipe(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.#", resourceName, "output_resources.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.#", resourceName, "output_resources.0.containers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.0.image_uris.#", resourceName, "output_resources.0.containers.0.image_uris.#"),

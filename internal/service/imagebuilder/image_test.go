@@ -710,18 +710,18 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 func testAccImageConfig_containerRecipe(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageConfig_containerRecipeBase(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_imagebuilder_image" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
 }
-`))
+`)
 }
 
 func testAccImageConfig_imageScanningConfigurationEnabled(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageConfig_containerRecipeBase(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_imagebuilder_image" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -735,5 +735,5 @@ resource "aws_imagebuilder_image" "test" {
     }
   }
 }
-`))
+`)
 }
