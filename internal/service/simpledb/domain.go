@@ -27,7 +27,6 @@ import (
 // @FrameworkResource
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

@@ -40,7 +40,6 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

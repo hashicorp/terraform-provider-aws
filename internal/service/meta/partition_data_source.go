@@ -15,7 +15,6 @@ import (
 // @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePartition{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

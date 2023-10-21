@@ -19,7 +19,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

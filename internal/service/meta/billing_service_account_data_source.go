@@ -16,7 +16,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceBillingServiceAccount{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

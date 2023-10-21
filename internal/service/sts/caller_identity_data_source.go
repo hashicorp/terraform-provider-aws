@@ -17,7 +17,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCallerIdentity{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

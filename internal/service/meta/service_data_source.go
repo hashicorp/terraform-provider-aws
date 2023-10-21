@@ -19,7 +19,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceService{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

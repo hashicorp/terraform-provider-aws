@@ -18,7 +18,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceARN{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
