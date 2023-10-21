@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -22,4 +23,39 @@ func (d *DataSourceWithConfigure) Configure(_ context.Context, request datasourc
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		d.meta = v
 	}
+}
+
+type dataSourceReader[T any] interface {
+	// Read is called when the provider must read data source values in order to update state.
+	// On entry `data` contains Config values and on return `data` is written to State.
+	OnRead(ctx context.Context, data *T) diag.Diagnostics
+}
+
+type DataSourceWithConfigureEx[T any] struct {
+	DataSourceWithConfigure
+
+	impl dataSourceReader[T]
+}
+
+// SetImpl sets the reader implementation.
+func (d *DataSourceWithConfigureEx[T]) SetImpl(impl dataSourceReader[T]) {
+	d.impl = impl
+}
+
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *DataSourceWithConfigureEx[T]) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data T
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(d.impl.OnRead(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
