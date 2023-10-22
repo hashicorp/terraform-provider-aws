@@ -60,6 +60,19 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"server_side_encryption_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_arn": {
+							Type:     schema.TypeString,
+							Optional: false,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"verifiedaccess_group_arn": {
