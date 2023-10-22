@@ -469,6 +469,14 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccClusterConfig_cloudWatchLogsExports(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "slowquery"),
+				),
+			},
+			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
