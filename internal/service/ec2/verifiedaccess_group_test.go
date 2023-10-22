@@ -59,6 +59,40 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessGroup_kms(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_kms(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.cmk_enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVerifiedAccessGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
@@ -256,6 +290,20 @@ func testAccVerifiedAccessGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), `
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+`)
+}
+
+func testAccVerifiedAccessGroupConfig_kms(rName string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), `
+resource "aws_kms_key" "test_key" {
+  description = "KMS key for Verified Access Group test"
+}
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+  server_side_encryption_configuration {
+	kms_key_arn = aws_kms_key.test_key.arn
+  }
 }
 `)
 }

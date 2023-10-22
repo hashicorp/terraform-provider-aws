@@ -20,6 +20,20 @@ resource "aws_verifiedaccess_group" "example" {
 }
 ```
 
+### Usage with KMS Key
+
+```terraform
+resource "aws_kms_key" "test_key" {
+  description = "KMS key for Verified Access Group test"
+}
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+  server_side_encryption_configuration {
+	  kms_key_arn = aws_kms_key.test_key.arn
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -31,6 +45,8 @@ The following arguments are optional:
 * `description` - (Optional) Description of the verified access group.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `policy_docment` - (Optional) The policy document that is associated with this resource.
+* `server_side_encryption_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption
+  * `kms_key_arn` - The Arn of the KMS key to use
 
 ## Attribute Reference
 
@@ -42,6 +58,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner` - AWS account number owning this resource.
 * `verifiedaccess_group_arn` - ARN of this verified acess group.
 * `verifiedaccess_group_id` - ID of this verified access group.
+* `server_side_encryption_configuration` - Configuration information for KMS-based encryption.
+  * `kms_key_arn` - The Arn of the key being used.
+  * `cmk_enabled` - Boolean indicating if customer-managed keys (CMK) are being used.
 
 ## Timeouts
 

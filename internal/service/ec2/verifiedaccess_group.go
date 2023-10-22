@@ -64,11 +64,16 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kms_key_arn": {
 							Type:     schema.TypeString,
-							Optional: false,
+							Optional: true,
+						},
+						"cmk_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 					},
 				},
@@ -110,6 +115,10 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("server_side_encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SseSpecification = expandCreateVerifiedAccessGroupSseConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	output, err := conn.CreateVerifiedAccessGroup(ctx, input)
 
 	if err != nil {
@@ -145,6 +154,14 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("verifiedaccess_group_arn", group.VerifiedAccessGroupArn)
 	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
 	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
+
+	if v := group.SseSpecification; v != nil {
+		if err := d.Set("server_side_encryption_configuration", flattenCreateVerifiedAccessGroupSseConfiguration(v)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting sse configuration: %s", err)
+		}
+	} else {
+		d.Set("server_side_encryption_configuration", nil)
+	}
 
 	setTagsOutV2(ctx, group.Tags)
 
@@ -217,4 +234,37 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func expandCreateVerifiedAccessGroupSseConfiguration(tfMap map[string]interface{}) *types.VerifiedAccessSseSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
+
+	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+		apiObject.KmsKeyArn = aws.String(v)
+		apiObject.CustomerManagedKeyEnabled = aws.Bool(true)
+	}
+
+	return apiObject
+}
+
+func flattenCreateVerifiedAccessGroupSseConfiguration(apiObject *types.VerifiedAccessSseSpecificationResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CustomerManagedKeyEnabled; v != nil {
+		tfMap["cmk_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.KmsKeyArn; v != nil {
+		tfMap["kms_key_arn"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
 }
