@@ -18,8 +18,7 @@ import (
 
 // @FrameworkDataSource
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceARN{}
-	d.SetImpl(d)
+	d := framework.NewDataSource[dataSourceARN, dataSourceARNData, *dataSourceARN]()
 
 	return d, nil
 }
