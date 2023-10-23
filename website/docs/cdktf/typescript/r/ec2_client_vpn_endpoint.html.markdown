@@ -104,6 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Client VPN endpoint.
 * `dnsName` - The DNS name to be used by clients when establishing their VPN session.
 * `id` - The ID of the Client VPN endpoint.
+* `selfServicePortalUrl` - The URL of the self-service portal.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -128,4 +129,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f4f8dbe89d75774796b216907972bd2bf3f8642b0b7ab8cdca495678b4b52ef6 -->
+<!-- cache-key: cdktf-0.18.0 input-668469ff889101884cb8259cd8c05b2008ff8bae928811357f2cfcabe260d50a -->
