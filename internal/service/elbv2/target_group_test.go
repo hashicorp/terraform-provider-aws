@@ -2342,7 +2342,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_targetHealthStateUnhealthyConnectionTermination(t *testing.T) {
+func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *testing.T) {
 	ctx := acctest.Context(t)
 	var targetGroup elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3177,10 +3177,10 @@ resource "aws_vpc" "test" {
 func testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, protocol string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name        = %[1]q
-  port        = 25
-  protocol    = %[2]q
-  vpc_id      = aws_vpc.test.id
+  name     = %[1]q
+  port     = 25
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
 
   target_health_state {
     enable_unhealthy_connection_termination = %[3]t

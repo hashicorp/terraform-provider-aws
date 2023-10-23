@@ -553,7 +553,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		// Only supported for TCP & TLS protocols
 		if v, ok := d.Get("protocol").(string); ok {
 			if v == elbv2.ProtocolEnumTcp || v == elbv2.ProtocolEnumTls {
-				fmt.Println("Protocol type", v)
 				if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 {
 					targetHealthStateBlock := v.([]interface{})
 					targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
