@@ -720,8 +720,8 @@ The following arguments are optional:
 * `program_date_time_period` (Optional) Period of insertion of EXT-X-PROGRAM-DATE-TIME entry, in seconds.
 * `redundant_manifest` (Optional) ENABLED: The master manifest (.m3u8 file) for each pipeline includes information about both pipelines: first its own media files, then the media files of the other pipeline. This feature allows playout device that support stale manifest detection to switch from one manifest to the other, when the current manifest seems to be stale. There are still two destinations and two master manifests, but both master manifests reference the media files from both pipelines.DISABLED: The master manifest (.m3u8 file) for each pipeline includes information about its own pipeline only.For an HLS output group with MediaPackage as the destination, the DISABLED behavior is always followed. MediaPackage regenerates the manifests it serves to players so a redundant manifest from MediaLive is irrelevant.
 * `segment_length` (Optional) Length of MPEG-2 Transport Stream segments to create in seconds. Note that segments will end on the next keyframe after this duration, so actual segment length may be longer.
-* `segments_per_subdirectory` (Optional) useInputSegmentation has been deprecated. The configured segment size is always used.
-* `stream_inf_resolution` (Optional) Number of segments to write to a subdirectory before starting a new one. directoryStructure must be subdirectoryPerStream for this setting to have an effect.
+* `segmentation_mode` (Optional) useInputSegmentation has been deprecated. The configured segment size is always used.
+* `segments_per_subdirectory` (Optional) Number of segments to write to a subdirectory before starting a new one. directoryStructure must be subdirectoryPerStream for this setting to have an effect.
 * `stream_inf_resolution` (Optional) Include or exclude RESOLUTION attribute for video in EXT-X-STREAM-INF tag of variant manifest.
 * `timed_metadata_id3_frame` (Optional) Indicates ID3 frame that has the timecode.
 * `timed_metadata_id3_period` (Optional) Timed Metadata interval in seconds.
