@@ -67,7 +67,7 @@ func ResourceTargetGroup() *schema.Resource {
 			"connection_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"deregistration_delay": {
 				Type:         nullable.TypeNullableInt,
