@@ -19,6 +19,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -41,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -916,6 +919,20 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 		if curr := Partition(); curr == partition {
 			t.Skipf("skipping tests; current partition (%s) not supported", curr)
 		}
+	}
+}
+
+func PreCheckInspector2(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+
+	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
+
+	if errs.IsA[*inspector2types.AccessDeniedException](err) {
+		t.Skipf("Amazon Inspector not available: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("listing Inspector2 delegated administrators: %s", err)
 	}
 }
 
