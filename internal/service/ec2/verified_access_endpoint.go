@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -15,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,7 +27,7 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_ec2_verified_access_endpoint", name="Verified Access Endpoint")
+// @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
 // Tagging annotations are used for "transparent tagging".
 // Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")
@@ -329,12 +332,9 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if !update {
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return diags. Otherwise, return a read call, as below.
 		return diags
 	}
 	
-	// TIP: -- 3. Call the AWS modify/update function
 	log.Printf("[DEBUG] Updating EC2 VerifiedAccessEndpoint (%s): %#v", d.Id(), in)
 	_, err := conn.ModifyVerifiedAccessEndpoint(ctx, in)
 	if err != nil {
@@ -370,27 +370,18 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-
 func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{types.VerifiedAccessEndpointStatusCode},
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(types.VerifiedAccessEndpoint); ok {
+	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
 		return out, err
 	}
 
@@ -399,9 +390,9 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 
 func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -417,9 +408,9 @@ func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id
 
 func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting,types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
 		Target:                    []string{},
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 	}
 
@@ -429,20 +420,6 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id
 	}
 
 	return nil, err
-}
-
-func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-		
-		return out, aws.ToString(out.Status.Message), nil
-	}
 }
 
 func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []interface{} {

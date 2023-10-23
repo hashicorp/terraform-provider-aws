@@ -1515,3 +1515,17 @@ func StatusImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Clie
 		return output, aws_sdkv2.ToString(output), nil
 	}
 }
+
+func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.Status.Code), nil
+	}
+}
