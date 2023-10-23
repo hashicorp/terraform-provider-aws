@@ -73,7 +73,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 						},
 						"cmk_enabled": {
 							Type:     schema.TypeBool,
-							Computed: true,
+							Optional: true,
 						},
 					},
 				},
@@ -245,7 +245,10 @@ func expandCreateVerifiedAccessGroupSseConfiguration(tfMap map[string]interface{
 
 	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
-		apiObject.CustomerManagedKeyEnabled = aws.Bool(true)
+	}
+
+	if v, ok := tfMap["cmk_enabled"].(bool); ok {
+		apiObject.CustomerManagedKeyEnabled = aws.Bool(v)
 	}
 
 	return apiObject
