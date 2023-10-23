@@ -31,9 +31,11 @@ func ResourceImage() *schema.Resource {
 		ReadWithoutTimeout:   resourceImageRead,
 		UpdateWithoutTimeout: resourceImageUpdate,
 		DeleteWithoutTimeout: resourceImageDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 		},
@@ -43,16 +45,16 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"container_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
+			"date_created": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
@@ -80,11 +82,6 @@ func ResourceImage() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 						"ecr_configuration": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -92,10 +89,6 @@ func ResourceImage() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"repository_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
 									"container_tags": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -103,8 +96,17 @@ func ResourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 								},
 							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
