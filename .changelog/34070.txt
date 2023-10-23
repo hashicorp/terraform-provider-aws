@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `target_health_state` block with attribute `enable_unhealthy_connection_termination` to disabling connection termination for unhealthy targets on NLB
+resource/aws_lb_target_group: Removes the default `false` value for the `connection_termination` attribute to support new default behavior for UDP/TCP_UDP target groups
+```
