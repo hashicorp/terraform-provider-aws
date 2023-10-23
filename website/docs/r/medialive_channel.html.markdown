@@ -781,12 +781,12 @@ The following arguments are optional:
 
 ### Key Provider Settings
 
-* `static_key_settings`
+* `static_key_settings` (Required) Static Key Settings. See [Static Key Settings](#static-key-settings) for more details.
 
 ### Static Key Settings
 
-* `static_key_value`
-* `key_provider_server`
+* `key_provider_server` (Optional) The URL of the license server used for protecting content.
+* `static_key_value` (Required) Static key value as a 32 character hexadecimal string.
 
 
 ### Media Package Group Settings
