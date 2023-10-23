@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dms_s3_endpoint: Don't send the default value of `false` for `add_trailing_padding_character` to maintain compatibility with older ((pre-3.4.7)[https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html#CHAP_ReleaseNotes.DMS347]) DMS engine versions ([#32698](https://github.com/hashicorp/terraform-provider-aws/issues/32698))
 * resource/aws_ecs_task_definition: Add `0` as a valid value for `volume.efs_volume_configuration.transit_encryption_port`, preventing unexpected drift ([#34020](https://github.com/hashicorp/terraform-provider-aws/issues/34020))
 * resource/aws_identitystore_group: Fix updating `description` attribute when it is changed ([#34037](https://github.com/hashicorp/terraform-provider-aws/issues/34037))
 * resource/aws_storagegateway_gateway: Support the value `0` (representing Sunday) for `maintenance_start_time.day_of_week` ([#34015](https://github.com/hashicorp/terraform-provider-aws/issues/34015))
