@@ -788,7 +788,6 @@ The following arguments are optional:
 * `key_provider_server` (Optional) The URL of the license server used for protecting content.
 * `static_key_value` (Required) Static key value as a 32 character hexadecimal string.
 
-
 ### Media Package Group Settings
 
 * `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
