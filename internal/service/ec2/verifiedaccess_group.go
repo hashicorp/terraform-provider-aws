@@ -174,6 +174,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		input := &ec2.ModifyVerifiedAccessGroupPolicyInput{
 			PolicyDocument:        aws.String(d.Get("policy_document").(string)),
 			VerifiedAccessGroupId: aws.String(d.Id()),
+			PolicyEnabled:         aws.Bool(true),
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, input)
