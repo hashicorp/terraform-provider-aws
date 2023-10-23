@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -45,10 +44,21 @@ func (r *resourceAccessGrantsInstance) Metadata(_ context.Context, request resou
 func (r *resourceAccessGrantsInstance) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"access_grants_instance_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"access_grants_instance_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString(r.Meta().AccountID),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,7 +66,6 @@ func (r *resourceAccessGrantsInstance) Schema(ctx context.Context, request resou
 					fwvalidators.AWSAccountID(),
 				},
 			},
-			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -65,7 +74,7 @@ func (r *resourceAccessGrantsInstance) Schema(ctx context.Context, request resou
 }
 
 func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceAccessGrantsInstanceData
+	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -75,27 +84,33 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
+	accountID := data.AccountID.ValueString()
+	if accountID == "" {
+		accountID = r.Meta().AccountID
+	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
-		AccountId: flex.StringFromFramework(ctx, data.AccountID),
+		AccountId: aws.String(accountID),
 	}
 
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating S3 Access Grants Instance", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	data.ARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
-	data.ID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
+	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.AccountID = types.StringValue(accountID)
+	data.ID = data.AccountID
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceAccessGrantsInstanceData
+	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -105,7 +120,7 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	output, err := findAccessGrantsInstance(ctx, conn, data.AccountID.ValueString())
+	output, err := findAccessGrantsInstance(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -115,19 +130,20 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Access Grants Instance (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set attributes for import.
-	data.ARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
+	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
+	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceAccessGrantsInstance) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceAccessGrantsInstanceData
+	var old, new accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 
@@ -145,11 +161,23 @@ func (r *resourceAccessGrantsInstance) Update(ctx context.Context, request resou
 }
 
 func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceAccessGrantsInstanceData
+	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().S3ControlClient(ctx)
+
+	_, err := conn.DeleteAccessGrantsInstance(ctx, &s3control.DeleteAccessGrantsInstanceInput{
+		AccountId: flex.StringFromFramework(ctx, data.AccountID),
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
+
 		return
 	}
 }
@@ -180,10 +208,11 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 	return output, nil
 }
 
-type resourceAccessGrantsInstanceData struct {
-	AccountID types.String `tfsdk:"account_id"`
-	ARN       types.String `tfsdk:"arn"`
-	ID        types.String `tfsdk:"id"`
-	Tags      types.Map    `tfsdk:"tags"`
-	TagsAll   types.Map    `tfsdk:"tags_all"`
+type accessGrantsInstanceResourceModel struct {
+	AccessGrantsInstanceARN types.String `tfsdk:"access_grants_instance_arn"`
+	AccessGrantsInstanceID  types.String `tfsdk:"access_grants_instance_id"`
+	AccountID               types.String `tfsdk:"account_id"`
+	ID                      types.String `tfsdk:"id"`
+	Tags                    types.Map    `tfsdk:"tags"`
+	TagsAll                 types.Map    `tfsdk:"tags_all"`
 }
