@@ -3908,7 +3908,7 @@ resource "aws_lambda_function" "test" {
 
 func testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLambdaDualStackBase(rName, rName, rName, 1),
+		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3918,7 +3918,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 
   vpc_config {
-    subnet_ids         = [aws_subnet.subnet_for_lambda[0].id]
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
     security_group_ids = [aws_security_group.sg_for_lambda.id]
   }
 }
@@ -3927,7 +3927,7 @@ resource "aws_lambda_function" "test" {
 
 func testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLambdaDualStackBase(rName, rName, rName, 1),
+		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3938,7 +3938,7 @@ resource "aws_lambda_function" "test" {
 
   vpc_config {
     ipv6_allowed_for_dual_stack = true
-    subnet_ids                  = [aws_subnet.subnet_for_lambda[0].id]
+    subnet_ids                  = [aws_subnet.subnet_for_lambda.id]
     security_group_ids          = [aws_security_group.sg_for_lambda.id]
   }
 }
