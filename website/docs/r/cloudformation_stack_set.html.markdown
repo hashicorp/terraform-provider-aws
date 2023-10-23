@@ -122,7 +122,7 @@ The `operation_preferences` configuration block supports the following arguments
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the StackSet.
-* `id` - Name of the StackSet.
+* `name` - Name of the StackSet.
 * `stack_set_id` - Unique identifier of the StackSet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
