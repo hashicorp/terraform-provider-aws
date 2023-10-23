@@ -2107,7 +2107,7 @@ func ConfigLambdaBase(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "%s"
+  name = %[1]q
   role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
@@ -2128,7 +2128,9 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "Action": [
         "ec2:CreateNetworkInterface",
         "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface"
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
       ],
       "Resource": [
         "*"
@@ -2158,7 +2160,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -2178,7 +2180,8 @@ EOF
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
   tags = {
     Name = "terraform-testacc-lambda-function"
@@ -2186,9 +2189,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-1"
@@ -2198,9 +2203,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # This is defined here, rather than only in test cases where it's needed is to
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-2"
@@ -2208,7 +2215,7 @@ resource "aws_subnet" "subnet_for_lambda_az2" {
 }
 
 resource "aws_security_group" "sg_for_lambda" {
-  name        = "%s"
+  name        = %[3]q
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.vpc_for_lambda.id
 
@@ -2224,6 +2231,10 @@ resource "aws_security_group" "sg_for_lambda" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[3]q
   }
 }
 `, policyName, roleName, sgName))
