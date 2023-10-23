@@ -56,19 +56,11 @@ func DataSourceImage() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
 						"ecr_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"repository_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"container_tags": {
 										Type:     schema.TypeSet,
 										Computed: true,
@@ -76,8 +68,16 @@ func DataSourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 					},
 				},
