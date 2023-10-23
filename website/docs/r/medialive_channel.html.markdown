@@ -403,6 +403,7 @@ The following arguments are optional:
 ### Output Group Settings
 
 * `archive_group_settings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
+* `hls_group_settings` - (Optional) HLS group settings. See [HLS Group Settings](#hls-group-settings) for more details.
 * `media_package_group_settings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
 * `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
 * `rtmp_group_settings` - (Optional) RTMP group settings. See [RTMP Group Settings](#rtmp-group-settings) for more details.
@@ -680,6 +681,113 @@ The following arguments are optional:
 * `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
 * `archive_cdn_settings` - (Optional) Parameters that control the interactions with the CDN. See [Archive CDN Settings](#archive-cdn-settings) for more details.
 * `rollover_interval` - (Optional) Number of seconds to write to archive file before closing and starting a new one.
+
+### HLS Group Settings
+
+* `destination` (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+* `ad_markers` - (Optional) Choose one or more ad marker types to pass SCTE35 signals through to this group of Apple HLS outputs
+* `base_url_content` (Optional) A partial URI prefix that will be prepended to each output in the media .m3u8 file. Can be used if base manifest is delivered from a different URL than the main .m3u8 file
+* `base_url_content1` (Optional) One value per output group. This field is required only if you are completing Base URL content A, and the downstream system has notified you that the media files for pipeline 1 of all outputs are in a location different from the media files for pipeline 0.
+* `base_url_manifest` (Optional) A partial URI prefix that will be prepended to each output in the media .m3u8 file. Can be used if base manifest is delivered from a different URL than the main .m3u8 file.
+* `base_url_manifest1` (Optional) One value per output group.Complete this field only if you are completing Base URL manifest A, and the downstream system has notified you that the child manifest files for pipeline 1 of all outputs are in a location different from the child manifest files for pipeline 0.
+* `caption_language_mappings` (Optional) Mapping of up to 4 caption channels to caption languages. Is only meaningful if captionLanguageSetting is set to "insert". See [Caption Language Mappings](#caption-language-mappings) for more details
+* `caption_language_setting` (Optional) Applies only to 608 Embedded output captions.insert: Include CLOSED-CAPTIONS lines in the manifest. Specify at least one language in the CC1 Language Code field. One CLOSED-CAPTION line is added for each Language Code you specify. Make sure to specify the languages in the order in which they appear in the original source (if the source is embedded format) or the order of the caption selectors (if the source is other than embedded). Otherwise, languages in the manifest will not match up properly with the output captions.none: Include CLOSED-CAPTIONS=NONE line in the manifest.omit: Omit any CLOSED-CAPTIONS line from the manifest.
+* `client_cache` (Optional) When set to "disabled", sets the #EXT-X-ALLOW-CACHE:no tag in the manifest, which prevents clients from saving media segments for later replay.
+* `codec_specification` (Optional) Specification to use (RFC-6381 or the default RFC-4281) during m3u8 playlist generation.
+* `constant_iv` (Optional) For use with encryptionType. This is a 128-bit, 16-byte hex value represented by a 32-character text string. If ivSource is set to "explicit" then this parameter is required and is used as the IV for encryption.
+* `directory_structure` (Optional) Place segments in subdirectories.
+* `discontinuity_tags` (Optional) Specifies whether to insert EXT-X-DISCONTINUITY tags in the HLS child manifests for this output group.Typically, choose Insert because these tags are required in the manifest (according to the HLS specification) and serve an important purpose.Choose Never Insert only if the downstream system is doing real-time failover (without using the MediaLive automatic failover feature) and only if that downstream system has advised you to exclude the tags.
+* `encryption_type` (Optional) Encrypts the segments with the given encryption scheme. Exclude this parameter if no encryption is desired.
+* `hls_cdn_settings` (Optional) Parameters that control interactions with the CDN. See [HLS CDN Settings](#hls-cdn-settings) for more details.
+* `hls_id3_segment_tagging` (Optional) State of HLS ID3 Segment Tagging.
+* `iframe_only_playlists` (Optional) DISABLED: Do not create an I-frame-only manifest, but do create the master and media manifests (according to the Output Selection field).STANDARD: Create an I-frame-only manifest for each output that contains video, as well as the other manifests (according to the Output Selection field). The I-frame manifest contains a #EXT-X-I-FRAMES-ONLY tag to indicate it is I-frame only, and one or more #EXT-X-BYTERANGE entries identifying the I-frame position. For example, #EXT-X-BYTERANGE:160364@1461888"
+* `incomplete_segment_behavior` (Optional) Specifies whether to include the final (incomplete) segment in the media output when the pipeline stops producing output because of a channel stop, a channel pause or a loss of input to the pipeline.Auto means that MediaLive decides whether to include the final segment, depending on the channel class and the types of output groups.Suppress means to never include the incomplete segment. We recommend you choose Auto and let MediaLive control the behavior.
+* `index_n_segments` (Optional) Applies only if Mode field is LIVE.Specifies the maximum number of segments in the media manifest file. After this maximum, older segments are removed from the media manifest. This number must be smaller than the number in the Keep Segments field.
+* `input_loss_action` (Optional) Parameter that control output group behavior on input loss.
+* `iv_in_manifest` (Optional) For use with encryptionType. The IV (Initialization Vector) is a 128-bit number used in conjunction with the key for encrypting blocks. If set to "include", IV is listed in the manifest, otherwise the IV is not in the manifest.
+* `iv_source` (Optional) For use with encryptionType. The IV (Initialization Vector) is a 128-bit number used in conjunction with the key for encrypting blocks. If this setting is "followsSegmentNumber", it will cause the IV to change every segment (to match the segment number). If this is set to "explicit", you must enter a constantIv value.
+* `keep_segments` (Optional) Applies only if Mode field is LIVE.Specifies the number of media segments to retain in the destination directory. This number should be bigger than indexNSegments (Num segments). We recommend (value = (2 x indexNsegments) + 1).If this "keep segments" number is too low, the following might happen: the player is still reading a media manifest file that lists this segment, but that segment has been removed from the destination directory (as directed by indexNSegments). This situation would result in a 404 HTTP error on the player.
+* `key_format` (Optional) The value specifies how the key is represented in the resource identified by the URI. If parameter is absent, an implicit value of "identity" is used. A reverse DNS string can also be given.
+* `key_format_versions` (Optional) Either a single positive integer version value or a slash delimited list of version values (1/2/3).
+* `key_provider_settings` (Optional) The key provider settings. See [Key Provider Settings](#key-provider-settings) for more details.
+* `manifest_compression` (Optional) When set to gzip, compresses HLS playlist.
+* `manifest_duration_format` (Optional) Indicates whether the output manifest should use floating point or integer values for segment duration.
+* `min_segment_length` (Optional) Minimum length of MPEG-2 Transport Stream segments in seconds. When set, minimum segment length is enforced by looking ahead and back within the specified range for a nearby avail and extending the segment size if needed.
+* `mode` (Optional) If "vod", all segments are indexed and kept permanently in the destination and manifest. If "live", only the number segments specified in keepSegments and indexNSegments are kept; newer segments replace older segments, which may prevent players from rewinding all the way to the beginning of the event.VOD mode uses HLS EXT-X-PLAYLIST-TYPE of EVENT while the channel is running, converting it to a "VOD" type manifest on completion of the stream.
+* `output_selection` (Optional) MANIFESTS_AND_SEGMENTS: Generates manifests (master manifest, if applicable, and media manifests) for this output group.VARIANT_MANIFESTS_AND_SEGMENTS: Generates media manifests for this output group, but not a master manifest.SEGMENTS_ONLY: Does not generate any manifests for this output group.
+* `program_date_time` (Optional) Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files. The value is calculated using the program date time clock.
+* `program_date_time_clock` (Optional) Specifies the algorithm used to drive the HLS EXT-X-PROGRAM-DATE-TIME clock. Options include:INITIALIZE_FROM_OUTPUT_TIMECODE: The PDT clock is initialized as a function of the first output timecode, then incremented by the EXTINF duration of each encoded segment.SYSTEM_CLOCK: The PDT clock is initialized as a function of the UTC wall clock, then incremented by the EXTINF duration of each encoded segment. If the PDT clock diverges from the wall clock by more than 500ms, it is resynchronized to the wall clock.
+* `program_date_time_period` (Optional) Period of insertion of EXT-X-PROGRAM-DATE-TIME entry, in seconds.
+* `redundant_manifest` (Optional) ENABLED: The master manifest (.m3u8 file) for each pipeline includes information about both pipelines: first its own media files, then the media files of the other pipeline. This feature allows playout device that support stale manifest detection to switch from one manifest to the other, when the current manifest seems to be stale. There are still two destinations and two master manifests, but both master manifests reference the media files from both pipelines.DISABLED: The master manifest (.m3u8 file) for each pipeline includes information about its own pipeline only.For an HLS output group with MediaPackage as the destination, the DISABLED behavior is always followed. MediaPackage regenerates the manifests it serves to players so a redundant manifest from MediaLive is irrelevant.
+* `segment_length` (Optional) Length of MPEG-2 Transport Stream segments to create in seconds. Note that segments will end on the next keyframe after this duration, so actual segment length may be longer.
+* `segments_per_subdirectory` (Optional) useInputSegmentation has been deprecated. The configured segment size is always used.
+* `stream_inf_resolution` (Optional) Number of segments to write to a subdirectory before starting a new one. directoryStructure must be subdirectoryPerStream for this setting to have an effect.
+* `stream_inf_resolution` (Optional) Include or exclude RESOLUTION attribute for video in EXT-X-STREAM-INF tag of variant manifest.
+* `timed_metadata_id3_frame` (Optional) Indicates ID3 frame that has the timecode.
+* `timed_metadata_id3_period` (Optional) Timed Metadata interval in seconds.
+* `timestamp_delta_milliseconds` (Optional) Provides an extra millisecond delta offset to fine tune the timestamps.
+* `ts_file_mode` (Optional) SEGMENTED_FILES: Emit the program as segments - multiple .ts media files.SINGLE_FILE: Applies only if Mode field is VOD. Emit the program as a single .ts media file. The media manifest includes #EXT-X-BYTERANGE tags to index segments for playback. A typical use for this value is when sending the output to AWS Elemental MediaConvert, which can accept only a single media file. Playback while the channel is running is not guaranteed due to HTTP server caching.
+
+### Caption Language mappings
+* `caption_channel`
+* `language_code`
+* `language_description`
+
+### HLS CDN Settings
+
+* `hls_akamai_settings`
+* `hls_basic_put_settings`
+* `hls_media_store_settings`
+* `hls_s3_settings`
+* `hls_webdav_settings`
+
+### HLS Akamai Settings
+
+* `connection_retry_interval`
+* `filecache_duration`
+* `http_transfer_mode`
+* `http_transfer_mode`
+* `num_retries`
+* `restart_delay`
+* `salt`
+* `token`
+
+### HLS Basic PUT Settings
+
+* `connection_retry_interval`
+* `filecache_duration`
+* `num_retries`
+* `restart_delay`
+
+### HLS Media Store Settings
+
+* `connection_retry_interval`
+* `filecache_duration`
+* `media_store_storage_class`
+* `num_retries`
+* `restart_delay`
+
+### HLS S3 Settings
+
+* `canned_acl`
+
+### HLS WebDAV Settings
+
+* `connection_retry_interval`
+* `filecache_duration`
+* `http_transfer_mode`
+* `num_retries`
+* `restart_delay`
+
+### Key Provider Settings
+
+* `static_key_settings`
+
+### Static Key Settings
+
+* `static_key_value`
+* `key_provider_server`
+
 
 ### Media Package Group Settings
 
