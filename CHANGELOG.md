@@ -2,17 +2,21 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_imagebuilder_image: Add `image_scanning_configuration` attribute ([#34049](https://github.com/hashicorp/terraform-provider-aws/issues/34049))
 * resource/aws_config_config_rule: Add `evaluation_mode` attribute ([#34033](https://github.com/hashicorp/terraform-provider-aws/issues/34033))
 * resource/aws_elasticache_replication_group: Add `ip_discovery` and `network_type` arguments ([#34019](https://github.com/hashicorp/terraform-provider-aws/issues/34019))
+* resource/aws_imagebuilder_image: Add `image_scanning_configuration` configuration block ([#34049](https://github.com/hashicorp/terraform-provider-aws/issues/34049))
+* resource/aws_lambda_function: Add `vpc_config.ipv6_allowed_for_dual_stack` argument ([#34045](https://github.com/hashicorp/terraform-provider-aws/issues/34045))
 * resource/aws_lb: Add `dns_record_client_routing_policy` attribute to configure Availability Zonal DNS affinity on Network Load Balancer (NLB) ([#33992](https://github.com/hashicorp/terraform-provider-aws/issues/33992))
 * resource/aws_neptune_cluster: Add `slowquery` as a valid `enable_cloudwatch_logs_exports` value ([#34053](https://github.com/hashicorp/terraform-provider-aws/issues/34053))
 
 BUG FIXES:
 
-* resource/aws_dms_s3_endpoint: Don't send the default value of `false` for `add_trailing_padding_character` to maintain compatibility with older ((pre-3.4.7)[https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html#CHAP_ReleaseNotes.DMS347]) DMS engine versions ([#32698](https://github.com/hashicorp/terraform-provider-aws/issues/32698))
+* resource/aws_dms_s3_endpoint: Don't send the default value of `false` for `add_trailing_padding_character`, maintaining compatibility with older ([pre-3.4.7](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html#CHAP_ReleaseNotes.DMS347)) DMS engine versions ([#34048](https://github.com/hashicorp/terraform-provider-aws/issues/34048))
 * resource/aws_ecs_task_definition: Add `0` as a valid value for `volume.efs_volume_configuration.transit_encryption_port`, preventing unexpected drift ([#34020](https://github.com/hashicorp/terraform-provider-aws/issues/34020))
 * resource/aws_identitystore_group: Fix updating `description` attribute when it is changed ([#34037](https://github.com/hashicorp/terraform-provider-aws/issues/34037))
 * resource/aws_storagegateway_gateway: Support the value `0` (representing Sunday) for `maintenance_start_time.day_of_week` ([#34015](https://github.com/hashicorp/terraform-provider-aws/issues/34015))
+* resource/aws_verifiedaccess_group: Fix `InvalidParameterValue: Policy Document cannot be provided when Policy Enabled is false or missing` errors when updating `policy_document` ([#34054](https://github.com/hashicorp/terraform-provider-aws/issues/34054))
 
 ## 5.22.0 (October 19, 2023)
 
