@@ -729,55 +729,55 @@ The following arguments are optional:
 * `ts_file_mode` (Optional) SEGMENTED_FILES: Emit the program as segments - multiple .ts media files.SINGLE_FILE: Applies only if Mode field is VOD. Emit the program as a single .ts media file. The media manifest includes #EXT-X-BYTERANGE tags to index segments for playback. A typical use for this value is when sending the output to AWS Elemental MediaConvert, which can accept only a single media file. Playback while the channel is running is not guaranteed due to HTTP server caching.
 
 ### Caption Language mappings
-* `caption_channel`
-* `language_code`
-* `language_description`
+
+* `caption_channel` (Required) The closed caption channel being described by this CaptionLanguageMapping. Each channel mapping must have a unique channel number (maximum of 4)
+* `language_code` (Required) Three character ISO 639-2 language code (see http://www.loc.gov/standards/iso639-2)
+* `language_description` (Required) Textual description of language
 
 ### HLS CDN Settings
 
-* `hls_akamai_settings`
-* `hls_basic_put_settings`
-* `hls_media_store_settings`
-* `hls_s3_settings`
-* `hls_webdav_settings`
+* `hls_akamai_settings` (Optional) Hls Akamai Settings. See [HLS Akamai Settings](#hls-akamai-settings) for more details.
+* `hls_basic_put_settings` (Optional) Hls Basic Put Settings. See [HLS Basic PUT Settings](#hls-basic-put-settings) for more details.
+* `hls_media_store_settings` (Optional) Hls Media Store Settings. See [HLS Media Store Settings](#hls-media-store-settings) for more details.
+* `hls_s3_settings` (Optional) Hls S3 Settings. See [HLS S3 Settings](#hls-s3-settings) for more details.
+* `hls_webdav_settings` (Optional) Hls Webdav Settings. See [HLS WebDAV Settings](#hls-webdav-settings) for more details.
 
 ### HLS Akamai Settings
 
-* `connection_retry_interval`
-* `filecache_duration`
-* `http_transfer_mode`
-* `http_transfer_mode`
-* `num_retries`
-* `restart_delay`
-* `salt`
-* `token`
+* `connection_retry_interval` (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` (Optional) Size in seconds of file cache for streaming outputs.
+* `http_transfer_mode` (Optional) Specify whether or not to use chunked transfer encoding to Akamai. User should  contact Akamai to enable this feature.
+* `num_retries` (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
+* `salt` (Optional) Salt for authenticated Akamai.
+* `token` (Optional) Token parameter for authenticated akamai. If not specified, _gda_ is used.
 
 ### HLS Basic PUT Settings
 
-* `connection_retry_interval`
-* `filecache_duration`
-* `num_retries`
-* `restart_delay`
+* `connection_retry_interval` (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` (Optional) Size in seconds of file cache for streaming outputs.
+* `num_retries` (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
 
 ### HLS Media Store Settings
 
-* `connection_retry_interval`
-* `filecache_duration`
-* `media_store_storage_class`
-* `num_retries`
-* `restart_delay`
+* `connection_retry_interval` (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` (Optional) Size in seconds of file cache for streaming outputs.
+* `media_store_storage_class` (Optional) When set to temporal, output files are stored in non-persistent memory for faster reading and writing.
+* `num_retries` (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
 
 ### HLS S3 Settings
 
-* `canned_acl`
+* `canned_acl` (Optional) Specify the canned ACL to apply to each S3 request. Defaults to none.
 
 ### HLS WebDAV Settings
 
-* `connection_retry_interval`
-* `filecache_duration`
-* `http_transfer_mode`
-* `num_retries`
-* `restart_delay`
+* `connection_retry_interval` (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` (Optional) Size in seconds of file cache for streaming outputs.
+* `http_transfer_mode` (Optional) Specify whether or not to use chunked transfer encoding to WebDAV.
+* `num_retries` (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
 
 ### Key Provider Settings
 
