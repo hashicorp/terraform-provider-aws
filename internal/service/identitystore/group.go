@@ -133,14 +133,13 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	d.Set("group_id", out.GroupId)
-	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("description", out.Description)
 	d.Set("display_name", out.DisplayName)
-
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
 	}
+	d.Set("group_id", out.GroupId)
+	d.Set("identity_store_id", out.IdentityStoreId)
 
 	return nil
 }
@@ -154,13 +153,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		Operations:      nil,
 	}
 
-	if d.HasChange("display_name") {
-		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("displayName"),
-			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
-		})
-	}
-
 	if d.HasChange("description") {
 		in.Operations = append(in.Operations, types.AttributeOperation{
 			AttributePath:  aws.String("description"),
@@ -168,12 +160,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 
-	if len(in.Operations) > 0 {
-		log.Printf("[DEBUG] Updating IdentityStore Group (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateGroup(ctx, in)
-		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionUpdating, ResNameGroup, d.Id(), err)
-		}
+	if d.HasChange("display_name") {
+		in.Operations = append(in.Operations, types.AttributeOperation{
+			AttributePath:  aws.String("displayName"),
+			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
+		})
+	}
+
+	_, err := conn.UpdateGroup(ctx, in)
+
+	if err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionUpdating, ResNameGroup, d.Id(), err)
 	}
 
 	return resourceGroupRead(ctx, d, meta)
