@@ -25,7 +25,7 @@ import (
 )
 
 // @FrameworkResource(name="Access Grants Instance")
-// @Tags(identifierAttribute="id")
+// @Tags
 func newResourceAccessGrantsInstance(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAccessGrantsInstance{}
 
