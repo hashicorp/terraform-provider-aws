@@ -15,7 +15,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
 
-func TestAWSAccountIDValidator(t *testing.T) {
+func TestAWSAccountIDValidator(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
 	type testCase struct {

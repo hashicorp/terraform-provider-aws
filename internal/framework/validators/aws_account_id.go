@@ -47,6 +47,6 @@ func (validator awsAccountIDValidator) ValidateString(ctx context.Context, reque
 //   - Is a string, which represents a valid AWS account ID.
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func AWSAccountID() validator.String {
+func AWSAccountID() validator.String { // nosemgrep:ci.aws-in-func-name
 	return awsAccountIDValidator{}
 }
