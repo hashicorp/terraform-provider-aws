@@ -197,7 +197,7 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	_, err := conn.DeleteAccessGrantsInstance(ctx, &s3control.DeleteAccessGrantsInstanceInput{
-		AccountId: flex.StringFromFramework(ctx, data.AccountID),
+		AccountId: flex.StringFromFramework(ctx, data.ID),
 	})
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -205,7 +205,7 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Instance (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
