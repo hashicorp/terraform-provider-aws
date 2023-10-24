@@ -90,6 +90,7 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
 		AccountId: aws.String(accountID),
+		Tags:      getTagsInS3Control(ctx),
 	}
 
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
@@ -138,6 +139,17 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 	// Set attributes for import.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.AccountID = data.ID
+
+	tags, err := listTags(ctx, conn, data.AccessGrantsInstanceARN.ValueString(), data.AccountID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing tags for S3 Access Grants Instance (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	setTagsOutS3Control(ctx, tagsS3Control(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -155,6 +167,16 @@ func (r *resourceAccessGrantsInstance) Update(ctx context.Context, request resou
 
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	conn := r.Meta().S3ControlClient(ctx)
+
+	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
+		if err := updateTags(ctx, conn, new.AccessGrantsInstanceARN.ValueString(), new.AccountID.ValueString(), oldTagsAll, newTagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating tags for S3 Access Grants Instance (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -180,6 +202,10 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 
 		return
 	}
+}
+
+func (r *resourceAccessGrantsInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accountID string) (*s3control.GetAccessGrantsInstanceOutput, error) {
