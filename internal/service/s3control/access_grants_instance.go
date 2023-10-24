@@ -6,15 +6,18 @@ package s3control
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -197,6 +200,10 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 		AccountId: flex.StringFromFramework(ctx, data.AccountID),
 	})
 
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
+		return
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
 
@@ -215,13 +222,12 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 
 	output, err := conn.GetAccessGrantsInstance(ctx, input)
 
-	// TODO
-	// if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-	// 	return nil, &retry.NotFoundError{
-	// 		LastError:   err,
-	// 		LastRequest: input,
-	// 	}
-	// }
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
