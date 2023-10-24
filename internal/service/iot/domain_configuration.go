@@ -9,15 +9,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_domain_configuration", name="Domain Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceDomainConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainConfigurationCreate,
@@ -28,6 +34,10 @@ func ResourceDomainConfiguration() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"authorizer_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -56,7 +66,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 				ForceNew: true,
 			},
 			"server_certificate_arns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -90,112 +100,105 @@ func ResourceDomainConfiguration() *schema.Resource {
 }
 
 func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateDomainConfigurationInput{
 		DomainConfigurationName: aws.String(name),
+		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("authorizer_config"); ok {
-		input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{}))
+	if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("domain_name"); ok {
 		input.DomainName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("server_certificate_arns"); ok {
-		input.ServerCertificateArns = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("server_certificate_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.ServerCertificateArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("service_type"); ok {
 		input.ServiceType = aws.String(v.(string))
 	}
 
+	// TODO tls_config
+
 	if v, ok := d.GetOk("validation_certificate_arn"); ok {
 		input.ValidationCertificateArn = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating IoT Domain Configuration: %s", input)
 	output, err := conn.CreateDomainConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating IoT Domain Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Domain Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.DomainConfigurationName))
 
-	return resourceDomainConfigurationRead(ctx, d, meta)
+	return append(diags, resourceDomainConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	out, err := conn.DescribeDomainConfigurationWithContext(ctx, &iot.DescribeDomainConfigurationInput{
-		DomainConfigurationName: aws.String(d.Id()),
-	})
+	output, err := FindDomainConfigurationByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Domain Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		return diag.Errorf("reading IoT Domain Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Domain Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.DomainConfigurationArn)
-
-	tags, _ := ListTags(conn, d.Get("arn").(string))
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	d.Set("arn", output.DomainConfigurationArn)
+	// TODO authorizer_config
+	d.Set("domain_name", output.DomainName)
+	// TODO domain_type
+	d.Set("name", output.DomainConfigurationName)
+	// TODO server_certificate_arns
+	// TODO service_type
+	d.Set("status", output.DomainConfigurationStatus)
+	// TODO validation_certificate_arn
 
 	return nil
 }
 
 func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChange("authorizer_config") {
-		input := iot.UpdateDomainConfigurationInput{
+		input := &iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName: aws.String(d.Id()),
 		}
 
 		if d.HasChange("authorizer_config") {
-			input.AuthorizerConfig = expandAuthorizerConfig(d.Get("authorizer_config").([]interface{}))
+			if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
-		log.Printf("[DEBUG] Updating IoT Domain Configuration: %s", d.Id())
-		_, err := conn.UpdateDomainConfigurationWithContext(ctx, &input)
+		_, err := conn.UpdateDomainConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating IoT Domain Configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IoT Domain Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating IoT Domain Configuration (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceDomainConfigurationRead(ctx, d, meta)
+	return append(diags, resourceDomainConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.Get("status").(string) == iot.DomainConfigurationStatusEnabled {
 		log.Printf("[DEBUG] Disabling IoT Domain Configuration: %s", d.Id())
@@ -205,7 +208,7 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 		})
 
 		if err != nil {
-			return diag.Errorf("disabling IoT Domain Configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disabling IoT Domain Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -215,23 +218,51 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting IoT Domain Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Domain Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandAuthorizerConfig(l []interface{}) *iot.AuthorizerConfig {
-	if len(l) < 1 || l[0] == nil {
+func FindDomainConfigurationByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeDomainConfigurationOutput, error) {
+	input := &iot.DescribeDomainConfigurationInput{
+		DomainConfigurationName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDomainConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandAuthorizerConfig(tfMap map[string]interface{}) *iot.AuthorizerConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &iot.AuthorizerConfig{}
 
-	iotAuthorizerConfig := &iot.AuthorizerConfig{
-		AllowAuthorizerOverride: aws.Bool(m["allow_authorizer_override"].(bool)),
-		DefaultAuthorizerName:   aws.String(m["allow_authorizer_override"].(string)),
+	if v, ok := tfMap["allow_authorizer_override"].(bool); ok {
+		apiObject.AllowAuthorizerOverride = aws.Bool(v)
 	}
 
-	return iotAuthorizerConfig
+	if v, ok := tfMap["default_authorizer_name"].(string); ok && v != "" {
+		apiObject.DefaultAuthorizerName = aws.String(v)
+	}
+
+	return apiObject
 }
