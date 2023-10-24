@@ -867,72 +867,28 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			launchTemplateCustomDiff,
-			// mixedInstancesPolicyLaunchTemplateCustomDiff,
-			launchTemplateDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
 		),
 	}
 }
 
-func launchTemplateCustomDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-	expandMap := func(in cty.Value, attributeName, keyToSet, valueToSet string) error {
-		if !in.IsNull() && len(in.AsValueSlice()) > 0 {
-			m := in.AsValueSlice()[0].AsValueMap()
-			tfMap := make(map[string]string)
-			for k, val := range m {
-				if !val.IsNull() && val.IsKnown() {
-					tfMap[k] = val.AsString()
-				}
-			}
-
-			tfMap[keyToSet] = valueToSet
-
-			if err := diff.SetNew(attributeName, []interface{}{tfMap}); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	if diff.HasChange("launch_template.0.name") {
-		lt := diff.GetRawPlan().GetAttr("launch_template")
-		if err := expandMap(lt, "launch_template", "id", "unknown"); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func mixedInstancesPolicyLaunchTemplateCustomDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-	if diff.HasChange("mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name") {
-		n := diff.Get("mixed_instances_policy")
-		nmip := n.([]interface{})
-
-		//parts := strings.Split("mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name", ".")
-		launchTemplate := nmip[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
-		launchTemplateSpecification := launchTemplate.(map[string]interface{})
-
-		launchTemplateSpecification["launch_template_id"] = "unknown"
-
-		launchTemplate = launchTemplateSpecification
-
-		if err := diff.SetNew("mixed_instances_policy", nmip); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func launchTemplateDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
+func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if diff.HasChange(subAttribute) {
 			n := diff.Get(baseAttribute)
 			nmip, ok := n.([]interface{})
 			if !ok {
 				return nil
+			}
+
+			if baseAttribute == "launch_template" {
+				launchTemplate := nmip[0].(map[string]interface{})
+				launchTemplate["id"] = "unknown"
+
+				if err := diff.SetNew(baseAttribute, nmip); err != nil {
+					return err
+				}
 			}
 
 			if baseAttribute == "mixed_instances_policy" {
@@ -943,7 +899,7 @@ func launchTemplateDiff(baseAttribute, subAttribute string) schema.CustomizeDiff
 
 				launchTemplate = launchTemplateSpecification
 
-				if err := diff.SetNew("mixed_instances_policy", nmip); err != nil {
+				if err := diff.SetNew(baseAttribute, nmip); err != nil {
 					return err
 				}
 			}
