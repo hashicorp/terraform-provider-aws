@@ -46,6 +46,72 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 	})
 }
 
+func testAccAccessGrantsInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3control_access_grants_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantsInstanceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsInstance, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAccessGrantsInstance_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3control_access_grants_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantsInstanceConfig_tags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessGrantsInstanceConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAccessGrantsInstanceConfig_tags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
@@ -91,4 +157,25 @@ func testAccAccessGrantsInstanceConfig_basic() string {
 	return `
 resource "aws_s3control_access_grants_instance" "test" {}
 `
+}
+
+func testAccAccessGrantsInstanceConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3control_access_grants_instance" "test" {
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAccessGrantsInstanceConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3control_access_grants_instance" "test" {
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

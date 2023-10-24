@@ -14,7 +14,9 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Instance": {
-			"basic": testAccAccessGrantsInstance_basic,
+			"basic":      testAccAccessGrantsInstance_basic,
+			"disappears": testAccAccessGrantsInstance_disappears,
+			"tags":       testAccAccessGrantsInstance_tags,
 		},
 	}
 
