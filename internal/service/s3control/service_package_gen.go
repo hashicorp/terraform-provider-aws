@@ -28,6 +28,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Access Grants Instance",
 			Tags:    &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory: newResourceAccessGrantsLocation,
+			Name:    "Access Grants Location",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
