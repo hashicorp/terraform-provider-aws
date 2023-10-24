@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Service can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Service using the `id`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_service.example
+  id = "svc-06728e2357ea55f8a"
+}
 ```
-$ terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
+
+Using `terraform import`, import VPC Lattice Service using the `id`. For example:
+
+```console
+% terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
 ```

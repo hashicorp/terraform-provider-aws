@@ -37,7 +37,7 @@ resource "aws_iot_role_alias" "alias" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `alias` - (Required) The name of the role alias.
 * `role_arn` - (Required) The identity of the role to which the alias refers.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IOT Role Alias can be imported via the alias, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Role Alias using the alias. For example:
 
-```sh
-$ terraform import aws_iot_role_alias.example myalias
+```terraform
+import {
+  to = aws_iot_role_alias.example
+  id = "myalias"
+}
+```
+
+Using `terraform import`, import IOT Role Alias using the alias. For example:
+
+```console
+% terraform import aws_iot_role_alias.example myalias
 ```

@@ -22,7 +22,7 @@ resource "aws_lightsail_static_ip" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the allocated static IP
 

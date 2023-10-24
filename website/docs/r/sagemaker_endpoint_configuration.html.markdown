@@ -33,7 +33,7 @@ resource "aws_sagemaker_endpoint_configuration" "ec" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `production_variants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
@@ -120,8 +120,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Endpoint configurations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
+  id = "endpoint-config-foo"
+}
 ```
-$ terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+
+Using `terraform import`, import endpoint configurations using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```

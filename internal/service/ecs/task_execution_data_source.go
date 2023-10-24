@@ -433,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 			co.Memory = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["memory_reservation"]; ok {
-			co.Memory = aws.Int64(int64(v.(int)))
+			co.MemoryReservation = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["resource_requirements"]; ok {
 			co.ResourceRequirements = expandResourceRequirements(v.(*schema.Set))

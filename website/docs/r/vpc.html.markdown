@@ -52,7 +52,7 @@ resource "aws_vpc_ipam_pool" "test" {
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc" "test" {
@@ -66,7 +66,7 @@ resource "aws_vpc" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr_block` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
 * `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which ensures that EC2 instances launched in this VPC use the EC2 instance tenancy attribute specified when the EC2 instance is launched. The only other option is `dedicated`, which ensures that EC2 instances launched in this VPC are run on dedicated tenancy instances regardless of the tenancy attribute specified at launch. This has a dedicated per region fee of $2 per hour, plus an hourly per instance usage fee.
@@ -105,8 +105,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPCs can be imported using the `vpc id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPCs using the VPC `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc.test_vpc
+  id = "vpc-a01106c2"
+}
 ```
-$ terraform import aws_vpc.test_vpc vpc-a01106c2
+
+Using `terraform import`, import VPCs using the VPC `id`. For example:
+
+```console
+% terraform import aws_vpc.test_vpc vpc-a01106c2
 ```

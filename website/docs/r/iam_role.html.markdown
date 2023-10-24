@@ -213,8 +213,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_role.developer
+  id = "developer_name"
+}
 ```
-$ terraform import aws_iam_role.developer developer_name
+
+Using `terraform import`, import IAM Roles using the `name`. For example:
+
+```console
+% terraform import aws_iam_role.developer developer_name
 ```

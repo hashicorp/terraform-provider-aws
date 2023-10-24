@@ -29,7 +29,7 @@ resource "aws_elb_attachment" "baz" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `elb` - (Required) The name of the ELB.
 * `instance` - (Required) Instance ID to place in the ELB pool.

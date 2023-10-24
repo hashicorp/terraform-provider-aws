@@ -19,7 +19,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/24"
+  cidr         = "172.20.0.0/24"
   depends_on = [
     aws_vpc_ipam_pool_cidr.example
   ]
@@ -27,7 +27,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "example" {
@@ -53,7 +53,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
   netmask_length = 28
 
   disallowed_cidrs = [
-    "172.2.0.0/28"
+    "172.20.0.0/28"
   ]
 
   depends_on = [
@@ -63,7 +63,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "example" {
@@ -81,7 +81,7 @@ resource "aws_vpc_ipam" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr` - (Optional) The CIDR you want to assign to the pool.
 * `description` - (Optional) The description for the allocation.
@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IPAM allocations can be imported using the `allocation id` and `pool id`, separated by `_`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAM allocations using the allocation `id` and `pool id`, separated by `_`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_pool_cidr_allocation.example
+  id = "ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe"
+}
 ```
-$ terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
+
+Using `terraform import`, import IPAM allocations using the allocation `id` and `pool id`, separated by `_`. For example:
+
+```console
+% terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```

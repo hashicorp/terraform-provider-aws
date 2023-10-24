@@ -59,4 +59,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Importing is currently not supported on this resource.
+You cannot import this resource.

@@ -23,7 +23,7 @@ resource "aws_ssm_maintenance_window" "production" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM  Maintenance Windows can be imported using the `maintenance window id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
+```terraform
+import {
+  to = aws_ssm_maintenance_window.imported-window
+  id = "mw-0123456789"
+}
 ```
-$ terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
+
+Using `terraform import`, import SSM  Maintenance Windows using the maintenance window `id`. For example:
+
+```console
+% terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
 ```

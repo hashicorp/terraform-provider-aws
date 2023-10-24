@@ -39,7 +39,7 @@ resource "aws_neptune_cluster_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any instance modifications
   are applied immediately, or during the next maintenance window. Default is`false`.
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The EC2 Availability Zone that the neptune instance is created in.
 * `cluster_identifier` - (Required) The identifier of the [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the neptune instance. Defaults to `neptune`. Valid Values: `neptune`.
-* `engine_version` - (Optional) The neptune engine version.
+* `engine_version` - (Optional) The neptune engine version. Currently configuring this argumnet has no effect.
 * `identifier` - (Optional, Forces new resource) The identifier for the neptune instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance class to use.
@@ -87,8 +87,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_cluster_instance` can be imported by using the instance identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_cluster_instance` using the instance identifier. For example:
 
+```terraform
+import {
+  to = aws_neptune_cluster_instance.example
+  id = "my-instance"
+}
 ```
-$ terraform import aws_neptune_cluster_instance.example my-instance
+
+Using `terraform import`, import `aws_neptune_cluster_instance` using the instance identifier. For example:
+
+```console
+% terraform import aws_neptune_cluster_instance.example my-instance
 ```

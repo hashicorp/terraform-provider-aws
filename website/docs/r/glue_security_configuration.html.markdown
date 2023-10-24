@@ -35,7 +35,7 @@ resource "aws_glue_security_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `encryption_configuration` – (Required) Configuration block containing encryption configuration. Detailed below.
 * `name` – (Required) Name of the security configuration.
@@ -69,8 +69,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Security Configurations can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Security Configurations using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_security_configuration.example
+  id = "example"
+}
 ```
-$ terraform import aws_glue_security_configuration.example example
+
+Using `terraform import`, import Glue Security Configurations using `name`. For example:
+
+```console
+% terraform import aws_glue_security_configuration.example example
 ```

@@ -34,7 +34,7 @@ resource "aws_sagemaker_feature_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `feature_group_name` - (Required) The name of the Feature Group. The name must be unique within an AWS Region in an AWS account.
 * `record_identifier_feature_name` - (Required) The name of the Feature whose value uniquely identifies a Record defined in the Feature Store. Only the latest record per identifier value will be stored in the Online Store.
@@ -88,8 +88,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Feature Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Feature Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_feature_group.test_feature_group
+  id = "feature_group-foo"
+}
 ```
-$ terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
+
+Using `terraform import`, import Feature Groups using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
 ```

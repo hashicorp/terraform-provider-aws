@@ -234,8 +234,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IoT Topic Rules can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Topic Rules using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iot_topic_rule.rule
+  id = "<name>"
+}
 ```
-$ terraform import aws_iot_topic_rule.rule <name>
+
+Using `terraform import`, import IoT Topic Rules using the `name`. For example:
+
+```console
+% terraform import aws_iot_topic_rule.rule <name>
 ```

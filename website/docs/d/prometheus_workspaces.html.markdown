@@ -29,7 +29,7 @@ data "aws_prometheus_workspaces" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `alias_prefix` - (Optional) Limits results to workspaces with aliases that begin with this value.
 

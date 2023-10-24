@@ -75,11 +75,11 @@ resource "aws_appsync_datasource" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [DynamoDB Config](#dynamodb-config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [ElasticSearch Config](#elasticsearch-config)
@@ -92,7 +92,7 @@ The following arguments are supported:
 
 ### DynamoDB Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `table_name` - (Required) Name of the DynamoDB table.
 * `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
@@ -108,61 +108,61 @@ The following arguments are supported:
 
 ### ElasticSearch Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `endpoint` - (Required) HTTP endpoint of the Elasticsearch domain.
 * `region` - (Optional) AWS region of Elasticsearch domain. Defaults to current region.
 
 ### Event Bridge Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `event_bus_arn` - (Required) ARN for the EventBridge bus.
 
 ### HTTP Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `endpoint` - (Required) HTTP URL.
 * `authorization_config` - (Optional) Authorization configuration in case the HTTP endpoint requires authorization. See [Authorization Config](#authorization-config).
 
 #### Authorization Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `authorization_type` - (Optional) Authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
 * `aws_iam_config` - (Optional) Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws-iam-config).
 
 ##### AWS IAM Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
 * `signing_service_name`- (Optional) Signing service name for IAM authorization.
 
 ### Lambda Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `function_arn` - (Required) ARN for the Lambda function.
 
 ### OpenSearch Service Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `endpoint` - (Required) HTTP endpoint of the OpenSearch domain.
 * `region` - (Optional) AWS region of the OpenSearch domain. Defaults to current region.
 
 ### Relational Database Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `http_endpoint_config` - (Required) Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http-endpoint-config).
 * `source_type` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
 
 #### HTTP Endpoint Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
 * `aws_secret_store_arn` - (Required) AWS secret store ARN for database credentials.
@@ -178,8 +178,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_datasource` can be imported with their `api_id`, a hyphen, and `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
 
+```terraform
+import {
+  to = aws_appsync_datasource.example
+  id = "abcdef123456-example"
+}
 ```
-$ terraform import aws_appsync_datasource.example abcdef123456-example
+
+Using `terraform import`, import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
+
+```console
+% terraform import aws_appsync_datasource.example abcdef123456-example
 ```

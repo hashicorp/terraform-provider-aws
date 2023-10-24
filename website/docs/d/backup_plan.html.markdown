@@ -20,7 +20,7 @@ data "aws_backup_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `plan_id` - (Required) Backup plan ID.
 

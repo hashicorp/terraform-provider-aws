@@ -25,7 +25,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `storage_capacity` - (Optional) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608`.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Upto 2 subnets can be provided.
@@ -36,7 +36,7 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `daily_automatic_backup_start_time` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
-* `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [Disk Iops Configuration](#disk-iops-configuration) Below.
+* `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
 * `endpoint_ip_address_range` - (Optional) Specifies the IP address range in which the endpoints to access your file system will be created. By default, Amazon FSx selects an unused IP address range for you from the 198.19.* range.
 * `storage_type` - (Optional) - The filesystem storage type. defaults to `SSD`.
 * `fsx_admin_password` - (Optional) The ONTAP administrative password for the fsxadmin user that you can use to administer your file system using the ONTAP CLI and REST API.
@@ -82,13 +82,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx File Systems using the `id`. For example:
 
-```
-$ terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33
+```terraform
+import {
+  to = aws_fsx_ontap_file_system.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
 
-Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import FSx File Systems using the `id`. For example:
+
+```console
+% terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33
+```
+
+Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_ontap_file_system" "example" {

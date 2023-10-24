@@ -89,10 +89,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DynamoDB table replicas can be imported using the `table-name:main-region`, _e.g._,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table replicas using the `table-name:main-region`. For example:
 
 ~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
 
+```terraform
+import {
+  to = aws_dynamodb_table_replica.example
+  id = "TestTable:us-west-2"
+}
 ```
-$ terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
+
+Using `terraform import`, import DynamoDB table replicas using the `table-name:main-region`. For example:
+
+~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
+
+```console
+% terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```

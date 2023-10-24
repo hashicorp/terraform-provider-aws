@@ -44,7 +44,7 @@ resource "aws_workspaces_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The ID of the directory for the WorkSpace.
 * `bundle_id` - (Required) The ID of the bundle for the WorkSpace.
@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Workspaces can be imported using their ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces using their ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_workspace.example
+  id = "ws-9z9zmbkhv"
+}
 ```
-$ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
+
+Using `terraform import`, import Workspaces using their ID. For example:
+
+```console
+% terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```

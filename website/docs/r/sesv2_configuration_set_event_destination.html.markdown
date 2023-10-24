@@ -138,7 +138,7 @@ The following arguments are required:
 The following arguments are required:
 
 * `default_dimension_value` - (Required) The default value of the dimension that is published to Amazon CloudWatch if you don't provide the value of the dimension when you send an email.
-( `dimension_name` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
+* `dimension_name` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
 * `dimension_value_source` - (Required) The location where the Amazon SES API v2 finds the value of a dimension to publish to Amazon CloudWatch. Valid values: `MESSAGE_TAG`, `EMAIL_HEADER`, `LINK_TAG`.
 
 ### kinesis_firehose_destination
@@ -168,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SESv2 (Simple Email V2) Configuration Set Event Destination can be imported using the `id` (`configuration_set_name|event_destination_name`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Configuration Set Event Destination using the `id` (`configuration_set_name|event_destination_name`). For example:
 
+```terraform
+import {
+  to = aws_sesv2_configuration_set_event_destination.example
+  id = "example_configuration_set|example_event_destination"
+}
 ```
-$ terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
+
+Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set Event Destination using the `id` (`configuration_set_name|event_destination_name`). For example:
+
+```console
+% terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```

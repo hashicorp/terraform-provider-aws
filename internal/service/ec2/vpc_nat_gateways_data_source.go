@@ -25,7 +25,7 @@ func DataSourceNATGateways() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -59,7 +59,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		)...)
 	}
 
-	input.Filter = append(input.Filter, BuildFiltersDataSource(
+	input.Filter = append(input.Filter, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

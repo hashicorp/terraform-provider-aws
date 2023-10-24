@@ -60,8 +60,17 @@ The `alternate_path_hints` object supports the following:
 
 ## Import
 
-Network Insights Analyses can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Insights Analyses using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_network_insights_analysis.test
+  id = "nia-0462085c957f11a55"
+}
 ```
-$ terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
+
+Using `terraform import`, import Network Insights Analyses using the `id`. For example:
+
+```console
+% terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
 ```

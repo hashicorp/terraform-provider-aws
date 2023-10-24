@@ -183,6 +183,32 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resourceName := "aws_lb_listener_certificate.test"
+	listenerResourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerCertificateExists(resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListener(), listenerResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)

@@ -37,7 +37,9 @@ resource "aws_ce_anomaly_subscription" "test" {
 }
 ```
 
-### Threshold Expression
+### Threshold Expression Example
+
+#### For a Specific Dimension
 
 ```terraform
 resource "aws_ce_anomaly_subscription" "test" {
@@ -58,6 +60,41 @@ resource "aws_ce_anomaly_subscription" "test" {
       key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
       values        = ["100.0"]
       match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
+  }
+}
+```
+
+#### Using an `and` Expression
+
+```terraform
+resource "aws_ce_anomaly_subscription" "test" {
+  name      = "AWSServiceMonitor"
+  frequency = "DAILY"
+
+  monitor_arn_list = [
+    aws_ce_anomaly_monitor.test.arn,
+  ]
+
+  subscriber {
+    type    = "EMAIL"
+    address = "abc@example.com"
+  }
+
+  threshold_expression {
+    and {
+      dimension {
+        key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+        match_options = ["GREATER_THAN_OR_EQUAL"]
+        values        = ["100"]
+      }
+    }
+    and {
+      dimension {
+        key           = "ANOMALY_TOTAL_IMPACT_PERCENTAGE"
+        match_options = ["GREATER_THAN_OR_EQUAL"]
+        values        = ["50"]
+      }
     }
   }
 }
@@ -213,8 +250,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ce_anomaly_subscription` can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_subscription` using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ce_anomaly_subscription.example
+  id = "AnomalySubscriptionARN"
+}
 ```
-$ terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
+
+Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. For example:
+
+```console
+% terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```

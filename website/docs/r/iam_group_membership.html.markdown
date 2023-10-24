@@ -46,7 +46,7 @@ resource "aws_iam_user" "user_two" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name to identify the Group Membership
 * `users` - (Required) A list of IAM User names to associate with the Group

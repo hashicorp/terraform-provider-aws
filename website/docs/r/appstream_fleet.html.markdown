@@ -25,7 +25,7 @@ resource "aws_appstream_fleet" "test_fleet" {
   display_name                       = "test-fleet"
   enable_default_internet_access     = false
   fleet_type                         = "ON_DEMAND"
-  image_name                         = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name                         = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type                      = "stream.standard.large"
   max_user_duration_in_seconds       = 600
 
@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appstream_fleet` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_fleet` using the id. For example:
 
+```terraform
+import {
+  to = aws_appstream_fleet.example
+  id = "fleetNameExample"
+}
 ```
-$ terraform import aws_appstream_fleet.example fleetNameExample
+
+Using `terraform import`, import `aws_appstream_fleet` using the id. For example:
+
+```console
+% terraform import aws_appstream_fleet.example fleetNameExample
 ```

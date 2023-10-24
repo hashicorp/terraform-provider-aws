@@ -30,7 +30,7 @@ resource "aws_gamelift_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
@@ -97,8 +97,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Fleets can be imported using the ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Fleets using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_fleet.example
+  id = "<fleet-id>"
+}
 ```
-$ terraform import aws_gamelift_fleet.example <fleet-id>
+
+Using `terraform import`, import GameLift Fleets using the ID. For example:
+
+```console
+% terraform import aws_gamelift_fleet.example <fleet-id>
 ```

@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES Configuration Sets can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Configuration Sets using their `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_configuration_set.test
+  id = "some-configuration-set-test"
+}
 ```
-$ terraform import aws_ses_configuration_set.test some-configuration-set-test
+
+Using `terraform import`, import SES Configuration Sets using their `name`. For example:
+
+```console
+% terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```

@@ -64,7 +64,7 @@ resource "aws_route53_zone_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `zone_id` - (Required) The ID of the private hosted zone that you want to authorize associating a VPC with.
 * `vpc_id` - (Required) The VPC to authorize for association with the private hosted zone.
@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_route53_vpc_association_authorization.example
+  id = "Z123456ABCDEFG:vpc-12345678"
+}
 ```
-$ terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
+
+Using `terraform import`, import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
 ```

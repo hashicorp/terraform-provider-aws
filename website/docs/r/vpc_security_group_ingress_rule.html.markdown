@@ -32,7 +32,7 @@ resource "aws_vpc_security_group_ingress_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security group ingress rules can be imported using the `security_group_rule_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group ingress rules using the `security_group_rule_id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_security_group_ingress_rule.example
+  id = "sgr-02108b27edd666983"
+}
 ```
-$ terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
+
+Using `terraform import`, import security group ingress rules using the `security_group_rule_id`. For example:
+
+```console
+% terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```

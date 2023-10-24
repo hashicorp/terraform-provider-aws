@@ -20,7 +20,7 @@ resource "aws_dx_connection_confirmation" "confirmation" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_id` - (Required) The ID of the hosted connection.
 

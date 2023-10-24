@@ -128,7 +128,7 @@ resource "aws_backup_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
@@ -152,8 +152,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup selection can be imported using the role plan_id and id separated by `|`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the role plan_id and id separated by `|`. For example:
 
+```terraform
+import {
+  to = aws_backup_selection.example
+  id = "plan-id|selection-id"
+}
 ```
-$ terraform import aws_backup_selection.example plan-id|selection-id
+
+Using `terraform import`, import Backup selection using the role plan_id and id separated by `|`. For example:
+
+```console
+% terraform import aws_backup_selection.example plan-id|selection-id
 ```

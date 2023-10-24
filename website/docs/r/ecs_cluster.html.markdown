@@ -54,7 +54,7 @@ resource "aws_ecs_cluster" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
@@ -99,8 +99,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS clusters using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_cluster.stateless
+  id = "stateless-app"
+}
 ```
-$ terraform import aws_ecs_cluster.stateless stateless-app
+
+Using `terraform import`, import ECS clusters using the `name`. For example:
+
+```console
+% terraform import aws_ecs_cluster.stateless stateless-app
 ```

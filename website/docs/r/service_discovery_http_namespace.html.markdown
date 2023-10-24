@@ -19,7 +19,7 @@ resource "aws_service_discovery_http_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the http namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery HTTP Namespace can be imported using the namespace ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Discovery HTTP Namespace using the namespace ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_http_namespace.example
+  id = "ns-1234567890"
+}
 ```
-$ terraform import aws_service_discovery_http_namespace.example ns-1234567890
+
+Using `terraform import`, import Service Discovery HTTP Namespace using the namespace ID. For example:
+
+```console
+% terraform import aws_service_discovery_http_namespace.example ns-1234567890
 ```

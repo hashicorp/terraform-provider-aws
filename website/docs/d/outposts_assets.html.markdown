@@ -40,7 +40,7 @@ data "aws_outposts_assets" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) Outpost ARN.
 * `host_id_filter` - (Optional) Filters by list of Host IDs of a Dedicated Host.

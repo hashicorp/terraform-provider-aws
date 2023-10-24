@@ -332,7 +332,11 @@ func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, me
 		},
 	})
 
+	// Ignore certain errors that indicate the fleet is already (being) deleted
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "instance fleet may only be modified when the cluster is running or waiting") {
+		return diags
+	}
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "A job flow that is shutting down, terminated, or finished may not be modified") {
 		return diags
 	}
 

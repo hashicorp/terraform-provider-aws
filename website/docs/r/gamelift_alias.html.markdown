@@ -26,7 +26,7 @@ resource "aws_gamelift_alias" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the alias.
 * `description` - (Optional) Description of the alias.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Aliases can be imported using the ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Aliases using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_alias.example
+  id = "<alias-id>"
+}
 ```
-$ terraform import aws_gamelift_alias.example <alias-id>
+
+Using `terraform import`, import GameLift Aliases using the ID. For example:
+
+```console
+% terraform import aws_gamelift_alias.example <alias-id>
 ```

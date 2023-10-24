@@ -22,7 +22,7 @@ resource "aws_network_interface_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) Instance ID to attach.
 * `network_interface_id` - (Required) ENI ID to attach.
@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic network interface (ENI) Attachments using its Attachment ID. For example:
 
+```terraform
+import {
+  to = aws_network_interface_attachment.secondary_nic
+  id = "eni-attach-0a33842b4ec347c4c"
+}
 ```
-terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
+
+Using `terraform import`, import Elastic network interface (ENI) Attachments using its Attachment ID. For example:
+
+```console
+% terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
 ```

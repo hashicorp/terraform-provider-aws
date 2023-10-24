@@ -38,7 +38,7 @@ resource "aws_ami" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
 * `boot_mode` - (Optional) Boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
@@ -111,7 +111,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `image_owner_alias` - AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
 * `image_type` - Type of image.
 * `hypervisor` - Hypervisor type of the image.
-* `owner_id` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Whether the image has public launch permissions.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -126,8 +125,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ami` can be imported using the ID of the AMI, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ami` using the ID of the AMI. For example:
 
+```terraform
+import {
+  to = aws_ami.example
+  id = "ami-12345678"
+}
 ```
-$ terraform import aws_ami.example ami-12345678
+
+Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
+
+```console
+% terraform import aws_ami.example ami-12345678
 ```

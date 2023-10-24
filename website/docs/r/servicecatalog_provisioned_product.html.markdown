@@ -63,7 +63,7 @@ The following arguments are optional:
 
 ### provisioning_parameters
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `key` - (Required) Parameter key.
 * `use_previous_value` - (Optional) Whether to ignore `value` and keep the previous parameter value. Ignored when initially provisioning a product.
@@ -73,7 +73,7 @@ The following arguments are supported:
 
 All of the `stack_set_provisioning_preferences` are only applicable to a `CFN_STACKSET` provisioned product type.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
 * `failure_tolerance_count` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failure_tolerance_count` or `failure_tolerance_percentage`, but not both. The default value is 0 if no value is specified.
@@ -122,8 +122,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_provisioned_product` using the provisioned product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_provisioned_product.example
+  id = "pp-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_provisioned_product` using the provisioned product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
 ```

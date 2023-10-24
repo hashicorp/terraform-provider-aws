@@ -49,7 +49,7 @@ resource "aws_dx_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
 * `encryption_mode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
@@ -81,8 +81,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect connections can be imported using the `connection id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect connections using the connection `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_connection.test_connection
+  id = "dxcon-ffre0ec3"
+}
 ```
-$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+
+Using `terraform import`, import Direct Connect connections using the connection `id`. For example:
+
+```console
+% terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```

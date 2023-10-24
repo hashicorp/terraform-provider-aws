@@ -86,7 +86,7 @@ resource "aws_iam_role_policy" "AWSCloudFormationStackSetAdministrationRole_Exec
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `administration_role_arn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `SELF_MANAGED` permission model.
 * `auto_deployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
@@ -134,8 +134,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFormation StackSets can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation StackSets using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example"
+}
 ```
-$ terraform import aws_cloudformation_stack_set.example example
+
+Import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example,DELEGATED_ADMIN"
+}
+```
+
+Using `terraform import`, import CloudFormation StackSets using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack_set.example example
+```
+
+Using `terraform import`, import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```

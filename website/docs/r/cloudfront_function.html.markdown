@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Functions can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Functions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_function.test
+  id = "my_test_function"
+}
 ```
-$ terraform import aws_cloudfront_function.test my_test_function
+
+Using `terraform import`, import CloudFront Functions using the `name`. For example:
+
+```console
+% terraform import aws_cloudfront_function.test my_test_function
 ```

@@ -43,7 +43,7 @@ resource "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
@@ -90,8 +90,17 @@ not included as an argument because the resource will add it automatically when 
 
 ## Import
 
-Slot types can be imported using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import slot types using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_slot_type.flower_types
+  id = "FlowerTypes"
+}
 ```
-$ terraform import aws_lex_slot_type.flower_types FlowerTypes
+
+Using `terraform import`, import slot types using their name. For example:
+
+```console
+% terraform import aws_lex_slot_type.flower_types FlowerTypes
 ```

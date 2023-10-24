@@ -37,7 +37,7 @@ resource "aws_iam_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Description of the IAM policy.
 * `name` - (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name.
@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Policies can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Policies using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_policy.administrator
+  id = "arn:aws:iam::123456789012:policy/UsersManageOwnCredentials"
+}
 ```
-$ terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
+
+Using `terraform import`, import IAM Policies using the `arn`. For example:
+
+```console
+% terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
 ```

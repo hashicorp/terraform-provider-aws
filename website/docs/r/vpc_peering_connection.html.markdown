@@ -103,7 +103,7 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the owner of the peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -150,10 +150,19 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 ## Import
 
-VPC Peering resources can be imported using the `vpc peering id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering resources using the VPC peering `id`. For example:
 
-```sh
-$ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
+```terraform
+import {
+  to = aws_vpc_peering_connection.test_connection
+  id = "pcx-111aaa111"
+}
+```
+
+Using `terraform import`, import VPC Peering resources using the VPC peering `id`. For example:
+
+```console
+% terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
 
 [1]: /docs/providers/aws/index.html

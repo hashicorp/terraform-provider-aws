@@ -29,7 +29,7 @@ resource "aws_guardduty_organization_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_account_id` - (Required) AWS account identifier to designate as a delegated administrator for GuardDuty.
 
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GuardDuty Organization Admin Account can be imported using the AWS account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty Organization Admin Account using the AWS account ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_organization_admin_account.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_guardduty_organization_admin_account.example 123456789012
+
+Using `terraform import`, import GuardDuty Organization Admin Account using the AWS account ID. For example:
+
+```console
+% terraform import aws_guardduty_organization_admin_account.example 123456789012
 ```

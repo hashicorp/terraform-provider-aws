@@ -47,7 +47,7 @@ resource "aws_worklink_fleet" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `audit_stream_arn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events. Kinesis data stream name must begin with `"AmazonWorkLink-"`.
@@ -84,8 +84,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WorkLink can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkLink using the ARN. For example:
 
+```terraform
+import {
+  to = aws_worklink_fleet.test
+  id = "arn:aws:worklink::123456789012:fleet/example"
+}
 ```
-$ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
+
+Using `terraform import`, import WorkLink using the ARN. For example:
+
+```console
+% terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
 ```

@@ -43,7 +43,7 @@ resource "aws_codeartifact_domain_permissions_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.
@@ -59,8 +59,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_domain_permissions_policy.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367"
+}
 ```
-$ terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
+
+Using `terraform import`, import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
+
+```console
+% terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
 ```

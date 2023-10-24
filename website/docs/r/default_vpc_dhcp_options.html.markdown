@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC DHCP Options using the DHCP Options `id`. For example:
 
+```terraform
+import {
+  to = aws_default_vpc_dhcp_options.default_options
+  id = "dopt-d9070ebb"
+}
 ```
-$ terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
+
+Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. For example:
+
+```console
+% terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
 ```

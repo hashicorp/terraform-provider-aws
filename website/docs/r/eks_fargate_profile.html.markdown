@@ -91,8 +91,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_fargate_profile.my_fargate_profile
+  id = "my_cluster:my_fargate_profile"
+}
 ```
-$ terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
+
+Using `terraform import`, import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```

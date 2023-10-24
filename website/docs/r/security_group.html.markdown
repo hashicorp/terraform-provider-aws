@@ -227,7 +227,7 @@ resource "null_resource" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Security group description. Defaults to `Managed by Terraform`. Cannot be `""`. **NOTE**: This field maps to the AWS `GroupDescription` attribute, for which there is no Update API. If you'd like to classify your security groups in a way that can be updated, use `tags`.
 * `egress` - (Optional, VPC only) Configuration block for egress rules. Can be specified multiple times for each egress rule. Each egress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -298,8 +298,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
+```terraform
+import {
+  to = aws_security_group.elb_sg
+  id = "sg-903004f8"
+}
 ```
-$ terraform import aws_security_group.elb_sg sg-903004f8
+
+Using `terraform import`, import Security Groups using the security group `id`. For example:
+
+```console
+% terraform import aws_security_group.elb_sg sg-903004f8
 ```

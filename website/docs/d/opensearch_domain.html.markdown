@@ -20,7 +20,7 @@ data "aws_opensearch_domain" "my_domain" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `domain_name` – (Required) Name of the domain.
 
@@ -93,6 +93,8 @@ This data source exports the following attributes in addition to the arguments a
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+* `software_update_options` - Software update options for the domain
+    * `auto_software_update_enabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
 * `vpc_options` - VPC Options for private OpenSearch domains.
     * `availability_zones` - Availability zones used by the domain.

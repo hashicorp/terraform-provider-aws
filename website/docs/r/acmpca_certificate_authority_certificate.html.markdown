@@ -106,7 +106,7 @@ data "aws_partition" "current" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate` - (Required) PEM-encoded certificate for the Certificate Authority.
 * `certificate_authority_arn` - (Required) ARN of the Certificate Authority.

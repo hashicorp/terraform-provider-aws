@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -103,7 +103,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 1024),
-																		validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
+																		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
 																	),
 																},
 															},
@@ -148,7 +148,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 												validation.StringLenBetween(1, 40),
 												// The value is returned in lower case by the API.
 												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-												validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 											),
 										},
 									},

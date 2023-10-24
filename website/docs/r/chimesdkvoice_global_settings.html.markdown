@@ -24,7 +24,7 @@ resource "aws_chimesdkvoice_global_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector` - (Required) The Voice Connector settings. See [voice_connector](#voice_connector).
 
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Chime SDK Voice Global Settings can be imported using the `id` (AWS account ID), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Chime SDK Voice Global Settings using the `id` (AWS account ID). For example:
 
+```terraform
+import {
+  to = aws_chimesdkvoice_global_settings.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_chimesdkvoice_global_settings.example 123456789012
+
+Using `terraform import`, import AWS Chime SDK Voice Global Settings using the `id` (AWS account ID). For example:
+
+```console
+% terraform import aws_chimesdkvoice_global_settings.example 123456789012
 ```

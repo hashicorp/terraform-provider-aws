@@ -36,7 +36,7 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `xss_match_tuples` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF XSS Match Set can be imported using their ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF XSS Match Set using their ID. For example:
 
+```terraform
+import {
+  to = aws_waf_xss_match_set.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_waf_xss_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF XSS Match Set using their ID. For example:
+
+```console
+% terraform import aws_waf_xss_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

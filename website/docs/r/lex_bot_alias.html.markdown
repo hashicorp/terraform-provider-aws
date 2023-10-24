@@ -24,7 +24,7 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bot_name` - (Required) The name of the bot.
 * `bot_version` - (Required) The name of the bot.
@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Bot aliases can be imported using an ID with the format `bot_name:bot_alias_name`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
 
+```terraform
+import {
+  to = aws_lex_bot_alias.order_flowers_prod
+  id = "OrderFlowers:OrderFlowersProd"
+}
 ```
-$ terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
+
+Using `terraform import`, import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
+
+```console
+% terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```

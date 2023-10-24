@@ -32,7 +32,7 @@ resource "aws_egress_only_internet_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The VPC ID to create in.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Egress-only Internet gateways can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Egress-only Internet gateways using the `id`. For example:
 
+```terraform
+import {
+  to = aws_egress_only_internet_gateway.example
+  id = "eigw-015e0e244e24dfe8a"
+}
 ```
-$ terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a
+
+Using `terraform import`, import Egress-only Internet gateways using the `id`. For example:
+
+```console
+% terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a
 ```

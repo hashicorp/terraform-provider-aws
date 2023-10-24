@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
@@ -132,8 +132,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Beanstalk Environments using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastic_beanstalk_environment.prodenv
+  id = "e-rpqsewtp2j"
+}
 ```
-$ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
+
+Using `terraform import`, import Elastic Beanstalk Environments using the `id`. For example:
+
+```console
+% terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```

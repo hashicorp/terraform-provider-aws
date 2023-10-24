@@ -40,7 +40,7 @@ resource "aws_transfer_access" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `external_id` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer Accesses can be imported using the `server_id` and `external_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Accesses using the `server_id` and `external_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_access.example
+  id = "s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234"
+}
 ```
-$ terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
+
+Using `terraform import`, import Transfer Accesses using the `server_id` and `external_id`. For example:
+
+```console
+% terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```

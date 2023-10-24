@@ -153,7 +153,7 @@ resource "aws_sns_topic_subscription" "this" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for the branch.
@@ -186,8 +186,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amplify branch can be imported using `app_id` and `branch_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify branch using `app_id` and `branch_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_branch.master
+  id = "d2ypk4k47z8u6/master"
+}
 ```
-$ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
+
+Using `terraform import`, import Amplify branch using `app_id` and `branch_name`. For example:
+
+```console
+% terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```

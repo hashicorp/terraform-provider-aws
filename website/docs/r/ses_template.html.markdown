@@ -23,7 +23,7 @@ resource "aws_ses_template" "MyTemplate" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the template. Cannot exceed 64 characters. You will refer to this name when you send email.
 * `html` - (Optional) The HTML body of the email. Must be less than 500KB in size, including both the text and HTML parts.
@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES templates can be imported using the template name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES templates using the template name. For example:
 
+```terraform
+import {
+  to = aws_ses_template.MyTemplate
+  id = "MyTemplate"
+}
 ```
-$ terraform import aws_ses_template.MyTemplate MyTemplate
+
+Using `terraform import`, import SES templates using the template name. For example:
+
+```console
+% terraform import aws_ses_template.MyTemplate MyTemplate
 ```

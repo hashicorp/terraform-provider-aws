@@ -60,7 +60,7 @@ resource "aws_datasync_task" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_location_arn` - (Required) Amazon Resource Name (ARN) of destination DataSync Location.
 * `source_location_arn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
@@ -76,7 +76,7 @@ The following arguments are supported:
 
 ~> **NOTE:** If `atime` is set to `BEST_EFFORT`, `mtime` must be set to `PRESERVE`. If `atime` is set to `NONE`, `mtime` must be set to `NONE`.
 
-The following arguments are supported inside the `options` configuration block:
+The `options` configuration block supports the following arguments:
 
 * `atime` - (Optional) A file metadata that shows the last time a file was accessed (that is when the file was read or written to). If set to `BEST_EFFORT`, the DataSync Task attempts to preserve the original (that is, the version before sync `PREPARING` phase) `atime` attribute on all source files. Valid values: `BEST_EFFORT`, `NONE`. Default: `BEST_EFFORT`.
 * `bytes_per_second` - (Optional) Limits the bandwidth utilized. For example, to set a maximum of 1 MB, set this value to `1048576`. Value values: `-1` or greater. Default: `-1` (unlimited).
@@ -124,8 +124,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datasync_task` can be imported by using the DataSync Task Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_task.example
+  id = "arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
+
+Using `terraform import`, import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```

@@ -20,7 +20,7 @@ data aws_workspaces_image example {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `image_id` – (Required) ID of the image.
 

@@ -90,10 +90,13 @@ func ResourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grantee_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -122,10 +125,13 @@ func ResourceGrant() *schema.Resource {
 				ForceNew: true,
 			},
 			"retiring_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 		},
 	}
@@ -331,13 +337,13 @@ func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, g
 		}
 
 		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}

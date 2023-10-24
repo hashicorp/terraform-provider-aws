@@ -1,9 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-// Terraform Plugin RPC protocol version 6.3
+// Terraform Plugin RPC protocol version 6.4
 //
-// This file defines version 6.3 of the RPC protocol. To implement a plugin
+// This file defines version 6.4 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -41,6 +41,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Provider_GetMetadata_FullMethodName                = "/tfplugin6.Provider/GetMetadata"
 	Provider_GetProviderSchema_FullMethodName          = "/tfplugin6.Provider/GetProviderSchema"
 	Provider_ValidateProviderConfig_FullMethodName     = "/tfplugin6.Provider/ValidateProviderConfig"
 	Provider_ValidateResourceConfig_FullMethodName     = "/tfplugin6.Provider/ValidateResourceConfig"
@@ -59,7 +60,14 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderClient interface {
-	// ////// Information about what a provider supports/expects
+	// GetMetadata returns upfront information about server capabilities and
+	// supported resource types without requiring the server to instantiate all
+	// schema information, which may be memory intensive. This RPC is optional,
+	// where clients may receive an unimplemented RPC error. Clients should
+	// ignore the error and call the GetProviderSchema RPC as a fallback.
+	GetMetadata(ctx context.Context, in *GetMetadata_Request, opts ...grpc.CallOption) (*GetMetadata_Response, error)
+	// GetSchema returns schema information for the provider, data resources,
+	// and managed resources.
 	GetProviderSchema(ctx context.Context, in *GetProviderSchema_Request, opts ...grpc.CallOption) (*GetProviderSchema_Response, error)
 	ValidateProviderConfig(ctx context.Context, in *ValidateProviderConfig_Request, opts ...grpc.CallOption) (*ValidateProviderConfig_Response, error)
 	ValidateResourceConfig(ctx context.Context, in *ValidateResourceConfig_Request, opts ...grpc.CallOption) (*ValidateResourceConfig_Response, error)
@@ -83,6 +91,15 @@ type providerClient struct {
 
 func NewProviderClient(cc grpc.ClientConnInterface) ProviderClient {
 	return &providerClient{cc}
+}
+
+func (c *providerClient) GetMetadata(ctx context.Context, in *GetMetadata_Request, opts ...grpc.CallOption) (*GetMetadata_Response, error) {
+	out := new(GetMetadata_Response)
+	err := c.cc.Invoke(ctx, Provider_GetMetadata_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *providerClient) GetProviderSchema(ctx context.Context, in *GetProviderSchema_Request, opts ...grpc.CallOption) (*GetProviderSchema_Response, error) {
@@ -197,7 +214,14 @@ func (c *providerClient) StopProvider(ctx context.Context, in *StopProvider_Requ
 // All implementations must embed UnimplementedProviderServer
 // for forward compatibility
 type ProviderServer interface {
-	// ////// Information about what a provider supports/expects
+	// GetMetadata returns upfront information about server capabilities and
+	// supported resource types without requiring the server to instantiate all
+	// schema information, which may be memory intensive. This RPC is optional,
+	// where clients may receive an unimplemented RPC error. Clients should
+	// ignore the error and call the GetProviderSchema RPC as a fallback.
+	GetMetadata(context.Context, *GetMetadata_Request) (*GetMetadata_Response, error)
+	// GetSchema returns schema information for the provider, data resources,
+	// and managed resources.
 	GetProviderSchema(context.Context, *GetProviderSchema_Request) (*GetProviderSchema_Response, error)
 	ValidateProviderConfig(context.Context, *ValidateProviderConfig_Request) (*ValidateProviderConfig_Response, error)
 	ValidateResourceConfig(context.Context, *ValidateResourceConfig_Request) (*ValidateResourceConfig_Response, error)
@@ -220,6 +244,9 @@ type ProviderServer interface {
 type UnimplementedProviderServer struct {
 }
 
+func (UnimplementedProviderServer) GetMetadata(context.Context, *GetMetadata_Request) (*GetMetadata_Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMetadata not implemented")
+}
 func (UnimplementedProviderServer) GetProviderSchema(context.Context, *GetProviderSchema_Request) (*GetProviderSchema_Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviderSchema not implemented")
 }
@@ -267,6 +294,24 @@ type UnsafeProviderServer interface {
 
 func RegisterProviderServer(s grpc.ServiceRegistrar, srv ProviderServer) {
 	s.RegisterService(&Provider_ServiceDesc, srv)
+}
+
+func _Provider_GetMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMetadata_Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).GetMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Provider_GetMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).GetMetadata(ctx, req.(*GetMetadata_Request))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_GetProviderSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -492,6 +537,10 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "tfplugin6.Provider",
 	HandlerType: (*ProviderServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetMetadata",
+			Handler:    _Provider_GetMetadata_Handler,
+		},
 		{
 			MethodName: "GetProviderSchema",
 			Handler:    _Provider_GetProviderSchema_Handler,

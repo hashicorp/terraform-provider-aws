@@ -24,7 +24,7 @@ resource "aws_main_route_table_association" "a" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The ID of the VPC whose main route table should be set
 * `route_table_id` - (Required) The ID of the Route Table to set as the new

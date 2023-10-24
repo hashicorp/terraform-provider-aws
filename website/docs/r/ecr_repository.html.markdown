@@ -25,7 +25,7 @@ resource "aws_ecr_repository" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the repository.
 * `encryption_configuration` - (Optional) Encryption configuration for the repository. See [below for schema](#encryption_configuration).
@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Repositories can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Repositories using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecr_repository.service
+  id = "test-service"
+}
 ```
-$ terraform import aws_ecr_repository.service test-service
+
+Using `terraform import`, import ECR Repositories using the `name`. For example:
+
+```console
+% terraform import aws_ecr_repository.service test-service
 ```

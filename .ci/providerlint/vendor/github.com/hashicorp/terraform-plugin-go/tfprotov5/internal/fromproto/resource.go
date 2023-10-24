@@ -10,6 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5"
 )
 
+func ResourceMetadata(in *tfplugin5.GetMetadata_ResourceMetadata) *tfprotov5.ResourceMetadata {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov5.ResourceMetadata{
+		TypeName: in.TypeName,
+	}
+}
+
 func ValidateResourceTypeConfigRequest(in *tfplugin5.ValidateResourceTypeConfig_Request) (*tfprotov5.ValidateResourceTypeConfigRequest, error) {
 	resp := &tfprotov5.ValidateResourceTypeConfigRequest{
 		TypeName: in.TypeName,

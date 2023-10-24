@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IOT Thing Types can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Thing Types using the name. For example:
 
+```terraform
+import {
+  to = aws_iot_thing_type.example
+  id = "example"
+}
 ```
-$ terraform import aws_iot_thing_type.example example
+
+Using `terraform import`, import IOT Thing Types using the name. For example:
+
+```console
+% terraform import aws_iot_thing_type.example example
 ```

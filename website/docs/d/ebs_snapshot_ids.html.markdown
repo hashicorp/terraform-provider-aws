@@ -31,7 +31,7 @@ data "aws_ebs_snapshot_ids" "ebs_volumes" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
 

@@ -30,7 +30,7 @@ resource "aws_appintegrations_event_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Event Integration.
 * `eventbridge_bus` - (Required) EventBridge bus.
@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon AppIntegrations Event Integrations can be imported using the `name` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon AppIntegrations Event Integrations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appintegrations_event_integration.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_appintegrations_event_integration.example example-name
+
+Using `terraform import`, import Amazon AppIntegrations Event Integrations using the `name`. For example:
+
+```console
+% terraform import aws_appintegrations_event_integration.example example-name
 ```

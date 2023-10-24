@@ -30,7 +30,7 @@ resource "aws_redshift_cluster" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `snapshot_copy_grant_name` - (Required, Forces new resource) A friendly name for identifying the grant.
 * `kms_key_id` - (Optional, Forces new resource) The unique identifier for the customer master key (CMK) that the grant applies to. Specify the key ID or the Amazon Resource Name (ARN) of the CMK. To specify a CMK in a different AWS account, you must use the key ARN. If not specified, the default key is used.
@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Snapshot Copy Grants support import by name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Snapshot Copy Grants by name. For example:
+
+```terraform
+import {
+  to = aws_redshift_snapshot_copy_grant.test
+  id = "my-grant"
+}
+```
+
+Using `terraform import`, import Redshift Snapshot Copy Grants by name. For example:
 
 ```console
-$ terraform import aws_redshift_snapshot_copy_grant.test my-grant
+% terraform import aws_redshift_snapshot_copy_grant.test my-grant
 ```

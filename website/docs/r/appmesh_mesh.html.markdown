@@ -36,7 +36,7 @@ resource "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh service meshes can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh service meshes using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_mesh.simple
+  id = "simpleapp"
+}
 ```
-$ terraform import aws_appmesh_mesh.simple simpleapp
+
+Using `terraform import`, import App Mesh service meshes using the `name`. For example:
+
+```console
+% terraform import aws_appmesh_mesh.simple simpleapp
 ```

@@ -20,7 +20,7 @@ data "aws_cloudfront_realtime_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Unique name to identify this real-time log configuration.
 

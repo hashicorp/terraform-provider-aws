@@ -19,7 +19,7 @@ data "aws_ecr_authorization_token" "token" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `registry_id` - (Optional) AWS account ID of the ECR Repository. If not specified the default account is assumed.
 

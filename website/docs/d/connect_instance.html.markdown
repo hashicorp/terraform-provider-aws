@@ -32,7 +32,7 @@ data "aws_connect_instance" "foo" {
 
 ~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
 

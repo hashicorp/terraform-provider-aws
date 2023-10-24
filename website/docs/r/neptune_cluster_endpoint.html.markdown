@@ -22,7 +22,7 @@ resource "aws_neptune_cluster_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resources) The DB cluster identifier of the DB cluster associated with the endpoint.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier of the endpoint.
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_cluster_endpoint` can be imported by using the `cluster-identifier:endpoint-identfier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_cluster_endpoint` using the `cluster-identifier:endpoint-identfier`. For example:
 
+```terraform
+import {
+  to = aws_neptune_cluster_endpoint.example
+  id = "my-cluster:my-endpoint"
+}
 ```
-$ terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint
+
+Using `terraform import`, import `aws_neptune_cluster_endpoint` using the `cluster-identifier:endpoint-identfier`. For example:
+
+```console
+% terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint
 ```

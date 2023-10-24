@@ -220,10 +220,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Batch compute can be imported using the `compute_environment_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `compute_environment_name`. For example:
 
+```terraform
+import {
+  to = aws_batch_compute_environment.sample
+  id = "sample"
+}
 ```
-$ terraform import aws_batch_compute_environment.sample sample
+
+Using `terraform import`, import AWS Batch compute using the `compute_environment_name`. For example:
+
+```console
+% terraform import aws_batch_compute_environment.sample sample
 ```
 
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html

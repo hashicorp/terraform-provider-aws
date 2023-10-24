@@ -40,7 +40,7 @@ resource "aws_apigatewayv2_authorizer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `authorizer_type` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.
@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_authorizer` using the API identifier and authorizer identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_authorizer.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_authorizer` using the API identifier and authorizer identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```

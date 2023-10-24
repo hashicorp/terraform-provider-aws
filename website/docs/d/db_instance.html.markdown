@@ -20,9 +20,10 @@ data "aws_db_instance" "database" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `db_instance_identifier` - (Required) Name of the RDS instance
+* `db_instance_identifier` - (Optional) Name of the RDS instance.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
 ## Attribute Reference
 

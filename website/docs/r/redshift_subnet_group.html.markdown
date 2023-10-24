@@ -49,7 +49,7 @@ resource "aws_redshift_subnet_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift Subnet group.
 * `description` - (Optional) The description of the Redshift Subnet group. Defaults to "Managed by Terraform".
@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift subnet groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift subnet groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_subnet_group.testgroup1
+  id = "test-cluster-subnet-group"
+}
 ```
-$ terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
+
+Using `terraform import`, import Redshift subnet groups using the `name`. For example:
+
+```console
+% terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
 ```

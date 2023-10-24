@@ -84,7 +84,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `max_capacity` - (Required) Max capacity of the scalable target.
 * `min_capacity` - (Required) Min capacity of the scalable target.
@@ -103,8 +103,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Application AutoScaling Target can be imported using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_target.test-target
+  id = "service-namespace/resource-id/scalable-dimension"
+}
 ```
-$ terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
+
+Using `terraform import`, import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```

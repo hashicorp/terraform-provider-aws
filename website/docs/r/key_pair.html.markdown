@@ -29,7 +29,7 @@ resource "aws_key_pair" "deployer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `key_name` - (Optional) The name for the key pair. If neither `key_name` nor `key_name_prefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
 * `key_name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `key_name`. If neither `key_name` nor `key_name_prefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
@@ -50,10 +50,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Key Pairs can be imported using the `key_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Key Pairs using the `key_name`. For example:
 
+```terraform
+import {
+  to = aws_key_pair.deployer
+  id = "deployer-key"
+}
 ```
-$ terraform import aws_key_pair.deployer deployer-key
+
+Using `terraform import`, import Key Pairs using the `key_name`. For example:
+
+```console
+% terraform import aws_key_pair.deployer deployer-key
 ```
 
 ~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.

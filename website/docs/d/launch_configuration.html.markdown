@@ -20,7 +20,7 @@ data "aws_launch_configuration" "ubuntu" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the launch configuration.
 

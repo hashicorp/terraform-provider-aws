@@ -68,7 +68,7 @@ output "cloud9_public_ip" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the environment.
 * `instance_type` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
@@ -79,9 +79,12 @@ The following arguments are supported:
     * `amazonlinux-1-x86_64`
     * `amazonlinux-2-x86_64`
     * `ubuntu-18.04-x86_64`
+    * `ubuntu-22.04-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
+
 * `owner_arn` - (Optional) The ARN of the environment owner. This can be ARN of any AWS IAM principal. Defaults to the environment's creator.
 * `subnet_id` - (Optional) The ID of the subnet in Amazon VPC that AWS Cloud9 will use to communicate with the Amazon EC2 instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

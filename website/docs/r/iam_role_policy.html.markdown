@@ -56,7 +56,7 @@ resource "aws_iam_role" "test_role" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the role policy. If omitted, Terraform will
 assign a random, unique name.
@@ -76,8 +76,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
+```terraform
+import {
+  to = aws_iam_role_policy.mypolicy
+  id = "role_of_mypolicy_name:mypolicy_name"
+}
 ```
-$ terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
+
+Using `terraform import`, import IAM Role Policies using the `role_name:role_policy_name`. For example:
+
+```console
+% terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
 ```

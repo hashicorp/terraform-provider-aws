@@ -24,7 +24,7 @@ resource "aws_ec2_traffic_mirror_filter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) A description of the filter.
 * `network_services` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazon-dns`.
@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Traffic mirror filter can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import traffic mirror filter using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_filter.foo
+  id = "tmf-0fbb93ddf38198f64"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
+
+Using `terraform import`, import traffic mirror filter using the `id`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
 ```

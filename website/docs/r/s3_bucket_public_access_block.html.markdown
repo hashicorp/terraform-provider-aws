@@ -29,7 +29,7 @@ resource "aws_s3_bucket_public_access_block" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) S3 Bucket to which this Public Access Block configuration should be applied.
 * `block_public_acls` - (Optional) Whether Amazon S3 should block public ACLs for this bucket. Defaults to `false`. Enabling this setting does not affect existing policies or ACLs. When set to `true` causes the following behavior:
@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_s3_bucket_public_access_block` using the bucket name. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_public_access_block.example
+  id = "my-bucket"
+}
 ```
-$ terraform import aws_s3_bucket_public_access_block.example my-bucket
+
+Using `terraform import`, import `aws_s3_bucket_public_access_block` using the bucket name. For example:
+
+```console
+% terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```

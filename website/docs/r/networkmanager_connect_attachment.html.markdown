@@ -95,8 +95,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_connect_attachment` can be imported using the attachment ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_connect_attachment` using the attachment ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_connect_attachment.example
+  id = "attachment-0f8fa60d2238d1bd8"
+}
 ```
-$ terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
+
+Using `terraform import`, import `aws_networkmanager_connect_attachment` using the attachment ID. For example:
+
+```console
+% terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
 ```

@@ -31,7 +31,7 @@ resource "aws_api_gateway_rest_api" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `location` - (Required) Location of the targeted API entity of the to-be-created documentation part. See below.
 * `properties` - (Required) Content map of API-specific key-value pairs describing the targeted API entity. The map must be encoded as a JSON string, e.g., "{ \"description\": \"The API does ...\" }". Only Swagger-compliant key-value pairs can be exported and, hence, published.
@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway documentation_parts can be imported using `REST-API-ID/DOC-PART-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway documentation_parts using `REST-API-ID/DOC-PART-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_documentation_part.example
+  id = "5i4e1ko720/3oyy3t"
+}
 ```
-$ terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
+
+Using `terraform import`, import API Gateway documentation_parts using `REST-API-ID/DOC-PART-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```

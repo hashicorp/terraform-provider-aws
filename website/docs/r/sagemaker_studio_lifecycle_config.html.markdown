@@ -24,7 +24,7 @@ resource "aws_sagemaker_studio_lifecycle_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `studio_lifecycle_config_name` - (Required) The name of the Studio Lifecycle Configuration to create.
 * `studio_lifecycle_config_app_type` - (Required) The App type that the Lifecycle Configuration is attached to. Valid values are `JupyterServer` and `KernelGateway`.
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Studio Lifecycle Configs can be imported using the `studio_lifecycle_config_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_studio_lifecycle_config.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_studio_lifecycle_config.example example
+
+Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+
+```console
+% terraform import aws_sagemaker_studio_lifecycle_config.example example
 ```

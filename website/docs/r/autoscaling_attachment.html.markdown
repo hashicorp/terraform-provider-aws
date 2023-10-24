@@ -32,7 +32,7 @@ resource "aws_autoscaling_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
 * `elb` - (Optional) Name of the ELB.

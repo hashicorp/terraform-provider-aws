@@ -168,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Batch Job Definition can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Definition using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_batch_job_definition.test
+  id = "arn:aws:batch:us-east-1:123456789012:job-definition/sample"
+}
 ```
-$ terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
+
+Using `terraform import`, import Batch Job Definition using the `arn`. For example:
+
+```console
+% terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```

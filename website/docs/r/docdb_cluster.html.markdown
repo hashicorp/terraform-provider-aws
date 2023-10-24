@@ -40,8 +40,9 @@ resource "aws_docdb_cluster" "docdb" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
+* `allow_major_version_upgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.
@@ -100,8 +101,17 @@ any cleanup task during the destroying process.
 
 ## Import
 
-DocumentDB Clusters can be imported using the `cluster_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocumentDB Clusters using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster.docdb_cluster
+  id = "docdb-prod-cluster"
+}
 ```
-$ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
+
+Using `terraform import`, import DocumentDB Clusters using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```

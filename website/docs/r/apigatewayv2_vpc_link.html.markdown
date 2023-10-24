@@ -29,7 +29,7 @@ resource "aws_apigatewayv2_vpc_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `security_group_ids` - (Required) Security group IDs for the VPC Link.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_vpc_link` can be imported by using the VPC Link identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_vpc_link` using the VPC Link identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_vpc_link.example
+  id = "aabbccddee"
+}
 ```
-$ terraform import aws_apigatewayv2_vpc_link.example aabbccddee
+
+Using `terraform import`, import `aws_apigatewayv2_vpc_link` using the VPC Link identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_vpc_link.example aabbccddee
 ```

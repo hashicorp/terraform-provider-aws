@@ -112,8 +112,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_connect_peer` can be imported using the connect peer ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_connect_peer` using the connect peer ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_connect_peer.example
+  id = "connect-peer-061f3e96275db1acc"
+}
 ```
-$ terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
+
+Using `terraform import`, import `aws_networkmanager_connect_peer` using the connect peer ID. For example:
+
+```console
+% terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
 ```

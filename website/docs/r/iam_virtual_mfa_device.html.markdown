@@ -29,7 +29,7 @@ resource "aws_iam_virtual_mfa_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `virtual_mfa_device_name` - (Required) The name of the virtual MFA device. Use with path to uniquely identify a virtual MFA device.
 * `path` – (Optional) The path for the virtual MFA device.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Virtual MFA Devices can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Virtual MFA Devices using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_virtual_mfa_device.example
+  id = "arn:aws:iam::123456789012:mfa/example"
+}
 ```
-$ terraform import aws_iam_virtual_mfa_device.example arn:aws:iam::123456789012:mfa/example
+
+Using `terraform import`, import IAM Virtual MFA Devices using the `arn`. For example:
+
+```console
+% terraform import aws_iam_virtual_mfa_device.example arn:aws:iam::123456789012:mfa/example
 ```

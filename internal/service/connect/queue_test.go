@@ -74,8 +74,6 @@ func testAccQueue_basic(t *testing.T) {
 }
 
 func testAccQueue_disappears(t *testing.T) {
-	t.Skip("Queues do not support deletion today")
-
 	ctx := acctest.Context(t)
 
 	var v connect.DescribeQueueOutput

@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Observability Access Manager Link can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Access Manager Link using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_oam_link.example
+  id = "arn:aws:oam:us-west-2:123456789012:link/link-id"
+}
 ```
-$ terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
+
+Using `terraform import`, import CloudWatch Observability Access Manager Link using the `arn`. For example:
+
+```console
+% terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```

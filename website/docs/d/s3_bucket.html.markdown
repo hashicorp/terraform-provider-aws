@@ -55,7 +55,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket
 

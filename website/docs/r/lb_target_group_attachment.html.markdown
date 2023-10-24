@@ -60,6 +60,32 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 ```
 
+### Registering Multiple Targets
+
+```terraform
+resource "aws_instance" "example" {
+  count = 3
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group_attachment" "example" {
+  # covert a list of instance objects to a map with instance ID as the key, and an instance
+  # object as the value.
+  for_each = {
+    for k, v in aws_instance.example :
+    v.id => v
+  }
+
+  target_group_arn = aws_lb_target_group.example.arn
+  target_id        = each.value.id
+  port             = 80
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -80,4 +106,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Target Group Attachments cannot be imported.
+You cannot import Target Group Attachments.

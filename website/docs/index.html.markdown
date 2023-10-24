@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1234 resources and 507 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1268 resources and 519 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -118,11 +118,11 @@ For example:
 provider "aws" {}
 ```
 
-```sh
-$ export AWS_ACCESS_KEY_ID="anaccesskey"
-$ export AWS_SECRET_ACCESS_KEY="asecretkey"
-$ export AWS_REGION="us-west-2"
-$ terraform plan
+```console
+% export AWS_ACCESS_KEY_ID="anaccesskey"
+% export AWS_SECRET_ACCESS_KEY="asecretkey"
+% export AWS_REGION="us-west-2"
+% terraform plan
 ```
 
 Other environment variables related to authorization are:
@@ -241,30 +241,33 @@ credential_process = custom-process --username jdoe
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
 |Shared Config Files|`shared_config_files`|`AWS_CONFIG_FILE`|N/A|
 |Shared Credentials Files|`shared_credentials_files`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
+|S3 Use Regional Endpoint for `us-east-1`|`s3_us_east_1_regional_endpoint`|`AWS_S3_US_EAST_1_REGIONAL_ENDPOINT`|`s3_us_east_1_regional_endpoint`|
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
+
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
 
 ### Assume Role Configuration Reference
 
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
+Note that environment variables are not supported for assuming IAM roles.
+
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|--------|-----------------------|
-|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Duration|`duration`|N/A|`duration_seconds`|
-|External ID|`external_id`|N/A|`external_id`|
-|Policy|`policy`|N/A|N/A|
-|Policy ARNs|`policy_arns`|N/A|N/A|
-|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|N/A|
-|Tags|`tags`|N/A|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
-
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`role_arn`|`role_arn`|
+|Duration|`duration`|`duration_seconds`|
+|External ID|`external_id`|`external_id`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policy_arns`|N/A|
+|Session Name|`session_name`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|
 
 ### Assume Role with Web Identity Configuration Reference
 
@@ -287,8 +290,8 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
 
-```sh
-$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```console
+% export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
 ```
 
 ## Argument Reference
@@ -326,7 +329,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
-* `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
+* `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
+  By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
+  Specific to the Amazon S3 service.
+* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint.
+  Valid values are `legacy` or `regional`.
+  Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
+  Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.

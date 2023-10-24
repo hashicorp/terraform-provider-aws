@@ -39,7 +39,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
- Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_endpoint.foo
+  id = "rslvr-in-abcdef01234567890"
+}
 ```
-$ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
+
+Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
+
+```console
+% terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```

@@ -84,7 +84,7 @@ resource "aws_budgets_budget" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `budget_name` - (Required) The name of a budget.
@@ -148,6 +148,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budget actions using `AccountID:ActionID:BudgetName`. For example:
 
-`$ terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget`
+```terraform
+import {
+  to = aws_budgets_budget_action.myBudget
+  id = "123456789012:some-id:myBudget"
+}
+```
+
+Using `terraform import`, import budget actions using `AccountID:ActionID:BudgetName`. For example:
+
+```console
+% terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget
+```

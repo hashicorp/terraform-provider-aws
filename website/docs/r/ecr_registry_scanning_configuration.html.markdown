@@ -54,7 +54,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `scan_type` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
 - `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).
@@ -72,8 +72,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Scanning Configurations can be imported using the `registry_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Scanning Configurations using the `registry_id`. For example:
 
+```terraform
+import {
+  to = aws_ecr_registry_scanning_configuration.example
+  id = "012345678901"
+}
 ```
-$ terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+
+Using `terraform import`, import ECR Scanning Configurations using the `registry_id`. For example:
+
+```console
+% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
 ```

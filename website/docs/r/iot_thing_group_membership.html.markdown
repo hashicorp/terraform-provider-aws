@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IoT Thing Group Membership can be imported using the thing group name and thing name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Thing Group Membership using the thing group name and thing name. For example:
 
+```terraform
+import {
+  to = aws_iot_thing_group_membership.example
+  id = "thing_group_name/thing_name"
+}
 ```
-$ terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
+
+Using `terraform import`, import IoT Thing Group Membership using the thing group name and thing name. For example:
+
+```console
+% terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
 ```

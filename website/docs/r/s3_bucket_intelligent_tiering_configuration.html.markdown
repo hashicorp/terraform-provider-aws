@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
@@ -89,8 +89,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket intelligent tiering configurations can be imported using `bucket:name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket intelligent tiering configurations using `bucket:name`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
 ```
-$ terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
+
+Using `terraform import`, import S3 bucket intelligent tiering configurations using `bucket:name`. For example:
+
+```console
+% terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

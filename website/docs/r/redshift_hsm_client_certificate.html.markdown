@@ -20,7 +20,7 @@ resource "aws_redshift_hsm_client_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `hsm_client_certificate_identifier` - (Required, Forces new resource) The identifier of the HSM client certificate.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Hsm Client Certificates support import by `hsm_client_certificate_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift HSM Client Certificates using `hsm_client_certificate_identifier`. For example:
+
+```terraform
+import {
+  to = aws_redshift_hsm_client_certificate.test
+  id = "example"
+}
+```
+
+Using `terraform import`, import Redshift HSM Client Certificates using `hsm_client_certificate_identifier`. For example:
 
 ```console
-$ terraform import aws_redshift_hsm_client_certificate.test example
+% terraform import aws_redshift_hsm_client_certificate.test example
 ```

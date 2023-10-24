@@ -1366,7 +1366,7 @@ func WaitTransitGatewayRouteCreated(ctx context.Context, conn *ec2.EC2, transitG
 		Pending: []string{ec2.TransitGatewayRouteStatePending},
 		Target:  []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole},
 		Timeout: TransitGatewayRouteCreatedTimeout,
-		Refresh: StatusTransitGatewayRouteState(ctx, conn, transitGatewayRouteTableID, destination),
+		Refresh: StatusTransitGatewayStaticRouteState(ctx, conn, transitGatewayRouteTableID, destination),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1383,7 +1383,7 @@ func WaitTransitGatewayRouteDeleted(ctx context.Context, conn *ec2.EC2, transitG
 		Pending: []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole, ec2.TransitGatewayRouteStateDeleting},
 		Target:  []string{},
 		Timeout: TransitGatewayRouteDeletedTimeout,
-		Refresh: StatusTransitGatewayRouteState(ctx, conn, transitGatewayRouteTableID, destination),
+		Refresh: StatusTransitGatewayStaticRouteState(ctx, conn, transitGatewayRouteTableID, destination),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2049,17 +2049,12 @@ func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (
 	return nil, err
 }
 
-const (
-	natGatewayCreatedTimeout = 10 * time.Minute
-	natGatewayDeletedTimeout = 30 * time.Minute
-)
-
-func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NatGateway, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayStatePending},
 		Target:  []string{ec2.NatGatewayStateAvailable},
 		Refresh: StatusNATGatewayState(ctx, conn, id),
-		Timeout: natGatewayCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2075,12 +2070,12 @@ func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return nil, err
 }
 
-func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NatGateway, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.NatGatewayStateDeleting},
 		Target:     []string{},
 		Refresh:    StatusNATGatewayState(ctx, conn, id),
-		Timeout:    natGatewayDeletedTimeout,
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -2090,6 +2085,90 @@ func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	if output, ok := outputRaw.(*ec2.NatGateway); ok {
 		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.FailureCode), aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusAssigning},
+		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusAssociating},
+		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusSucceeded, ec2.NatGatewayAddressStatusDisassociating},
+		Target:  []string{},
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusUnassigning},
+		Target:  []string{},
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
 		}
 
 		return output, err
@@ -3242,4 +3321,16 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Cli
 	}
 
 	return nil, err
+}
+
+func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client, target string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{target},
+		Refresh: StatusImageBlockPublicAccessState(ctx, conn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

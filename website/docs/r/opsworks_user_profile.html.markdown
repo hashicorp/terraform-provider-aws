@@ -21,7 +21,7 @@ resource "aws_opsworks_user_profile" "my_profile" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_arn` - (Required) The user's IAM ARN
 * `allow_self_management` - (Optional) Whether users can specify their own SSH public key through the My Settings page

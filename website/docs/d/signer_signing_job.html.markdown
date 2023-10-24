@@ -20,7 +20,7 @@ data "aws_signer_signing_job" "build_signing_job" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `job_id` - (Required) ID of the signing job on output.
 

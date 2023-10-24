@@ -24,7 +24,7 @@ output "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Custom filter block as described below.
 

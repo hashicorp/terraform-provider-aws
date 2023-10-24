@@ -82,7 +82,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Lifecycle Policy can be imported using the name of the repository, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Lifecycle Policy using the name of the repository. For example:
 
+```terraform
+import {
+  to = aws_ecr_lifecycle_policy.example
+  id = "tf-example"
+}
 ```
-$ terraform import aws_ecr_lifecycle_policy.example tf-example
+
+Using `terraform import`, import ECR Lifecycle Policy using the name of the repository. For example:
+
+```console
+% terraform import aws_ecr_lifecycle_policy.example tf-example
 ```

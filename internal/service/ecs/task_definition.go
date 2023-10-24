@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -129,7 +129,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
+					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
 				),
 			},
 			"inference_accelerator": {
@@ -371,7 +371,8 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:         schema.TypeInt,
 										ForceNew:     true,
 										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
+										ValidateFunc: validation.IsPortNumberOrZero,
+										Default:      0,
 									},
 								},
 							},

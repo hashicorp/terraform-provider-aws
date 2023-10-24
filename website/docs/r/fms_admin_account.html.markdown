@@ -18,7 +18,7 @@ resource "aws_fms_admin_account" "example" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID to associate with AWS Firewall Manager as the AWS Firewall Manager administrator account. This can be an AWS Organizations master account or a member account. Defaults to the current account. Must be configured to perform drift detection.
 
@@ -28,10 +28,26 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The AWS account ID of the AWS Firewall Manager administrator account.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
-Firewall Manager administrator account association can be imported using the account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Firewall Manager administrator account association using the account ID. For example:
 
+```terraform
+import {
+  to = aws_fms_admin_account.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_fms_admin_account.example 123456789012
+
+Using `terraform import`, import Firewall Manager administrator account association using the account ID. For example:
+
+```console
+% terraform import aws_fms_admin_account.example 123456789012
 ```

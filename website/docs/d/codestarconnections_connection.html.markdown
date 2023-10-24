@@ -30,7 +30,7 @@ data "aws_codestarconnections_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) CodeStar Connection ARN.
 * `name` - (Optional) CodeStar Connection name.

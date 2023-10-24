@@ -126,7 +126,7 @@ resource "aws_appsync_resolver" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API ID for the GraphQL API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
@@ -174,8 +174,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
 
+```terraform
+import {
+  to = aws_appsync_resolver.example
+  id = "abcdef123456-exampleType-exampleField"
+}
 ```
-$ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
+
+Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+
+```console
+% terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```

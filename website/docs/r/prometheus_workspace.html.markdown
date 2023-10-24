@@ -38,7 +38,7 @@ resource "aws_prometheus_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 * `logging_configuration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.
@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AMP Workspaces can be imported using the identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMP Workspaces using the identifier. For example:
 
+```terraform
+import {
+  to = aws_prometheus_workspace.demo
+  id = "ws-C6DCB907-F2D7-4D96-957B-66691F865D8B"
+}
 ```
-$ terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
+
+Using `terraform import`, import AMP Workspaces using the identifier. For example:
+
+```console
+% terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```

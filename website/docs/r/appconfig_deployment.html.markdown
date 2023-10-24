@@ -29,7 +29,7 @@ resource "aws_appconfig_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required, Forces new resource) Application ID. Must be between 4 and 7 characters in length.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID. Must be between 4 and 7 characters in length.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Deployments can be imported by using the application ID, environment ID, and deployment number separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Deployments using the application ID, environment ID, and deployment number separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appconfig_deployment.example
+  id = "71abcde/11xxxxx/1"
+}
 ```
-$ terraform import aws_appconfig_deployment.example 71abcde/11xxxxx/1
+
+Using `terraform import`, import AppConfig Deployments using the application ID, environment ID, and deployment number separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appconfig_deployment.example 71abcde/11xxxxx/1
 ```

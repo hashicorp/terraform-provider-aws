@@ -20,7 +20,7 @@ data "aws_msk_broker_nodes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 

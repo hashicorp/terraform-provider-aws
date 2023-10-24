@@ -46,7 +46,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
@@ -91,8 +91,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Models can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_model.test_model
+  id = "model-foo"
+}
 ```
-$ terraform import aws_sagemaker_model.test_model model-foo
+
+Using `terraform import`, import models using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_model.test_model model-foo
 ```

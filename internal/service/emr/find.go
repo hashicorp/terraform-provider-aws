@@ -87,8 +87,8 @@ func FindStudioByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Studio,
 	return output.Studio, nil
 }
 
-func FindStudioSessionMappingByID(ctx context.Context, conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
-	studioId, identityType, identityId, err := readStudioSessionMapping(id)
+func FindStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
+	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(id)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,12 @@ func FindStudioSessionMappingByID(ctx context.Context, conn *emr.EMR, id string)
 	input := &emr.GetStudioSessionMappingInput{
 		StudioId:     aws.String(studioId),
 		IdentityType: aws.String(identityType),
-		IdentityId:   aws.String(identityId),
+	}
+
+	if isIdentityId(identityIdOrName) {
+		input.IdentityId = aws.String(identityIdOrName)
+	} else {
+		input.IdentityName = aws.String(identityIdOrName)
 	}
 
 	output, err := conn.GetStudioSessionMappingWithContext(ctx, input)

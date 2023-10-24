@@ -33,7 +33,7 @@ resource "aws_redshift_cluster" "example" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
@@ -142,8 +142,17 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 
 ## Import
 
-Redshift Clusters can be imported using the `cluster_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Clusters using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_redshift_cluster.myprodcluster
+  id = "tf-redshift-cluster-12345"
+}
 ```
-$ terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
+
+Using `terraform import`, import Redshift Clusters using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```

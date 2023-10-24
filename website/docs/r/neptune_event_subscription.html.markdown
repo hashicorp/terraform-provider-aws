@@ -62,7 +62,7 @@ resource "aws_neptune_event_subscription" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `event_categories` - (Optional) A list of event categories for a `source_type` that you want to subscribe to. Run `aws neptune describe-event-categories` to find all the event categories.
@@ -92,8 +92,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_event_subscription` using the event subscription name. For example:
 
+```terraform
+import {
+  to = aws_neptune_event_subscription.example
+  id = "my-event-subscription"
+}
 ```
-$ terraform import aws_neptune_event_subscription.example my-event-subscription
+
+Using `terraform import`, import `aws_neptune_event_subscription` using the event subscription name. For example:
+
+```console
+% terraform import aws_neptune_event_subscription.example my-event-subscription
 ```

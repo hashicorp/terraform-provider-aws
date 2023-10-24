@@ -21,7 +21,7 @@ resource "aws_service_discovery_public_dns_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Discovery Public DNS Namespace using the namespace ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_public_dns_namespace.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_service_discovery_public_dns_namespace.example 0123456789
+
+Using `terraform import`, import Service Discovery Public DNS Namespace using the namespace ID. For example:
+
+```console
+% terraform import aws_service_discovery_public_dns_namespace.example 0123456789
 ```

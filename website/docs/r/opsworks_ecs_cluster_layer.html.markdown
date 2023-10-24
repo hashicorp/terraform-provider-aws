@@ -21,7 +21,7 @@ resource "aws_opsworks_ecs_cluster_layer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_id` - (Required) ID of the stack the layer will belong to.
 * `ecs_cluster_arn` - (Required) The ECS Cluster ARN of the layer.

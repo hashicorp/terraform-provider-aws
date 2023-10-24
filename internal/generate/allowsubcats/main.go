@@ -49,6 +49,10 @@ func main() {
 			continue
 		}
 
+		if l[names.ColNotImplemented] != "" {
+			continue
+		}
+
 		sd := ServiceDatum{
 			HumanFriendly: l[names.ColHumanFriendly],
 		}

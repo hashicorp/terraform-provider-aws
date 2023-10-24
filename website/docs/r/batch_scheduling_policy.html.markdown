@@ -39,7 +39,7 @@ resource "aws_batch_scheduling_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fairshare_policy` - (Optional) A fairshare policy block specifies the `compute_reservation`, `share_delay_seconds`, and `share_distribution` of the scheduling policy. The `fairshare_policy` block is documented below.
 * `name` - (Required) Specifies the name of the scheduling policy.
@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Batch Scheduling Policy can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Scheduling Policy using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_batch_scheduling_policy.test_policy
+  id = "arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample"
+}
 ```
-$ terraform import aws_batch_scheduling_policy.test_policy arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample
+
+Using `terraform import`, import Batch Scheduling Policy using the `arn`. For example:
+
+```console
+% terraform import aws_batch_scheduling_policy.test_policy arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample
 ```

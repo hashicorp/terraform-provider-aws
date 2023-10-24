@@ -45,7 +45,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `active_directory_configuration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `file_system_id` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
@@ -55,14 +55,14 @@ The following arguments are supported:
 
 ### active_directory_configuration
 
-The following arguments are supported for `active_directory_configuration` configuration block:
+The `active_directory_configuration` configuration block supports the following arguments:
 
 * `netbios_name` - (Required) The NetBIOS name of the Active Directory computer object that will be created for your SVM. This is often the same as the SVM name but can be different. AWS limits to 15 characters because of standard NetBIOS naming limits.
 * `self_managed_active_directory` - (Optional) Configuration block that Amazon FSx uses to join the SVM to your self-managed (including on-premises) Microsoft Active Directory (AD) directory.
 
 ### self_managed_active_directory
 
-The following arguments are supported for `self_managed_active_directory` configuration block:
+The `self_managed_active_directory` configuration block supports the following arguments:
 
 * `dns_ips` - (Required) A list of up to three IP addresses of DNS servers or domain controllers in the self-managed AD directory.
 * `domain_name` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
@@ -104,13 +104,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx Storage Virtual Machine can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Storage Virtual Machine using the `id`. For example:
 
-```
-$ terraform import aws_fsx_ontap_storage_virtual_machine.example svm-12345678abcdef123
+```terraform
+import {
+  to = aws_fsx_ontap_storage_virtual_machine.example
+  id = "svm-12345678abcdef123"
+}
 ```
 
-Certain resource arguments, like `svm_admin_password` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import FSx Storage Virtual Machine using the `id`. For example:
+
+```console
+% terraform import aws_fsx_ontap_storage_virtual_machine.example svm-12345678abcdef123
+```
+
+Certain resource arguments, like `svm_admin_password` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_ontap_storage_virtual_machine" "example" {

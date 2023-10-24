@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Origin Access Control can be imported using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Origin Access Control using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_access_control.example
+  id = "E327GJI25M56DG"
+}
 ```
-$ terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
+
+Using `terraform import`, import CloudFront Origin Access Control using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```

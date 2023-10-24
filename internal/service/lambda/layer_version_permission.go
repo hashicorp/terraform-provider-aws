@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -40,7 +40,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 			"layer_name": {
 				Type: schema.TypeString,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 					verify.ValidARN,
 				),
 				Required: true,

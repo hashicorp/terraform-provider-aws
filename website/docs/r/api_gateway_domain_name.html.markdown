@@ -152,7 +152,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
@@ -198,8 +198,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway domain names can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain names using their `name`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_domain_name.example
+  id = "dev.example.com"
+}
 ```
-$ terraform import aws_api_gateway_domain_name.example dev.example.com
+
+Using `terraform import`, import API Gateway domain names using their `name`. For example:
+
+```console
+% terraform import aws_api_gateway_domain_name.example dev.example.com
 ```

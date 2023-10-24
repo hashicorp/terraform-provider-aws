@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_stream" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the log stream. Must not be longer than 512 characters and must not contain `:`
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Stream using the stream's `log_group_name` and `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_stream.foo
+  id = "Yada:SampleLogStream1234"
+}
 ```
-$ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
+
+Using `terraform import`, import Cloudwatch Log Stream using the stream's `log_group_name` and `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
 ```

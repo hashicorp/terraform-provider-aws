@@ -33,7 +33,7 @@ resource "aws_redshiftserverless_resource_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
 * `policy` - (Required) The policy to create or update. For example, the following policy grants a user authorization to restore a snapshot.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Resource Policies can be imported using the `resource_arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Serverless Resource Policies using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_redshiftserverless_resource_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftserverless_resource_policy.example example
+
+Using `terraform import`, import Redshift Serverless Resource Policies using the `resource_arn`. For example:
+
+```console
+% terraform import aws_redshiftserverless_resource_policy.example example
 ```

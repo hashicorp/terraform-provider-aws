@@ -58,7 +58,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.
@@ -97,8 +97,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_domain_name` can be imported by using the domain name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_domain_name` using the domain name. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_domain_name.example
+  id = "ws-api.example.com"
+}
 ```
-$ terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
+
+Using `terraform import`, import `aws_apigatewayv2_domain_name` using the domain name. For example:
+
+```console
+% terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```

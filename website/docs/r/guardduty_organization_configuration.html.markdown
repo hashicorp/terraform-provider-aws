@@ -48,7 +48,7 @@ resource "aws_guardduty_organization_configuration" "example" {
 
 ~> **NOTE:** One of `auto_enable` or `auto_enable_organization_members` must be specified.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
@@ -110,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GuardDuty Organization Configurations can be imported using the GuardDuty Detector ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty Organization Configurations using the GuardDuty Detector ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_organization_configuration.example
+  id = "00b00fd5aecc0ab60a708659477e9617"
+}
 ```
-$ terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import GuardDuty Organization Configurations using the GuardDuty Detector ID. For example:
+
+```console
+% terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```

@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -96,13 +96,13 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
 						},
 						"cached_http_methods": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "The HTTP method responses that are cached by your distribution.",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
 						},
 						"default_ttl": {
 							Type:        schema.TypeInt,
@@ -194,7 +194,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -259,7 +259,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "The name of the distribution.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
 			},
 			"origin": {
 				Type:        schema.TypeList,
@@ -271,7 +271,7 @@ func ResourceDistribution() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
 							Description:  "The name of the origin resource.",
 						},
 						"protocol_policy": {

@@ -54,7 +54,7 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `description` - (Optional) Description for the deployment resource. Must be less than or equal to 1024 characters in length.
@@ -69,10 +69,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
 ```
 
 The `triggers` argument cannot be imported.

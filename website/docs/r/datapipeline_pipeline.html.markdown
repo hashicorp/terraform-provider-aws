@@ -20,7 +20,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.
@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datapipeline_pipeline` can be imported by using the id (Pipeline ID), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
 
+```terraform
+import {
+  to = aws_datapipeline_pipeline.default
+  id = "df-1234567890"
+}
 ```
-$ terraform import aws_datapipeline_pipeline.default df-1234567890
+
+Using `terraform import`, import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
+
+```console
+% terraform import aws_datapipeline_pipeline.default df-1234567890
 ```

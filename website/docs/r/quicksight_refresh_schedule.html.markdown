@@ -112,8 +112,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A QuickSight Refresh Schedule can be imported using the AWS account ID, data set ID and schedule ID separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_refresh_schedule.example
+  id = "123456789012,dataset-id,schedule-id"
+}
 ```
-$ terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
+
+Using `terraform import`, import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
 ```

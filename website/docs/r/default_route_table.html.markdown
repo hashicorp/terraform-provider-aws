@@ -107,12 +107,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default VPC route tables using the `vpc_id`. For example:
 
-```
-$ terraform import aws_default_route_table.example vpc-33cc44dd
+```terraform
+import {
+  to = aws_default_route_table.example
+  id = "vpc-33cc44dd"
+}
 ```
 
-[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
+Using `terraform import`, import Default VPC route tables using the `vpc_id`. For example:
+
+```console
+% terraform import aws_default_route_table.example vpc-33cc44dd
+```
+
 [tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html

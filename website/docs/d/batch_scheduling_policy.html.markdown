@@ -20,7 +20,7 @@ data "aws_batch_scheduling_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the scheduling policy.
 

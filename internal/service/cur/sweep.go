@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cur
 
 import (
@@ -14,9 +11,11 @@ import (
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cur_report_definition", &resource.Sweeper{
 		Name: "aws_cur_report_definition",
 		F:    sweepReportDefinitions,
@@ -25,6 +24,10 @@ func init() {
 
 func sweepReportDefinitions(region string) error {
 	ctx := sweep.Context(region)
+	if region != names.USEast1RegionID {
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -49,8 +52,8 @@ func sweepReportDefinitions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Cost And Usage Report Definition sweep for %s: %s", region, err)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
 		return nil
 	}
 	if err != nil {

@@ -38,7 +38,7 @@ resource "aws_ses_identity_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identity` - (Required) Name or Amazon Resource Name (ARN) of the SES Identity.
 * `name` - (Required) Name of the policy.
@@ -50,8 +50,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Identity Policies using the identity and policy name, separated by a pipe character (`|`). For example:
 
+```terraform
+import {
+  to = aws_ses_identity_policy.example
+  id = "example.com|example"
+}
 ```
-$ terraform import aws_ses_identity_policy.example 'example.com|example'
+
+Using `terraform import`, import SES Identity Policies using the identity and policy name, separated by a pipe character (`|`). For example:
+
+```console
+% terraform import aws_ses_identity_policy.example 'example.com|example'
 ```

@@ -57,7 +57,7 @@ resource "aws_db_proxy_target" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy.
 * `target_group_name` - (Required, Forces new resource) The name of the target group.
@@ -80,16 +80,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS DB Proxy Targets can be imported using the `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS DB Proxy Targets using the `db_proxy_name`, `target_group_name`, target type (such as `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`). For example:
 
 Instances:
 
-```
-$ terraform import aws_db_proxy_target.example example-proxy/default/RDS_INSTANCE/example-instance
+```terraform
+import {
+  to = aws_db_proxy_target.example
+  id = "example-proxy/default/RDS_INSTANCE/example-instance"
+}
 ```
 
 Provisioned Clusters:
 
+```terraform
+import {
+  to = aws_db_proxy_target.example
+  id = "example-proxy/default/TRACKED_CLUSTER/example-cluster"
+}
 ```
-$ terraform import aws_db_proxy_target.example example-proxy/default/TRACKED_CLUSTER/example-cluster
+
+**Using `terraform import` to import** RDS DB Proxy Targets using the `db_proxy_name`, `target_group_name`, target type (such as `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`). For example:
+
+Instances:
+
+```console
+% terraform import aws_db_proxy_target.example example-proxy/default/RDS_INSTANCE/example-instance
+```
+
+Provisioned Clusters:
+
+```console
+% terraform import aws_db_proxy_target.example example-proxy/default/TRACKED_CLUSTER/example-cluster
 ```

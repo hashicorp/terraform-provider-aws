@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a subnet group. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a subnet group using its `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_subnet_group.example
+  id = "my-subnet-group"
+}
 ```
-$ terraform import aws_memorydb_subnet_group.example my-subnet-group
+
+Using `terraform import`, import a subnet group using its `name`. For example:
+
+```console
+% terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```

@@ -20,7 +20,7 @@ data "aws_db_subnet_group" "database" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the RDS database subnet group.
 

@@ -70,7 +70,7 @@ The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the topic. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 256 characters long. For a FIFO (first-in-first-out) topic, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`
@@ -110,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SNS Topics can be imported using the `topic arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Topics using the topic `arn`. For example:
 
+```terraform
+import {
+  to = aws_sns_topic.user_updates
+  id = "arn:aws:sns:us-west-2:0123456789012:my-topic"
+}
 ```
-$ terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+
+Using `terraform import`, import SNS Topics using the topic `arn`. For example:
+
+```console
+% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
 ```

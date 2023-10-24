@@ -21,7 +21,7 @@ data "aws_lex_intent" "order_flowers" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the intent. The name is case sensitive.
 * `version` - (Optional) Version of the intent.

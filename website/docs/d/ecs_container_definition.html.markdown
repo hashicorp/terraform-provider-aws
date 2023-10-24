@@ -22,7 +22,7 @@ data "aws_ecs_container_definition" "ecs-mongo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `task_definition` - (Required) ARN of the task definition which contains the container
 * `container_name` - (Required) Name of the container definition

@@ -38,7 +38,7 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `admin_contact` - (Optional) Details about the domain administrative contact.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.

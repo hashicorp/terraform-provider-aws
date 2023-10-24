@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EMR studio session mappings can be imported using the `id`, e.g., `studio-id:identity-type:identity-id`
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
 
+```terraform
+import {
+  to = aws_emr_studio_session_mapping.example
+  id = "es-xxxxx:USER:xxxxx-xxx-xxx"
+}
 ```
-$ terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx
+
+Using `terraform import`, import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
+
+```console
+% terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx
 ```

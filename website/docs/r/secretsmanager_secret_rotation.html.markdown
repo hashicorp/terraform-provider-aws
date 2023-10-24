@@ -35,7 +35,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `rotation_lambda_arn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.
@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_secretsmanager_secret_rotation.example
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+}
 ```
-$ terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
+
+Using `terraform import`, import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```

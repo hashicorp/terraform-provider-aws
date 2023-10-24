@@ -26,7 +26,7 @@ resource "aws_route53_resolver_dnssec_config" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `resource_id` - (Required) The ID of the virtual private cloud (VPC) that you're updating the DNSSEC validation status for.
 
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
- Route 53 Resolver DNSSEC configs can be imported using the Route 53 Resolver DNSSEC config ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver DNSSEC configs using the Route 53 Resolver DNSSEC config ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_dnssec_config.example
+  id = "rdsc-be1866ecc1683e95"
+}
 ```
-$ terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
+
+Using `terraform import`, import  Route 53 Resolver DNSSEC configs using the Route 53 Resolver DNSSEC config ID. For example:
+
+```console
+% terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
 ```

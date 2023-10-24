@@ -51,7 +51,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Required) Content for the resource policy. The text must be correctly formatted JSON that complies with the syntax for the resource policy's type. See the [_AWS Organizations User Guide_](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_delegate_examples.html) for examples.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_organizations_resource_policy` can be imported by using the resource policy ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_resource_policy` using the resource policy ID. For example:
 
+```terraform
+import {
+  to = aws_organizations_resource_policy.example
+  id = "rp-12345678"
+}
 ```
-$ terraform import aws_organizations_resource_policy.example rp-12345678
+
+Using `terraform import`, import `aws_organizations_resource_policy` using the resource policy ID. For example:
+
+```console
+% terraform import aws_organizations_resource_policy.example rp-12345678
 ```

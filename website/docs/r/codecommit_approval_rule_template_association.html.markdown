@@ -21,7 +21,7 @@ resource "aws_codecommit_approval_rule_template_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `approval_rule_template_name` - (Required) The name for the approval rule template.
 * `repository_name` - (Required) The name of the repository that you want to associate with the template.
@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeCommit approval rule template associations can be imported using the `approval_rule_template_name` and `repository_name` separated by a comma (`,`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCommit approval rule template associations using the `approval_rule_template_name` and `repository_name` separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_codecommit_approval_rule_template_association.example
+  id = "approver-rule-for-example,MyExampleRepo"
+}
 ```
-$ terraform import aws_codecommit_approval_rule_template_association.example approver-rule-for-example,MyExampleRepo
+
+Using `terraform import`, import CodeCommit approval rule template associations using the `approval_rule_template_name` and `repository_name` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_codecommit_approval_rule_template_association.example approver-rule-for-example,MyExampleRepo
 ```

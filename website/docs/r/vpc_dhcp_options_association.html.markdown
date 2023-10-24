@@ -21,7 +21,7 @@ resource "aws_vpc_dhcp_options_association" "dns_resolver" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The ID of the VPC to which we would like to associate a DHCP Options Set.
 * `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DHCP associations can be imported by providing the VPC ID associated with the options:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DHCP associations using the VPC ID associated with the options. For example:
 
+```terraform
+import {
+  to = aws_vpc_dhcp_options_association.imported
+  id = "vpc-0f001273ec18911b1"
+}
 ```
-$ terraform import aws_vpc_dhcp_options_association.imported vpc-0f001273ec18911b1
+
+Using `terraform import`, import DHCP associations using the VPC ID associated with the options. For example:
+
+```console
+% terraform import aws_vpc_dhcp_options_association.imported vpc-0f001273ec18911b1
 ```

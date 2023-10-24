@@ -32,7 +32,7 @@ resource "aws_ecs_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the ECS resource to tag.
 * `key` - (Required) Tag name.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ecs_tag` can be imported by using the ECS resource identifier and key, separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ecs_tag.example
+  id = "arn:aws:ecs:us-east-1:123456789012:cluster/example,Name"
+}
 ```
-$ terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
+
+Using `terraform import`, import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
 ```

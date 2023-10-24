@@ -96,7 +96,7 @@ resource "aws_ecr_repository_policy" "default" {
 container service. For more information, see
 [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
@@ -160,8 +160,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Container Service can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Container Service using the `name`. For example:
 
-```shell
-$ terraform import aws_lightsail_container_service.my_container_service container-service-1
+```terraform
+import {
+  to = aws_lightsail_container_service.my_container_service
+  id = "container-service-1"
+}
+```
+
+Using `terraform import`, import Lightsail Container Service using the `name`. For example:
+
+```console
+% terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```

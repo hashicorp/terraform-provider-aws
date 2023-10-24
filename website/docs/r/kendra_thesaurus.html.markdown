@@ -67,8 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_kendra_thesaurus` can be imported using the unique identifiers of the thesaurus and index separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_kendra_thesaurus` using the unique identifiers of the thesaurus and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_thesaurus.example
+  id = "thesaurus-123456780/idx-8012925589"
+}
 ```
-$ terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
+
+Using `terraform import`, import `aws_kendra_thesaurus` using the unique identifiers of the thesaurus and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
 ```

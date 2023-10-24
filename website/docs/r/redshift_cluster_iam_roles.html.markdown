@@ -23,7 +23,7 @@ resource "aws_redshift_cluster_iam_roles" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The name of the Redshift Cluster IAM Roles.
 * `iam_role_arns` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Cluster IAM Roless can be imported using the `cluster_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_redshift_cluster_iam_roles.examplegroup1
+  id = "example"
+}
 ```
-$ terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
+
+Using `terraform import`, import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
 ```

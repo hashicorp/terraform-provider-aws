@@ -38,7 +38,7 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Field Level Encryption Profile.
 * `comment` - (Optional) An optional comment about the Field Level Encryption Profile.
@@ -60,8 +60,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudfront Field Level Encryption Profile can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Field Level Encryption Profile using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_field_level_encryption_profile.profile
+  id = "K3D5EWEUDCCXON"
+}
 ```
-$ terraform import aws_cloudfront_field_level_encryption_profile.profile K3D5EWEUDCCXON
+
+Using `terraform import`, import Cloudfront Field Level Encryption Profile using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_field_level_encryption_profile.profile K3D5EWEUDCCXON
 ```

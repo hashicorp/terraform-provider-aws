@@ -77,7 +77,7 @@ resource "aws_db_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the DB parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB Parameter groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Parameter groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_parameter_group.rds_pg
+  id = "rds-pg"
+}
 ```
-$ terraform import aws_db_parameter_group.rds_pg rds-pg
+
+Using `terraform import`, import DB Parameter groups using the `name`. For example:
+
+```console
+% terraform import aws_db_parameter_group.rds_pg rds-pg
 ```

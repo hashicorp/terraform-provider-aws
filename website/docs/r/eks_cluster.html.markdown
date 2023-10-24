@@ -122,7 +122,7 @@ data "tls_certificate" "example" {
 
 resource "aws_iam_openid_connect_provider" "example" {
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = data.tls_certificate.example.certificates[*].sha1_fingerprint
+  thumbprint_list = [data.tls_certificate.example.certificates[0].sha1_fingerprint]
   url             = data.tls_certificate.example.url
 }
 
@@ -198,14 +198,14 @@ The following arguments are optional:
 
 ### encryption_config
 
-The following arguments are supported in the `encryption_config` configuration block:
+The `encryption_config` configuration block supports the following arguments:
 
 * `provider` - (Required) Configuration block with provider for encryption. Detailed below.
 * `resources` - (Required) List of strings with resources to be encrypted. Valid values: `secrets`.
 
 #### provider
 
-The following arguments are supported in the `provider` configuration block:
+The `provider` configuration block supports the following arguments:
 
 * `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
@@ -219,7 +219,7 @@ The following arguments are supported in the `provider` configuration block:
 
 ### kubernetes_network_config
 
-The following arguments are supported in the `kubernetes_network_config` configuration block:
+The `kubernetes_network_config` configuration block supports the following arguments:
 
 * `service_ipv4_cidr` - (Optional) The CIDR block to assign Kubernetes pod and service IP addresses from. If you don't specify a block, Kubernetes assigns addresses from either the 10.100.0.0/16 or 172.20.0.0/16 CIDR blocks. We recommend that you specify a block that does not overlap with resources in other networks that are peered or connected to your VPC. You can only specify a custom CIDR block when you create a cluster, changing this value will force a new cluster to be created. The block must meet the following requirements:
 
@@ -232,7 +232,7 @@ The following arguments are supported in the `kubernetes_network_config` configu
 
 ### outpost_config
 
-The following arguments are supported in the `outpost_config` configuration block:
+The `outpost_config` configuration block supports the following arguments:
 
 * `control_plane_instance_type` - (Required) The Amazon EC2 instance type that you want to use for your local Amazon EKS cluster on Outposts. The instance type that you specify is used for all Kubernetes control plane instances. The instance type can't be changed after cluster creation. Choose an instance type based on the number of nodes that your cluster will have. If your cluster will have:
 
@@ -245,7 +245,7 @@ The following arguments are supported in the `outpost_config` configuration bloc
     For a list of the available Amazon EC2 instance types, see Compute and storage in AWS Outposts rack features  The control plane is not automatically scaled by Amazon EKS.
 
 * `control_plane_placement` - (Optional) An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
-The following arguments are supported in the `control_plane_placement` configuration block:
+The `control_plane_placement` configuration block supports the following arguments:
 
     * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
 
@@ -296,8 +296,17 @@ Note that the `update` timeout is used separately for both `version` and `vpc_co
 
 ## Import
 
-EKS Clusters can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Clusters using the `name`. For example:
 
+```terraform
+import {
+  to = aws_eks_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_eks_cluster.my_cluster my_cluster
+
+Using `terraform import`, import EKS Clusters using the `name`. For example:
+
+```console
+% terraform import aws_eks_cluster.my_cluster my_cluster
 ```

@@ -54,7 +54,7 @@ resource "aws_s3control_access_point_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_point_arn` - (Required) The ARN of the access point that you want to associate with the specified policy.
 * `policy` - (Required) The policy that you want to apply to the specified access point.
@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Access Point policies can be imported using the `access_point_arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Access Point policies using the `access_point_arn`. For example:
 
+```terraform
+import {
+  to = aws_s3control_access_point_policy.example
+  id = "arn:aws:s3:us-west-2:123456789012:accesspoint/example"
+}
 ```
-$ terraform import aws_s3control_access_point_policy.example arn:aws:s3:us-west-2:123456789012:accesspoint/example
+
+Using `terraform import`, import Access Point policies using the `access_point_arn`. For example:
+
+```console
+% terraform import aws_s3control_access_point_policy.example arn:aws:s3:us-west-2:123456789012:accesspoint/example
 ```

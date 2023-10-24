@@ -80,7 +80,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
@@ -167,8 +167,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Transcoder presets can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Transcoder presets using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastictranscoder_preset.basic_preset
+  id = "1407981661351-cttk8b"
+}
 ```
-$ terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
+
+Using `terraform import`, import Elastic Transcoder presets using the `id`. For example:
+
+```console
+% terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```

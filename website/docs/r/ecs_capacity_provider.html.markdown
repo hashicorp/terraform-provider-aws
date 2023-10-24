@@ -44,7 +44,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_capacity_provider.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecs_capacity_provider.example example
+
+Using `terraform import`, import ECS Capacity Providers using the `name`. For example:
+
+```console
+% terraform import aws_ecs_capacity_provider.example example
 ```

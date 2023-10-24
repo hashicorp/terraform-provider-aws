@@ -37,7 +37,7 @@ data "aws_lb_target_group" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) Full ARN of the target group.
 * `name` - (Optional) Unique name of the target group.

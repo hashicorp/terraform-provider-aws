@@ -29,7 +29,7 @@ resource "aws_organizations_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Required) The policy content to add to the new policy. For example, if you create a [service control policy (SCP)](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html), this string must be JSON text that specifies the permissions that admins in attached accounts can delegate to their users, groups, and roles. For more information about the SCP syntax, see the [Service Control Policy Syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_scp-syntax.html) and for more information on the Tag Policy syntax, see the [Tag Policy Syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_example-tag-policies.html).
 * `name` - (Required) The friendly name to assign to the policy.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_organizations_policy` can be imported by using the policy ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_policy` using the policy ID. For example:
 
+```terraform
+import {
+  to = aws_organizations_policy.example
+  id = "p-12345678"
+}
 ```
-$ terraform import aws_organizations_policy.example p-12345678
+
+Using `terraform import`, import `aws_organizations_policy` using the policy ID. For example:
+
+```console
+% terraform import aws_organizations_policy.example p-12345678
 ```

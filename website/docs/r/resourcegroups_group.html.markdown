@@ -36,7 +36,7 @@ JSON
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The resource group's name. A resource group name can have a maximum of 127 characters, including letters, numbers, hyphens, dots, and underscores. The name cannot start with `AWS` or `aws`.
 * `configuration` - (Optional) A configuration associates the resource group with an AWS service and specifies how the service can interact with the resources in the group. See below for details.
@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Resource groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import resource groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_resourcegroups_group.foo
+  id = "resource-group-name"
+}
 ```
-$ terraform import aws_resourcegroups_group.foo resource-group-name
+
+Using `terraform import`, import resource groups using the `name`. For example:
+
+```console
+% terraform import aws_resourcegroups_group.foo resource-group-name
 ```

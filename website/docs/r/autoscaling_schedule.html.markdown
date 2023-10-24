@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_schedule.resource-name
+  id = "auto-scaling-group-name/scheduled-action-name"
+}
 ```
-$ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+
+Using `terraform import`, import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+
+```console
+% terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
 ```

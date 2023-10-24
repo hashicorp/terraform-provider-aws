@@ -69,7 +69,7 @@ resource "aws_iam_role_policy" "p" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3_bucket_name` - (Required) The name of the S3 bucket used to store the configuration history.
@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Delivery Channel can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Delivery Channel using the name. For example:
 
+```terraform
+import {
+  to = aws_config_delivery_channel.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_delivery_channel.foo example
+
+Using `terraform import`, import Delivery Channel using the name. For example:
+
+```console
+% terraform import aws_config_delivery_channel.foo example
 ```

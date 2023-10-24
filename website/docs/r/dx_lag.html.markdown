@@ -25,7 +25,7 @@ resource "aws_dx_lag" "hoge" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the LAG.
 * `connections_bandwidth` - (Required) The bandwidth of the individual physical connections bundled by the LAG. Valid values: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect LAGs can be imported using the `lag id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect LAGs using the LAG `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_lag.test_lag
+  id = "dxlag-fgnsp5rq"
+}
 ```
-$ terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
+
+Using `terraform import`, import Direct Connect LAGs using the LAG `id`. For example:
+
+```console
+% terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
 ```

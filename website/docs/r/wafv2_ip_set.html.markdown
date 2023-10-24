@@ -29,7 +29,7 @@ resource "aws_wafv2_ip_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the IP set.
 * `description` - (Optional) A friendly description of the IP set.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAFv2 IP Sets can be imported using `ID/name/scope`
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 IP Sets using `ID/name/scope`. For example:
 
+```terraform
+import {
+  to = aws_wafv2_ip_set.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL"
+}
 ```
-$ terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
+
+Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For example:
+
+```console
+% terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```

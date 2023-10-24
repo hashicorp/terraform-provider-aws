@@ -29,7 +29,7 @@ resource "aws_cur_report_definition" "example_cur_report_definition" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `report_name` - (Required) Unique name for the report. Must start with a number/letter and is case sensitive. Limited to 256 characters.
 * `time_unit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Report Definitions can be imported using the `report_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Report Definitions using the `report_name`. For example:
 
+```terraform
+import {
+  to = aws_cur_report_definition.example_cur_report_definition
+  id = "example-cur-report-definition"
+}
 ```
-$ terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
+
+Using `terraform import`, import Report Definitions using the `report_name`. For example:
+
+```console
+% terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
 ```

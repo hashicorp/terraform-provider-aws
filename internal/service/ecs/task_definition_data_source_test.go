@@ -5,9 +5,9 @@ package ecs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +31,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "family", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "bridge"),
-					resource.TestMatchResourceAttr(dataSourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
+					resource.TestMatchResourceAttr(dataSourceName, "revision", regexache.MustCompile("^[1-9][0-9]*$")),
 					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_role_arn", "aws_iam_role.test", "arn"),
 				),

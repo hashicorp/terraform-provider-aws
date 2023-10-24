@@ -53,7 +53,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_name` - (Required) Name of the RDS DB Proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.
@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB proxy default target groups can be imported using the `db_proxy_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB proxy default target groups using the `db_proxy_name`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy_default_target_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_db_proxy_default_target_group.example example
+
+Using `terraform import`, import DB proxy default target groups using the `db_proxy_name`. For example:
+
+```console
+% terraform import aws_db_proxy_default_target_group.example example
 ```

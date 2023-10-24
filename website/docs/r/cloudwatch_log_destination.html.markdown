@@ -22,7 +22,7 @@ resource "aws_cloudwatch_log_destination" "test_destination" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the log destination.
 * `role_arn` - (Required) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to put data into the target.
@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Logs destinations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs destinations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_destination.test_destination
+  id = "test_destination"
+}
 ```
-$ terraform import aws_cloudwatch_log_destination.test_destination test_destination
+
+Using `terraform import`, import CloudWatch Logs destinations using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_destination.test_destination test_destination
 ```

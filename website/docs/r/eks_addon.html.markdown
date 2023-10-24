@@ -169,8 +169,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_addon.my_eks_addon
+  id = "my_cluster_name:my_addon_name"
+}
 ```
-$ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
+
+Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```

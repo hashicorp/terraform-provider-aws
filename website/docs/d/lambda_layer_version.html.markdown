@@ -24,7 +24,7 @@ data "aws_lambda_layer_version" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `layer_name` - (Required) Name of the lambda layer.
 * `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime` and `compatible_architecture`. If omitted, the latest available layer version will be used.

@@ -218,8 +218,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch metric streams can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch metric streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_metric_stream.sample
+  id = "sample-stream-name"
+}
 ```
-$ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
+
+Using `terraform import`, import CloudWatch metric streams using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```

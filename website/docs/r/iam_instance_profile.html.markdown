@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Instance Profiles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Instance Profiles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_instance_profile.test_profile
+  id = "app-instance-profile-1"
+}
 ```
-$ terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
+
+Using `terraform import`, import Instance Profiles using the `name`. For example:
+
+```console
+% terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
 ```

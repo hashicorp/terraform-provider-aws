@@ -93,8 +93,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cognito User can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
 
+```terraform
+import {
+  to = aws_cognito_user.user
+  id = "us-east-1_vG78M4goG/user"
+}
 ```
-$ terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
+
+Using `terraform import`, import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
+
+```console
+% terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
 ```

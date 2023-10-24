@@ -21,7 +21,7 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `peering_id` - (Required) The ID of the peer for the attachment.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_transit_gateway_route_table_attachment` can be imported using the attachment ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_route_table_attachment` using the attachment ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_transit_gateway_route_table_attachment.example
+  id = "attachment-0f8fa60d2238d1bd8"
+}
 ```
-$ terraform import aws_networkmanager_transit_gateway_route_table_attachment.example attachment-0f8fa60d2238d1bd8
+
+Using `terraform import`, import `aws_networkmanager_transit_gateway_route_table_attachment` using the attachment ID. For example:
+
+```console
+% terraform import aws_networkmanager_transit_gateway_route_table_attachment.example attachment-0f8fa60d2238d1bd8
 ```

@@ -57,7 +57,7 @@ The following arguments are required:
 
 - `delivery_address` - (Required) Block that contains contact engagement details. See details below.
 
-- `name` - (Required) Name of the contact channel.
+- `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `type` - (Required) Type of the contact channel. One of `SMS`, `VOICE` or `EMAIL`.
 
@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSM Contact Channel using the `ARN`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact Channel using the `ARN`. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_contact_channel.example
+  id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example"
+}
 ```
-$ terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
+
+Using `terraform import`, import SSM Contact Channel using the `ARN`. For example:
+
+```console
+% terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```

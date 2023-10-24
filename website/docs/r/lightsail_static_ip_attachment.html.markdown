@@ -35,7 +35,7 @@ resource "aws_lightsail_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `static_ip_name` - (Required) The name of the allocated static IP
 * `instance_name` - (Required) The name of the Lightsail instance to attach the IP to

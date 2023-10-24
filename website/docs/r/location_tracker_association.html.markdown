@@ -47,8 +47,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Location Tracker Association can be imported using the `tracker_name|consumer_arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Location Tracker Association using the `tracker_name|consumer_arn`. For example:
 
+```terraform
+import {
+  to = aws_location_tracker_association.example
+  id = "tracker_name|consumer_arn"
+}
 ```
-$ terraform import aws_location_tracker_association.example "tracker_name|consumer_arn"
+
+Using `terraform import`, import Location Tracker Association using the `tracker_name|consumer_arn`. For example:
+
+```console
+% terraform import aws_location_tracker_association.example "tracker_name|consumer_arn"
 ```

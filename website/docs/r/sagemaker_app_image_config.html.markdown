@@ -44,7 +44,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker App Image Configs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker App Image Configs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_app_image_config.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_app_image_config.example example
+
+Using `terraform import`, import SageMaker App Image Configs using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_app_image_config.example example
 ```

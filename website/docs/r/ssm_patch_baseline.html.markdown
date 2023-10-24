@@ -158,7 +158,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the patch baseline.
 * `description` - (Optional) The description of the patch baseline.
@@ -245,8 +245,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM Patch Baselines can be imported by their baseline ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Patch Baselines using their baseline ID. For example:
 
+```terraform
+import {
+  to = aws_ssm_patch_baseline.example
+  id = "pb-12345678"
+}
 ```
-$ terraform import aws_ssm_patch_baseline.example pb-12345678
+
+Using `terraform import`, import SSM Patch Baselines using their baseline ID. For example:
+
+```console
+% terraform import aws_ssm_patch_baseline.example pb-12345678
 ```

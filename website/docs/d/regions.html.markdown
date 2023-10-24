@@ -41,7 +41,7 @@ data "aws_regions" "current" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `all_regions` - (Optional) If true the source will query all regions regardless of availability.
 
@@ -49,7 +49,7 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.

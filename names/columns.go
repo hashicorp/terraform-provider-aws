@@ -23,9 +23,10 @@ const (
 	ColDocPrefix               = 16
 	ColHumanFriendly           = 17
 	ColBrand                   = 18
-	ColExclude                 = 19
-	ColAllowedSubcategory      = 20
-	ColDeprecatedEnvVar        = 21
-	ColEnvVar                  = 22
-	ColNote                    = 23
+	ColExclude                 = 19 // If set, the service is completely ignored
+	ColNotImplemented          = 20 // If set, the service will be included in, e.g. labels, but not have a service client
+	ColAllowedSubcategory      = 21
+	ColDeprecatedEnvVar        = 22
+	ColEnvVar                  = 23
+	ColNote                    = 24
 )

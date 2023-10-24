@@ -20,7 +20,7 @@ data "aws_appintegrations_event_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) The AppIntegrations Event Integration name.
 
@@ -37,6 +37,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Event Filter Attributes
 
-For **event_filter** the following attributes are supported:
+`event_filter` has the following attributes:
 
 * `source` - The source of the events.

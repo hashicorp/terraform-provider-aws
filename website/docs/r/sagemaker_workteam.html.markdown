@@ -48,7 +48,7 @@ resource "aws_sagemaker_workteam" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
 * `workforce_name` - (Required) The name of the Workteam (must be unique).
@@ -87,8 +87,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Workteams can be imported using the `workteam_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workteams using the `workteam_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_workteam.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_workteam.example example
+
+Using `terraform import`, import SageMaker Workteams using the `workteam_name`. For example:
+
+```console
+% terraform import aws_sagemaker_workteam.example example
 ```

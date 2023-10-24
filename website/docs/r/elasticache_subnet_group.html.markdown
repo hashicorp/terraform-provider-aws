@@ -39,7 +39,7 @@ resource "aws_elasticache_subnet_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
 * `description` – (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".
@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Subnet Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Subnet Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_subnet_group.bar
+  id = "tf-test-cache-subnet"
+}
 ```
-$ terraform import aws_elasticache_subnet_group.bar tf-test-cache-subnet
+
+Using `terraform import`, import ElastiCache Subnet Groups using the `name`. For example:
+
+```console
+% terraform import aws_elasticache_subnet_group.bar tf-test-cache-subnet
 ```

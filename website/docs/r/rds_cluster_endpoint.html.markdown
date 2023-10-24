@@ -79,7 +79,7 @@ resource "aws_rds_cluster_endpoint" "static" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resources) The cluster identifier.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
@@ -99,10 +99,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS Clusters Endpoint can be imported using the `cluster_endpoint_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_endpoint.custom_reader
+  id = "aurora-prod-cluster-custom-reader"
+}
 ```
-$ terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
+
+Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster

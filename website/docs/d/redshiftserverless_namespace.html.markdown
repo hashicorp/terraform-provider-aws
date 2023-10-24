@@ -20,7 +20,7 @@ data "aws_redshiftserverless_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `namespace_name` - (Required) The name of the namespace.
 

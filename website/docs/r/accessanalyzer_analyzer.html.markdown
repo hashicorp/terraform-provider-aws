@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Access Analyzer Analyzers can be imported using the `analyzer_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Access Analyzer Analyzers using the `analyzer_name`. For example:
 
+```terraform
+import {
+  to = aws_accessanalyzer_analyzer.example
+  id = "example"
+}
 ```
-$ terraform import aws_accessanalyzer_analyzer.example example
+
+Using `terraform import`, import Access Analyzer Analyzers using the `analyzer_name`. For example:
+
+```console
+% terraform import aws_accessanalyzer_analyzer.example example
 ```

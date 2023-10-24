@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the application, must be unique within your account
 * `description` - (Optional) Short description of the application
@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Beanstalk Applications can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Beanstalk Applications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_elastic_beanstalk_application.tf_test
+  id = "tf-test-name"
+}
 ```
-$ terraform import aws_elastic_beanstalk_application.tf_test tf-test-name
+
+Using `terraform import`, import Elastic Beanstalk Applications using the `name`. For example:
+
+```console
+% terraform import aws_elastic_beanstalk_application.tf_test tf-test-name
 ```

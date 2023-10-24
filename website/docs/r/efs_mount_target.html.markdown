@@ -31,7 +31,7 @@ resource "aws_subnet" "alpha" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) The ID of the file system for which the mount target is intended.
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The EFS mount targets can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS mount targets using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_mount_target.alpha
+  id = "fsmt-52a643fb"
+}
 ```
-$ terraform import aws_efs_mount_target.alpha fsmt-52a643fb
+
+Using `terraform import`, import the EFS mount targets using the `id`. For example:
+
+```console
+% terraform import aws_efs_mount_target.alpha fsmt-52a643fb
 ```

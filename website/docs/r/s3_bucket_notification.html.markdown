@@ -361,8 +361,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket notification using the `bucket`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_notification.bucket_notification
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_notification.bucket_notification bucket-name
+
+Using `terraform import`, import S3 bucket notification using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```

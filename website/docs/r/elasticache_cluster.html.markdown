@@ -181,6 +181,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `snapshot_window` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 * `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transit_encryption_enabled` - (Optional) Enable encryption in-transit. Supported only with Memcached versions `1.6.12` and later, running in a VPC. See the [ElastiCache in-transit encryption](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) documentation for more details.
 
 ### Log Delivery Configuration
 
@@ -212,8 +213,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Clusters can be imported using the `cluster_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Clusters using the `cluster_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_elasticache_cluster.my_cluster my_cluster
+
+Using `terraform import`, import ElastiCache Clusters using the `cluster_id`. For example:
+
+```console
+% terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```

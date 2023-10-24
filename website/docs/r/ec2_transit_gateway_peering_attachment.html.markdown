@@ -60,7 +60,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
@@ -77,10 +77,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_transit_gateway_peering_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_peering_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
 
-```sh
-terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
+```terraform
+import {
+  to = aws_ec2_transit_gateway_peering_attachment.example
+  id = "tgw-attach-12345678"
+}
+```
+
+Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
 ```
 
 [1]: /docs/providers/aws/index.html

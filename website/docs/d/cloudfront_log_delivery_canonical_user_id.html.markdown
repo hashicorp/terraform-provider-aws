@@ -37,7 +37,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 

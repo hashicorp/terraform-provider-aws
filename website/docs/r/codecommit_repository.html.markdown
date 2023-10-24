@@ -21,7 +21,7 @@ resource "aws_codecommit_repository" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Codecommit repository can be imported using repository name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCommit repository using repository name. For example:
 
+```terraform
+import {
+  to = aws_codecommit_repository.imported
+  id = "ExistingRepo"
+}
 ```
-$ terraform import aws_codecommit_repository.imported ExistingRepo
+
+Using `terraform import`, import CodeCommit repository using repository name. For example:
+
+```console
+% terraform import aws_codecommit_repository.imported ExistingRepo
 ```

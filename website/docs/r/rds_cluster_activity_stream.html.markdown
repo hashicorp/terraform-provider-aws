@@ -56,7 +56,7 @@ resource "aws_rds_cluster_activity_stream" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation][3].
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
@@ -72,10 +72,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS Aurora Cluster Database Activity Streams can be imported using the `resource_arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_activity_stream.default
+  id = "arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo"
+}
 ```
-$ terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
+
+Using `terraform import`, import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
+
+```console
+% terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html

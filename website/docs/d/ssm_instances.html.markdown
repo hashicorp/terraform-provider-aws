@@ -27,7 +27,7 @@ data "aws_ssm_instances" "example" {
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [SSM InstanceInformationStringFilter API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_InstanceInformationStringFilter.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.

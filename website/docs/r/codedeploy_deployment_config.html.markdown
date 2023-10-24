@@ -91,7 +91,7 @@ resource "aws_codedeploy_deployment_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_config_name` - (Required) The name of the deployment config.
 * `compute_platform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
@@ -131,8 +131,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Deployment Configurations using the `deployment_config_name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_deployment_config.example
+  id = "my-deployment-config"
+}
 ```
-$ terraform import aws_codedeploy_deployment_config.example my-deployment-config
+
+Using `terraform import`, import CodeDeploy Deployment Configurations using the `deployment_config_name`. For example:
+
+```console
+% terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```

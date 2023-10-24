@@ -6,9 +6,9 @@ package glue_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -360,7 +360,7 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_executionProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
+				ExpectError: regexache.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
 			},
 			{
 				Config: testAccJobConfig_executionProperty(rName, 1),
@@ -401,7 +401,7 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_maxRetries(rName, 11),
-				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
 				Config: testAccJobConfig_maxRetries(rName, 0),
@@ -440,7 +440,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_notificationProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
+				ExpectError: regexache.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
 			},
 			{
 				Config: testAccJobConfig_notificationProperty(rName, 1),
@@ -720,6 +720,34 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_rayJob(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job glue.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_rayJob(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueray"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.runtime", "Ray2.4"),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
 				),
 			},
 		},
@@ -1196,6 +1224,27 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, pythonVersion))
+}
+
+func testAccJobConfig_rayJob(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  glue_version      = "4.0"
+  name              = %[1]q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "Z.2X"
+  number_of_workers = 10
+
+  command {
+    name            = "glueray"
+    python_version  = "3.9"
+    runtime         = "Ray2.4"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
 }
 
 func testAccJobConfig_maxCapacity(rName string, maxCapacity float64) string {

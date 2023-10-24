@@ -25,7 +25,7 @@ resource "aws_kms_alias" "a" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 * `name_prefix` - (Optional) Creates an unique alias beginning with the specified prefix.
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS aliases using the `name`. For example:
 
+```terraform
+import {
+  to = aws_kms_alias.a
+  id = "alias/my-key-alias"
+}
 ```
-$ terraform import aws_kms_alias.a alias/my-key-alias
+
+Using `terraform import`, import KMS aliases using the `name`. For example:
+
+```console
+% terraform import aws_kms_alias.a alias/my-key-alias
 ```

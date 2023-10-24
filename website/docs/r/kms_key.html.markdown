@@ -25,7 +25,7 @@ resource "aws_kms_key" "a" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, or `GENERATE_VERIFY_MAC`.
@@ -59,8 +59,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_key.a
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS Keys using the `id`. For example:
+
+```console
+% terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

@@ -43,7 +43,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(45 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,15 +119,80 @@ func ResourceKxEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"transit_gateway_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+						"attachment_network_acl_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 100,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidr_block": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsCIDR,
+									},
+									"icmp_type_code": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"code": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"port_range": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"from": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IsPortNumber,
+												},
+												"to": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IsPortNumber,
+												},
+											},
+										},
+									},
+									"protocol": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 5),
+									},
+									"rule_action": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleAction](),
+									},
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 32766),
+									},
+								},
+							},
 						},
 						"routable_cidr_space": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
+						},
+						"transit_gateway_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
@@ -265,11 +330,11 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
-
+	log.Printf("[INFO] Deleting FinSpace Kx Environment: %s", d.Id())
 	_, err := conn.DeleteKxEnvironment(ctx, &finspace.DeleteKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
 	})
+
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.ValidationException](err, "The Environment is in DELETED state") {
 		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())
@@ -497,7 +562,85 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 		a.RoutableCIDRSpace = aws.String(v)
 	}
 
+	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkACLConfigurations(v.([]interface{}))
+	}
+
 	return a
+}
+
+func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.NetworkACLEntry {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.NetworkACLEntry
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		a := expandAttachmentNetworkACLConfiguration(m)
+		if a == nil {
+			continue
+		}
+
+		s = append(s, *a)
+	}
+	return s
+}
+
+func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.NetworkACLEntry{}
+	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
+		a.RuleNumber = int32(v)
+	}
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+		a.Protocol = &v
+	}
+	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
+		a.RuleAction = types.RuleAction(v)
+	}
+	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+		a.CidrBlock = &v
+	}
+	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.PortRange = expandPortRange(v.([]interface{}))
+	}
+	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.IcmpTypeCode = expandIcmpTypeCode(v.([]interface{}))
+	}
+
+	return a
+}
+
+func expandPortRange(tfList []interface{}) *types.PortRange {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]interface{})
+
+	return &types.PortRange{
+		From: int32(tfMap["from"].(int)),
+		To:   int32(tfMap["to"].(int)),
+	}
+}
+
+func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]interface{})
+
+	return &types.IcmpTypeCode{
+		Code: int32(tfMap["code"].(int)),
+		Type: int32(tfMap["type"].(int)),
+	}
 }
 
 func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
@@ -557,6 +700,72 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 
 	if v := apiObject.RoutableCIDRSpace; v != nil {
 		m["routable_cidr_space"] = aws.ToString(v)
+	}
+
+	if v := apiObject.AttachmentNetworkAclConfiguration; v != nil {
+		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkACLConfigurations(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		l = append(l, flattenAttachmentNetworkACLConfiguration(&apiObject))
+	}
+
+	return l
+}
+
+func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"cidr_block":  aws.ToString(apiObject.CidrBlock),
+		"protocol":    aws.ToString(apiObject.Protocol),
+		"rule_action": apiObject.RuleAction,
+		"rule_number": apiObject.RuleNumber,
+	}
+
+	if v := apiObject.PortRange; v != nil {
+		m["port_range"] = flattenPortRange(v)
+	}
+	if v := apiObject.IcmpTypeCode; v != nil {
+		m["icmp_type_code"] = flattenIcmpTypeCode(v)
+	}
+
+	return m
+}
+
+func flattenPortRange(apiObject *types.PortRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"from": apiObject.From,
+		"to":   apiObject.To,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"type": apiObject.Type,
+		"code": apiObject.Code,
 	}
 
 	return []interface{}{m}

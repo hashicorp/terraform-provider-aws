@@ -21,7 +21,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identifier` - (Optional, Forces new resource) The snapshot schedule identifier. If omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Snapshot Schedule can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Snapshot Schedule using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_redshift_snapshot_schedule.default
+  id = "tf-redshift-snapshot-schedule"
+}
 ```
-$ terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule
+
+Using `terraform import`, import Redshift Snapshot Schedule using the `identifier`. For example:
+
+```console
+% terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule
 ```

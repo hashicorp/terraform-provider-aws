@@ -56,7 +56,7 @@ resource "aws_emr_instance_fleet" "task" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_id` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
@@ -127,8 +127,17 @@ to fulfill TargetSpotCapacity. This provisioned capacity might be less than or g
 
 ## Import
 
-EMR Instance Fleet can be imported with the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_emr_instance_fleet.example
+  id = "j-123456ABCDEF/if-15EK4O09RZLNR"
+}
+```
+
+Using `terraform import`, import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
 
 ```console
-$ terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
+% terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
 ```

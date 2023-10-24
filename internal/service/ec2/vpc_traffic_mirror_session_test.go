@@ -6,10 +6,10 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -48,10 +48,10 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
-					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexp.MustCompile(`\d+`)),
+					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-session/tms-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`traffic-mirror-session/tms-.+`)),
 				),
 			},
 			// update of description, packet length and VNI
@@ -73,7 +73,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
-					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexp.MustCompile(`\d+`)),
+					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 				),
 			},
 			// import test without VNI
@@ -293,10 +293,18 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 
-resource "aws_ec2_traffic_mirror_filter" "test" {}
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   network_load_balancer_arn = aws_lb.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -385,10 +393,16 @@ resource "aws_ec2_traffic_mirror_target" "test" {
   count = 2
 
   network_interface_id = aws_instance.target[count.index].primary_network_interface_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_traffic_mirror_filter" "test" {
-  description = %[1]q
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_traffic_mirror_session" "test" {
@@ -397,6 +411,10 @@ resource "aws_ec2_traffic_mirror_session" "test" {
   traffic_mirror_target_id = aws_ec2_traffic_mirror_target.test[%[2]d].id
   network_interface_id     = aws_instance.test.primary_network_interface_id
   session_number           = %[3]d
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, idx, session))
 }

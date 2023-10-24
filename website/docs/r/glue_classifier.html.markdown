@@ -71,7 +71,7 @@ resource "aws_glue_classifier" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `csv_classifier` - (Optional) A classifier for Csv content. Defined below.
 * `grok_classifier` – (Optional) A classifier that uses grok patterns. Defined below.
@@ -113,8 +113,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Classifiers can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Classifiers using their name. For example:
 
+```terraform
+import {
+  to = aws_glue_classifier.MyClassifier
+  id = "MyClassifier"
+}
 ```
-$ terraform import aws_glue_classifier.MyClassifier MyClassifier
+
+Using `terraform import`, import Glue Classifiers using their name. For example:
+
+```console
+% terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```

@@ -20,7 +20,7 @@ data "aws_elasticache_replication_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `replication_group_id` – (Required) Identifier for the replication group.
 

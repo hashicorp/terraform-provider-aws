@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Audit Manager Account Registration resources can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Audit Manager Account Registration resources using the `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_account_registration.example
+  id = "us-east-1"
+}
 ```
-$ terraform import aws_auditmanager_account_registration.example us-east-1
+
+Using `terraform import`, import Audit Manager Account Registration resources using the `id`. For example:
+
+```console
+% terraform import aws_auditmanager_account_registration.example us-east-1
 ```

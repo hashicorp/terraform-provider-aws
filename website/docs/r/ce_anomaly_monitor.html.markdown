@@ -69,8 +69,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ce_anomaly_monitor` can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_monitor` using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ce_anomaly_monitor.example
+  id = "costAnomalyMonitorARN"
+}
 ```
-$ terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
+
+Using `terraform import`, import `aws_ce_anomaly_monitor` using the `id`. For example:
+
+```console
+% terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```

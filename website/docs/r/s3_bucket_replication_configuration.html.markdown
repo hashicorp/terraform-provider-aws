@@ -228,7 +228,7 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) ARN of the IAM role for Amazon S3 to assume when replicating the objects.
@@ -429,8 +429,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-S3 bucket replication configuration can be imported using the `bucket`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket replication configuration using the `bucket`. For example:
 
-```sh
-$ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_replication_configuration.replication
+  id = "bucket-name"
+}
+```
+
+Using `terraform import`, import S3 bucket replication configuration using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```

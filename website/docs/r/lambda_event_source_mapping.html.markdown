@@ -230,8 +230,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.event_source_mapping
+  id = "12345kxodurf3443"
+}
 ```
-$ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
+
+Using `terraform import`, import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
+
+```console
+% terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```

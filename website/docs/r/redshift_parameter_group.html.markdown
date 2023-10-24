@@ -36,7 +36,7 @@ resource "aws_redshift_parameter_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.
@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_parameter_group.paramgroup1
+  id = "parameter-group-test-terraform"
+}
 ```
-$ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
+
+Using `terraform import`, import Redshift Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
 ```

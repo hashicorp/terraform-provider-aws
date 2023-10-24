@@ -23,7 +23,7 @@ resource "aws_ec2_capacity_reservation" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `availability_zone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebs_optimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Capacity Reservations can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Capacity Reservations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_capacity_reservation.web
+  id = "cr-0123456789abcdef0"
+}
 ```
-$ terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0
+
+Using `terraform import`, import Capacity Reservations using the `id`. For example:
+
+```console
+% terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0
 ```

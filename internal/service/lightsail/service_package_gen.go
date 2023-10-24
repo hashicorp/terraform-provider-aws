@@ -113,6 +113,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceKeyPair,
 			TypeName: "aws_lightsail_key_pair",
+			Name:     "KeyPair",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceLoadBalancer,

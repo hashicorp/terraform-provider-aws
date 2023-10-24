@@ -109,7 +109,7 @@ resource "aws_launch_template" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
@@ -503,8 +503,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Launch Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_launch_template.web
+  id = "lt-12345678"
+}
 ```
-$ terraform import aws_launch_template.web lt-12345678
+
+Using `terraform import`, import Launch Templates using the `id`. For example:
+
+```console
+% terraform import aws_launch_template.web lt-12345678
 ```

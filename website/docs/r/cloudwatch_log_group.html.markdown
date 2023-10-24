@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_group" "yada" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the log group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudwatch Log Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_group.test_group
+  id = "yada"
+}
 ```
-$ terraform import aws_cloudwatch_log_group.test_group yada
+
+Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_group.test_group yada
 ```

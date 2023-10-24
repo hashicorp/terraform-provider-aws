@@ -38,7 +38,7 @@ resource "aws_vpc_dhcp_options" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolv.conf` file.
 * `domain_name_servers` - (Optional) List of name servers to configure in `/etc/resolv.conf`. If you want to use the default AWS nameservers you should set this to `AmazonProvidedDNS`.
@@ -69,8 +69,17 @@ official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide
 
 ## Import
 
-VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC DHCP Options using the DHCP Options `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_dhcp_options.my_options
+  id = "dopt-d9070ebb"
+}
 ```
-$ terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
+
+Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. For example:
+
+```console
+% terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
 ```

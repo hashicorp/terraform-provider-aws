@@ -57,7 +57,7 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
@@ -76,8 +76,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pool Domains using the `domain`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool_domain.main
+  id = "auth.example.org"
+}
 ```
-$ terraform import aws_cognito_user_pool_domain.main auth.example.org
+
+Using `terraform import`, import Cognito User Pool Domains using the `domain`. For example:
+
+```console
+% terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```

@@ -45,7 +45,7 @@ resource "aws_iam_user_policy" "lb_ro" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@-_.`. User names are not distinguished by case. For example, you cannot create users named both "TESTUSER" and "testuser".
 * `path` - (Optional, default "/") Path in which to create the user.
@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Users can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Users using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_user.lb
+  id = "loadbalancer"
+}
 ```
-$ terraform import aws_iam_user.lb loadbalancer
+
+Using `terraform import`, import IAM Users using the `name`. For example:
+
+```console
+% terraform import aws_iam_user.lb loadbalancer
 ```

@@ -163,8 +163,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Default Network ACLs can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default Network ACLs using the `id`. For example:
 
+```terraform
+import {
+  to = aws_default_network_acl.sample
+  id = "acl-7aaabd18"
+}
 ```
-$ terraform import aws_default_network_acl.sample acl-7aaabd18
+
+Using `terraform import`, import Default Network ACLs using the `id`. For example:
+
+```console
+% terraform import aws_default_network_acl.sample acl-7aaabd18
 ```

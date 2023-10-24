@@ -30,11 +30,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAdminAccount,
+			Factory:  resourceAdminAccount,
 			TypeName: "aws_fms_admin_account",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_fms_policy",
 			Name:     "Policy",
 			Tags: &types.ServicePackageResourceTags{

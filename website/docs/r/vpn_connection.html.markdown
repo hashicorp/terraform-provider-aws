@@ -121,7 +121,7 @@ resource "aws_vpn_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
@@ -238,8 +238,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPN Connections can be imported using the `vpn connection id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Connections using the VPN connection `id`. For example:
 
+```terraform
+import {
+  to = aws_vpn_connection.testvpnconnection
+  id = "vpn-40f41529"
+}
 ```
-$ terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
+
+Using `terraform import`, import VPN Connections using the VPN connection `id`. For example:
+
+```console
+% terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```

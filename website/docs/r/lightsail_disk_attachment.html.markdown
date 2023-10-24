@@ -44,7 +44,7 @@ resource "aws_lightsail_disk_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `disk_name` - (Required) The name of the Lightsail Disk.
 * `instance_name` - (Required) The name of the Lightsail Instance to attach to.
@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_disk` can be imported by using the id attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_disk` using the id attribute. For example:
 
-```shell
-$ terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
+```terraform
+import {
+  to = aws_lightsail_disk_attachment.test
+  id = "test-disk,test-instance"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_disk` using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
 ```

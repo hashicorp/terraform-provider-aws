@@ -27,7 +27,7 @@ resource "aws_cloudwatch_event_api_destination" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new API Destination. The name must be unique for your account. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) The description of the new API Destination. Maximum of 512 characters.
@@ -44,8 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge API Destinations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge API Destinations using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_api_destination.test
+  id = "api-destination"
+}
+```
+
+Using `terraform import`, import EventBridge API Destinations using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_api_destination.test api-destination
+% terraform import aws_cloudwatch_event_api_destination.test api-destination
 ```

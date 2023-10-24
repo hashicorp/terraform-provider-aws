@@ -26,7 +26,7 @@ resource "aws_iam_openid_connect_provider" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `url` - (Required) The URL of the identity provider. Corresponds to the _iss_ claim.
 * `client_id_list` - (Required) A list of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM OpenID Connect Providers can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM OpenID Connect Providers using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_openid_connect_provider.default
+  id = "arn:aws:iam::123456789012:oidc-provider/accounts.google.com"
+}
 ```
-$ terraform import aws_iam_openid_connect_provider.default arn:aws:iam::123456789012:oidc-provider/accounts.google.com
+
+Using `terraform import`, import IAM OpenID Connect Providers using the `arn`. For example:
+
+```console
+% terraform import aws_iam_openid_connect_provider.default arn:aws:iam::123456789012:oidc-provider/accounts.google.com
 ```

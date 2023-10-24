@@ -28,7 +28,7 @@ resource "aws_customer_gateway" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Customer Gateways can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Customer Gateways using the `id`. For example:
 
+```terraform
+import {
+  to = aws_customer_gateway.main
+  id = "cgw-b4dc3961"
+}
 ```
-$ terraform import aws_customer_gateway.main cgw-b4dc3961
+
+Using `terraform import`, import Customer Gateways using the `id`. For example:
+
+```console
+% terraform import aws_customer_gateway.main cgw-b4dc3961
 ```

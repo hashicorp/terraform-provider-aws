@@ -105,7 +105,7 @@ resource "aws_glue_trigger" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
 * `description` – (Optional) A description of the new trigger.
@@ -168,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Triggers can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Triggers using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_trigger.MyTrigger
+  id = "MyTrigger"
+}
 ```
-$ terraform import aws_glue_trigger.MyTrigger MyTrigger
+
+Using `terraform import`, import Glue Triggers using `name`. For example:
+
+```console
+% terraform import aws_glue_trigger.MyTrigger MyTrigger
 ```

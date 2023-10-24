@@ -27,7 +27,7 @@ resource "aws_api_gateway_resource" "MyDemoResource" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `parent_id` - (Required) ID of the parent API resource
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_resource.example
+  id = "12345abcde/67890fghij"
+}
 ```
-$ terraform import aws_api_gateway_resource.example 12345abcde/67890fghij
+
+Using `terraform import`, import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_resource.example 12345abcde/67890fghij
 ```

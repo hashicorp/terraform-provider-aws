@@ -54,7 +54,7 @@ resource "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `group_names` - (Required) List of AutoScaling Group Names
 * `notifications` - (Required) List of Notification Types that trigger

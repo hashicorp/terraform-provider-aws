@@ -55,7 +55,7 @@ The following arguments are optional:
 
 ### provisioning_artifact_parameters
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
@@ -86,8 +86,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_product` can be imported using the product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product` using the product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_product.example
+  id = "prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_product` using the product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```

@@ -1924,11 +1924,457 @@ func channelEncoderSettingsSchema() *schema.Schema {
 				},
 				// TODO avail_configuration
 				// TODO blackout_slate
-				// TODO caption_descriptions
+				"caption_descriptions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"caption_selector_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"accessibility": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessibilityType](),
+							},
+
+							"destination_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arib_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"burn_in_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"alignment": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInAlignment](),
+													},
+													"background_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInBackgroundColor](),
+													},
+													"background_opacity": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"font": func() *schema.Schema {
+														return inputLocationSchema()
+													}(),
+													"font_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInFontColor](),
+													},
+													"font_opacity": {
+														Type:         schema.TypeInt,
+														Default:      0,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(0),
+													},
+													"font_resolution": {
+														Type:         schema.TypeInt,
+														Default:      96,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"font_size": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"outline_color": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInOutlineColor](),
+													},
+													"outline_size": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"shadow_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInShadowColor](),
+													},
+													"shadow_opacity": {
+														Type:         schema.TypeInt,
+														Default:      0,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(0),
+													},
+													"shadow_x_offset": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"shadow_y_offset": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"teletext_grid_control": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.BurnInTeletextGridControl](),
+													},
+													"x_position": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"y_position": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"dvb_sub_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"alignment": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationAlignment](),
+													},
+													"background_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationBackgroundColor](),
+													},
+													"background_opacity": {
+														Type:         schema.TypeInt,
+														Default:      0,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(0),
+													},
+													"font": func() *schema.Schema {
+														return inputLocationSchema()
+													}(),
+													"font_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationFontColor](),
+													},
+													"font_opacity": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(0),
+													},
+													"font_resolution": {
+														Type:         schema.TypeInt,
+														Default:      96,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"font_size": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"outline_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationOutlineColor](),
+													},
+													"outline_size": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"shadow_color": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationShadowColor](),
+													},
+													"shadow_opacity": {
+														Type:         schema.TypeInt,
+														Default:      0,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(0),
+													},
+													"shadow_x_offset": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"shadow_y_offset": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"teletext_grid_control": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationTeletextGridControl](),
+													},
+													"x_position": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"y_position": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"ebu_tt_d_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"copyright_holder": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"fill_line_gap": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.EbuTtDFillLineGapControl](),
+													},
+													"font_family": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"style_control": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.EbuTtDDestinationStyleControl](),
+													},
+												},
+											},
+										},
+										"embedded_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"embedded_plus_scte20_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"rtmp_caption_info_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"scte20_plus_embedded_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"scte27_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"smpte_tt_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"teletext_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+										"ttml_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"style_control": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.TtmlDestinationStyleControl](),
+													},
+												},
+											},
+										},
+										"webvtt_destination_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"style_control": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.WebvttDestinationStyleControl](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"language_code": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"language_description": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
 				// TODO feature_activations
-				// TODO global_configuration
-				// TODO motion_graphics_configuration
-				// TODO nielsen_configuration
+				"global_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"initial_audio_gain": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"input_end_action": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.GlobalConfigurationInputEndAction](),
+							},
+							"input_loss_behavior": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"black_frame_msec": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"input_loss_image_color": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"input_loss_image_slate": func() *schema.Schema {
+											return inputLocationSchema()
+										}(),
+
+										"input_loss_image_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputLossImageType](),
+										},
+										"repeat_frame_msec": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"output_locking_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.GlobalConfigurationOutputLockingMode](),
+							},
+							"output_timing_source": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.GlobalConfigurationOutputTimingSource](),
+							},
+							"support_low_framerate_inputs": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.GlobalConfigurationLowFramerateInputs](),
+							},
+						},
+					},
+				},
+				"motion_graphics_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"motion_graphics_settings": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"html_motion_graphics_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
+											},
+										},
+									},
+								},
+							},
+							"motion_graphics_insertion": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.MotionGraphicsInsertion](),
+							},
+						},
+					},
+				},
+				"nielsen_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"distributor_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"nielsen_pcm_to_id3_tagging": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.NielsenPcmToId3TaggingState](),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -2639,19 +3085,19 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 		settings.BlackoutSlate = nil // TODO expandChannelEncoderSettingsBlackoutSlate(v)
 	}
 	if v, ok := m["caption_descriptions"].([]interface{}); ok && len(v) > 0 {
-		settings.CaptionDescriptions = nil // TODO expandChannelEncoderSettingsCaptionDescriptions(v)
+		settings.CaptionDescriptions = expandChannelEncoderSettingsCaptionDescriptions(v)
 	}
 	if v, ok := m["feature_activations"].([]interface{}); ok && len(v) > 0 {
 		settings.FeatureActivations = nil // TODO expandChannelEncoderSettingsFeatureActivations(v)
 	}
 	if v, ok := m["global_configuration"].([]interface{}); ok && len(v) > 0 {
-		settings.GlobalConfiguration = nil // TODO expandChannelEncoderSettingsGlobalConfiguration(v)
+		settings.GlobalConfiguration = expandChannelEncoderSettingsGlobalConfiguration(v)
 	}
 	if v, ok := m["motion_graphics_configuration"].([]interface{}); ok && len(v) > 0 {
-		settings.MotionGraphicsConfiguration = nil // TODO expandChannelEncoderSettingsMotionGraphicsConfiguration(v)
+		settings.MotionGraphicsConfiguration = expandChannelEncoderSettingsMotionGraphicsConfiguration(v)
 	}
 	if v, ok := m["nielsen_configuration"].([]interface{}); ok && len(v) > 0 {
-		settings.NielsenConfiguration = nil // TODO expandChannelEncoderSettingsNielsenConfiguration(v)
+		settings.NielsenConfiguration = expandChannelEncoderSettingsNielsenConfiguration(v)
 	}
 
 	return &settings
@@ -4495,6 +4941,399 @@ func expandChannelEncoderSettingsAvailBlanking(tfList []interface{}) *types.Avai
 	return &out
 }
 
+func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []types.CaptionDescription {
+	if tfList == nil {
+		return nil
+	}
+
+	var captionDesc []types.CaptionDescription
+	for _, tfItem := range tfList {
+		m, ok := tfItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var d types.CaptionDescription
+		if v, ok := m["caption_selector_name"].(string); ok && v != "" {
+			d.CaptionSelectorName = aws.String(v)
+		}
+		if v, ok := m["name"].(string); ok && v != "" {
+			d.Name = aws.String(v)
+		}
+		if v, ok := m["accessibility"].(string); ok && v != "" {
+			d.Accessibility = types.AccessibilityType(v)
+		}
+		if v, ok := m["destination_settings"].([]interface{}); ok && len(v) > 0 {
+			d.DestinationSettings = expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(v)
+		}
+		if v, ok := m["language_code"].(string); ok && v != "" {
+			d.LanguageCode = aws.String(v)
+		}
+		if v, ok := m["language_description"].(string); ok && v != "" {
+			d.LanguageDescription = aws.String(v)
+		}
+
+		captionDesc = append(captionDesc, d)
+	}
+
+	return captionDesc
+}
+
+func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList []interface{}) *types.CaptionDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.CaptionDestinationSettings
+	if v, ok := m["arib_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AribDestinationSettings = &types.AribDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["burn_in_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.BurnInDestinationSettings = expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(v)
+	}
+	if v, ok := m["dvb_sub_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.DvbSubDestinationSettings = expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(v)
+	}
+	if v, ok := m["ebu_tt_d_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.EbuTtDDestinationSettings = expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(v)
+	}
+	if v, ok := m["embedded_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.EmbeddedDestinationSettings = &types.EmbeddedDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["embedded_plus_scte20_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.EmbeddedPlusScte20DestinationSettings = &types.EmbeddedPlusScte20DestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["rtmp_caption_info_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.RtmpCaptionInfoDestinationSettings = &types.RtmpCaptionInfoDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["scte20_plus_embedded_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte20PlusEmbeddedDestinationSettings = &types.Scte20PlusEmbeddedDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["scte27_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte27DestinationSettings = &types.Scte27DestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["smpte_tt_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.SmpteTtDestinationSettings = &types.SmpteTtDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["teletext_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TeletextDestinationSettings = &types.TeletextDestinationSettings{} // only unexported fields
+	}
+	if v, ok := m["ttml_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TtmlDestinationSettings = expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(v)
+	}
+	if v, ok := m["webvtt_destination_settings"].([]interface{}); ok && len(v) > 0 {
+		out.WebvttDestinationSettings = expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(v)
+	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfList []interface{}) *types.BurnInDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.BurnInDestinationSettings
+	if v, ok := m["alignment"].(string); ok && len(v) > 0 {
+		out.Alignment = types.BurnInAlignment(v)
+	}
+	if v, ok := m["background_color"].(string); ok && len(v) > 0 {
+		out.BackgroundColor = types.BurnInBackgroundColor(v)
+	}
+	if v, ok := m["background_opacity"].(int); ok {
+		out.BackgroundOpacity = int32(v)
+	}
+	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
+		out.Font = expandInputLocation(v)
+	}
+	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
+		out.FontColor = types.BurnInFontColor(v)
+	}
+	if v, ok := m["font_opacity"].(int); ok {
+		out.FontOpacity = int32(v)
+	}
+	if v, ok := m["font_resolution"].(int); ok {
+		out.FontResolution = int32(v)
+	}
+	if v, ok := m["font_size"].(string); ok && v != "" {
+		out.FontSize = aws.String(v)
+	}
+	if v, ok := m["outline_color"].(string); ok && len(v) > 0 {
+		out.OutlineColor = types.BurnInOutlineColor(v)
+	}
+	if v, ok := m["outline_size"].(int); ok {
+		out.OutlineSize = int32(v)
+	}
+	if v, ok := m["shadow_color"].(string); ok && len(v) > 0 {
+		out.ShadowColor = types.BurnInShadowColor(v)
+	}
+	if v, ok := m["shadow_opacity"].(int); ok {
+		out.ShadowOpacity = int32(v)
+	}
+	if v, ok := m["shadow_x_offset"].(int); ok {
+		out.ShadowXOffset = int32(v)
+	}
+	if v, ok := m["shadow_y_offset"].(int); ok {
+		out.ShadowYOffset = int32(v)
+	}
+	if v, ok := m["teletext_grid_control"].(string); ok && len(v) > 0 {
+		out.TeletextGridControl = types.BurnInTeletextGridControl(v)
+	}
+	if v, ok := m["x_position"].(int); ok {
+		out.XPosition = int32(v)
+	}
+	if v, ok := m["y_position"].(int); ok {
+		out.YPosition = int32(v)
+	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfList []interface{}) *types.DvbSubDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.DvbSubDestinationSettings
+	if v, ok := m["alignment"].(string); ok && len(v) > 0 {
+		out.Alignment = types.DvbSubDestinationAlignment(v)
+	}
+	if v, ok := m["background_color"].(string); ok && len(v) > 0 {
+		out.BackgroundColor = types.DvbSubDestinationBackgroundColor(v)
+	}
+	if v, ok := m["background_opacity"].(int); ok {
+		out.BackgroundOpacity = int32(v)
+	}
+	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
+		out.Font = expandInputLocation(v)
+	}
+	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
+		out.FontColor = types.DvbSubDestinationFontColor(v)
+	}
+	if v, ok := m["font_opacity"].(int); ok {
+		out.FontOpacity = int32(v)
+	}
+	if v, ok := m["font_resolution"].(int); ok {
+		out.FontResolution = int32(v)
+	}
+	if v, ok := m["font_size"].(string); ok && v != "" {
+		out.FontSize = aws.String(v)
+	}
+	if v, ok := m["outline_color"].(string); ok && len(v) > 0 {
+		out.OutlineColor = types.DvbSubDestinationOutlineColor(v)
+	}
+	if v, ok := m["outline_size"].(int); ok {
+		out.OutlineSize = int32(v)
+	}
+	if v, ok := m["shadow_color"].(string); ok && len(v) > 0 {
+		out.ShadowColor = types.DvbSubDestinationShadowColor(v)
+	}
+	if v, ok := m["shadow_opacity"].(int); ok {
+		out.ShadowOpacity = int32(v)
+	}
+	if v, ok := m["shadow_x_offset"].(int); ok {
+		out.ShadowXOffset = int32(v)
+	}
+	if v, ok := m["shadow_y_offset"].(int); ok {
+		out.ShadowYOffset = int32(v)
+	}
+	if v, ok := m["teletext_grid_control"].(string); ok && len(v) > 0 {
+		out.TeletextGridControl = types.DvbSubDestinationTeletextGridControl(v)
+	}
+	if v, ok := m["x_position"].(int); ok {
+		out.XPosition = int32(v)
+	}
+	if v, ok := m["y_position"].(int); ok {
+		out.YPosition = int32(v)
+	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfList []interface{}) *types.EbuTtDDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.EbuTtDDestinationSettings
+	if v, ok := m["copyright_holder"].(string); ok && v != "" {
+		out.CopyrightHolder = aws.String(v)
+	}
+
+	if v, ok := m["fill_line_gap"].(string); ok && len(v) > 0 {
+		out.FillLineGap = types.EbuTtDFillLineGapControl(v)
+	}
+
+	if v, ok := m["font_family"].(string); ok && v != "" {
+		out.FontFamily = aws.String(v)
+	}
+
+	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
+		out.StyleControl = types.EbuTtDDestinationStyleControl(v)
+	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList []interface{}) *types.TtmlDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TtmlDestinationSettings
+	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
+		out.StyleControl = types.TtmlDestinationStyleControl(v)
+	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfList []interface{}) *types.WebvttDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.WebvttDestinationSettings
+	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
+		out.StyleControl = types.WebvttDestinationStyleControl(v)
+	}
+	return &out
+}
+
+func expandChannelEncoderSettingsGlobalConfiguration(tfList []interface{}) *types.GlobalConfiguration {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.GlobalConfiguration
+
+	if v, ok := m["initial_audio_gain"].(int); ok {
+		out.InitialAudioGain = int32(v)
+	}
+
+	if v, ok := m["input_end_action"].(string); ok && len(v) > 0 {
+		out.InputEndAction = types.GlobalConfigurationInputEndAction(v)
+	}
+
+	if v, ok := m["input_loss_behavior"].([]interface{}); ok && len(v) > 0 {
+		out.InputLossBehavior = expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(v)
+	}
+
+	if v, ok := m["output_locking_mode"].(string); ok && len(v) > 0 {
+		out.OutputLockingMode = types.GlobalConfigurationOutputLockingMode(v)
+	}
+
+	if v, ok := m["output_timing_source"].(string); ok && len(v) > 0 {
+		out.OutputTimingSource = types.GlobalConfigurationOutputTimingSource(v)
+	}
+
+	if v, ok := m["support_low_framerate_inputs"].(string); ok && len(v) > 0 {
+		out.SupportLowFramerateInputs = types.GlobalConfigurationLowFramerateInputs(v)
+	}
+
+	return &out
+}
+
+func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []interface{}) *types.InputLossBehavior {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.InputLossBehavior
+
+	if v, ok := m["black_frame_msec"].(int); ok {
+		out.BlackFrameMsec = int32(v)
+	}
+
+	if v, ok := m["input_loss_image_color"].(string); ok && v != "" {
+		out.InputLossImageColor = aws.String(v)
+	}
+
+	if v, ok := m["input_loss_image_slate"].([]interface{}); ok && len(v) > 0 {
+		out.InputLossImageSlate = expandInputLocation(v)
+	}
+
+	if v, ok := m["input_loss_image_type"].(string); ok && len(v) > 0 {
+		out.InputLossImageType = types.InputLossImageType(v)
+	}
+
+	if v, ok := m["repeat_frame_msec"].(int); ok {
+		out.RepeatFrameMsec = int32(v)
+	}
+
+	return &out
+}
+
+func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []interface{}) *types.MotionGraphicsConfiguration {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.MotionGraphicsConfiguration
+
+	if v, ok := m["motion_graphics_settings"].([]interface{}); ok && len(v) > 0 {
+		out.MotionGraphicsSettings = expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(v)
+	}
+
+	if v, ok := m["motion_graphics_insertion"].(string); ok && len(v) > 0 {
+		out.MotionGraphicsInsertion = types.MotionGraphicsInsertion(v)
+	}
+
+	return &out
+}
+
+func expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(tfList []interface{}) *types.MotionGraphicsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.MotionGraphicsSettings
+	if v, ok := m["html_motion_graphics_settings"].([]interface{}); ok && len(v) > 0 {
+		out.HtmlMotionGraphicsSettings = &types.HtmlMotionGraphicsSettings{} // no exported elements in this list
+	}
+
+	return &out
+}
+
+func expandChannelEncoderSettingsNielsenConfiguration(tfList []interface{}) *types.NielsenConfiguration {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.NielsenConfiguration
+	if v, ok := m["distributor_id"].(string); ok && v != "" {
+		out.DistributorId = aws.String(v)
+	}
+
+	if v, ok := m["nielsen_pcm_to_id3_tagging"].(string); ok && len(v) > 0 {
+		out.NielsenPcmToId3Tagging = types.NielsenPcmToId3TaggingState(v)
+	}
+
+	return &out
+}
+
 func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []interface{}) *types.VideoCodecSettings {
 	if tfList == nil {
 		return nil
@@ -4952,11 +5791,11 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 		"avail_blanking":     flattenAvailBlanking(apiObject.AvailBlanking),
 		// TODO avail_configuration
 		// TODO blackout_slate
-		// TODO caption_descriptions
+		"caption_descriptions": flattenCaptionDescriptions(apiObject.CaptionDescriptions),
 		// TODO feature_activations
-		// TODO global_configuration
-		// TODO motion_graphics_configuration
-		// TODO nielsen_configuration
+		"global_configuration":          flattenGlobalConfiguration(apiObject.GlobalConfiguration),
+		"motion_graphics_configuration": flattenMotionGraphicsConfiguration(apiObject.MotionGraphicsConfiguration),
+		"nielsen_configuration":         flattenNielsenConfiguration(apiObject.NielsenConfiguration),
 	}
 
 	return []interface{}{m}
@@ -5834,6 +6673,218 @@ func flattenAvailBlanking(in *types.AvailBlanking) []interface{} {
 	m := map[string]interface{}{
 		"avail_blanking_image": flattenInputLocation(in.AvailBlankingImage),
 		"state":                string(in.State),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, item := range tfList {
+		m := map[string]interface{}{
+			"caption_selector_name": aws.ToString(item.CaptionSelectorName),
+			"name":                  aws.ToString(item.Name),
+			"accessibility":         string(item.Accessibility),
+			"destination_settings":  flattenCaptionDescriptionsCaptionDestinationSettings(item.DestinationSettings),
+			"language_code":         aws.ToString(item.LanguageCode),
+			"language_description":  aws.ToString(item.LanguageDescription),
+		}
+
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettings(in *types.CaptionDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"arib_destination_settings":                 []interface{}{}, // attribute has no exported fields
+		"burn_in_destination_settings":              flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettings(in.BurnInDestinationSettings),
+		"dvb_sub_destination_settings":              flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettings(in.DvbSubDestinationSettings),
+		"ebu_tt_d_destination_settings":             flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettings(in.EbuTtDDestinationSettings),
+		"embedded_destination_settings":             []interface{}{}, // attribute has no exported fields
+		"embedded_plus_scte20_destination_settings": []interface{}{}, // attribute has no exported fields
+		"rtmp_caption_info_destination_settings":    []interface{}{}, // attribute has no exported fields
+		"scte20_plus_embedded_destination_settings": []interface{}{}, // attribute has no exported fields
+		"scte27_destination_settings":               []interface{}{}, // attribute has no exported fields
+		"smpte_tt_destination_settings":             []interface{}{}, // attribute has no exported fields
+		"teletext_destination_settings":             []interface{}{}, // attribute has no exported fields
+		"ttml_destination_settings":                 flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in.TtmlDestinationSettings),
+		"webvtt_destination_settings":               flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in.WebvttDestinationSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettings(in *types.BurnInDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"alignment":             string(in.Alignment),
+		"background_color":      string(in.BackgroundColor),
+		"background_opacity":    int(in.BackgroundOpacity),
+		"font":                  flattenInputLocation(in.Font),
+		"font_color":            string(in.FontColor),
+		"font_opacity":          int(in.FontOpacity),
+		"font_resolution":       int(in.FontResolution),
+		"font_size":             aws.ToString(in.FontSize),
+		"outline_color":         string(in.OutlineColor),
+		"outline_size":          int(in.OutlineSize),
+		"shadow_color":          string(in.ShadowColor),
+		"shadow_opacity":        int(in.ShadowOpacity),
+		"shadow_x_offset":       int(in.ShadowXOffset),
+		"shadow_y_offset":       int(in.ShadowYOffset),
+		"teletext_grid_control": string(in.TeletextGridControl),
+		"x_position":            int(in.XPosition),
+		"y_position":            int(in.YPosition),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettings(in *types.DvbSubDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"alignment":             string(in.Alignment),
+		"background_color":      string(in.BackgroundColor),
+		"background_opacity":    int(in.BackgroundOpacity),
+		"font":                  flattenInputLocation(in.Font),
+		"font_color":            string(in.FontColor),
+		"font_opacity":          int(in.FontOpacity),
+		"font_resolution":       int(in.FontResolution),
+		"font_size":             aws.ToString(in.FontSize),
+		"outline_color":         string(in.OutlineColor),
+		"outline_size":          int(in.OutlineSize),
+		"shadow_color":          string(in.ShadowColor),
+		"shadow_opacity":        int(in.ShadowOpacity),
+		"shadow_x_offset":       int(in.ShadowXOffset),
+		"shadow_y_offset":       int(in.ShadowYOffset),
+		"teletext_grid_control": string(in.TeletextGridControl),
+		"x_position":            int(in.XPosition),
+		"y_position":            int(in.YPosition),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettings(in *types.EbuTtDDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"copyright_holder": aws.ToString(in.CopyrightHolder),
+		"fill_line_gap":    string(in.FillLineGap),
+		"font_family":      aws.ToString(in.FontFamily),
+		"style_control":    string(in.StyleControl),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in *types.TtmlDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"style_control": string(in.StyleControl),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in *types.WebvttDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"style_control": string(in.StyleControl),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenGlobalConfiguration(apiObject *types.GlobalConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"initial_audio_gain":           int(apiObject.InitialAudioGain),
+		"input_end_action":             string(apiObject.InputEndAction),
+		"input_loss_behavior":          flattenGlobalConfigurationInputLossBehavior(apiObject.InputLossBehavior),
+		"output_locking_mode":          string(apiObject.OutputLockingMode),
+		"output_timing_source":         string(apiObject.OutputTimingSource),
+		"support_low_framerate_inputs": string(apiObject.SupportLowFramerateInputs),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenGlobalConfigurationInputLossBehavior(in *types.InputLossBehavior) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"black_frame_msec":       int(in.BlackFrameMsec),
+		"input_loss_image_color": aws.ToString(in.InputLossImageColor),
+		"input_loss_image_slate": flattenInputLocation(in.InputLossImageSlate),
+		"input_loss_image_type":  string(in.InputLossImageType),
+		"repeat_frame_msec":      int(in.RepeatFrameMsec),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenMotionGraphicsConfiguration(apiObject *types.MotionGraphicsConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"motion_graphics_settings":  flattenMotionGraphicsConfigurationMotionGraphicsSettings(apiObject.MotionGraphicsSettings),
+		"motion_graphics_insertion": string(apiObject.MotionGraphicsInsertion),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenMotionGraphicsConfigurationMotionGraphicsSettings(in *types.MotionGraphicsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"html_motion_graphics_settings": []interface{}{}, // attribute has no exported fields
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNielsenConfiguration(apiObject *types.NielsenConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"distributor_id":             aws.ToString(apiObject.DistributorId),
+		"nielsen_pcm_to_id3_tagging": string(apiObject.NielsenPcmToId3Tagging),
 	}
 
 	return []interface{}{m}

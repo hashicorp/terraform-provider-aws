@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-KMS (Key Management) Custom Key Store can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS (Key Management) Custom Key Store using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_custom_key_store.example
+  id = "cks-5ebd4ef395a96288e"
+}
 ```
-$ terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
+
+Using `terraform import`, import KMS (Key Management) Custom Key Store using the `id`. For example:
+
+```console
+% terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
 ```

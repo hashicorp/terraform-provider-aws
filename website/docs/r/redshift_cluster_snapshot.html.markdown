@@ -27,7 +27,7 @@ resource "aws_redshift_cluster_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier for which you want a snapshot.
 * `snapshot_identifier` - (Required, Forces new resource) A unique identifier for the snapshot that you are requesting. This identifier must be unique for all snapshots within the Amazon Web Services account.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Cluster Snapshots support import by `snapshot_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Cluster Snapshots using `snapshot_identifier`. For example:
+
+```terraform
+import {
+  to = aws_redshift_cluster_snapshot.test
+  id = "example"
+}
+```
+
+Using `terraform import`, import Redshift Cluster Snapshots using `snapshot_identifier`. For example:
 
 ```console
-$ terraform import aws_redshift_cluster_snapshot.test example
+% terraform import aws_redshift_cluster_snapshot.test example
 ```

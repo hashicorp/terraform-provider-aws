@@ -24,7 +24,7 @@ resource "aws_ecr_pull_through_cache_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ecr_repository_prefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry.
 * `upstream_registry_url` - (Required, Forces new resource) The registry URL of the upstream public registry to use as the source.
@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `ecr_repository_prefix` to import a Pull Through Cache Rule. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a pull-through cache rule using the `ecr_repository_prefix`. For example:
 
+```terraform
+import {
+  to = aws_ecr_pull_through_cache_rule.example
+  id = "ecr-public"
+}
 ```
-$ terraform import aws_ecr_pull_through_cache_rule.example ecr-public
+
+Using `terraform import`, import a pull-through cache rule using the `ecr_repository_prefix`. For example:
+
+```console
+% terraform import aws_ecr_pull_through_cache_rule.example ecr-public
 ```

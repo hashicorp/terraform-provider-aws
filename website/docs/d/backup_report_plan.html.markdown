@@ -20,7 +20,7 @@ data "aws_backup_report_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Backup report plan name.
 
@@ -39,7 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Report Delivery Channel Attributes
 
-For **report_delivery_channel** the following attributes are supported:
+`report_delivery_channel` has the following attributes:
 
 * `formats` - List of the format of your reports: CSV, JSON, or both.
 * `s3_bucket_name` - Unique name of the S3 bucket that receives your reports.
@@ -47,7 +47,7 @@ For **report_delivery_channel** the following attributes are supported:
 
 ### Report Setting Attributes
 
-For **report_setting** the following attributes are supported:
+`report_setting` has the following attributes:
 
 * `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.

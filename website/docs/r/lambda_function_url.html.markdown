@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda function URLs can be imported using the `function_name` or `function_name/qualifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda function URLs using the `function_name` or `function_name/qualifier`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function_url.test_lambda_url
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
+
+Using `terraform import`, import Lambda function URLs using the `function_name` or `function_name/qualifier`. For example:
+
+```console
+% terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
 ```

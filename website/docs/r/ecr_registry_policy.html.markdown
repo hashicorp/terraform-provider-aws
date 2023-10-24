@@ -43,7 +43,7 @@ resource "aws_ecr_registry_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Registry Policy can be imported using the registry id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Registry Policy using the registry id. For example:
 
+```terraform
+import {
+  to = aws_ecr_registry_policy.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_ecr_registry_policy.example 123456789012
+
+Using `terraform import`, import ECR Registry Policy using the registry id. For example:
+
+```console
+% terraform import aws_ecr_registry_policy.example 123456789012
 ```

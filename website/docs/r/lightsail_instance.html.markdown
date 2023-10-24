@@ -67,7 +67,7 @@ resource "aws_lightsail_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your
@@ -159,8 +159,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Instances can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Instances using their name. For example:
 
+```terraform
+import {
+  to = aws_lightsail_instance.gitlab_test
+  id = "custom_gitlab"
+}
 ```
-$ terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
+
+Using `terraform import`, import Lightsail Instances using their name. For example:
+
+```console
+% terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```

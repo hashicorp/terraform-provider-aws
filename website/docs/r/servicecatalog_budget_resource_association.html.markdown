@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_budget_resource_association` can be imported using the budget name and resource ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_budget_resource_association` using the budget name and resource ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_budget_resource_association.example
+  id = "budget-pjtvyakdlyo3m:prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_budget_resource_association.example budget-pjtvyakdlyo3m:prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_budget_resource_association` using the budget name and resource ID. For example:
+
+```console
+% terraform import aws_servicecatalog_budget_resource_association.example budget-pjtvyakdlyo3m:prod-dnigbtea24ste
 ```

@@ -52,7 +52,7 @@ resource "aws_opsworks_application" "foo-app" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the application.
 * `short_name` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
@@ -101,8 +101,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Opsworks Application can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Opsworks Application using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opsworks_application.test
+  id = "<id>"
+}
 ```
-$ terraform import aws_opsworks_application.test <id>
+
+Using `terraform import`, import Opsworks Application using the `id`. For example:
+
+```console
+% terraform import aws_opsworks_application.test <id>
 ```

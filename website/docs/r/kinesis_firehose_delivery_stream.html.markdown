@@ -360,7 +360,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 ```
 
-### Opensearch Destination
+### OpenSearch Destination
 
 ```terraform
 resource "aws_opensearch_domain" "test_cluster" {
@@ -400,7 +400,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
-### Opensearch Destination With VPC
+### OpenSearch Destination With VPC
 
 ```terraform
 resource "aws_opensearch_domain" "test_cluster" {
@@ -486,6 +486,46 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 ```
 
+### OpenSearch Serverless Destination
+
+```terraform
+resource "aws_opensearchserverless_collection" "test_collection" {
+  name = "firehose-osserverless-test"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "opensearchserverless"
+
+  opensearchserverless_configuration {
+    collection_endpoint = aws_opensearchserverless_collection.test_collection.collection_endpoint
+    role_arn            = aws_iam_role.firehose_role.arn
+    index_name          = "test"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Splunk Destination
 
 ```terraform
@@ -554,28 +594,39 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. More details are given below.
+* `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. More details are given below.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint` and `opensearch`.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
 is redshift). More details are given below.
+* `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
-* `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
-Using `redshift_configuration` requires the user to also specify a
-`s3_configuration` block. More details are given below.
-* `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
-* `opensearch_configuration` - (Optional) Configuration options if opensearch is the destination. More details are given below.
-* `splunk_configuration` - (Optional) Configuration options if splunk is the destination. More details are given below.
-* `http_endpoint_configuration` - (Optional) Configuration options if http_endpoint is the destination. requires the user to also specify a `s3_configuration` block.  More details are given below.
+* `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  More details are given below.
+* `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. More details are given below.
+* `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. More details are given below.
+* `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. More details are given below.
+* `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. More details are given below.
 
 The `kinesis_source_configuration` object supports the following:
 
-* `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
-* `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
+* `kinesis_stream_arn` - (Required) The kinesis stream used as the source of the firehose delivery stream.
+* `role_arn` - (Required) The ARN of the role that provides access to the source Kinesis stream.
+
+The `msk_source_configuration` object supports the following:
+
+* `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. More details are given below.
+* `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
+* `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+
+The `authentication_configuration` object supports the following:
+
+* `connectivity` - (Required) The type of connectivity used to access the Amazon MSK cluster. Valid values: `PUBLIC`, `PRIVATE`.
+* `role_arn` - (Required) The ARN of the role used to access the Amazon MSK cluster.
 
 The `server_side_encryption` object supports the following:
 
@@ -630,8 +681,8 @@ The `opensearch_configuration` object supports the following:
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
 * `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
 * `cluster_endpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
-* `index_name` - (Required) The Opensearch index name.
-* `index_rotation_period` - (Optional) The Opensearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
+* `index_name` - (Required) The OpenSearch index name.
+* `index_rotation_period` - (Optional) The OpenSearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Amazon OpenSearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeDomain`, `DescribeDomains`, and `DescribeDomainConfig`.  The pattern needs to be `arn:.*`.
 * `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
@@ -639,6 +690,20 @@ The `opensearch_configuration` object supports the following:
 * `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters. Types are deprecated in OpenSearch_1.1. TypeName must be empty.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `opensearchserverless_configuration` object supports the following:
+
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
+* `collection_endpoint` - (Required) The endpoint to use when communicating with the collection in the Serverless offering for Amazon OpenSearch Service.
+* `index_name` - (Required) The Serverless offering for Amazon OpenSearch Service index name.
+* `retry_duration` - (Optional) After an initial failure to deliver to the Serverless offering for Amazon OpenSearch Service, the total amount of time, in seconds between 0 to 7200, during which Kinesis Data Firehose retries delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch Serverless associated with the VPC. More details are given below
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `splunk_configuration` objects supports the following:
@@ -854,10 +919,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Firehose Delivery streams using the stream ARN. For example:
 
+```terraform
+import {
+  to = aws_kinesis_firehose_delivery_stream.foo
+  id = "arn:aws:firehose:us-east-1:XXX:deliverystream/example"
+}
 ```
-$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+
+Using `terraform import`, import Kinesis Firehose Delivery streams using the stream ARN. For example:
+
+```console
+% terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
 ```
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

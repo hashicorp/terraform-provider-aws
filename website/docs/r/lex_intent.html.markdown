@@ -117,7 +117,7 @@ resource "aws_lex_intent" "order_flowers_intent" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `conclusion_statement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
@@ -261,8 +261,17 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-Intents can be imported using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import intents using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_intent.order_flowers_intent
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_intent.order_flowers_intent OrderFlowers
+
+Using `terraform import`, import intents using their name. For example:
+
+```console
+% terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
