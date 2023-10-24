@@ -227,7 +227,7 @@ func TestARNStringFromFramework(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.ARNStringFromFramework(context.Background(), test.input)
+			got := flex.StringFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

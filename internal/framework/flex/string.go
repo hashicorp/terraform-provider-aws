@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // StringFromFramework converts a Framework String value to a string pointer.
 // A null String is converted to a nil string pointer.
-func StringFromFramework(ctx context.Context, v types.String) *string {
+func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *string {
 	var output *string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -66,14 +67,6 @@ func StringToFramework(ctx context.Context, v *string) types.String {
 // A nil string pointer is converted to an empty String.
 func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 	return types.StringValue(aws.ToString(v))
-}
-
-func ARNStringFromFramework(ctx context.Context, v fwtypes.ARN) *string {
-	var output *string
-
-	panicOnError(Expand(ctx, v, &output))
-
-	return output
 }
 
 func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) fwtypes.ARN {

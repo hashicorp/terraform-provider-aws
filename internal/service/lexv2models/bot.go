@@ -162,7 +162,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		BotName:                 aws.String(plan.Name.ValueString()),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
-		RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+		RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		BotTags:                 getTagsIn(ctx),
 	}
 
@@ -295,7 +295,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			BotName:                 flex.StringFromFramework(ctx, plan.Name),
 			IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 			DataPrivacy:             dpInput,
-			RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+			RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		}
 
 		if !plan.Description.IsNull() {
