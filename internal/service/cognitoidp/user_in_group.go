@@ -5,13 +5,14 @@ package cognitoidp
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +29,11 @@ func resourceUserInGroup() *schema.Resource {
 		CreateWithoutTimeout: resourceUserInGroupCreate,
 		ReadWithoutTimeout:   resourceUserInGroupRead,
 		DeleteWithoutTimeout: resourceUserInGroupDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrGroupName: {
 				Type:         schema.TypeString,
@@ -55,18 +61,14 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
+	groupName := d.Get("group_name").(string)
+	userPoolId := d.Get("user_pool_id").(string)
+	username := d.Get("username").(string)
 
-	if v, ok := d.GetOk(names.AttrGroupName); ok {
-		input.GroupName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrUserPoolID); ok {
-		input.UserPoolId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrUsername); ok {
-		input.Username = aws.String(v.(string))
+	input := &cognitoidentityprovider.AdminAddUserToGroupInput{
+		GroupName:  aws.String(groupName),
+		UserPoolId: aws.String(userPoolId),
+		Username:   aws.String(username),
 	}
 
 	_, err := conn.AdminAddUserToGroup(ctx, input)
@@ -75,8 +77,9 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Cognito Group User: %s", err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.UniqueId())
+	d.SetId(
+		fmt.Sprintf("%s/%s/%s", userPoolId, groupName, username),
+	)
 
 	return append(diags, resourceUserInGroupRead(ctx, d, meta)...)
 }
@@ -85,13 +88,20 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	err := findGroupUserByThreePartKey(ctx, conn, d.Get(names.AttrGroupName).(string), d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string))
+	id := strings.Split(d.Id(), "/")
+	userPoolId := id[0]
+	groupName := id[1]
+	username := id[2]
+	err := findGroupUserByThreePartKey(ctx, conn, groupName, userPoolId, username)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cognito Group User %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+	d.Set("group_name", groupName)
+	d.Set("user_pool_id", userPoolId)
+	d.Set("username", username)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito Group User (%s): %s", d.Id(), err)
