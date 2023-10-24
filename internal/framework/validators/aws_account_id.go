@@ -24,7 +24,7 @@ func (validator awsAccountIDValidator) MarkdownDescription(ctx context.Context) 
 	return validator.Description(ctx)
 }
 
-// Validate performs the validation.
+// ValidateString performs the validation.
 func (validator awsAccountIDValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
