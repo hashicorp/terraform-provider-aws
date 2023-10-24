@@ -19,6 +19,12 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 			// TODO Tagging not working during beta.
 			// "tags":       testAccAccessGrantsInstance_tags,
 		},
+		"Location": {
+			"basic":      testAccAccessGrantsLocation_basic,
+			"disappears": testAccAccessGrantsLocation_disappears,
+			// TODO Tagging not working during beta.
+			// "tags":       testAccAccessGrantsLocation_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

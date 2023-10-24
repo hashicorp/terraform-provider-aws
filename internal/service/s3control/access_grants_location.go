@@ -112,7 +112,7 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 	output, err := conn.CreateAccessGrantsLocation(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.AccountID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.LocationScope.ValueString()), err.Error())
 
 		return
 	}

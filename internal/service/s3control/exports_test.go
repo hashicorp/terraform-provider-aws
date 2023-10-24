@@ -6,6 +6,7 @@ package s3control
 // Exports for use in tests only.
 var (
 	ResourceAccessGrantsInstance          = newResourceAccessGrantsInstance
+	ResourceAccessGrantsLocation          = newResourceAccessGrantsLocation
 	ResourceAccessPoint                   = resourceAccessPoint
 	ResourceAccessPointPolicy             = resourceAccessPointPolicy
 	ResourceAccountPublicAccessBlock      = resourceAccountPublicAccessBlock
@@ -19,6 +20,7 @@ var (
 	ResourceStorageLensConfiguration      = resourceStorageLensConfiguration
 
 	FindAccessGrantsInstance                               = findAccessGrantsInstance
+	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
 	FindAccessPointPolicyAndStatusByTwoPartKey             = findAccessPointPolicyAndStatusByTwoPartKey
 	FindBucketByTwoPartKey                                 = findBucketByTwoPartKey
