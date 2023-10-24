@@ -87,19 +87,18 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	accountID := data.AccountID.ValueString()
-	if accountID == "" {
-		accountID = r.Meta().AccountID
+	if data.AccountID.ValueString() == "" {
+		data.AccountID = types.StringValue(r.Meta().AccountID)
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
-		AccountId: aws.String(accountID),
+		AccountId: flex.StringFromFramework(ctx, data.AccountID),
 		Tags:      getTagsInS3Control(ctx),
 	}
 
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Instance (%s)", accountID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
 
 		return
 	}
@@ -107,8 +106,7 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 	// Set values for unknowns.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
-	data.AccountID = types.StringValue(accountID)
-	data.ID = data.AccountID
+	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -122,9 +120,15 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 		return
 	}
 
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
 	conn := r.Meta().S3ControlClient(ctx)
 
-	output, err := findAccessGrantsInstance(ctx, conn, data.ID.ValueString())
+	output, err := findAccessGrantsInstance(ctx, conn, data.AccountID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -142,7 +146,6 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 	// Set attributes for import.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
-	data.AccountID = data.ID
 
 	tags, err := listTags(ctx, conn, data.AccessGrantsInstanceARN.ValueString(), data.AccountID.ValueString())
 
@@ -197,7 +200,7 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	_, err := conn.DeleteAccessGrantsInstance(ctx, &s3control.DeleteAccessGrantsInstanceInput{
-		AccountId: flex.StringFromFramework(ctx, data.ID),
+		AccountId: flex.StringFromFramework(ctx, data.AccountID),
 	})
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -247,4 +250,14 @@ type accessGrantsInstanceResourceModel struct {
 	ID                      types.String `tfsdk:"id"`
 	Tags                    types.Map    `tfsdk:"tags"`
 	TagsAll                 types.Map    `tfsdk:"tags_all"`
+}
+
+func (data *accessGrantsInstanceResourceModel) InitFromID() error {
+	data.AccountID = data.ID
+
+	return nil
+}
+
+func (data *accessGrantsInstanceResourceModel) setID() {
+	data.ID = data.AccountID
 }
