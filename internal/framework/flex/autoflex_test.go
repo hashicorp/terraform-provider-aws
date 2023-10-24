@@ -65,6 +65,16 @@ type TestFlexTF07 struct {
 	Field4 fwtypes.SetNestedObjectValueOf[TestFlexTF02]  `tfsdk:"field4"`
 }
 
+// TestFlexTF08 testing for idiomatic singular on TF side but plural on AWS side
+type TestFlexTF08 struct {
+	Field fwtypes.ListNestedObjectValueOf[TestFlexTF01] `tfsdk:"field"`
+}
+
+// TestFlexTF09 testing for fields that only differ by capitalization
+type TestFlexTF09 struct {
+	FieldURL types.String `tfsdk:"field_url"`
+}
+
 type TestFlexAWS01 struct {
 	Field1 string
 }
@@ -118,6 +128,14 @@ type TestFlexAWS09 struct {
 	Field2 *TestFlexAWS06
 	Field3 map[string]*string
 	Field4 []TestFlexAWS03
+}
+
+type TestFlexAWS10 struct {
+	Fields []TestFlexAWS01
+}
+
+type TestFlexAWS11 struct {
+	FieldUrl *string
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -394,6 +412,28 @@ func TestGenericExpand(t *testing.T) {
 				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
 				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
 				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
+			},
+		},
+		{
+			TestName: "plural field names",
+			Source: &TestFlexTF08{
+				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+					Field1: types.StringValue("a"),
+				}),
+			},
+			Target: &TestFlexAWS10{},
+			WantTarget: &TestFlexAWS10{
+				Fields: []TestFlexAWS01{{Field1: "a"}},
+			},
+		},
+		{
+			TestName: "capitalization field names",
+			Source: &TestFlexTF09{
+				FieldURL: types.StringValue("h"),
+			},
+			Target: &TestFlexAWS11{},
+			WantTarget: &TestFlexAWS11{
+				FieldUrl: aws.String("h"),
 			},
 		},
 	}
@@ -751,6 +791,28 @@ func TestGenericFlatten(t *testing.T) {
 					{Field1: types.Int64Value(2000)},
 					{Field1: types.Int64Value(30000)},
 				}),
+			},
+		},
+		{
+			TestName: "plural field names",
+			Source: &TestFlexAWS10{
+				Fields: []TestFlexAWS01{{Field1: "a"}},
+			},
+			Target: &TestFlexTF08{},
+			WantTarget: &TestFlexTF08{
+				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+					Field1: types.StringValue("a"),
+				}),
+			},
+		},
+		{
+			TestName: "capitalization field names",
+			Source: &TestFlexAWS11{
+				FieldUrl: aws.String("h"),
+			},
+			Target: &TestFlexTF09{},
+			WantTarget: &TestFlexTF09{
+				FieldURL: types.StringValue("h"),
 			},
 		},
 	}
