@@ -44,7 +44,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
-          body-includes: "Please note that typically Go dependency changes"
+          body-includes: "A new usage of AWS SDK for Go V1 was detected"
 
       - run: echo ${{ steps.prc.outputs.comment-id }}
 
