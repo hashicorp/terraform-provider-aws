@@ -884,7 +884,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 
 			if baseAttribute == "launch_template" {
 				launchTemplate := nmip[0].(map[string]interface{})
-				launchTemplate["id"] = "unknown"
+				launchTemplate["id"] = launchTemplateIDUnknown
 
 				if err := diff.SetNew(baseAttribute, nmip); err != nil {
 					return err
@@ -895,7 +895,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 				launchTemplate := nmip[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
 
-				launchTemplateSpecification["launch_template_id"] = "unknown"
+				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
 				launchTemplate = launchTemplateSpecification
 
@@ -3070,7 +3070,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	// API returns both ID and name, which Terraform saves to state. Next update returns:
 	// ValidationError: Valid requests must contain either launchTemplateId or LaunchTemplateName
 	// Prefer the ID if we have both.
-	if v, ok := tfMap["launch_template_id"]; ok && v != "" && v != "unknown" {
+	if v, ok := tfMap["launch_template_id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["launch_template_name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
@@ -3092,7 +3092,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 
 	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap["id"]; ok && v != "" && v != "unknown" {
+	if v, ok := tfMap["id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
