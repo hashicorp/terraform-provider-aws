@@ -894,7 +894,6 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			if baseAttribute == "mixed_instances_policy" {
 				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
-
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
 				if err := diff.SetNew(baseAttribute, ba); err != nil {
