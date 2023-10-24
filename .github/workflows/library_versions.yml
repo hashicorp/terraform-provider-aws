@@ -31,7 +31,7 @@ jobs:
         id: diff
         run: |
           git diff origin/${{ github.event.pull_request.base.ref }} internal/ |
-            (grep "github.com/aws/aws-sdk-go/" && echo "found=true" >> "$GITHUB_OUTPUT") || echo "found=false" >> "$GITHUB_OUTPUT"
+            (grep '^\+\s*"github.com/aws/aws-sdk-go/' && echo "found=true" >> "$GITHUB_OUTPUT") || echo "found=false" >> "$GITHUB_OUTPUT"
 
   comment:
     runs-on: ubuntu-latest
