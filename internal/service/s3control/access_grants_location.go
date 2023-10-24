@@ -198,6 +198,26 @@ func (r *resourceAccessGrantsLocation) Update(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
+	if !new.IAMRoleARN.Equal(old.IAMRoleARN) {
+		input := &s3control.UpdateAccessGrantsLocationInput{
+			AccessGrantsLocationId: flex.StringFromFramework(ctx, new.AccessGrantsLocationID),
+			AccountId:              flex.StringFromFramework(ctx, new.AccountID),
+			IAMRoleArn:             flex.StringFromFramework(ctx, new.IAMRoleARN),
+		}
+
+		// TODO: Is this the GA error?
+		// HTTP 400 => Invalid IAM role.
+		_, err := tfresource.RetryWhenHTTPStatusCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.UpdateAccessGrantsLocation(ctx, input)
+		}, http.StatusBadRequest)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating S3 Access Grants Location (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
 	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
 		if err := updateTags(ctx, conn, new.AccessGrantsLocationARN.ValueString(), new.AccountID.ValueString(), oldTagsAll, newTagsAll); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating tags for S3 Access Grants Location (%s)", new.ID.ValueString()), err.Error())
