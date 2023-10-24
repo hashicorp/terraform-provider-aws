@@ -24,6 +24,7 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 			"disappears": testAccAccessGrantsLocation_disappears,
 			// TODO Tagging not working during beta.
 			// "tags":       testAccAccessGrantsLocation_tags,
+			"update": testAccAccessGrantsLocation_update,
 		},
 	}
 

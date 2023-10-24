@@ -74,6 +74,7 @@ func testAccAccessGrantsLocation_disappears(t *testing.T) {
 
 func testAccAccessGrantsLocation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_access_grants_location.test"
 
 	resource.Test(t, resource.TestCase{
@@ -83,7 +84,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessGrantsLocationConfig_tags1("key1", "value1"),
+				Config: testAccAccessGrantsLocationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +97,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccessGrantsLocationConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccAccessGrantsLocationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,11 +106,47 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAccessGrantsLocationConfig_tags1("key2", "value2"),
+				Config: testAccAccessGrantsLocationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAccessGrantsLocation_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3control_access_grants_location.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantsLocationConfig_customLocation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessGrantsLocationConfig_customLocationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},
 		},
@@ -207,23 +244,99 @@ resource "aws_s3control_access_grants_location" "test" {
 `)
 }
 
-func testAccAccessGrantsLocationConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+func testAccAccessGrantsLocationConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.test.arn
+  location_scope = "s3://"
+
   tags = {
     %[1]q = %[2]q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
-func testAccAccessGrantsLocationConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+func testAccAccessGrantsLocationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.test.arn
+  location_scope = "s3://"
+
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAccessGrantsLocationConfig_baseCustomLocation(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "prefixA"
+}
+`, rName))
+}
+
+func testAccAccessGrantsLocationConfig_customLocation(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_baseCustomLocation(rName), `
+resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.test.arn
+  location_scope = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}*"
+}
+`)
+}
+
+func testAccAccessGrantsLocationConfig_customLocationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_baseCustomLocation(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = ["sts:AssumeRole", "sts:SetSourceIdentity"],
+      Principal = {
+        Service = "access-grants.s3.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test2" {
+  name = "%[1]s-2"
+  role = aws_iam_role.test2.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "s3:*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.test2, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.test2.arn
+  location_scope = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}*"
+}
+`, rName))
 }
