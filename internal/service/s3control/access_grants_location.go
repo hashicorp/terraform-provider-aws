@@ -109,7 +109,11 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 		Tags:          getTagsInS3Control(ctx),
 	}
 
-	output, err := conn.CreateAccessGrantsLocation(ctx, input)
+	// TODO: Is this the GA error?
+	// HTTP 400 => Invalid IAM role.
+	outputRaw, err := tfresource.RetryWhenHTTPStatusCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateAccessGrantsLocation(ctx, input)
+	}, http.StatusBadRequest)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.LocationScope.ValueString()), err.Error())
@@ -118,6 +122,7 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 	}
 
 	// Set values for unknowns.
+	output := outputRaw.(*s3control.CreateAccessGrantsLocationOutput)
 	data.AccessGrantsLocationARN = flex.StringToFramework(ctx, output.AccessGrantsLocationArn)
 	data.AccessGrantsLocationID = flex.StringToFramework(ctx, output.AccessGrantsLocationId)
 	data.setID()
@@ -205,7 +210,7 @@ func (r *resourceAccessGrantsLocation) Update(ctx context.Context, request resou
 }
 
 func (r *resourceAccessGrantsLocation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data accessGrantsInstanceResourceModel
+	var data accessGrantsLocationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -216,7 +221,8 @@ func (r *resourceAccessGrantsLocation) Delete(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	_, err := conn.DeleteAccessGrantsLocation(ctx, &s3control.DeleteAccessGrantsLocationInput{
-		AccountId: flex.StringFromFramework(ctx, data.AccountID),
+		AccessGrantsLocationId: flex.StringFromFramework(ctx, data.AccessGrantsLocationID),
+		AccountId:              flex.StringFromFramework(ctx, data.AccountID),
 	})
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
