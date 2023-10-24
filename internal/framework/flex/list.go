@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func ExpandFrameworkStringList(ctx context.Context, v types.List) []*string {
+func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []*string {
 	var output []*string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -21,7 +22,7 @@ func ExpandFrameworkStringList(ctx context.Context, v types.List) []*string {
 	return output
 }
 
-func ExpandFrameworkStringValueList(ctx context.Context, v types.List) []string {
+func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuable) []string {
 	var output []string
 
 	panicOnError(Expand(ctx, v, &output))
