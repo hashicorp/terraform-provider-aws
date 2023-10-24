@@ -877,33 +877,30 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if diff.HasChange(subAttribute) {
 			n := diff.Get(baseAttribute)
-			nmip, ok := n.([]interface{})
+			ba, ok := n.([]interface{})
 			if !ok {
 				return nil
 			}
 
 			if baseAttribute == "launch_template" {
-				launchTemplate := nmip[0].(map[string]interface{})
+				launchTemplate := ba[0].(map[string]interface{})
 				launchTemplate["id"] = launchTemplateIDUnknown
 
-				if err := diff.SetNew(baseAttribute, nmip); err != nil {
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
 					return err
 				}
 			}
 
 			if baseAttribute == "mixed_instances_policy" {
-				launchTemplate := nmip[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
 
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
-				launchTemplate = launchTemplateSpecification
-
-				if err := diff.SetNew(baseAttribute, nmip); err != nil {
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
 					return err
 				}
 			}
-
 		}
 
 		return nil
