@@ -25,7 +25,7 @@ func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *strin
 
 // StringFromFramework converts a single Framework String value to a string pointer slice.
 // A null String is converted to a nil slice.
-func StringSliceFromFramework(ctx context.Context, v types.String) []*string {
+func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
@@ -69,10 +69,17 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 	return types.StringValue(aws.ToString(v))
 }
 
+// StringToFrameworkARN converts a string pointer to a Framework custom ARN value.
+// A nil string pointer is converted to a null ARN.
+// If diags is nil, any errors cause a panic.
 func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) fwtypes.ARN {
 	var output fwtypes.ARN
 
-	diags.Append(Flatten(ctx, v, &output)...)
+	if diags == nil {
+		panicOnError(Flatten(ctx, v, &output))
+	} else {
+		diags.Append(Flatten(ctx, v, &output)...)
+	}
 
 	return output
 }
