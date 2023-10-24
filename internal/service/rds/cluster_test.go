@@ -1375,9 +1375,8 @@ func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
-	blueGreenDeployment := "aws_rds_cluster_blue_green_deployment"
-	dataSourceName := "data.aws_rds_engine_version.test"
-	aws_rds_cluster_parameter_group := "aws_rds_cluster_parameter_group"
+	blueGreenDeployment := "aws_rds_cluster_blue_green_deployment.test"
+	aws_rds_cluster_parameter_group := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1386,24 +1385,21 @@ func TestAccRDSClusterBlueGreenWithTwoInstances(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName, false),
+				Config: testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
+					resource.TestCheckResourceAttr(aws_rds_cluster_parameter_group, "aws_rds_cluster_parameter_group", "test"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "create_deployment"),
+					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "switchover_enabled"),
 				),
 			},
 			{
-				Config: testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "create_deployment"),
-					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "switchover_enabled"),
-					resource.TestCheckResourceAttr(blueGreenDeployment, "aws_rds_cluster_blue_green_deployment", "cleanup_resources"),
-					resource.TestCheckResourceAttr(aws_rds_cluster_parameter_group, "aws_rds_cluster_parameter_group", "test"),
-				),
+				Config:      testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName),
+				ExpectError: regexache.MustCompile(`Root object was present, but now absent`),
 			},
 		},
-	})
+	},
+	)
 }
 
 func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
@@ -3302,7 +3298,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, upgrade)
 }
 
-func testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName string, upgrade bool) string {
+func testAccClusterConfigengineVersionTwoInstancesBlueGreen(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-mysql"
@@ -3349,9 +3345,10 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_rds_cluster_blue_green_deployment" "test" {
+  depends_on         = [aws_rds_cluster_instance.test]
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
   create_deployment  = true
-  cleanup_resources  = true
+  cleanup_resources  = false
   engine             = aws_rds_cluster_instance.test[0].engine
   switchover_enabled = true
 }
@@ -3359,7 +3356,7 @@ resource "aws_rds_cluster_blue_green_deployment" "test" {
 
 
 
-`, rName, upgrade)
+`, rName)
 }
 
 func testAccClusterConfig_engineVersionPrimaryInstance(rName string, upgrade bool) string {
