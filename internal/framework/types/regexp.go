@@ -24,7 +24,8 @@ var (
 )
 
 var (
-	_ xattr.TypeWithValidate = RegexpType
+	_ xattr.TypeWithValidate   = RegexpType
+	_ basetypes.StringValuable = Regexp{}
 )
 
 func (t regexpType) TerraformType(_ context.Context) tftypes.Type {

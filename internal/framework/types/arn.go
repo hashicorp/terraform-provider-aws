@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = ARNType
+	_ xattr.TypeWithValidate   = ARNType
+	_ basetypes.StringValuable = ARN{}
 )
 
 func (t arnType) TerraformType(_ context.Context) tftypes.Type {
