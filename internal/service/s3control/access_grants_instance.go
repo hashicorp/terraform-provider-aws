@@ -99,7 +99,7 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Instance (%s)", data.AccountID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Instance (%s)", accountID), err.Error())
 
 		return
 	}
