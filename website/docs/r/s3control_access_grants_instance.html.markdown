@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_s3control_access_grants_instance
 
 Provides a resource to manage an S3 Access Grants instance.
-You can have one S3 Access Grants instance per Region in your
+You can have one S3 Access Grants instance per Region in your account.
 
 ## Example Usage
 
