@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -649,10 +650,25 @@ func sweepDomainConfigurations(region string) error {
 				continue
 			}
 
+			output, err := FindDomainConfigurationByName(ctx, conn, name)
+
+			if err != nil {
+				log.Printf("[WARN] IoT Domain Configuration (%s): %s", name, err)
+				continue
+			}
+
+			if aws.StringValue(output.DomainType) == iot.DomainTypeAwsManaged && aws.StringValue(output.DomainConfigurationStatus) == iot.DomainConfigurationStatusDisabled {
+				// AWS Managed Domain Configuration must be disabled for at least 7 days before it can be deleted.
+				if output.LastStatusChangeDate.After(time.Now().AddDate(0, 0, -7)) {
+					log.Printf("[INFO] Skipping IoT Domain Configuration %s", name)
+					continue
+				}
+			}
+
 			r := ResourceDomainConfiguration()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("status", iot.DomainConfigurationStatusEnabled)
+			d.Set("status", output.DomainConfigurationStatus)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
