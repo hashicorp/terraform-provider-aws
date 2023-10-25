@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -59,6 +60,10 @@ func ResourceDomainConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"domain_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -174,12 +179,20 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("arn", output.DomainConfigurationArn)
-	// TODO authorizer_config
+	if output.AuthorizerConfig != nil {
+		if err := d.Set("authorizer_config", []interface{}{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
+			return diag.Errorf("setting authorizer_config: %s", err)
+		}
+	} else {
+		d.Set("authorizer_config", nil)
+	}
 	d.Set("domain_name", output.DomainName)
-	// TODO domain_type
+	d.Set("domain_type", output.DomainType)
 	d.Set("name", output.DomainConfigurationName)
-	// TODO server_certificate_arns
-	// TODO service_type
+	d.Set("server_certificate_arns", tfslices.ApplyToAll(output.ServerCertificates, func(v *iot.ServerCertificateSummary) string {
+		return aws.StringValue(v.ServerCertificateArn)
+	}))
+	d.Set("service_type", output.ServiceType)
 	d.Set("status", output.DomainConfigurationStatus)
 	if output.TlsConfig != nil {
 		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
@@ -188,7 +201,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("tls_config", nil)
 	}
-	// TODO validation_certificate_arn
+	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
 
 	return nil
 }
@@ -313,6 +326,24 @@ func expandTlsConfig(tfMap map[string]interface{}) *iot.TlsConfig {
 	}
 
 	return apiObject
+}
+
+func flattenAuthorizerConfig(apiObject *iot.AuthorizerConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllowAuthorizerOverride; v != nil {
+		tfMap["allow_authorizer_override"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.DefaultAuthorizerName; v != nil {
+		tfMap["default_authorizer_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenTlsConfig(apiObject *iot.TlsConfig) map[string]interface{} {

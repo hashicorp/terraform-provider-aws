@@ -49,5 +49,6 @@ resource "aws_iot_domain_configuration" "iot" {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the domain configuration.
+* `domain_type` - The type of the domain.
 * `id` - The name of the created domain configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
