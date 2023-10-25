@@ -32,6 +32,10 @@ func ResourceDomainConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceDomainConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDomainConfigurationDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{

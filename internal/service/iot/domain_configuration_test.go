@@ -48,6 +48,11 @@ func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_certificate_arn", ""),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -128,15 +133,15 @@ func testAccCheckDomainConfigurationDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccDomainConfigurationConfig_basic(rName, rootDomain, domain string) string {
+func testAccDomainConfigurationConfig_base(rootDomain, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  domain_name       = %[3]q
+  domain_name       = %[2]q
   validation_method = "DNS"
 }
 
 data "aws_route53_zone" "test" {
-  name         = %[2]q
+  name         = %[1]q
   private_zone = false
 }
 
@@ -154,15 +159,19 @@ resource "aws_acm_certificate_validation" "test" {
 
   certificate_arn = aws_acm_certificate.test.arn
 }
+`, rootDomain, domain)
+}
 
+func testAccDomainConfigurationConfig_basic(rName, rootDomain, domain string) string {
+	return acctest.ConfigCompose(testAccDomainConfigurationConfig_base(rootDomain, domain), fmt.Sprintf(`
 resource "aws_iot_domain_configuration" "test" {
   depends_on = [aws_acm_certificate_validation.test]
 
   name                    = %[1]q
-  domain_name             = %[3]q
+  domain_name             = %[2]q
   server_certificate_arns = [aws_acm_certificate.test.arn]
 }
-`, rName, rootDomain, domain)
+`, rName, domain))
 }
 
 func testAccDomainConfigurationConfig_awsManaged(rName string) string {
