@@ -18,6 +18,40 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestAccIoTDomainConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	resourceName := "aws_iot_domain_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigurationConfig_basic(rName, rootDomain, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_type", "DATA"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_certificate_arn", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,6 +126,43 @@ func testAccCheckDomainConfigurationDestroy(ctx context.Context) resource.TestCh
 
 		return nil
 	}
+}
+
+func testAccDomainConfigurationConfig_basic(rName, rootDomain, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[3]q
+  validation_method = "DNS"
+}
+
+data "aws_route53_zone" "test" {
+  name         = %[2]q
+  private_zone = false
+}
+
+resource "aws_route53_record" "test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+  depends_on = [aws_route53_record.test]
+
+  certificate_arn = aws_acm_certificate.test.arn
+}
+
+resource "aws_iot_domain_configuration" "test" {
+  depends_on = [aws_acm_certificate_validation.test]
+
+  name                    = %[1]q
+  domain_name             = %[3]q
+  server_certificate_arns = [aws_acm_certificate.test.arn]
+}
+`, rName, rootDomain, domain)
 }
 
 func testAccDomainConfigurationConfig_awsManaged(rName string) string {
