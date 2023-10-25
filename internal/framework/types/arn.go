@@ -17,10 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-type arnType uint8
+// ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
+const ProviderErrorDetailPrefix = "An unexpected error was encountered trying to validate an attribute value. " +
+	"This is always an error in the provider. Please report the following to the provider developer:\n\n"
 
-const (
-	ARNType arnType = iota
+type arnType struct {
+	basetypes.StringType
+}
+
+var (
+	ARNType = arnType{}
 )
 
 var (
@@ -29,90 +35,66 @@ var (
 	_ basetypes.StringValuable = ARN{}
 )
 
-func (t arnType) TerraformType(_ context.Context) tftypes.Type {
-	return tftypes.String
+func (t arnType) Equal(o attr.Type) bool {
+	other, ok := o.(arnType)
+
+	if !ok {
+		return false
+	}
+
+	return t.StringType.Equal(other.StringType)
 }
 
-func (t arnType) ValueFromString(_ context.Context, st types.String) (basetypes.StringValuable, diag.Diagnostics) {
-	if st.IsNull() {
-		return ARNNull(), nil
+func (t arnType) String() string {
+	return "ARNType"
+}
+
+func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if in.IsNull() {
+		return ARNNull(), diags
 	}
-	if st.IsUnknown() {
-		return ARNUnknown(), nil
+	if in.IsUnknown() {
+		return ARNUnknown(), diags
 	}
 
-	var diags diag.Diagnostics
-	v, err := arn.Parse(st.ValueString())
+	v, err := arn.Parse(in.ValueString())
 	if err != nil {
-		diags.AddError(
-			"ARN ValueFromString Error",
-			fmt.Sprintf("String %s cannot be parsed as an ARN.", st),
-		)
-		return nil, diags
+		return ARNUnknown(), diags // Must not return validation errors.
 	}
 
 	return ARNValue(v), diags
 }
 
-func (t arnType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
-	if !in.IsKnown() {
-		return ARNUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return ARNNull(), nil
-	}
-
-	var s string
-	err := in.As(&s)
+func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := arn.Parse(s)
+	stringValue, ok := attrValue.(basetypes.StringValue)
 
-	if err != nil {
-		return ARNUnknown(), nil //nolint: nilerr // Must not return validation errors
+	if !ok {
+		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
-	return ARNValue(v), nil
+	stringValuable, diags := t.ValueFromString(ctx, stringValue)
+
+	if diags.HasError() {
+		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
+	}
+
+	return stringValuable, nil
 }
 
 func (t arnType) ValueType(context.Context) attr.Value {
 	return ARN{}
 }
 
-// Equal returns true if `o` is also an ARNType.
-func (t arnType) Equal(o attr.Type) bool {
-	_, ok := o.(arnType)
-	return ok
-}
-
-// ApplyTerraform5AttributePathStep applies the given AttributePathStep to the
-// type.
-func (t arnType) ApplyTerraform5AttributePathStep(step tftypes.AttributePathStep) (interface{}, error) {
-	return nil, fmt.Errorf("cannot apply AttributePathStep %T to %s", step, t.String())
-}
-
-// String returns a human-friendly description of the ARNType.
-func (t arnType) String() string {
-	return "types.ARNType"
-}
-
-// Validate implements type validation.
 func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	if !in.Type().Is(tftypes.String) {
-		diags.AddAttributeError(
-			path,
-			"ARN Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
-		)
-		return diags
-	}
 
 	if !in.IsKnown() || in.IsNull() {
 		return diags
@@ -124,8 +106,7 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 		diags.AddAttributeError(
 			path,
 			"ARN Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to arn.ARN: %s", err),
+			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
 		)
 		return diags
 	}
@@ -140,10 +121,6 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 	}
 
 	return diags
-}
-
-func (t arnType) Description() string {
-	return `An Amazon Resource Name.`
 }
 
 func ARNNull() ARN {
