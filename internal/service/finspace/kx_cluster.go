@@ -43,7 +43,7 @@ func ResourceKxCluster() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(45 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute), // Tags only
+			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -155,26 +155,26 @@ func ResourceKxCluster() *schema.Resource {
 			"code": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
+							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 255),
 						},
 						"s3_key": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
+							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
+							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
 					},
@@ -184,7 +184,7 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
+				ForceNew: false,
 				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 50),
 					validation.MapValueLenBetween(1, 50),
@@ -258,7 +258,7 @@ func ResourceKxCluster() *schema.Resource {
 			"initialization_script": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"last_modified_timestamp": {
@@ -537,6 +537,44 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
+
+	update := false
+
+	in := &finspace.UpdateKxClusterCodeConfigurationInput{
+		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && d.HasChanges("code") {
+		in.Code = expandCode(v.([]interface{}))
+		update = true
+	}
+
+	if v, ok := d.GetOk("initialization_script"); ok && d.HasChanges("initialization_script") {
+		in.Code = expandCode(d.Get("code").([]interface{}))
+		in.InitializationScript = aws.String(v.(string))
+		update = true
+	}
+
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
+		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+		update = true
+	}
+
+	log.Printf("[DEBUG] Updating FinSpace KxClusterCodeConfiguration (%s): %#v", d.Id(), in)
+
+	if _, err := conn.UpdateKxClusterCodeConfiguration(ctx, in); err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+	}
+
+	if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+	}
+
+	if !update {
+		return diags
+	}
 	// Tags only.
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
@@ -570,6 +608,24 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusCreating),
+		Target:                    enum.Slice(types.KxClusterStatusRunning),
+		Refresh:                   statusKxCluster(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*finspace.GetKxClusterOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitKxClusterUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusUpdating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
 		Refresh:                   statusKxCluster(ctx, conn, id),
 		Timeout:                   timeout,

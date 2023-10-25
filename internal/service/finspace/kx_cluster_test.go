@@ -278,6 +278,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 	codePath := "test-fixtures/code.zip"
+	updatedCodePath := "test-fixtures/updated_code.zip"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -290,7 +291,45 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxClusterConfig_code(rName, codePath),
+				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, codePath),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxCluster_codeUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+	codePath := "test-fixtures/code.zip"
+	updatedCodePath := "test-fixtures/updated_code.zip"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, codePath),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+				),
+			},
+			{
+				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, updatedCodePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 				),
@@ -456,6 +495,50 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 	})
 }
 
+func TestAccFinSpaceKxCluster_initializationScriptUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+	// Need to set these to the bucket/key you want to use
+	codePath := "test-fixtures/code.zip"
+	initScriptPath := "code/helloworld.q"
+	updatedInitScriptPath := "code/helloworld_updated.q"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_initScript(rName, codePath, initScriptPath),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+			{
+				Config: testAccKxClusterConfig_initScript(rName, codePath, updatedInitScriptPath),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -482,6 +565,46 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxCluster_CommandLineArgsUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_commandLineArgs1(rName, "arg1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value1"),
+				),
+			},
+			{
+				Config: testAccKxClusterConfig_commandLineArgs1(rName, "arg1", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value2"),
 				),
 			},
 		},
@@ -1022,7 +1145,7 @@ resource "aws_finspace_kx_cluster" "test" {
 `, rName))
 }
 
-func testAccKxClusterConfig_code(rName, path string) string {
+func testAccKxClusterConfig_code(rName, path string, path2 string, clusterPath string) string {
 	return acctest.ConfigCompose(
 		testAccKxClusterConfigBase(rName),
 		fmt.Sprintf(`
@@ -1098,6 +1221,12 @@ resource "aws_s3_object" "object" {
   source = %[2]q
 }
 
+resource "aws_s3_object" "updated_object" {
+	bucket = aws_s3_bucket.test.id
+	key    = %[3]q
+	source = %[3]q
+  }
+
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
   environment_id       = aws_finspace_kx_environment.test.id
@@ -1119,10 +1248,10 @@ resource "aws_finspace_kx_cluster" "test" {
 
   code {
     s3_bucket = aws_s3_bucket.test.id
-    s3_key    = aws_s3_object.object.key
+    s3_key    = %[4]q
   }
 }
-`, rName, path))
+`, rName, path, path2, clusterPath))
 }
 
 func testAccKxClusterConfig_multiAZ(rName string) string {
