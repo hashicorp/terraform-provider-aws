@@ -93,7 +93,7 @@ func ResourceConnectAttachment() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"GRE"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"GRE", "NO_ENCAP"}, false),
 						},
 					},
 				},
