@@ -173,7 +173,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 	})
 }
 
-func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) {
+func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_domain_configuration.test"
@@ -344,7 +344,7 @@ resource "aws_iot_domain_configuration" "test" {
 `, rName, domain, securityPolicy, allowAuthorizerOverride))
 }
 
-func testAccDomainConfigurationConfig_awsManaged(rName string) string {
+func testAccDomainConfigurationConfig_awsManaged(rName string) string { // nosemgrep:ci.aws-in-func-name
 	return fmt.Sprintf(`
 resource "aws_iot_domain_configuration" "test" {
   name = %[1]q
