@@ -904,7 +904,6 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
-				log.Printf("[DEBUG] we got here")
 				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
 
 				for i := range launchTemplate {
