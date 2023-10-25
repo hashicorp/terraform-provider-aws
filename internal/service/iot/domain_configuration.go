@@ -21,6 +21,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_domain_configuration", name="Domain Configuration")
@@ -96,8 +97,8 @@ func ResourceDomainConfiguration() *schema.Resource {
 				Default:      iot.DomainConfigurationStatusEnabled,
 				ValidateFunc: validation.StringInSlice(iot.DomainConfigurationStatus_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tls_config": {
 				Type:     schema.TypeList,
 				Optional: true,
