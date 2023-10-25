@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Int64FromFramework converts a Framework Int64 value to an int64 pointer.
 // A null Int64 is converted to a nil int64 pointer.
-func Int64FromFramework(ctx context.Context, v types.Int64) *int64 {
+func Int64FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int64 {
 	var output *int64
 
 	panicOnError(Expand(ctx, v, &output))
@@ -47,4 +48,12 @@ func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
 	}
 
 	return aws.Int64(i)
+}
+
+func Int32ToFramework(ctx context.Context, v *int32) types.Int64 {
+	var output types.Int64
+
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
 }

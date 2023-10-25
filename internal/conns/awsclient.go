@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -14,6 +15,7 @@ import (
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
+	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,9 +39,18 @@ type AWSClient struct {
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
 	lock                      sync.Mutex
+	logger                    baselogging.Logger
 	s3UsePathStyle            bool                                      // From provider configuration.
 	s3UsEast1RegionalEndpoint endpoints_sdkv1.S3UsEast1RegionalEndpoint // From provider configuration.
 	stsRegion                 string                                    // From provider configuration.
+}
+
+// CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
+func (client *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
+	if client.awsConfig == nil {
+		return nil
+	}
+	return client.awsConfig.Credentials
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -72,6 +83,11 @@ func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
 // HTTPClient returns the http.Client used for AWS API calls.
 func (client *AWSClient) HTTPClient() *http.Client {
 	return client.httpClient
+}
+
+// RegisterLogger places the configured logger into Context so it can be used via `tflog`.
+func (client *AWSClient) RegisterLogger(ctx context.Context) context.Context {
+	return baselogging.RegisterLogger(ctx, client.logger)
 }
 
 // APIGatewayInvokeURL returns the Amazon API Gateway (REST APIs) invoke URL for the configured AWS Region.
@@ -142,6 +158,13 @@ func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]a
 	switch servicePackageName {
 	case names.S3:
 		m["s3_use_path_style"] = client.s3UsePathStyle
+		// AWS SDK for Go v2 does not use the AWS_S3_US_EAST_1_REGIONAL_ENDPOINT environment variable during configuration.
+		// For compatibility, read it now.
+		if client.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
+			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err == nil {
+				client.s3UsEast1RegionalEndpoint = v
+			}
+		}
 		m["s3_us_east_1_regional_endpoint"] = client.s3UsEast1RegionalEndpoint
 	case names.STS:
 		m["sts_region"] = client.stsRegion

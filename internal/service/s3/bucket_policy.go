@@ -79,6 +79,14 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.IsNewResource() {
 		d.SetId(bucket)
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findBucketPolicy(ctx, conn, d.Id())
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Policy (%s) create: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
@@ -97,7 +105,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket (%s) Policy: %s", d.Id(), err)
+		return diag.Errorf("reading S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
 	policy, err = verify.PolicyToSet(d.Get("policy").(string), policy)
@@ -125,7 +133,15 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) Policy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketPolicy(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Policy (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

@@ -7,13 +7,16 @@ import (
 	"context"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
@@ -34,7 +37,7 @@ func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*s3_sdk
 // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) CustomizeConn(ctx context.Context, conn *s3_sdkv1.S3) (*s3_sdkv1.S3, error) {
 	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		if tfawserr.ErrMessageContains(r.Error, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+		if tfawserr_sdkv1.ErrMessageContains(r.Error, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
 			r.Retryable = aws_sdkv1.Bool(true)
 		}
 	})
@@ -55,5 +58,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			o.Region = "aws-global"
 		}
 		o.UsePathStyle = config["s3_use_path_style"].(bool)
+
+		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+				return aws_sdkv2.TrueTernary
+			}
+			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+		}))
 	}), nil
 }

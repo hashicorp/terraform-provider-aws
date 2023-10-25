@@ -155,6 +155,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bedrock:
+  - 'internal/service/bedrock/**/*'
+  - 'website/**/bedrock_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -361,6 +364,7 @@ service/ec2:
   - 'website/**/ec2_capacity_*'
   - 'website/**/ec2_fleet*'
   - 'website/**/ec2_host*'
+  - 'website/**/ec2_image_*'
   - 'website/**/ec2_instance_*'
   - 'website/**/ec2_public_ipv4_pool*'
   - 'website/**/ec2_serial_*'
@@ -680,7 +684,7 @@ service/marketplacemetering:
   - 'website/**/marketplacemetering_*'
 service/mediaconnect:
   - 'internal/service/mediaconnect/**/*'
-  - 'website/**/media_connect_*'
+  - 'website/**/mediaconnect_*'
 service/mediaconvert:
   - 'internal/service/mediaconvert/**/*'
   - 'website/**/media_convert_*'

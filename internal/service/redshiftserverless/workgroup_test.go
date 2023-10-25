@@ -101,7 +101,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -130,6 +130,14 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 						"parameter_key":   "enable_case_sensitive_identifier",
 						"parameter_value": "false",
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "require_ssl",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "use_fips_ssl",
+						"parameter_value": "false",
+					}),
 				),
 			},
 			{
@@ -141,7 +149,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -168,6 +176,14 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_case_sensitive_identifier",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "require_ssl",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "use_fips_ssl",
 						"parameter_value": "false",
 					}),
 				),
@@ -351,6 +367,14 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
   config_parameter {
     parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "false"
+  }
+  config_parameter {
+    parameter_key   = "require_ssl"
+    parameter_value = "false"
+  }
+  config_parameter {
+    parameter_key   = "use_fips_ssl"
     parameter_value = "false"
   }
 }

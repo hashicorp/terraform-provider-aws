@@ -103,7 +103,8 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				Config: testAccBucketConfig_emptyString,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile("^terraform-")),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -116,7 +117,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
+func TestAccS3Bucket_Basic_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 
@@ -127,16 +128,18 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_generatedName,
+				Config: testAccBucketConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -153,17 +156,18 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_namePrefix,
+				Config: testAccBucketConfig_namePrefix("tf-test-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile("^tf-test-")),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "bucket", "tf-test-"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", "tf-test-"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -2638,6 +2642,25 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 	}
 }
 
+func testAccCheckBucketAddObjectWithMetadata(ctx context.Context, n string, key string, metadata map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+
+		_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
+			Bucket:   aws.String(rs.Primary.ID),
+			Key:      aws.String(key),
+			Metadata: aws.StringMap(metadata),
+		})
+
+		if err != nil {
+			return fmt.Errorf("PutObject error: %s", err)
+		}
+
+		return nil
+	}
+}
+
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -4345,16 +4368,16 @@ resource "aws_s3_bucket" "test" {
 }
 `
 
-const testAccBucketConfig_namePrefix = `
+func testAccBucketConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket_prefix = "tf-test-"
+  bucket_prefix = %[1]q
 }
-`
+`, namePrefix)
+}
 
-const testAccBucketConfig_generatedName = `
-resource "aws_s3_bucket" "test" {
-  bucket_prefix = "tf-test-"
-}
+const testAccBucketConfig_nameGenerated = `
+resource "aws_s3_bucket" "test" {}
 `
 
 func testAccBucketConfig_duplicate(region, bucketName string) string {

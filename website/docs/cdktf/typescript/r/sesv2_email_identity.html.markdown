@@ -134,7 +134,7 @@ The following arguments are optional:
 
 ### dkim_signing_attributes
 
-* `domainSigningPrivateKey` - (Optional) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature. The private key must use 1024 or 2048-bit RSA encryption, and must be encoded using base64 encoding.
+* `domainSigningPrivateKey` - (Optional, Sensitive) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature. The private key must use 1024 or 2048-bit RSA encryption, and must be encoded using base64 encoding.
 
 -> **NOTE:** You have to delete the first and last lines ('-----BEGIN PRIVATE KEY-----' and '-----END PRIVATE KEY-----', respectively) of the generated private key. Additionally, you have to remove the line breaks in the generated private key. The resulting value is a string of characters with no spaces or line breaks.
 
@@ -179,4 +179,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity using th
 % terraform import aws_sesv2_email_identity.example example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-381db80c2776ced6bf25c331d0c8e8a3b91881ee3fbba5c91329e150a22b406d -->
+<!-- cache-key: cdktf-0.18.0 input-28f1021df6e78a4dec2007cff0687b2638fab5bbf6cfb378ee2edfc2129cd0b1 -->

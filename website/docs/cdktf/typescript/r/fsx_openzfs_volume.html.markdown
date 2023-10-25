@@ -45,6 +45,7 @@ This resource supports the following arguments:
 * `originSnapshot` - (Optional) The ARN of the source snapshot to create the volume from.
 * `copyTagsToSnapshots` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
 * `dataCompressionType` - (Optional) Method used to compress the data on the volume. Valid values are `none` or `zstd`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `deleteVolumeOptions` - (Optional) Whether to delete all child volumes and snapshots. Valid values: `deleteChildVolumesAndSnapshots`. This configuration must be applied separately before attempting to delete the resource to have the desired behavior..
 * `nfsExports` - (Optional) NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `readOnly` - (Optional) specifies whether the volume is read-only. Default is false.
 * `recordSizeKib` - (Optional) The record size of an OpenZFS volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.
@@ -106,4 +107,4 @@ Using `terraform import`, import FSx Volumes using the `id`. For example:
 % terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-99e65d4227843541c0e2139386dc8bbc538daddd6e90884db644ec76f3528a06 -->
+<!-- cache-key: cdktf-0.18.0 input-1179f10edd690fc9c59b2fb74afd95265abe59dfbd0b69ee2df86ce1400318a0 -->

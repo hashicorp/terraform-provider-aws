@@ -65,7 +65,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
-				ElementType: types.StringType,
+				ElementType: fwtypes.ARNType,
 				Required:    true,
 			},
 			"id": framework.IDAttribute(),
@@ -132,7 +132,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	if !data.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, data.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
 	}
 
 	output, err := conn.CreateJobQueueWithContext(ctx, &input)
@@ -229,13 +229,13 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !state.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, state.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, state.SchedulingPolicyARN)
 		update = true
 	}
 
 	if !plan.SchedulingPolicyARN.Equal(state.SchedulingPolicyARN) {
 		if !plan.SchedulingPolicyARN.IsNull() || !plan.SchedulingPolicyARN.IsUnknown() {
-			input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, plan.SchedulingPolicyARN)
+			input.SchedulingPolicyArn = flex.StringFromFramework(ctx, plan.SchedulingPolicyARN)
 
 			update = true
 		} else {
@@ -365,6 +365,7 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 
 	return diags
 }
+
 func expandComputeEnvironmentOrder(order []string) (envs []*batch.ComputeEnvironmentOrder) {
 	for i, env := range order {
 		envs = append(envs, &batch.ComputeEnvironmentOrder{

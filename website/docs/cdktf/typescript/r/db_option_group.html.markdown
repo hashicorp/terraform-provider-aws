@@ -79,35 +79,35 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
-* `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
+* `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
-* `optionGroupDescription` - (Optional) The description of the option group. Defaults to "Managed by Terraform".
+* `optionGroupDescription` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
-* `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `option` - (Optional) List of options to apply.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Option blocks support the following:
+`option` blocks support the following:
 
-* `optionName` - (Required) The Name of the Option (e.g., MEMCACHED).
-* `optionSettings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
-* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
-* `dbSecurityGroupMemberships` - (Optional) A list of DB Security Groups for which the option is enabled.
-* `vpcSecurityGroupMemberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
+* `optionName` - (Required) Name of the option (e.g., MEMCACHED).
+* `optionSettings` - (Optional) List of option settings to apply.
+* `port` - (Optional) Port number when connecting to the option (e.g., 11211). Leaving out or removing `port` from your configuration does not remove or clear a port from the option in AWS. AWS may assign a default port. Not including `port` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any port changes.
+* `version` - (Optional) Version of the option (e.g., 13.1.0.0). Leaving out or removing `version` from your configuration does not remove or clear a version from the option in AWS. AWS may assign a default version. Not including `version` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any version changes.
+* `dbSecurityGroupMemberships` - (Optional) List of DB Security Groups for which the option is enabled.
+* `vpcSecurityGroupMemberships` - (Optional) List of VPC Security Groups for which the option is enabled.
 
-Option Settings blocks support the following:
+`optionSettings` blocks support the following:
 
-* `name` - (Optional) The Name of the setting.
-* `value` - (Optional) The Value of the setting.
+* `name` - (Optional) Name of the setting.
+* `value` - (Optional) Value of the setting.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The db option group name.
-* `arn` - The ARN of the db option group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - DB option group name.
+* `arn` - ARN of the DB option group.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -117,7 +117,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB option groups using the `name`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -131,10 +131,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import DB Option groups using the `name`. For example:
+Using `terraform import`, import DB option groups using the `name`. For example:
 
 ```console
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2653f20f77c2a6f4979ce5eb3a9c3c9dc22aa167c5aac46782e52fe6e4b9e98 -->
+<!-- cache-key: cdktf-0.18.0 input-62a59e358d472f90cc96a8b627a9411731fa9d779529aff440ffd21e6234b0b2 -->

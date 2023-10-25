@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package s3control
 
 import (
@@ -19,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
 		Name: "aws_s3_access_point",
 		F:    sweepAccessPoints,
@@ -74,12 +71,12 @@ func sweepAccessPoints(region string) error {
 		for _, v := range page.AccessPointList {
 			r := resourceAccessPoint()
 			d := r.Data(nil)
-			if id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn)); err != nil {
+			id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn))
+			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
-			} else {
-				d.SetId(id)
 			}
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -188,6 +185,10 @@ func sweepObjectLambdaAccessPoints(region string) error {
 
 func sweepStorageLensConfigurations(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping S3 Storage Lens Configuration sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

@@ -193,6 +193,7 @@ The following arguments are optional:
 * `encodingType` - (Optional) Type of encoding to use. Value values are `rleDictionary`, `plain`, and `plainDictionary`. Default is `rleDictionary`.
 * `encryptionMode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `sseS3` and `sseKms`. Default is `sseS3`.
 * `externalTableDefinition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
+* `glueCatalogGeneration` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
 * `ignoreHeaderRows` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
 * `includeOpForFullLoad` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `maxFileSize` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. Default is `1048576` (1 GB).
@@ -243,4 +244,4 @@ Using `terraform import`, import endpoints using the `endpointId`. For example:
 % terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dd77662537518abba52d580d2bc275446163c357ee26f394da488a830ef24ce5 -->
+<!-- cache-key: cdktf-0.18.0 input-f2f58fcc9fc681dd781d8464906ff4fb32f765c99816410fe344b23200d8740a -->

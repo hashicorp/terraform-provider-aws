@@ -107,13 +107,10 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("staging", distributionConfig.Staging)
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
-	if !aws.BoolValue(distributionConfig.Staging) {
-		// Only set this for production distributions. While staging distributions do
-		// return a value when their domain name is referenced in a continuous deployment
-		// policy, this attribute is optional (not optional/computed) to correctly
-		// trigger changes when a policy is removed from a production distribution.
-		d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
-	}
+	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
+	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
+	// API call for staging distributions.
+	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))

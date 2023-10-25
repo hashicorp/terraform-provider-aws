@@ -25,6 +25,7 @@ const (
 	AutoScalingPlans             = "autoscalingplans"
 	Backup                       = "backup"
 	Batch                        = "batch"
+	Bedrock                      = "bedrock"
 	Budgets                      = "budgets"
 	CE                           = "ce"
 	CUR                          = "cur"

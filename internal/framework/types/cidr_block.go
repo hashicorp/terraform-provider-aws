@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = CIDRBlockType
+	_ xattr.TypeWithValidate   = CIDRBlockType
+	_ basetypes.StringValuable = CIDRBlock{}
 )
 
 func (t cidrBlockType) TerraformType(_ context.Context) tftypes.Type {
@@ -88,8 +89,7 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
+			fmt.Sprintf("%sExpected String value, received %T with value: %v", ProviderErrorDetailPrefix, in, in),
 		)
 		return diags
 	}
@@ -104,8 +104,7 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to string: %s", err),
+			fmt.Sprintf("%sCannot convert value to string: %s", ProviderErrorDetailPrefix, err),
 		)
 		return diags
 	}

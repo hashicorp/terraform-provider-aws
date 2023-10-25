@@ -242,21 +242,13 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
-	var name string
-	fifoTopic := d.Get("fifo_topic").(bool)
-	if fifoTopic {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOTopicNameSuffix)
-	} else {
-		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	}
-
+	name := topicName(d)
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -329,13 +321,11 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	arn, err := arn.Parse(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -356,13 +346,11 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
 		err = putTopicAttributes(ctx, conn, d.Id(), attributes)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -396,15 +384,7 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 	if diff.Id() == "" {
 		// Create.
-
-		var name string
-
-		if fifoTopic {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), FIFOTopicNameSuffix)
-		} else {
-			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
-		}
-
+		name := topicName(diff)
 		var re *regexp.Regexp
 
 		if fifoTopic {
@@ -461,4 +441,12 @@ func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, val
 	}
 
 	return nil
+}
+
+func topicName(d interface{ Get(string) any }) string {
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	if d.Get("fifo_topic").(bool) {
+		optFns = append(optFns, create.WithSuffix(FIFOTopicNameSuffix))
+	}
+	return create.NewNameGenerator(optFns...).Generate()
 }

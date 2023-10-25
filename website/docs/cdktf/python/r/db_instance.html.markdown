@@ -100,7 +100,7 @@ class MyConvertedCode(TerraformStack):
             engine="custom-oracle-ee",
             engine_version="19.c.ee.002",
             license_model="bring-your-own-license",
-            preferred_instance_classes=["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"
+            preferred_instance_classes=["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"
             ],
             storage_type="gp3"
         )
@@ -169,8 +169,8 @@ class MyConvertedCode(TerraformStack):
         )
         custom_sqlserver = DataAwsRdsOrderableDbInstance(self, "custom-sqlserver",
             engine="custom-sqlserver-se",
-            engine_version="115.00.4249.2.cev1",
-            preferred_instance_classes=["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"
+            engine_version="15.00.4249.2.v1",
+            preferred_instance_classes=["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"
             ],
             storage_type="gp3"
         )
@@ -187,6 +187,7 @@ class MyConvertedCode(TerraformStack):
             kms_key_id=Token.as_string(by_id.arn),
             multi_az=False,
             password="avoid-plaintext-passwords",
+            storage_encrypted=True,
             timeouts=[{
                 "create": "3h",
                 "delete": "3h",
@@ -329,7 +330,7 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
@@ -573,4 +574,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5348e10ce76b94ea3543c947af183b44e90cbde641979d6904c70aafffcd18ce -->
+<!-- cache-key: cdktf-0.18.0 input-41ba58380667dcc7a38f78843e428cd160e498bf83324d0e4cd8d4778fd00d9b -->

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package s3
 
 import (
@@ -26,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
 		Name: "aws_s3_object",
 		F:    sweepObjects,
@@ -73,9 +70,23 @@ func sweepObjects(region string) error {
 	sweepables := make([]sweep.Sweepable, 0)
 
 	for _, bucket := range buckets {
+		bucket := aws.ToString(bucket.Name)
+		objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucket, "")
+
+		var objectLockEnabled bool
+
+		if !tfresource.NotFound(err) {
+			if err != nil {
+				log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
+				continue
+			}
+			objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
+		}
+
 		sweepables = append(sweepables, objectSweeper{
-			conn: conn,
-			name: aws.ToString(bucket.Name),
+			conn:   conn,
+			bucket: bucket,
+			locked: objectLockEnabled,
 		})
 	}
 
@@ -89,15 +100,16 @@ func sweepObjects(region string) error {
 }
 
 type objectSweeper struct {
-	conn *s3.Client
-	name string
+	conn   *s3.Client
+	bucket string
+	locked bool
 }
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := deleteAllObjectVersions(ctx, os.conn, os.name, "", true, true)
+	_, err := deleteAllObjectVersions(ctx, os.conn, os.bucket, "", os.locked, true)
 	if err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.name, err)
+		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
 	return nil
 }
@@ -174,6 +186,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tf-object-test",
 		"tf-test",
 		"tftest.applicationversion",
+		"terraform-remote-s3-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
