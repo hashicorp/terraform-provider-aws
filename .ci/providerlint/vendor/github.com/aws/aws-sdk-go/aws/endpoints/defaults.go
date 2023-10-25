@@ -18209,6 +18209,9 @@ var awsPartition = partition{
 					Region: "il-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "me-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{
@@ -34390,8 +34393,20 @@ var awscnPartition = partition{
 					Region: "cn-north-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "cn-north-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "states.cn-north-1.api.amazonwebservices.com.cn",
+				},
+				endpointKey{
 					Region: "cn-northwest-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "cn-northwest-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "states.cn-northwest-1.api.amazonwebservices.com.cn",
+				},
 			},
 		},
 		"storagegateway": service{
@@ -37315,18 +37330,42 @@ var awsusgovPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region:  "us-gov-east-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "glue.us-gov-east-1.api.aws",
+				},
+				endpointKey{
+					Region:  "us-gov-east-1",
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "glue-fips.us-gov-east-1.amazonaws.com",
+				},
+				endpointKey{
+					Region:  "us-gov-east-1",
+					Variant: fipsVariant | dualStackVariant,
+				}: endpoint{
+					Hostname: "glue-fips.us-gov-east-1.api.aws",
 				},
 				endpointKey{
 					Region: "us-gov-west-1",
 				}: endpoint{},
 				endpointKey{
 					Region:  "us-gov-west-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "glue.us-gov-west-1.api.aws",
+				},
+				endpointKey{
+					Region:  "us-gov-west-1",
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "glue-fips.us-gov-west-1.amazonaws.com",
+				},
+				endpointKey{
+					Region:  "us-gov-west-1",
+					Variant: fipsVariant | dualStackVariant,
+				}: endpoint{
+					Hostname: "glue-fips.us-gov-west-1.api.aws",
 				},
 			},
 		},
