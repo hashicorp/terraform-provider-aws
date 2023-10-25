@@ -18,31 +18,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIoTDomainConfiguration_basic(t *testing.T) {
+func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_domain_configuration.test"
+
+	acctest.SkipIfEnvVarNotSet(t, "IOT_DOMAIN_CONFIGURATION_TEST_AWS_MANAGED")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigurationConfig_basic(rName),
+				Config: testAccDomainConfigurationConfig_awsManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "AWS_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "DATA"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "tls_config.0.security_policy"),
 					resource.TestCheckResourceAttr(resourceName, "validation_certificate_arn", ""),
 				),
 			},
@@ -91,7 +94,7 @@ func testAccCheckDomainConfigurationDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccDomainConfigurationConfig_basic(rName string) string {
+func testAccDomainConfigurationConfig_awsManaged(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_domain_configuration" "test" {
   name = %[1]q
