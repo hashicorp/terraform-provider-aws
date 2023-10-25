@@ -77,6 +77,12 @@ func RegisterSweepers() {
 		F:    sweepTopicRuleDestinations,
 	})
 
+	resource.AddTestSweepers("aws_iot_authorizer", &resource.Sweeper{
+		Name:         "aws_iot_authorizer",
+		F:            sweepAuthorizers,
+		Dependencies: []string{"aws_iot_domain_configuration"},
+	})
+
 	resource.AddTestSweepers("aws_iot_domain_configuration", &resource.Sweeper{
 		Name: "aws_iot_domain_configuration",
 		F:    sweepDomainConfigurations,
@@ -570,6 +576,51 @@ func sweepTopicRuleDestinations(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Topic Rule Destinations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepAuthorizers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListAuthorizersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListAuthorizersPagesWithContext(ctx, input, func(page *iot.ListAuthorizersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Authorizers {
+			r := ResourceAuthorizer()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.AuthorizerName))
+			d.Set("status", iot.AuthorizerStatusActive)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Authorizer sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Authorizers (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Authorizers (%s): %w", region, err)
 	}
 
 	return nil
