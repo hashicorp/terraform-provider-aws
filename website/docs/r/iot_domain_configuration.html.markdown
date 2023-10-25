@@ -53,7 +53,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the created domain configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT domain configurations using the name. For example:
