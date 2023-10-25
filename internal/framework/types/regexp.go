@@ -25,6 +25,7 @@ var (
 
 var (
 	_ xattr.TypeWithValidate   = RegexpType
+	_ basetypes.StringTypable  = RegexpType
 	_ basetypes.StringValuable = Regexp{}
 )
 

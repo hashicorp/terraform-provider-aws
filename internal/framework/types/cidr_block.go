@@ -25,6 +25,7 @@ const (
 
 var (
 	_ xattr.TypeWithValidate   = CIDRBlockType
+	_ basetypes.StringTypable  = CIDRBlockType
 	_ basetypes.StringValuable = CIDRBlock{}
 )
 

@@ -25,6 +25,7 @@ const (
 
 var (
 	_ xattr.TypeWithValidate   = DurationType
+	_ basetypes.StringTypable  = DurationType
 	_ basetypes.StringValuable = Duration{}
 )
 
