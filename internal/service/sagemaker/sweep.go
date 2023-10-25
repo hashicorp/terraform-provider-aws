@@ -974,7 +974,7 @@ func sweepProjects(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			if err := sdk.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout); err != nil {
+			if err := sdk.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout); err != nil { // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 			}
 		}
