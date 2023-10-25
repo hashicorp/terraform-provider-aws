@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func RegisterSweepers() {
@@ -953,19 +954,29 @@ func sweepProjects(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.SageMakerConn(ctx)
-
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := &sagemaker.ListProjectsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListProjectsPagesWithContext(ctx, &sagemaker.ListProjectsInput{}, func(page *sagemaker.ListProjectsOutput, lastPage bool) bool {
-		for _, project := range page.ProjectSummaryList {
-			name := aws.StringValue(project.ProjectName)
+	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *sagemaker.ListProjectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ProjectSummaryList {
+			name := aws.StringValue(v.ProjectName)
+
+			if status := aws.StringValue(v.ProjectStatus); status == sagemaker.ProjectStatusDeleteCompleted {
+				log.Printf("[INFO] Skipping SageMaker Project %s: ProjectStatus=%s", name, status)
+				continue
+			}
 
 			r := ResourceProject()
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			if err := sdk.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout); err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+			}
 		}
 
 		return !lastPage
@@ -975,12 +986,9 @@ func sweepProjects(region string) error {
 		log.Printf("[WARN] Skipping SageMaker Project sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Projects: %w", err))
-	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping SageMaker Projects: %w", err))
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing SageMaker Projects (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
