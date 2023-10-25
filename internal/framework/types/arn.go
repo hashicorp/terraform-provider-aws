@@ -25,6 +25,7 @@ const (
 
 var (
 	_ xattr.TypeWithValidate   = ARNType
+	_ basetypes.StringTypable  = ARNType
 	_ basetypes.StringValuable = ARN{}
 )
 
