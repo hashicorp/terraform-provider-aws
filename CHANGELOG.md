@@ -1,5 +1,9 @@
 ## 5.23.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_iot_domain_configuration` ([#24765](https://github.com/hashicorp/terraform-provider-aws/issues/24765))
+
 ENHANCEMENTS:
 
 * data-source/aws_imagebuilder_image: Add `image_scanning_configuration` attribute ([#34049](https://github.com/hashicorp/terraform-provider-aws/issues/34049))
