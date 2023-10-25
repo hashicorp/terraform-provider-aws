@@ -2004,8 +2004,8 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("disable_api_stop"); ok {
-		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.(bool)); err != nil {
+	if v := d.GetRawConfig().GetAttr("disable_api_stop"); v.IsKnown() && !v.IsNull() {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.True()); err != nil {
 			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
 		}
 	}
