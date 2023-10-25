@@ -58,7 +58,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"domain_type": {

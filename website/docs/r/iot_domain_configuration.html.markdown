@@ -27,7 +27,7 @@ resource "aws_iot_domain_configuration" "iot" {
 ## Argument Reference
 
 * `authorizer_config` - (Optional) An object that specifies the authorization service for a domain. See below.
-* `domain_name` - (Required) Fully-qualified domain name.
+* `domain_name` - (Optional) Fully-qualified domain name.
 * `name` - (Required) The name of the domain configuration. This value must be unique to a region.
 * `server_certificate_arns` - (Optional) The ARNs of the certificates that IoT passes to the device during the TLS handshake. Currently you can specify only one certificate ARN. This value is not required for Amazon Web Services-managed domains. When using a custom `domain_name`, the cert must include it.
 * `service_type` - (Optional) The type of service delivered by the endpoint. Note: Amazon Web Services IoT Core currently supports only the `DATA` service type.
