@@ -535,12 +535,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = client.DeleteCluster(ctx, input)
 
-		if errs.IsA[*types.ResourceInUseException](err) {
-			return retry.RetryableError(err)
-		}
-
 		if err != nil {
-			return retry.NonRetryableError(err)
+			if errs.IsA[*types.ResourceInUseException](err) {
+				return retry.RetryableError(err)
+			} else {
+				return retry.NonRetryableError(err)
+			}
 		}
 
 		return nil
@@ -550,19 +550,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = client.DeleteCluster(ctx, input)
 	}
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
-	}
-
-	// Sometimes the EKS API returns the ResourceNotFound error in this form:
-	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if errs.IsA[*types.ClientException](err) {
-		if strings.Contains(err.Error(), "No cluster found for name:") {
+	if err != nil {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil
 		}
-	}
 
-	if err != nil {
+		// Sometimes the EKS API returns the ResourceNotFound error in this form:
+		// ClientException: No cluster found for name: tf-acc-test-0o1f8
+		if errs.IsA[*types.ClientException](err) {
+			if strings.Contains(err.Error(), "No cluster found for name:") {
+				return nil
+			}
+		}
+
 		return diag.Errorf("deleting EKS Cluster (%s): %s", d.Id(), err)
 	}
 
@@ -586,24 +586,24 @@ func FindClusterByName(ctx context.Context, client *eks.Client, name string) (*t
 
 	output, err := client.DescribeCluster(ctx, input)
 
-	// Sometimes the EKS API returns the ResourceNotFound error in this form:
-	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if errs.IsA[*types.ClientException](err) {
-		if strings.Contains(err.Error(), "No cluster found for name:") {
+	if err != nil {
+		// Sometimes the EKS API returns the ResourceNotFound error in this form:
+		// ClientException: No cluster found for name: tf-acc-test-0o1f8
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
-	}
+		if errs.IsA[*types.ClientException](err) {
+			if strings.Contains(err.Error(), "No cluster found for name:") {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+		}
 
-	if err != nil {
 		return nil, err
 	}
 
@@ -638,22 +638,6 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, client *eks.Client, name
 	}
 
 	return output.Update, nil
-}
-
-func statusCluster(ctx context.Context, client *eks.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindClusterByName(ctx, client, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
 }
 
 func statusClusterUpdate(ctx context.Context, client *eks.Client, name, id string) retry.StateRefreshFunc {
@@ -806,13 +790,13 @@ func expandVPCConfigRequestForCreate(tfList []interface{}) *types.VpcConfigReque
 	securityGroupIds := flex.ExpandStringSet(m["security_group_ids"].(*schema.Set))
 	securityGroupIdsSlice := make([]string, len(securityGroupIds))
 	for i, id := range securityGroupIds {
-		securityGroupIdsSlice[i] = *id
+		securityGroupIdsSlice[i] = aws.ToString(id)
 	}
 
 	subnetIds := flex.ExpandStringSet(m["subnet_ids"].(*schema.Set))
 	subnetIdsSlice := make([]string, len(subnetIds))
 	for i, id := range subnetIds {
-		subnetIdsSlice[i] = *id
+		subnetIdsSlice[i] = aws.ToString(id)
 	}
 
 	vpcConfigRequest := &types.VpcConfigRequest{
@@ -826,7 +810,7 @@ func expandVPCConfigRequestForCreate(tfList []interface{}) *types.VpcConfigReque
 		publicAccessCidrs := flex.ExpandStringSet(v)
 		vpcConfigRequest.PublicAccessCidrs = make([]string, len(publicAccessCidrs))
 		for i, cidr := range publicAccessCidrs {
-			vpcConfigRequest.PublicAccessCidrs[i] = *cidr
+			vpcConfigRequest.PublicAccessCidrs[i] = aws.ToString(cidr)
 		}
 	}
 
@@ -849,7 +833,7 @@ func expandVPCConfigRequestForUpdate(tfList []interface{}) *types.VpcConfigReque
 		publicAccessCidrs := flex.ExpandStringSet(v)
 		vpcConfigRequest.PublicAccessCidrs = make([]string, len(publicAccessCidrs))
 		for i, cidr := range publicAccessCidrs {
-			vpcConfigRequest.PublicAccessCidrs[i] = *cidr
+			vpcConfigRequest.PublicAccessCidrs[i] = aws.ToString(cidr)
 		}
 	}
 

@@ -285,7 +285,7 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 			fargateProfileSelector.Labels = make(map[string]string)
 			for key, value := range flex.ExpandStringMap(v) {
 				val := value
-				fargateProfileSelector.Labels[key] = *val
+				fargateProfileSelector.Labels[key] = aws.ToString(val)
 			}
 		}
 
