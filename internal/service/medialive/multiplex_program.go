@@ -406,7 +406,7 @@ func (mps multiplexProgramSettingsObject) expand(ctx context.Context) (*mltypes.
 	data := mps[0]
 
 	l := &mltypes.MultiplexProgramSettings{
-		ProgramNumber:            int32(data.ProgramNumber.ValueInt64()),
+		ProgramNumber:            aws.Int32(int32(data.ProgramNumber.ValueInt64())),
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(data.PreferredChannelPipeline.ValueString()),
 	}
 
@@ -464,7 +464,7 @@ func (vs videoSettingsObject) expand(_ context.Context) *mltypes.MultiplexVideoS
 	}
 
 	return &mltypes.MultiplexVideoSettings{
-		ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
+		ConstantBitrate: aws.Int32(int32(vs[0].ConstantBitrate.ValueInt64())),
 	}
 }
 
@@ -476,9 +476,9 @@ func (sms statmuxSettingsObject) expand(_ context.Context) *mltypes.MultiplexSta
 	}
 
 	return &mltypes.MultiplexStatmuxVideoSettings{
-		MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-		MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-		Priority:       int32(sms[0].Priority.ValueInt64()),
+		MaximumBitrate: aws.Int32(int32(sms[0].MaximumBitrate.ValueInt64())),
+		MinimumBitrate: aws.Int32(int32(sms[0].MinimumBitrate.ValueInt64())),
+		Priority:       aws.Int32(int32(sms[0].Priority.ValueInt64())),
 	}
 }
 
@@ -515,7 +515,7 @@ func flattenMultiplexProgramSettings(ctx context.Context, mps *mltypes.Multiplex
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["program_number"] = types.Int64Value(int64(mps.ProgramNumber))
+	attrs["program_number"] = types.Int64Value(int64(aws.ToInt32(mps.ProgramNumber)))
 	attrs["preferred_channel_pipeline"] = flex.StringValueToFrameworkLegacy(ctx, mps.PreferredChannelPipeline)
 	attrs["service_descriptor"] = flattenServiceDescriptor(ctx, mps.ServiceDescriptor)
 	attrs["video_settings"] = flattenVideoSettings(ctx, mps.VideoSettings)
@@ -549,9 +549,9 @@ func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVide
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["minimum_bitrate"] = types.Int64Value(int64(mps.MinimumBitrate))
-	attrs["maximum_bitrate"] = types.Int64Value(int64(mps.MaximumBitrate))
-	attrs["priority"] = types.Int64Value(int64(mps.Priority))
+	attrs["minimum_bitrate"] = types.Int64Value(int64(aws.ToInt32(mps.MinimumBitrate)))
+	attrs["maximum_bitrate"] = types.Int64Value(int64(aws.ToInt32(mps.MaximumBitrate)))
+	attrs["priority"] = types.Int64Value(int64(aws.ToInt32(mps.Priority)))
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 
@@ -566,7 +566,7 @@ func flattenVideoSettings(ctx context.Context, mps *mltypes.MultiplexVideoSettin
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["constant_bitrate"] = types.Int64Value(int64(mps.ConstantBitrate))
+	attrs["constant_bitrate"] = types.Int64Value(int64(aws.ToInt32(mps.ConstantBitrate)))
 	attrs["statmux_settings"] = flattenStatMuxSettings(ctx, mps.StatmuxSettings)
 
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)
