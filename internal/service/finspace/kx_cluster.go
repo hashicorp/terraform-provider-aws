@@ -558,6 +558,7 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
+		in.Code = expandCode(d.Get("code").([]interface{}))
 		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
 		update = true
 	}

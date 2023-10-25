@@ -579,6 +579,7 @@ func TestAccFinSpaceKxCluster_CommandLineArgsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	codePath := "test-fixtures/code.zip"
 	resourceName := "aws_finspace_kx_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -592,7 +593,7 @@ func TestAccFinSpaceKxCluster_CommandLineArgsUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxClusterConfig_commandLineArgs1(rName, "arg1", "value1"),
+				Config: testAccKxClusterConfig_commandLineArgs1Update(rName, "arg1", "value1", codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
@@ -600,7 +601,7 @@ func TestAccFinSpaceKxCluster_CommandLineArgsUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKxClusterConfig_commandLineArgs1(rName, "arg1", "value2"),
+				Config: testAccKxClusterConfig_commandLineArgs1Update(rName, "arg1", "value2", codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
@@ -913,6 +914,113 @@ resource "aws_finspace_kx_cluster" "test" {
 `, rName, arg1, val1))
 }
 
+func testAccKxClusterConfig_commandLineArgs1Update(rName, arg1, val1 string, codePath string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_iam_policy_document" "bucket_policy" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectTagging"
+    ]
+
+    resources = [
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+  policy = data.aws_iam_policy_document.bucket_policy.json
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.id
+  key    = %[4]q
+  source = %[4]q
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  type                 = "HDB"
+  release_label        = "1.0"
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+
+  code {
+    s3_bucket = aws_s3_bucket.test.id
+    s3_key    = %[4]q
+  }
+
+  command_line_arguments = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, arg1, val1, codePath))
+}
+
 func testAccKxClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccKxClusterConfigBase(rName),
@@ -1222,10 +1330,10 @@ resource "aws_s3_object" "object" {
 }
 
 resource "aws_s3_object" "updated_object" {
-	bucket = aws_s3_bucket.test.id
-	key    = %[3]q
-	source = %[3]q
-  }
+  bucket = aws_s3_bucket.test.id
+  key    = %[3]q
+  source = %[3]q
+}
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
