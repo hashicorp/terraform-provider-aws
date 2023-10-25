@@ -321,7 +321,7 @@ func expandAuthorizerConfig(tfMap map[string]interface{}) *iot.AuthorizerConfig 
 	return apiObject
 }
 
-func expandTlsConfig(tfMap map[string]interface{}) *iot.TlsConfig {
+func expandTlsConfig(tfMap map[string]interface{}) *iot.TlsConfig { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -353,7 +353,7 @@ func flattenAuthorizerConfig(apiObject *iot.AuthorizerConfig) map[string]interfa
 	return tfMap
 }
 
-func flattenTlsConfig(apiObject *iot.TlsConfig) map[string]interface{} {
+func flattenTlsConfig(apiObject *iot.TlsConfig) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
