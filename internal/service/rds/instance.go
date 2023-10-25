@@ -1904,7 +1904,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			if d.Get("deletion_protection").(bool) {
 				input := &rds_sdkv2.ModifyDBInstanceInput{
-					ApplyImmediately:     true,
+					ApplyImmediately:     aws.Bool(true),
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 					DeletionProtection:   aws.Bool(false),
 				}
@@ -1915,7 +1915,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
 				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
-				SkipFinalSnapshot:    true,
+				SkipFinalSnapshot:    aws.Bool(true),
 			}
 			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
 				func() (any, error) {
@@ -1954,12 +1954,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				o, _ := d.GetChange("identifier")
 				oldID = o.(string)
 			}
+
+			applyImmediately := d.Get("apply_immediately").(bool)
 			input := &rds_sdkv2.ModifyDBInstanceInput{
-				ApplyImmediately:     d.Get("apply_immediately").(bool),
+				ApplyImmediately:     aws.Bool(applyImmediately),
 				DBInstanceIdentifier: aws.String(oldID),
 			}
 
-			if !input.ApplyImmediately {
+			if !applyImmediately {
 				log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
 			}
 
@@ -1967,7 +1969,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
-				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
 				// for the source
