@@ -706,10 +706,10 @@ func (ac *analyticsConfiguration) expand(ctx context.Context) *cognitoidentitypr
 		return nil
 	}
 	result := &cognitoidentityprovider.AnalyticsConfigurationType{
-		ApplicationArn: flex.ARNStringFromFramework(ctx, ac.ApplicationARN),
+		ApplicationArn: flex.StringFromFramework(ctx, ac.ApplicationARN),
 		ApplicationId:  flex.StringFromFramework(ctx, ac.ApplicationID),
 		ExternalId:     flex.StringFromFramework(ctx, ac.ExternalID),
-		RoleArn:        flex.ARNStringFromFramework(ctx, ac.RoleARN),
+		RoleArn:        flex.StringFromFramework(ctx, ac.RoleARN),
 		UserDataShared: flex.BoolFromFramework(ctx, ac.UserDataShared),
 	}
 

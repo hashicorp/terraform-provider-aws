@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = CIDRBlockType
+	_ xattr.TypeWithValidate   = CIDRBlockType
+	_ basetypes.StringValuable = CIDRBlock{}
 )
 
 func (t cidrBlockType) TerraformType(_ context.Context) tftypes.Type {
