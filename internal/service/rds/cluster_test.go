@@ -1134,6 +1134,39 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBCluster
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+	resourceName2 := "aws_rds_cluster.clone"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName2, "copy_tags_to_snapshot", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4601,6 +4634,34 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot   = true
 }
 `, n, f)
+}
+
+func testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier    = "tf-aurora-cluster-test-%d"
+  engine                = "aurora-mysql"
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = true
+  skip_final_snapshot   = true
+}
+
+resource "aws_rds_cluster" "clone" {
+  cluster_identifier    = "tf-aurora-cluster-clone-%d"
+  engine                = "aurora-mysql"
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = %t
+  skip_final_snapshot   = true
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    use_latest_restorable_time = true
+  }
+}
+`, n, n, f)
 }
 
 func testAccClusterConfig_auroraStorageType(rName, storageType string) string {
