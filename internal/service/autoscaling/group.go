@@ -398,6 +398,7 @@ func ResourceGroup() *schema.Resource {
 									"override": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_requirements": {
@@ -869,6 +870,7 @@ func ResourceGroup() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
 			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.override"),
 		),
 	}
 }
@@ -891,10 +893,28 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 				}
 			}
 
-			if baseAttribute == "mixed_instances_policy" {
+			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
 				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+
+			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
+				log.Printf("[DEBUG] we got here")
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+
+				for i := range launchTemplate {
+					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
+
+					if diff.HasChange(key) {
+						launchTemplateSpecification := launchTemplate[i].(map[string]interface{})["launch_template_specification"].([]interface{})[0].(map[string]interface{})
+						launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+					}
+				}
 
 				if err := diff.SetNew(baseAttribute, ba); err != nil {
 					return err
