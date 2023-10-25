@@ -89,6 +89,19 @@ func ResourceDomainConfiguration() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tls_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_policy": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"validation_certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -125,7 +138,9 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.ServiceType = aws.String(v.(string))
 	}
 
-	// TODO tls_config
+	if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TlsConfig = expandTlsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
 
 	if v, ok := d.GetOk("validation_certificate_arn"); ok {
 		input.ValidationCertificateArn = aws.String(v.(string))
@@ -166,6 +181,13 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	// TODO server_certificate_arns
 	// TODO service_type
 	d.Set("status", output.DomainConfigurationStatus)
+	if output.TlsConfig != nil {
+		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
+			return diag.Errorf("setting tls_config: %s", err)
+		}
+	} else {
+		d.Set("tls_config", nil)
+	}
 	// TODO validation_certificate_arn
 
 	return nil
@@ -175,7 +197,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChange("authorizer_config") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName: aws.String(d.Id()),
 		}
@@ -183,6 +205,18 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 		if d.HasChange("authorizer_config") {
 			if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				input.RemoveAuthorizerConfig = aws.Bool(true)
+			}
+		}
+
+		if d.HasChange("status") {
+			input.DomainConfigurationStatus = aws.String(d.Get("status").(string))
+		}
+
+		if d.HasChange("tls_config") {
+			if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.TlsConfig = expandTlsConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -265,4 +299,32 @@ func expandAuthorizerConfig(tfMap map[string]interface{}) *iot.AuthorizerConfig 
 	}
 
 	return apiObject
+}
+
+func expandTlsConfig(tfMap map[string]interface{}) *iot.TlsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &iot.TlsConfig{}
+
+	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
+		apiObject.SecurityPolicy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenTlsConfig(apiObject *iot.TlsConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SecurityPolicy; v != nil {
+		tfMap["security_policy"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
