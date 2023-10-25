@@ -111,7 +111,7 @@ func TestAccIoTDomainConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfigurationConfig_tags2(rName, rootDomain, domain, "key2", "value2", "key2", "value2"),
+				Config: testAccDomainConfigurationConfig_tags2(rName, rootDomain, domain, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -145,13 +145,13 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "TLS12_1_2_2022_10", true),
+				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_3_2022_10", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "TLS12_1_2_2022_10"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_3_2022_10"),
 				),
 			},
 			{
