@@ -1,0 +1,154 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package types
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+)
+
+type StringEnumType[T enum.Valueser[T]] struct {
+	basetypes.StringType
+}
+
+type dummyValueser string
+
+func (dummyValueser) Values() []dummyValueser {
+	return nil
+}
+
+var (
+	_ xattr.TypeWithValidate   = StringEnumType[dummyValueser]{}
+	_ basetypes.StringTypable  = StringEnumType[dummyValueser]{}
+	_ basetypes.StringValuable = StringEnum[dummyValueser]{}
+)
+
+func (t StringEnumType[T]) Equal(o attr.Type) bool {
+	other, ok := o.(StringEnumType[T])
+
+	if !ok {
+		return false
+	}
+
+	return t.StringType.Equal(other.StringType)
+}
+
+func (t StringEnumType[T]) String() string {
+	var zero T
+	return fmt.Sprintf("StringEnumType[%T]", zero)
+}
+
+func (t StringEnumType[T]) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if in.IsNull() {
+		return StringEnumNull[T](), diags
+	}
+	if in.IsUnknown() {
+		return StringEnumUnknown[T](), diags
+	}
+
+	return StringEnum[T]{StringValue: in}, diags
+}
+
+func (t StringEnumType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	stringValue, ok := attrValue.(basetypes.StringValue)
+
+	if !ok {
+		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
+	}
+
+	stringValuable, diags := t.ValueFromString(ctx, stringValue)
+
+	if diags.HasError() {
+		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
+	}
+
+	return stringValuable, nil
+}
+
+func (t StringEnumType[T]) ValueType(context.Context) attr.Value {
+	return StringEnum[T]{}
+}
+
+func (t StringEnumType[T]) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if in.IsNull() || !in.IsKnown() {
+		return diags
+	}
+
+	var value string
+	err := in.As(&value)
+	if err != nil {
+		diags.AddAttributeError(
+			path,
+			"StringEnum Type Validation Error",
+			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Cannot convert value to string: %s", err),
+		)
+		return diags
+	}
+
+	request := validator.StringRequest{
+		ConfigValue: types.StringValue(value),
+		Path:        path,
+	}
+	response := validator.StringResponse{}
+	stringvalidator.OneOf(enum.Values[T]()...).ValidateString(ctx, request, &response)
+	diags.Append(response.Diagnostics...)
+
+	return diags
+}
+
+func StringEnumNull[T enum.Valueser[T]]() StringEnum[T] {
+	return StringEnum[T]{StringValue: basetypes.NewStringNull()}
+}
+
+func StringEnumUnknown[T enum.Valueser[T]]() StringEnum[T] {
+	return StringEnum[T]{StringValue: basetypes.NewStringUnknown()}
+}
+
+func StringEnumValue[T enum.Valueser[T]](value T) StringEnum[T] {
+	return StringEnum[T]{StringValue: basetypes.NewStringValue(string(value))}
+}
+
+type StringEnum[T enum.Valueser[T]] struct {
+	basetypes.StringValue
+}
+
+func (v StringEnum[T]) Equal(o attr.Value) bool {
+	other, ok := o.(StringEnum[T])
+
+	if !ok {
+		return false
+	}
+
+	return v.StringValue.Equal(other.StringValue)
+}
+
+func (v StringEnum[T]) Type(_ context.Context) attr.Type {
+	return StringEnumType[T]{}
+}
+
+func (v StringEnum[T]) ValueEnum() T {
+	return T(v.ValueString())
+}
