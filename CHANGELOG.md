@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_config_config_rule: Add `evaluation_mode` attribute ([#34033](https://github.com/hashicorp/terraform-provider-aws/issues/34033))
 * resource/aws_elasticache_replication_group: Add `ip_discovery` and `network_type` arguments ([#34019](https://github.com/hashicorp/terraform-provider-aws/issues/34019))
 * resource/aws_imagebuilder_image: Add `image_scanning_configuration` configuration block ([#34049](https://github.com/hashicorp/terraform-provider-aws/issues/34049))
+* resource/aws_kms_key: Add configurable timeouts ([#34112](https://github.com/hashicorp/terraform-provider-aws/issues/34112))
 * resource/aws_lambda_function: Add `vpc_config.ipv6_allowed_for_dual_stack` argument ([#34045](https://github.com/hashicorp/terraform-provider-aws/issues/34045))
 * resource/aws_lb: Add `dns_record_client_routing_policy` attribute to configure Availability Zonal DNS affinity on Network Load Balancer (NLB) ([#33992](https://github.com/hashicorp/terraform-provider-aws/issues/33992))
 * resource/aws_lb_target_group: Add `target_health_state` configuration block ([#34070](https://github.com/hashicorp/terraform-provider-aws/issues/34070))
