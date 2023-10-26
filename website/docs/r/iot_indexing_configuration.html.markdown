@@ -21,7 +21,7 @@ resource "aws_iot_indexing_configuration" "example" {
     named_shadow_indexing_mode       = "ON"
     
     filter {
-      named_shadow_names = [ "thing1shadow" ]
+      named_shadow_names = ["thing1shadow"]
     }
 
     custom_field {
