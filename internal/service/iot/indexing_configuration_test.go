@@ -130,8 +130,8 @@ resource "aws_iot_indexing_configuration" "test" {
     device_defender_indexing_mode    = "VIOLATIONS"
     named_shadow_indexing_mode       = "ON"
 
-	filter {
-      named_shadow_names = [ "thing1shadow" ]
+    filter {
+      named_shadow_names = ["thing1shadow"]
     }
 
     custom_field {
