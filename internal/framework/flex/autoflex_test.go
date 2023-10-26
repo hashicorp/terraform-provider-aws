@@ -90,10 +90,6 @@ type TestFlexTF11 struct {
 }
 
 type TestFlexTF12 struct {
-	Field1 fwtypes.ListNestedObjectValueOf[TestFlexTF13] `tfsdk:"field1"`
-}
-
-type TestFlexTF13 struct {
 	Field1 types.Map `tfsdk:"field1"`
 }
 
@@ -175,10 +171,6 @@ type TestFlexAWS13 struct {
 }
 
 type TestFlexAWS14 struct {
-	Field1 *TestFlexAWS15
-}
-
-type TestFlexAWS15 struct {
 	Field1 map[string]string
 }
 
@@ -548,20 +540,16 @@ func TestGenericExpand(t *testing.T) {
 			TestName: "nested map",
 			Source: &TestFlexTF11{
 				Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
-					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF13{
-						Field1: types.MapValueMust(types.StringType, map[string]attr.Value{
-							"x": types.StringValue("y"),
-						}),
+					Field1: types.MapValueMust(types.StringType, map[string]attr.Value{
+						"x": types.StringValue("y"),
 					}),
 				}),
 			},
 			Target: &TestFlexAWS13{},
 			WantTarget: &TestFlexAWS13{
 				Field1: &TestFlexAWS14{
-					Field1: &TestFlexAWS15{
-						Field1: map[string]string{
-							"x": "y",
-						},
+					Field1: map[string]string{
+						"x": "y",
 					},
 				},
 			},
