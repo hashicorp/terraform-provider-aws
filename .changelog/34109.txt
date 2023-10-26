@@ -1,3 +1,11 @@
 ```release-note:enhancement
 resource/aws_networkmanager_connect_attachment: Add support for tunnel-less connect `NO_ENCAP` in `protocol` attribute
 ```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: Add `subnet_arn` attribute to support tunnel-less Connect attachments
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: Mark `inside_cidr_blocks` argument as optional to support tunnel-less Connect attachments
+```
