@@ -5,7 +5,6 @@ package iot
 
 import (
 	"context"
-	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -189,7 +188,6 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		input.ThingIndexingConfiguration = expandThingIndexingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating IoT Indexing Configuration: %s", input)
 	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
 
 	if err != nil {
@@ -265,6 +263,10 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 		tfMap["device_defender_indexing_mode"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Filter; v != nil {
+		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
+	}
+
 	if v := apiObject.ManagedFields; v != nil {
 		tfMap["managed_field"] = flattenFields(v)
 	}
@@ -279,10 +281,6 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 
 	if v := apiObject.ThingIndexingMode; v != nil {
 		tfMap["thing_indexing_mode"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	return tfMap
@@ -375,6 +373,10 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 		apiObject.DeviceDefenderIndexingMode = aws.String(v)
 	}
 
+	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["managed_field"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.ManagedFields = expandFields(v.List())
 	}
@@ -389,10 +391,6 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 
 	if v, ok := tfMap["thing_indexing_mode"].(string); ok && v != "" {
 		apiObject.ThingIndexingMode = aws.String(v)
-	}
-
-	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return apiObject
