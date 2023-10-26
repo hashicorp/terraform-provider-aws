@@ -1,5 +1,9 @@
 ## 5.23.0 (Unreleased)
 
+NOTES:
+
+* provider: This release includes an update to the AWS SDK for Go v2 with breaking type changes to several services: `finspace`, `kafka`, `medialive`, `rds`, `s3control`, `timestreamwrite`, and `xray`. These changes primarily affect how arguments with default values are serialized for outbound requests, changing scalar types to pointers. See [this AWS SDK for Go V2 issue](https://github.com/aws/aws-sdk-go-v2/issues/2162) for additional context. The corresponding provider changes should make this breakfix transparent to users, but as with any breaking change there is the potential for missed edge cases. If errors are observed in the impacted resources, please link to this dependency update pull request in the bug report. ([#34096](https://github.com/hashicorp/terraform-provider-aws/issues/34096))
+
 FEATURES:
 
 * **New Resource:** `aws_iot_domain_configuration` ([#24765](https://github.com/hashicorp/terraform-provider-aws/issues/24765))
@@ -24,6 +28,7 @@ BUG FIXES:
 * resource/aws_dms_s3_endpoint: Don't send the default value of `false` for `add_trailing_padding_character`, maintaining compatibility with older ([pre-3.4.7](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html#CHAP_ReleaseNotes.DMS347)) DMS engine versions ([#34048](https://github.com/hashicorp/terraform-provider-aws/issues/34048))
 * resource/aws_ecs_task_definition: Add `0` as a valid value for `volume.efs_volume_configuration.transit_encryption_port`, preventing unexpected drift ([#34020](https://github.com/hashicorp/terraform-provider-aws/issues/34020))
 * resource/aws_identitystore_group: Fix updating `description` attribute when it is changed ([#34037](https://github.com/hashicorp/terraform-provider-aws/issues/34037))
+* resource/aws_iot_indexing_configuration: Add `thing_indexing_configuration.filter` attribute, resolving `InvalidRequestException: NamedShadowNames Filter must not be empty for enabling NamedShadowIndexingMode` errors ([#26859](https://github.com/hashicorp/terraform-provider-aws/issues/26859))
 * resource/aws_storagegateway_gateway: Support the value `0` (representing Sunday) for `maintenance_start_time.day_of_week` ([#34015](https://github.com/hashicorp/terraform-provider-aws/issues/34015))
 * resource/aws_verifiedaccess_group: Fix `InvalidParameterValue: Policy Document cannot be provided when Policy Enabled is false or missing` errors when updating `policy_document` ([#34054](https://github.com/hashicorp/terraform-provider-aws/issues/34054))
 
