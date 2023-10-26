@@ -382,7 +382,7 @@ func instanceStateUpgradeV0(_ context.Context, rawState map[string]any, meta any
 		return nil, nil
 	}
 
-	rawState["delete_automated_backups"] = true
+	rawState["delete_automated_backups"] = false
 
 	return rawState, nil
 }
@@ -488,7 +488,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 			"delete_automated_backups": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
