@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -42,7 +43,7 @@ func TestStringEnumTypeValueFromTerraform(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			val, err := fwtypes.StringEnumType[awstypes.AclPermission]{}.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.StringEnumType[awstypes.AclPermission]().ValueFromTerraform(ctx, test.val)
 
 			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
@@ -89,7 +90,7 @@ func TestStringEnumTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.StringEnumType[awstypes.AclPermission]{}.Validate(ctx, test.val, path.Root("test"))
+			diags := fwtypes.StringEnumType[awstypes.AclPermission]().(xattr.TypeWithValidate).Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
