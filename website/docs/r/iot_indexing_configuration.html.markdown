@@ -19,7 +19,7 @@ resource "aws_iot_indexing_configuration" "example" {
     thing_connectivity_indexing_mode = "STATUS"
     device_defender_indexing_mode    = "VIOLATIONS"
     named_shadow_indexing_mode       = "ON"
-    
+
     filter {
       named_shadow_names = ["thing1shadow"]
     }
