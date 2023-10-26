@@ -798,6 +798,45 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_buildBatchConfigDelete(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "true"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", "10"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "480"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_buildBatchConfigDelete(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckNoResourceAttr(resourceName, "build_batch_config.%"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildProject_Source_gitCloneDepth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var project codebuild.Project
@@ -3419,6 +3458,52 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, combineArtifacts, computeTypesAllowed, maximumBuildsAllowed, timeoutInMins))
+}
+
+func testAccProjectConfig_buildBatchConfigDelete(rName string, withBuildBatchConfig bool) string {
+
+	template := `
+resource "aws_codebuild_project" "test" {
+	name         = %[1]q
+	service_role = aws_iam_role.test.arn
+
+	artifacts {
+	type = "NO_ARTIFACTS"
+	}
+
+	environment {
+	compute_type = "BUILD_GENERAL1_SMALL"
+	image        = "2"
+	type         = "LINUX_CONTAINER"
+	}
+
+	source {
+	location = "https://github.com/hashicorp/packer.git"
+	type     = "GITHUB"
+	}
+
+	%[2]s
+}
+	`
+
+	buildBatchConfig := `
+build_batch_config {
+	combine_artifacts = true
+
+	restrictions {
+		compute_types_allowed  = []
+		maximum_builds_allowed = 10
+	}
+
+	service_role    = aws_iam_role.test.arn
+	timeout_in_mins = 480
+}
+	`
+
+	if withBuildBatchConfig {
+		return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(template, rName, buildBatchConfig))
+	}
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(template, rName, ""))
 }
 
 func testAccProjectConfig_s3Logs(rName, status, location string, encryptionDisabled bool) string {
