@@ -3,36 +3,7 @@
 
 package lexv2models_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/lexv2models/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"fmt"
 	"testing"
@@ -42,93 +13,89 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	lextypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-
-// TestIntentAutoExpand tests autoflex expand for the specific intent data
-// structures. As such, this is not meant to be a comprehensive test of autoflex
-// generally, but a test to make sure the complex intent data structures work
-// with autoflex now and in the future.
 func TestIntentAutoExpand(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	testString := "b72d06fd-2b78-5fe2-a6a3-e06e5efde347"
-	//testString2 := "a47c2004-f58b-5982-880a-f68c80f6307c"
+	testString2 := "a47c2004-f58b-5982-880a-f68c80f6307c"
 
-	ssmlMessage := tflexv2models.SSMLMessage{
+	ssmlMessageTF := tflexv2models.SSMLMessage{
 		Value: types.StringValue(testString),
 	}
-	plainTextMessage := tflexv2models.PlainTextMessage{
+	plainTextMessageTF := tflexv2models.PlainTextMessage{
 		Value: types.StringValue(testString),
 	}
-	button := tflexv2models.Button{
+	buttonTF := tflexv2models.Button{
 		Text:  types.StringValue(testString),
 		Value: types.StringValue(testString),
 	}
-	buttons := []tflexv2models.Button{
-		button,
+	buttonsTF := []tflexv2models.Button{
+		buttonTF,
 	}
-	imageResponseCard := tflexv2models.ImageResponseCard{
+	imageResponseCardTF := tflexv2models.ImageResponseCard{
 		Title:    types.StringValue(testString),
-		Button:   fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Button](ctx, buttons),
+		Button:   fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Button](ctx, buttonsTF),
 		ImageURL: types.StringValue(testString),
 		Subtitle: types.StringValue(testString),
 	}
-	customPayload := tflexv2models.CustomPayload{
+	customPayloadTF := tflexv2models.CustomPayload{
 		Value: types.StringValue(testString),
 	}
-	message := tflexv2models.Message{
-		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &customPayload),
-		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtr(ctx, &imageResponseCard),
-		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &plainTextMessage),
-		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &ssmlMessage),
+	messageTF := tflexv2models.Message{
+		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &customPayloadTF),
+		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtr(ctx, &imageResponseCardTF),
+		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &plainTextMessageTF),
+		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &ssmlMessageTF),
 	}
-	messages := []tflexv2models.Message{
-		message,
+	messageAWS := lextypes.Message{
+		CustomPayload: &lextypes.CustomPayload{
+			Value: aws.String(testString),
+		},
+		ImageResponseCard: &lextypes.ImageResponseCard{
+			Title: aws.String(testString),
+			Buttons: []lextypes.Button{{
+				Text:  aws.String(testString),
+				Value: aws.String(testString),
+			}},
+			ImageUrl: aws.String(testString),
+			Subtitle: aws.String(testString),
+		},
+		PlainTextMessage: &lextypes.PlainTextMessage{
+			Value: aws.String(testString),
+		},
+		SsmlMessage: &lextypes.SSMLMessage{
+			Value: aws.String(testString),
+		},
 	}
-	messageGroup := tflexv2models.MessageGroup{
-		Message:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &message),
-		Variations: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messages),
+	messagesTF := []tflexv2models.Message{
+		messageTF,
 	}
-	responseSpecification := tflexv2models.ResponseSpecification{
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr[tflexv2models.MessageGroup](ctx, &messageGroup),
+	messageGroupTF := tflexv2models.MessageGroup{
+		Message:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageTF),
+		Variations: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messagesTF),
+	}
+	responseSpecificationTF := tflexv2models.ResponseSpecification{
+		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr[tflexv2models.MessageGroup](ctx, &messageGroupTF),
 		AllowInterrupt: types.BoolValue(true),
+	}
+	responseSpecificationAWS := lextypes.ResponseSpecification{
+		MessageGroups: []lextypes.MessageGroup{
+			{
+				Message: &messageAWS,
+				Variations: []lextypes.Message{
+					messageAWS,
+				},
+			},
+		},
+		AllowInterrupt: aws.Bool(true),
 	}
 	/*
 		slotValue := tflexv2models.SlotValue{
@@ -147,210 +114,272 @@ func TestIntentAutoExpand(t *testing.T) {
 			}),
 		}
 	*/
-	intentOverride := tflexv2models.IntentOverride{
+	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
 		//Slots: fwtypes.NewMapValueOf[tflexv2models.SlotValueOverride](ctx, &slotValueOverride),
 	}
-	dialogAction := tflexv2models.DialogAction{
-		Type:                types.StringValue(testString),
+	dialogActionTF := tflexv2models.DialogAction{
+		Type:                types.StringValue(string(lextypes.DialogActionTypeCloseIntent)),
 		SlotToElicit:        types.StringValue(testString),
 		SuppressNextMessage: types.BoolValue(true),
 	}
-	dialogState := tflexv2models.DialogState{
-		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogAction),
-		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverride),
-		/*SessionAttributes: types.MapValueMust(types.StringType, map[string]attr.Value{
+	dialogStateTF := tflexv2models.DialogState{
+		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogActionTF),
+		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverrideTF),
+		SessionAttributes: types.MapValueMust(types.StringType, map[string]attr.Value{
 			testString: types.StringValue(testString2),
-		}),*/
+		}),
 	}
-	condition := tflexv2models.Condition{
-		ExpressionString: types.StringValue(testString),
+	dialogStateAWS := lextypes.DialogState{
+		DialogAction: &lextypes.DialogAction{
+			Type:                lextypes.DialogActionTypeCloseIntent,
+			SlotToElicit:        aws.String(testString),
+			SuppressNextMessage: aws.Bool(true),
+		},
+		Intent: &lextypes.IntentOverride{
+			Name: aws.String(testString),
+		},
+		SessionAttributes: map[string]string{
+			testString: testString2,
+		},
 	}
-	defaultConditionalBranch := tflexv2models.DefaultConditionalBranch{
-		NextStep: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
+
+	//conditionTF := tflexv2models.Condition{
+	//	ExpressionString: types.StringValue(testString),
+	//}
+
+	defaultConditionalBranchTF := tflexv2models.DefaultConditionalBranch{
+		NextStep: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
 	}
-	conditionalBranch := tflexv2models.ConditionalBranch{
-		Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &condition),
-		Name:      types.StringValue(testString),
-		NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		Response:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
+
+	/*
+		conditionalBranchTF := tflexv2models.ConditionalBranch{
+			Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
+			Name:      types.StringValue(testString),
+			//NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		}
+	*/
+
+	//conditionalBranchesTF := []tflexv2models.ConditionalBranch{
+	//	conditionalBranchTF,
+	//}
+	conditionalSpecificationTF := tflexv2models.ConditionalSpecification{
+		Active: types.BoolValue(true),
+		/*
+			ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.ConditionalBranch{
+				{
+					Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
+					Name: types.StringValue(testString),
+					NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+					Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+				},
+			}),
+		*/
+		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtr(ctx, &defaultConditionalBranchTF),
 	}
-	conditionalBranches := []tflexv2models.ConditionalBranch{
-		conditionalBranch,
-	}
-	conditionalSpecification := tflexv2models.ConditionalSpecification{
-		Active:            types.BoolValue(true),
-		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, conditionalBranches),
-		DefaultBranch:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &defaultConditionalBranch),
-	}
-	intentClosingSetting := tflexv2models.IntentClosingSetting{
-		Active:          types.BoolValue(true),
-		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
+	conditionalSpecificationAWS := lextypes.ConditionalSpecification{
+		Active: aws.Bool(true),
+		ConditionalBranches: []lextypes.ConditionalBranch{
+			{
+				Condition: &lextypes.Condition{
+					ExpressionString: aws.String(testString),
+				},
+				Name: aws.String(testString),
+				//NextStep: &dialogStateAWS,
+				Response: &responseSpecificationAWS,
+			},
+		},
+		DefaultBranch: &lextypes.DefaultConditionalBranch{
+			//NextStep: &dialogStateAWS,
+			Response: &responseSpecificationAWS,
+		},
 	}
 	/*
-		allowedInputTypes := tflexv2models.AllowedInputTypes{
-			AllowAudioInput: types.BoolValue(true),
-			AllowDTMFInput:  types.BoolValue(true),
+		intentClosingSettingTF := tflexv2models.IntentClosingSetting{
+			Active:          types.BoolValue(true),
+			ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
 		}
-		audioSpecification := tflexv2models.AudioSpecification{
-			EndTimeoutMs: types.Int64Value(1),
-			MaxLengthMs:  types.Int64Value(1),
-		}
-		dtmfSpecification := tflexv2models.DTMFSpecification{
-			DeletionCharacter: types.StringValue(testString),
-			EndCharacter:      types.StringValue(testString),
-			EndTimeoutMs:      types.Int64Value(1),
-			MaxLength:         types.Int64Value(1),
-		}
-		audioAndDTMFInputSpecification := tflexv2models.AudioAndDTMFInputSpecification{
-			StartTimeoutMs:     types.Int64Value(1),
-			AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecification),
-			DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecification),
+		intentClosingSettingAWS := lextypes.IntentClosingSetting{
+			Active:          aws.Bool(true),
+			ClosingResponse: &responseSpecificationAWS,
+			Conditional:     &conditionalSpecificationAWS,
 		}
 
-		textInputSpecification := tflexv2models.TextInputSpecification{
-			StartTimeoutMs: types.Int64Value(1),
+		/*
+				allowedInputTypes := tflexv2models.AllowedInputTypes{
+					AllowAudioInput: types.BoolValue(true),
+					AllowDTMFInput:  types.BoolValue(true),
+				}
+				audioSpecification := tflexv2models.AudioSpecification{
+					EndTimeoutMs: types.Int64Value(1),
+					MaxLengthMs:  types.Int64Value(1),
+				}
+				dtmfSpecification := tflexv2models.DTMFSpecification{
+					DeletionCharacter: types.StringValue(testString),
+					EndCharacter:      types.StringValue(testString),
+					EndTimeoutMs:      types.Int64Value(1),
+					MaxLength:         types.Int64Value(1),
+				}
+				audioAndDTMFInputSpecification := tflexv2models.AudioAndDTMFInputSpecification{
+					StartTimeoutMs:     types.Int64Value(1),
+					AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecification),
+					DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecification),
+				}
+
+				textInputSpecification := tflexv2models.TextInputSpecification{
+					StartTimeoutMs: types.Int64Value(1),
+				}
+				promptAttemptSpecification := tflexv2models.PromptAttemptSpecification{
+					AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypes),
+					AllowInterrupt:                 types.BoolValue(true),
+					AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecification),
+					TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecification),
+				}
+				promptAttemptSpecificationMap := map[string]tflexv2models.PromptAttemptSpecification{
+					testString: promptAttemptSpecification,
+				}
+			promptSpecificationTF := tflexv2models.PromptSpecification{
+				MaxRetries:               types.Int64Value(1),
+				MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+				AllowInterrupt:           types.BoolValue(true),
+				MessageSelectionStrategy: types.StringValue(testString),
+				//PromptAttemptsSpecification: promptAttemptSpecificationMap,
+			}
+	*/
+	/*
+		failureSuccessTimeoutTF := tflexv2models.FailureSuccessTimeout{
+			FailureConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			FailureResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			SuccessConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
 		}
-		promptAttemptSpecification := tflexv2models.PromptAttemptSpecification{
-			AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypes),
-			AllowInterrupt:                 types.BoolValue(true),
-			AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecification),
-			TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecification),
+
+		dialogCodeHookInvocationSettingTF := tflexv2models.DialogCodeHookInvocationSetting{
+			Active:                    types.BoolValue(true),
+			EnableCodeHookInvocation:  types.BoolValue(true),
+			InvocationLabel:           types.StringValue(testString),
+			PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
 		}
-		promptAttemptSpecificationMap := map[string]tflexv2models.PromptAttemptSpecification{
-			testString: promptAttemptSpecification,
-		}*/
-	promptSpecification := tflexv2models.PromptSpecification{
-		MaxRetries:               types.Int64Value(1),
-		MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroup),
-		AllowInterrupt:           types.BoolValue(true),
-		MessageSelectionStrategy: types.StringValue(testString),
-		//PromptAttemptsSpecification: promptAttemptSpecificationMap,
-	}
-	failureSuccessTimeout := tflexv2models.FailureSuccessTimeout{
-		FailureConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		FailureResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		SuccessConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-	}
-	dialogCodeHookInvocationSetting := tflexv2models.DialogCodeHookInvocationSetting{
-		Active:                    types.BoolValue(true),
-		EnableCodeHookInvocation:  types.BoolValue(true),
-		InvocationLabel:           types.StringValue(testString),
-		PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeout),
-	}
-	elicitationCodeHook := tflexv2models.ElicitationCodeHookInvocationSetting{
-		EnableCodeHookInvocation: types.BoolValue(true),
-		InvocationLabel:          types.StringValue(testString),
-	}
-	intentConfirmationSetting := tflexv2models.IntentConfirmationSetting{
-		PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptSpecification),
-		Active:                  types.BoolValue(true),
-		CodeHook:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSetting),
-		ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &elicitationCodeHook),
-		FailureConditional:      fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-		FailureResponse:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-	}
-	dialogCodeHookSettings := tflexv2models.DialogCodeHookSettings{
+	*/
+	/*
+		elicitationCodeHookTF := tflexv2models.ElicitationCodeHookInvocationSetting{
+			EnableCodeHookInvocation: types.BoolValue(true),
+			InvocationLabel:          types.StringValue(testString),
+		}
+		/*
+		intentConfirmationSettingTF := tflexv2models.IntentConfirmationSetting{
+			PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptSpecificationTF),
+			Active:                  types.BoolValue(true),
+			CodeHook:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
+			ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &elicitationCodeHookTF),
+			FailureConditional:      fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			FailureResponse:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		}
+	*/
+	dialogCodeHookSettingsTF := tflexv2models.DialogCodeHookSettings{
 		Enabled: types.BoolValue(true),
 	}
-	fulfillmentStartResponseSpecification := tflexv2models.FulfillmentStartResponseSpecification{
-		DelayInSeconds: types.Int64Value(1),
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroup),
-		AllowInterrupt: types.BoolValue(true),
-	}
-	fulfillmentUpdateResponseSpecification := tflexv2models.FulfillmentUpdateResponseSpecification{
-		FrequencyInSeconds: types.Int64Value(1),
-		MessageGroup:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroup),
-		AllowInterrupt:     types.BoolValue(true),
-	}
-	fulfillmentUpdatesSpecification := tflexv2models.FulfillmentUpdatesSpecification{
-		Active:           types.BoolValue(true),
-		StartResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentStartResponseSpecification),
-		TimeoutInSeconds: types.Int64Value(1),
-		UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdateResponseSpecification),
-	}
-	fulfillmentCodeHookSettings := tflexv2models.FulfillmentCodeHookSettings{
-		Enabled:                            types.BoolValue(true),
-		Active:                             types.BoolValue(true),
-		FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdatesSpecification),
-		PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeout),
-	}
-	initialResponseSetting := tflexv2models.InitialResponseSetting{
-		CodeHook:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSetting),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecification),
-		InitialResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecification),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogState),
-	}
-	inputContext := tflexv2models.InputContext{
+	/*
+		fulfillmentStartResponseSpecificationTF := tflexv2models.FulfillmentStartResponseSpecification{
+			DelayInSeconds: types.Int64Value(1),
+			MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+			AllowInterrupt: types.BoolValue(true),
+		}
+		fulfillmentUpdateResponseSpecificationTF := tflexv2models.FulfillmentUpdateResponseSpecification{
+			FrequencyInSeconds: types.Int64Value(1),
+			MessageGroup:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+			AllowInterrupt:     types.BoolValue(true),
+		}
+		fulfillmentUpdatesSpecificationTF := tflexv2models.FulfillmentUpdatesSpecification{
+			Active:           types.BoolValue(true),
+			StartResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentStartResponseSpecificationTF),
+			TimeoutInSeconds: types.Int64Value(1),
+			UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdateResponseSpecificationTF),
+		}
+
+		fulfillmentCodeHookSettingsTF := tflexv2models.FulfillmentCodeHookSettings{
+			Enabled:                            types.BoolValue(true),
+			Active:                             types.BoolValue(true),
+			FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdatesSpecificationTF),
+			PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
+		}
+		initialResponseSettingTF := tflexv2models.InitialResponseSetting{
+			CodeHook:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
+			Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+			InitialResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		}
+	*/
+	inputContextTF := tflexv2models.InputContext{
 		Name: types.StringValue(testString),
 	}
-	inputContexts := []tflexv2models.InputContext{
-		inputContext,
+	inputContextsTF := []tflexv2models.InputContext{
+		inputContextTF,
 	}
-	kendraConfiguration := tflexv2models.KendraConfiguration{
+	kendraConfigurationTF := tflexv2models.KendraConfiguration{
 		KendraIndex:              types.StringValue(testString),
 		QueryFilterString:        types.StringValue(testString),
 		QueryFilterStringEnabled: types.BoolValue(true),
 	}
-	outputContext := tflexv2models.OutputContext{
+	outputContextTF := tflexv2models.OutputContext{
 		Name:                types.StringValue(testString),
 		TimeToLiveInSeconds: types.Int64Value(1),
 		TurnsToLive:         types.Int64Value(1),
 	}
-	outputContexts := []tflexv2models.OutputContext{
-		outputContext,
+	outputContextsTF := []tflexv2models.OutputContext{
+		outputContextTF,
 	}
-	sampleUtterance := tflexv2models.SampleUtterance{
+	sampleUtteranceTF := tflexv2models.SampleUtterance{
 		Utterance: types.StringValue(testString),
 	}
-	sampleUtterances := []tflexv2models.SampleUtterance{
-		sampleUtterance,
+	sampleUtterancesTF := []tflexv2models.SampleUtterance{
+		sampleUtteranceTF,
 	}
-	slotPriority := tflexv2models.SlotPriority{
+	slotPriorityTF := tflexv2models.SlotPriority{
 		Priority: types.Int64Value(1),
 		SlotID:   types.StringValue(testString),
 	}
-	slotPriorities := []tflexv2models.SlotPriority{
-		slotPriority,
+	slotPrioritiesTF := []tflexv2models.SlotPriority{
+		slotPriorityTF,
 	}
-	intentResource := tflexv2models.ResourceIntentData{
-		BotID:                  types.StringValue(testString),
-		BotVersion:             types.StringValue(testString),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSetting),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSetting),
-		CreationDateTime:       fwtypes.TimestampType{},
-		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettings),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettings),
-		ID:                     types.StringValue(testString),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSetting),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContexts),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfiguration),
-		LastUpdatedDateTime:    fwtypes.TimestampType{},
-		LocaleID:               types.StringValue(testString),
-		Name:                   types.StringValue(testString),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContexts),
-		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterances),
-		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPriorities),
+	intentResourceTF := tflexv2models.ResourceIntentData{
+		BotID:      types.StringValue(testString),
+		BotVersion: types.StringValue(testString),
+		//ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
+		//ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
+		CreationDateTime: fwtypes.TimestampType{},
+		Description:      types.StringValue(testString),
+		DialogCodeHook:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
+		//FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
+		ID: types.StringValue(testString),
+		//InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
+		InputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
+		KendraConfiguration:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
+		LastUpdatedDateTime:   fwtypes.TimestampType{},
+		LocaleID:              types.StringValue(testString),
+		Name:                  types.StringValue(testString),
+		OutputContext:         fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		ParentIntentSignature: types.StringValue(testString),
+		SampleUtterance:       fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
 	}
-	fmt.Printf("intentResource %s\n", intentResource)
+	fmt.Printf("intentResourceTF %s\n", intentResourceTF)
 
 	testCases := []struct {
 		TestName   string
@@ -360,51 +389,34 @@ func TestIntentAutoExpand(t *testing.T) {
 		WantTarget any
 	}{
 		{
-			TestName: "message",
-			Source:   &message,
-			Target:   &lextypes.Message{},
-			WantTarget: &lextypes.Message{
-				CustomPayload: &lextypes.CustomPayload{
-					Value: aws.String(testString),
-				},
-				ImageResponseCard: &lextypes.ImageResponseCard{
-					Title: aws.String(testString),
-					Buttons: []lextypes.Button{{
-						Text:  aws.String(testString),
-						Value: aws.String(testString),
-					}},
-					ImageUrl: aws.String(testString),
-					Subtitle: aws.String(testString),
-				},
-				PlainTextMessage: &lextypes.PlainTextMessage{
-					Value: aws.String(testString),
-				},
-				SsmlMessage: &lextypes.SSMLMessage{
-					Value: aws.String(testString),
-				},
-			},
+			TestName:   "message",
+			Source:     &messageTF,
+			Target:     &lextypes.Message{},
+			WantTarget: &messageAWS,
 		},
 		{
-			TestName: "plainTextMessage",
-			Source:   &plainTextMessage,
-			Target:   &lextypes.PlainTextMessage{},
-			WantTarget: &lextypes.PlainTextMessage{
-				Value: aws.String(testString),
-			},
+			TestName:   "responseSpecification",
+			Source:     &responseSpecificationTF,
+			Target:     &lextypes.ResponseSpecification{},
+			WantTarget: &responseSpecificationAWS,
 		},
 		{
-			TestName: "button",
-			Source:   &button,
-			Target:   &lextypes.Button{},
-			WantTarget: &lextypes.Button{
-				Text:  aws.String(testString),
-				Value: aws.String(testString),
-			},
+			TestName:   "dialogState",
+			Source:     &dialogStateTF,
+			Target:     &lextypes.DialogState{},
+			WantTarget: &dialogStateAWS,
 		},
+		{
+			TestName:   "conditionalSpecification",
+			Source:     &conditionalSpecificationTF,
+			Target:     &lextypes.ConditionalSpecification{},
+			WantTarget: &conditionalSpecificationAWS,
+		},
+
 		/*
 			{
 				TestName: "complex Source and complex Target",
-				Source:   &intentResource,
+				Source:   &intentResourceTF,
 				Target:   &lexmodelsv2.CreateIntentInput{},
 				WantTarget: &lexmodelsv2.CreateIntentInput{
 					BotId: aws.String(testString),
@@ -420,6 +432,13 @@ func TestIntentAutoExpand(t *testing.T) {
 		lextypes.CustomPayload{},
 		lextypes.ImageResponseCard{},
 		lextypes.Message{},
+		lextypes.ResponseSpecification{},
+		lextypes.MessageGroup{},
+		lextypes.DialogAction{},
+		lextypes.DialogState{},
+		lextypes.IntentOverride{},
+		lextypes.ConditionalSpecification{},
+		lextypes.ConditionalBranch{},
 	)
 
 	for _, testCase := range testCases {

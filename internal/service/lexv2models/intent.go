@@ -1047,9 +1047,9 @@ type Condition struct {
 }
 
 type DialogState struct {
-	DialogAction fwtypes.ListNestedObjectValueOf[DialogAction]   `tfsdk:"dialog_action"`
-	Intent       fwtypes.ListNestedObjectValueOf[IntentOverride] `tfsdk:"intent"`
-	//SessionAttributes types.Map                                       `tfsdk:"session_attributes"`
+	DialogAction      fwtypes.ListNestedObjectValueOf[DialogAction]   `tfsdk:"dialog_action"`
+	Intent            fwtypes.ListNestedObjectValueOf[IntentOverride] `tfsdk:"intent"`
+	SessionAttributes types.Map                                       `tfsdk:"session_attributes"`
 }
 
 type DialogAction struct {
