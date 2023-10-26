@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -19,11 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
+type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
+	basetypes.StringTypable
+	AttributeDefault(T) defaults.String
+}
+
 type stringEnumType[T enum.Valueser[T]] struct {
 	basetypes.StringType
 }
 
-func StringEnumType[T enum.Valueser[T]]() basetypes.StringTypable {
+func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
 	return stringEnumType[T]{}
 }
 
@@ -121,6 +128,10 @@ func (t stringEnumType[T]) Validate(ctx context.Context, in tftypes.Value, path 
 	diags.Append(response.Diagnostics...)
 
 	return diags
+}
+
+func (t stringEnumType[T]) AttributeDefault(defaultVal T) defaults.String {
+	return stringdefault.StaticString(string(defaultVal))
 }
 
 func StringEnumNull[T enum.Valueser[T]]() StringEnum[T] {
