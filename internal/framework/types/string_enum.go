@@ -19,8 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
-type StringEnumType[T enum.Valueser[T]] struct {
+type stringEnumType[T enum.Valueser[T]] struct {
 	basetypes.StringType
+}
+
+func StringEnumType[T enum.Valueser[T]]() basetypes.StringTypable {
+	return stringEnumType[T]{}
 }
 
 type dummyValueser string
@@ -30,13 +34,13 @@ func (dummyValueser) Values() []dummyValueser {
 }
 
 var (
-	_ xattr.TypeWithValidate   = StringEnumType[dummyValueser]{}
-	_ basetypes.StringTypable  = StringEnumType[dummyValueser]{}
+	_ xattr.TypeWithValidate   = stringEnumType[dummyValueser]{}
+	_ basetypes.StringTypable  = stringEnumType[dummyValueser]{}
 	_ basetypes.StringValuable = StringEnum[dummyValueser]{}
 )
 
-func (t StringEnumType[T]) Equal(o attr.Type) bool {
-	other, ok := o.(StringEnumType[T])
+func (t stringEnumType[T]) Equal(o attr.Type) bool {
+	other, ok := o.(stringEnumType[T])
 
 	if !ok {
 		return false
@@ -45,12 +49,12 @@ func (t StringEnumType[T]) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-func (t StringEnumType[T]) String() string {
+func (t stringEnumType[T]) String() string {
 	var zero T
 	return fmt.Sprintf("StringEnumType[%T]", zero)
 }
 
-func (t StringEnumType[T]) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+func (t stringEnumType[T]) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if in.IsNull() {
@@ -63,7 +67,7 @@ func (t StringEnumType[T]) ValueFromString(_ context.Context, in types.String) (
 	return StringEnum[T]{StringValue: in}, diags
 }
 
-func (t StringEnumType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t stringEnumType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
@@ -85,11 +89,11 @@ func (t StringEnumType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Va
 	return stringValuable, nil
 }
 
-func (t StringEnumType[T]) ValueType(context.Context) attr.Value {
+func (t stringEnumType[T]) ValueType(context.Context) attr.Value {
 	return StringEnum[T]{}
 }
 
-func (t StringEnumType[T]) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
+func (t stringEnumType[T]) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if in.IsNull() || !in.IsKnown() {
@@ -145,8 +149,8 @@ func (v StringEnum[T]) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-func (v StringEnum[T]) Type(_ context.Context) attr.Type {
-	return StringEnumType[T]{}
+func (v StringEnum[T]) Type(context.Context) attr.Type {
+	return StringEnumType[T]()
 }
 
 func (v StringEnum[T]) ValueEnum() T {
