@@ -14,6 +14,7 @@ func Validate[T Valueser[T]]() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), false))
 }
 
+// TODO Move to internal/framework/validators or replace with custom types.
 func FrameworkValidate[T Valueser[T]]() validator.String {
 	return stringvalidator.OneOf(Values[T]()...)
 }
