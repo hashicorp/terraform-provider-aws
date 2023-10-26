@@ -1477,7 +1477,7 @@ resource "aws_glue_catalog_table" "test2" {
 }
 
 func testAccCatalogTableConfig_targetWithRegion(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(1), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
