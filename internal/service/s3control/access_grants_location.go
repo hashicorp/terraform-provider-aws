@@ -250,7 +250,7 @@ func (r *resourceAccessGrantsLocation) Delete(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Location (%s)", data.AccountID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Access Grants Location (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -262,8 +262,8 @@ func (r *resourceAccessGrantsLocation) ModifyPlan(ctx context.Context, request r
 
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {
 	input := &s3control.GetAccessGrantsLocationInput{
-		AccountId:              aws.String(accountID),
 		AccessGrantsLocationId: aws.String(locationID),
+		AccountId:              aws.String(accountID),
 	}
 
 	output, err := conn.GetAccessGrantsLocation(ctx, input)
