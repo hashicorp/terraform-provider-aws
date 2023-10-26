@@ -5,8 +5,8 @@ package iot
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -125,7 +125,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 64),
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens"),
 											),
 										},
 									},
