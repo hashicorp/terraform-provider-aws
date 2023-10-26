@@ -19,6 +19,7 @@ var (
 	ResourceObjectLambdaAccessPointPolicy = resourceObjectLambdaAccessPointPolicy
 	ResourceStorageLensConfiguration      = resourceStorageLensConfiguration
 
+	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
 	FindAccessGrantsInstance                               = findAccessGrantsInstance
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey

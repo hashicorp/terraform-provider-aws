@@ -26,6 +26,9 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 			// "tags":       testAccAccessGrantsLocation_tags,
 			"update": testAccAccessGrantsLocation_update,
 		},
+		"Grant": {
+			"basic": testAccAccessGrant_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

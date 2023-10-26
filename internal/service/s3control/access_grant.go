@@ -129,14 +129,14 @@ func (r *resourceAccessGrant) Schema(ctx context.Context, request resource.Schem
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"grantee_identifier": schema.StringAttribute{
-							Optional: true,
+							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"grantee_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.GranteeType](),
-							Optional:   true,
+							Required:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -188,6 +188,7 @@ func (r *resourceAccessGrant) Create(ctx context.Context, request resource.Creat
 	// Set values for unknowns.
 	data.AccessGrantARN = flex.StringToFramework(ctx, output.AccessGrantArn)
 	data.AccessGrantID = flex.StringToFramework(ctx, output.AccessGrantId)
+	data.GrantScope = flex.StringToFramework(ctx, output.GrantScope)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
