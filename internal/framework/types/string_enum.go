@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -21,17 +20,55 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
+type customStringTypeWithValidator struct {
+	basetypes.StringType
+	validator validator.String
+}
+
+func (t customStringTypeWithValidator) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if in.IsNull() || !in.IsKnown() {
+		return diags
+	}
+
+	var value string
+	err := in.As(&value)
+	if err != nil {
+		diags.AddAttributeError(
+			path,
+			"Invalid Terraform Value",
+			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
+				"This generally is an issue with the provider schema implementation. "+
+				"Please contact the provider developers.\n\n"+
+				"Path: "+path.String()+"\n"+
+				"Error: "+err.Error(),
+		)
+		return diags
+	}
+
+	request := validator.StringRequest{
+		ConfigValue: types.StringValue(value),
+		Path:        path,
+	}
+	response := validator.StringResponse{}
+	t.validator.ValidateString(ctx, request, &response)
+	diags.Append(response.Diagnostics...)
+
+	return diags
+}
+
 type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
 	basetypes.StringTypable
 	AttributeDefault(T) defaults.String
 }
 
 type stringEnumType[T enum.Valueser[T]] struct {
-	basetypes.StringType
+	customStringTypeWithValidator
 }
 
 func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
-	return stringEnumType[T]{}
+	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: enum.FrameworkValidate[T]()}}
 }
 
 type dummyValueser string
@@ -98,36 +135,6 @@ func (t stringEnumType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Va
 
 func (t stringEnumType[T]) ValueType(context.Context) attr.Value {
 	return StringEnum[T]{}
-}
-
-func (t stringEnumType[T]) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if in.IsNull() || !in.IsKnown() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"StringEnum Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	request := validator.StringRequest{
-		ConfigValue: types.StringValue(value),
-		Path:        path,
-	}
-	response := validator.StringResponse{}
-	stringvalidator.OneOf(enum.Values[T]()...).ValidateString(ctx, request, &response)
-	diags.Append(response.Diagnostics...)
-
-	return diags
 }
 
 func (t stringEnumType[T]) AttributeDefault(defaultVal T) defaults.String {
