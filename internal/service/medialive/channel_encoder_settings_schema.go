@@ -3199,7 +3199,7 @@ func expandAudioDescriptionsAudioNormalizationSettings(tfList []interface{}) *ty
 	if v, ok := m["algorithm_control"].(string); ok && v != "" {
 		out.AlgorithmControl = types.AudioNormalizationAlgorithmControl(v)
 	}
-	if v, ok := m["target_lkfs"].(float32); ok && v > 0 {
+	if v, ok := m["target_lkfs"].(float32); ok && v != 0.0 {
 		out.TargetLkfs = aws.Float64(float64(v))
 	}
 
@@ -3247,7 +3247,7 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AacSettings
-	if v, ok := m["bitrate"].(float64); ok && v > 0 {
+	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(v)
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
@@ -3265,7 +3265,7 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	if v, ok := m["raw_format"].(string); ok && v != "" {
 		out.RawFormat = types.AacRawFormat(v)
 	}
-	if v, ok := m["sample_rate"].(float64); ok && v > 0 {
+	if v, ok := m["sample_rate"].(float64); ok && v != 0.0 {
 		out.SampleRate = aws.Float64(v)
 	}
 	if v, ok := m["spec"].(string); ok && v != "" {
@@ -3286,7 +3286,7 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Ac3Settings
-	if v, ok := m["bitrate"].(float64); ok && v > 0 {
+	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(v)
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
@@ -3295,7 +3295,7 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *type
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.Ac3CodingMode(v)
 	}
-	if v, ok := m["dialnorm"].(int); ok && v > 0 {
+	if v, ok := m["dialnorm"].(int); ok && v != 0 {
 		out.Dialnorm = aws.Int32(int32(v))
 	}
 	if v, ok := m["drc_profile"].(string); ok && v != "" {
@@ -3319,13 +3319,13 @@ func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []interface{})
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Eac3AtmosSettings
-	if v, ok := m["bitrate"].(float32); ok && v > 0 {
+	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.Eac3AtmosCodingMode(v)
 	}
-	if v, ok := m["dialnorm"].(int); ok && v > 0 {
+	if v, ok := m["dialnorm"].(int); ok && v != 0 {
 		out.Dialnorm = aws.Int32(int32(v))
 	}
 	if v, ok := m["drc_line"].(string); ok && v != "" {
@@ -3334,10 +3334,10 @@ func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []interface{})
 	if v, ok := m["drc_rf"].(string); ok && v != "" {
 		out.DrcRf = types.Eac3AtmosDrcRf(v)
 	}
-	if v, ok := m["height_trim"].(float32); ok && v > 0 {
+	if v, ok := m["height_trim"].(float32); ok && v != 0.0 {
 		out.HeightTrim = aws.Float64(float64(v))
 	}
-	if v, ok := m["surround_trim"].(float32); ok && v > 0 {
+	if v, ok := m["surround_trim"].(float32); ok && v != 0.0 {
 		out.SurroundTrim = aws.Float64(float64(v))
 	}
 
@@ -3355,7 +3355,7 @@ func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *typ
 	if v, ok := m["attenuation_control"].(string); ok && v != "" {
 		out.AttenuationControl = types.Eac3AttenuationControl(v)
 	}
-	if v, ok := m["bitrate"].(float32); ok && v > 0 {
+	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
@@ -3367,7 +3367,7 @@ func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *typ
 	if v, ok := m["dc_filter"].(string); ok && v != "" {
 		out.DcFilter = types.Eac3DcFilter(v)
 	}
-	if v, ok := m["dialnorm"].(int); ok && v > 0 {
+	if v, ok := m["dialnorm"].(int); ok && v != 0 {
 		out.Dialnorm = aws.Int32(int32(v))
 	}
 	if v, ok := m["drc_line"].(string); ok && v != "" {
@@ -3382,16 +3382,16 @@ func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *typ
 	if v, ok := m["lfe_filter"].(string); ok && v != "" {
 		out.LfeFilter = types.Eac3LfeFilter(v)
 	}
-	if v, ok := m["lo_ro_center_mix_level"].(float32); ok && v > 0 {
+	if v, ok := m["lo_ro_center_mix_level"].(float32); ok && v != 0.0 {
 		out.LoRoCenterMixLevel = aws.Float64(float64(v))
 	}
-	if v, ok := m["lo_ro_surround_mix_level"].(float32); ok && v > 0 {
+	if v, ok := m["lo_ro_surround_mix_level"].(float32); ok && v != 0.0 {
 		out.LoRoSurroundMixLevel = aws.Float64(float64(v))
 	}
-	if v, ok := m["lt_rt_center_mix_level"].(float32); ok && v > 0 {
+	if v, ok := m["lt_rt_center_mix_level"].(float32); ok && v != 0.0 {
 		out.LtRtCenterMixLevel = aws.Float64(float64(v))
 	}
-	if v, ok := m["lt_rt_surround_mix_level"].(float32); ok && v > 0 {
+	if v, ok := m["lt_rt_surround_mix_level"].(float32); ok && v != 0.0 {
 		out.LtRtSurroundMixLevel = aws.Float64(float64(v))
 	}
 	if v, ok := m["metadata_control"].(string); ok && v != "" {
@@ -3421,13 +3421,13 @@ func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Mp2Settings
-	if v, ok := m["bitrate"].(float32); ok && v > 0 {
+	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.Mp2CodingMode(v)
 	}
-	if v, ok := m["sample_rate"].(float32); ok && v > 0 {
+	if v, ok := m["sample_rate"].(float32); ok && v != 0.0 {
 		out.Bitrate = aws.Float64(float64(v))
 	}
 
@@ -3442,13 +3442,13 @@ func expandAudioDescriptionsCodecSettingsWavSettings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.WavSettings
-	if v, ok := m["bit_depth"].(float32); ok && v > 0 {
+	if v, ok := m["bit_depth"].(float32); ok && v != 0.0 {
 		out.BitDepth = aws.Float64(float64(v))
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.WavCodingMode(v)
 	}
-	if v, ok := m["sample_rate"].(float32); ok && v > 0 {
+	if v, ok := m["sample_rate"].(float32); ok && v != 0.0 {
 		out.SampleRate = aws.Float64(float64(v))
 	}
 
@@ -3466,10 +3466,10 @@ func expandChannelEncoderSettingsAudioDescriptionsRemixSettings(tfList []interfa
 	if v, ok := m["channel_mappings"].(*schema.Set); ok && v.Len() > 0 {
 		out.ChannelMappings = expandChannelMappings(v.List())
 	}
-	if v, ok := m["channels_in"].(int); ok && v > 0 {
+	if v, ok := m["channels_in"].(int); ok && v != 0 {
 		out.ChannelsIn = aws.Int32(int32(v))
 	}
-	if v, ok := m["channels_out"].(int); ok && v > 0 {
+	if v, ok := m["channels_out"].(int); ok && v != 0 {
 		out.ChannelsOut = aws.Int32(int32(v))
 	}
 
@@ -3492,7 +3492,7 @@ func expandChannelMappings(tfList []interface{}) []types.AudioChannelMapping {
 		if v, ok := m["input_channel_levels"].(*schema.Set); ok && v.Len() > 0 {
 			o.InputChannelLevels = expandInputChannelLevels(v.List())
 		}
-		if v, ok := m["output_channel"].(int); ok && v > 0 {
+		if v, ok := m["output_channel"].(int); ok && v != 0 {
 			o.OutputChannel = aws.Int32(int32(v))
 		}
 
@@ -3515,10 +3515,10 @@ func expandInputChannelLevels(tfList []interface{}) []types.InputChannelLevel {
 		}
 
 		var o types.InputChannelLevel
-		if v, ok := m["gain"].(int); ok && v > 0 {
+		if v, ok := m["gain"].(int); ok && v != 0 {
 			o.Gain = aws.Int32(int32(v))
 		}
-		if v, ok := m["input_channel"].(int); ok && v > 0 {
+		if v, ok := m["input_channel"].(int); ok && v != 0 {
 			o.InputChannel = aws.Int32(int32(v))
 		}
 
@@ -3611,7 +3611,7 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 	if v, ok := m["archive_cdn_settings"].([]interface{}); ok && len(v) > 0 {
 		o.ArchiveCdnSettings = expandArchiveCDNSettings(v)
 	}
-	if v, ok := m["rollover_interval"].(int); ok && v > 0 {
+	if v, ok := m["rollover_interval"].(int); ok && v != 0 {
 		o.RolloverInterval = aws.Int32(int32(v))
 	}
 
@@ -3724,7 +3724,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["incomplete_segment_behavior"].(string); ok && v != "" {
 		out.IncompleteSegmentBehavior = types.HlsIncompleteSegmentBehavior(v)
 	}
-	if v, ok := m["index_n_segments"].(int); ok && v > 0 {
+	if v, ok := m["index_n_segments"].(int); ok && v != 0 {
 		out.IndexNSegments = aws.Int32(int32(v))
 	}
 	if v, ok := m["input_loss_action"].(string); ok && v != "" {
@@ -3736,7 +3736,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["iv_source"].(string); ok && v != "" {
 		out.IvSource = types.HlsIvSource(v)
 	}
-	if v, ok := m["keep_segments"].(int); ok && v > 0 {
+	if v, ok := m["keep_segments"].(int); ok && v != 0 {
 		out.KeepSegments = aws.Int32(int32(v))
 	}
 	if v, ok := m["key_format"].(string); ok && v != "" {
@@ -3754,7 +3754,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["manifest_duration_format"].(string); ok && v != "" {
 		out.ManifestDurationFormat = types.HlsManifestDurationFormat(v)
 	}
-	if v, ok := m["min_segment_length"].(int); ok && v > 0 {
+	if v, ok := m["min_segment_length"].(int); ok && v != 0 {
 		out.MinSegmentLength = aws.Int32(int32(v))
 	}
 	if v, ok := m["mode"].(string); ok && v != "" {
@@ -3769,16 +3769,16 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["program_date_time_clock"].(string); ok && v != "" {
 		out.ProgramDateTimeClock = types.HlsProgramDateTimeClock(v)
 	}
-	if v, ok := m["program_date_time_period"].(int); ok && v > 0 {
+	if v, ok := m["program_date_time_period"].(int); ok && v != 0 {
 		out.ProgramDateTimePeriod = aws.Int32(int32(v))
 	}
 	if v, ok := m["redundant_manifest"].(string); ok && v != "" {
 		out.RedundantManifest = types.HlsRedundantManifest(v)
 	}
-	if v, ok := m["segment_length"].(int); ok && v > 0 {
+	if v, ok := m["segment_length"].(int); ok && v != 0 {
 		out.SegmentLength = aws.Int32(int32(v))
 	}
-	if v, ok := m["segments_per_subdirectory"].(int); ok && v > 0 {
+	if v, ok := m["segments_per_subdirectory"].(int); ok && v != 0 {
 		out.SegmentsPerSubdirectory = aws.Int32(int32(v))
 	}
 	if v, ok := m["stream_inf_resolution"].(string); ok && v != "" {
@@ -3787,10 +3787,10 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["timed_metadata_id3_frame"].(string); ok && v != "" {
 		out.TimedMetadataId3Frame = types.HlsTimedMetadataId3Frame(v)
 	}
-	if v, ok := m["timed_metadata_id3_period"].(int); ok && v > 0 {
+	if v, ok := m["timed_metadata_id3_period"].(int); ok && v != 0 {
 		out.TimedMetadataId3Period = aws.Int32(int32(v))
 	}
-	if v, ok := m["timestamp_delta_milliseconds"].(int); ok && v > 0 {
+	if v, ok := m["timestamp_delta_milliseconds"].(int); ok && v != 0 {
 		out.TimestampDeltaMilliseconds = aws.Int32(int32(v))
 	}
 	if v, ok := m["ts_file_mode"].(string); ok && v != "" {
@@ -3820,7 +3820,7 @@ func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSetti
 	if v, ok := m["certificate_mode"].(string); ok && v != "" {
 		out.CertificateMode = types.SmoothGroupCertificateMode(v)
 	}
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		out.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["event_id"].(string); ok && v != "" {
@@ -3832,25 +3832,25 @@ func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSetti
 	if v, ok := m["event_stop_behavior"].(string); ok && v != "" {
 		out.EventStopBehavior = types.SmoothGroupEventStopBehavior(v)
 	}
-	if v, ok := m["filecache_duration"].(int); ok && v > 0 {
+	if v, ok := m["filecache_duration"].(int); ok && v != 0 {
 		out.FilecacheDuration = aws.Int32(int32(v))
 	}
-	if v, ok := m["fragment_length"].(int); ok && v > 0 {
+	if v, ok := m["fragment_length"].(int); ok && v != 0 {
 		out.FragmentLength = aws.Int32(int32(v))
 	}
 	if v, ok := m["input_loss_action"].(string); ok && v != "" {
 		out.InputLossAction = types.InputLossActionForMsSmoothOut(v)
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		out.NumRetries = aws.Int32(int32(v))
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 	if v, ok := m["segmentation_mode"].(string); ok && v != "" {
 		out.SegmentationMode = types.SmoothGroupSegmentationMode(v)
 	}
-	if v, ok := m["send_delay_ms"].(int); ok && v > 0 {
+	if v, ok := m["send_delay_ms"].(int); ok && v != 0 {
 		out.SendDelayMs = aws.Int32(int32(v))
 	}
 	if v, ok := m["sparse_track_type"].(string); ok && v != "" {
@@ -3903,19 +3903,19 @@ func expandHSLAkamaiSettings(tfList []interface{}) *types.HlsAkamaiSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsAkamaiSettings
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		out.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["filecache_duration"].(int); ok && v > 0 {
+	if v, ok := m["filecache_duration"].(int); ok && v != 0 {
 		out.FilecacheDuration = aws.Int32(int32(v))
 	}
 	if v, ok := m["http_transfer_mode"].(string); ok && v != "" {
 		out.HttpTransferMode = types.HlsAkamaiHttpTransferMode(v)
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		out.NumRetries = aws.Int32(int32(v))
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 	if v, ok := m["salt"].(string); ok && v != "" {
@@ -3936,16 +3936,16 @@ func expandHSLBasicPutSettings(tfList []interface{}) *types.HlsBasicPutSettings 
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsBasicPutSettings
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		out.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["filecache_duration"].(int); ok && v > 0 {
+	if v, ok := m["filecache_duration"].(int); ok && v != 0 {
 		out.FilecacheDuration = aws.Int32(int32(v))
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		out.NumRetries = aws.Int32(int32(v))
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 
@@ -3960,19 +3960,19 @@ func expandHLSMediaStoreSettings(tfList []interface{}) *types.HlsMediaStoreSetti
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsMediaStoreSettings
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		out.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["filecache_duration"].(int); ok && v > 0 {
+	if v, ok := m["filecache_duration"].(int); ok && v != 0 {
 		out.FilecacheDuration = aws.Int32(int32(v))
 	}
 	if v, ok := m["media_store_storage_class"].(string); ok && v != "" {
 		out.MediaStoreStorageClass = types.HlsMediaStoreStorageClass(v)
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		out.NumRetries = aws.Int32(int32(v))
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 
@@ -4002,19 +4002,19 @@ func expandHLSWebdavSettings(tfList []interface{}) *types.HlsWebdavSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsWebdavSettings
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		out.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["filecache_duration"].(int); ok && v > 0 {
+	if v, ok := m["filecache_duration"].(int); ok && v != 0 {
 		out.FilecacheDuration = aws.Int32(int32(v))
 	}
 	if v, ok := m["http_transfer_mode"].(string); ok && v != "" {
 		out.HttpTransferMode = types.HlsWebdavHttpTransferMode(v)
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		out.NumRetries = aws.Int32(int32(v))
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 	return &out
@@ -4033,7 +4033,7 @@ func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types
 		}
 
 		var o types.CaptionLanguageMapping
-		if v, ok := m["caption_channel"].(int); ok && v > 0 {
+		if v, ok := m["caption_channel"].(int); ok && v != 0 {
 			o.CaptionChannel = aws.Int32(int32(v))
 		}
 		if v, ok := m["language_code"].(string); ok && v != "" {
@@ -4182,7 +4182,7 @@ func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
 	if v, ok := m["cache_full_behavior"].(string); ok && v != "" {
 		out.CacheFullBehavior = types.RtmpCacheFullBehavior(v)
 	}
-	if v, ok := m["cache_length"].(int); ok && v > 0 {
+	if v, ok := m["cache_length"].(int); ok && v != 0 {
 		out.CacheLength = aws.Int32(int32(v))
 	}
 	if v, ok := m["caption_data"].(string); ok && v != "" {
@@ -4191,7 +4191,7 @@ func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
 	if v, ok := m["input_loss_action"].(string); ok && v != "" {
 		out.InputLossAction = types.InputLossActionForRtmpOut(v)
 	}
-	if v, ok := m["restart_delay"].(int); ok && v > 0 {
+	if v, ok := m["restart_delay"].(int); ok && v != 0 {
 		out.RestartDelay = aws.Int32(int32(v))
 	}
 
@@ -4212,7 +4212,7 @@ func expandUdpGroupSettings(tfList []interface{}) *types.UdpGroupSettings {
 	if v, ok := m["timed_metadata_id3_frame"].(string); ok && v != "" {
 		out.TimedMetadataId3Frame = types.UdpTimedMetadataId3Frame(v)
 	}
-	if v, ok := m["timed_metadata_id3_period"].(int); ok && v > 0 {
+	if v, ok := m["timed_metadata_id3_period"].(int); ok && v != 0 {
 		out.TimedMetadataId3Period = aws.Int32(int32(v))
 	}
 
@@ -4499,7 +4499,7 @@ func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Sett
 	m := tfList[0].(map[string]interface{})
 
 	var out types.M3u8Settings
-	if v, ok := m["audio_frames_per_pes"].(int); ok && v > 0 {
+	if v, ok := m["audio_frames_per_pes"].(int); ok && v != 0 {
 		out.AudioFramesPerPes = aws.Int32(int32(v))
 	}
 	if v, ok := m["audio_pids"].(string); ok && v != "" {
@@ -4511,25 +4511,25 @@ func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Sett
 	if v, ok := m["nielsen_id3_behavior"].(string); ok && v != "" {
 		out.NielsenId3Behavior = types.M3u8NielsenId3Behavior(v)
 	}
-	if v, ok := m["pat_interval"].(int); ok && v > 0 {
+	if v, ok := m["pat_interval"].(int); ok && v != 0 {
 		out.PatInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["pcr_control"].(string); ok && v != "" {
 		out.PcrControl = types.M3u8PcrControl(v)
 	}
-	if v, ok := m["pcr_period"].(int); ok && v > 0 {
+	if v, ok := m["pcr_period"].(int); ok && v != 0 {
 		out.PcrPeriod = aws.Int32(int32(v))
 	}
 	if v, ok := m["pcr_pid"].(string); ok && v != "" {
 		out.PcrPid = aws.String(v)
 	}
-	if v, ok := m["pmt_interval"].(int); ok && v > 0 {
+	if v, ok := m["pmt_interval"].(int); ok && v != 0 {
 		out.PmtInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["pmt_pid"].(string); ok && v != "" {
 		out.PmtPid = aws.String(v)
 	}
-	if v, ok := m["program_num"].(int); ok && v > 0 {
+	if v, ok := m["program_num"].(int); ok && v != 0 {
 		out.ProgramNum = aws.Int32(int32(v))
 	}
 	if v, ok := m["scte35_behavior"].(string); ok && v != "" {
@@ -4544,7 +4544,7 @@ func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Sett
 	if v, ok := m["timed_metadata_pid"].(string); ok && v != "" {
 		out.TimedMetadataPid = aws.String(v)
 	}
-	if v, ok := m["transport_stream_id"].(int); ok && v > 0 {
+	if v, ok := m["transport_stream_id"].(int); ok && v != 0 {
 		out.TransportStreamId = aws.Int32(int32(v))
 	}
 	if v, ok := m["video_pid"].(string); ok && v != "" {
@@ -4568,10 +4568,10 @@ func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.
 	if v, ok := m["certificate_mode"].(string); ok && v != "" {
 		settings.CertificateMode = types.RtmpOutputCertificateMode(v)
 	}
-	if v, ok := m["connection_retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
 		settings.ConnectionRetryInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["num_retries"].(int); ok && v > 0 {
+	if v, ok := m["num_retries"].(int); ok && v != 0 {
 		settings.NumRetries = aws.Int32(int32(v))
 	}
 
@@ -4592,7 +4592,7 @@ func expandOutputsOutputSettingsUdpOutputSettings(tfList []interface{}) *types.U
 	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
-	if v, ok := m["buffer_msec"].(int); ok && v > 0 {
+	if v, ok := m["buffer_msec"].(int); ok && v != 0 {
 		settings.BufferMsec = aws.Int32(int32(v))
 	}
 	if v, ok := m["fec_output_settings"].([]interface{}); ok && len(v) > 0 {
@@ -4643,13 +4643,13 @@ func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.FecOutputSettings
-	if v, ok := m["column_depth"].(int); ok && v > 0 {
+	if v, ok := m["column_depth"].(int); ok && v != 0 {
 		settings.ColumnDepth = aws.Int32(int32(v))
 	}
 	if v, ok := m["include_fec"].(string); ok && v != "" {
 		settings.IncludeFec = types.FecOutputIncludeFec(v)
 	}
-	if v, ok := m["row_length"].(int); ok && v > 0 {
+	if v, ok := m["row_length"].(int); ok && v != 0 {
 		settings.RowLength = aws.Int32(int32(v))
 	}
 
@@ -4679,7 +4679,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["audio_buffer_model"].(string); ok && v != "" {
 		s.AudioBufferModel = types.M2tsAudioBufferModel(v)
 	}
-	if v, ok := m["audio_frames_per_pes"].(int); ok && v > 0 {
+	if v, ok := m["audio_frames_per_pes"].(int); ok && v != 0 {
 		s.AudioFramesPerPes = aws.Int32(int32(v))
 	}
 	if v, ok := m["audio_pids"].(string); ok && v != "" {
@@ -4688,7 +4688,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["audio_stream_type"].(string); ok && v != "" {
 		s.AudioStreamType = types.M2tsAudioStreamType(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v > 0 {
+	if v, ok := m["bitrate"].(int); ok && v != 0 {
 		s.Bitrate = aws.Int32(int32(v))
 	}
 	if v, ok := m["buffer_model"].(string); ok && v != "" {
@@ -4715,7 +4715,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 			m := tfList[0].(map[string]interface{})
 
 			var s types.DvbTdtSettings
-			if v, ok := m["rep_interval"].(int); ok && v > 0 {
+			if v, ok := m["rep_interval"].(int); ok && v != 0 {
 				s.RepInterval = aws.Int32(int32(v))
 			}
 			return &s
@@ -4730,7 +4730,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["ebp_audio_interval"].(string); ok && v != "" {
 		s.EbpAudioInterval = types.M2tsAudioInterval(v)
 	}
-	if v, ok := m["ebp_lookahead_ms"].(int); ok && v > 0 {
+	if v, ok := m["ebp_lookahead_ms"].(int); ok && v != 0 {
 		s.EbpLookaheadMs = aws.Int32(int32(v))
 	}
 	if v, ok := m["ebp_placement"].(string); ok && v != "" {
@@ -4748,7 +4748,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["etv_signal_pid"].(string); ok && v != "" {
 		s.EtvSignalPid = aws.String(v)
 	}
-	if v, ok := m["fragment_time"].(float64); ok && v > 0 {
+	if v, ok := m["fragment_time"].(float64); ok && v != 0.0 {
 		s.FragmentTime = aws.Float64(v)
 	}
 	if v, ok := m["klv"].(string); ok && v != "" {
@@ -4760,28 +4760,28 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["nielsen_id3_behavior"].(string); ok && v != "" {
 		s.NielsenId3Behavior = types.M2tsNielsenId3Behavior(v)
 	}
-	if v, ok := m["null_packet_bitrate"].(float32); ok && v > 0 {
+	if v, ok := m["null_packet_bitrate"].(float32); ok && v != 0.0 {
 		s.NullPacketBitrate = aws.Float64(float64(v))
 	}
-	if v, ok := m["pat_interval"].(int); ok && v > 0 {
+	if v, ok := m["pat_interval"].(int); ok && v != 0 {
 		s.PatInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["pcr_control"].(string); ok && v != "" {
 		s.PcrControl = types.M2tsPcrControl(v)
 	}
-	if v, ok := m["pcr_period"].(int); ok && v > 0 {
+	if v, ok := m["pcr_period"].(int); ok && v != 0 {
 		s.PcrPeriod = aws.Int32(int32(v))
 	}
 	if v, ok := m["pcr_pid"].(string); ok && v != "" {
 		s.PcrPid = aws.String(v)
 	}
-	if v, ok := m["pmt_interval"].(int); ok && v > 0 {
+	if v, ok := m["pmt_interval"].(int); ok && v != 0 {
 		s.PmtInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["pmt_pid"].(string); ok && v != "" {
 		s.PmtPid = aws.String(v)
 	}
-	if v, ok := m["program_num"].(int); ok && v > 0 {
+	if v, ok := m["program_num"].(int); ok && v != 0 {
 		s.ProgramNum = aws.Int32(int32(v))
 	}
 	if v, ok := m["rate_mode"].(string); ok && v != "" {
@@ -4802,7 +4802,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["segmentation_style"].(string); ok && v != "" {
 		s.SegmentationStyle = types.M2tsSegmentationStyle(v)
 	}
-	if v, ok := m["segmentation_time"].(float64); ok && v > 0 {
+	if v, ok := m["segmentation_time"].(float64); ok && v != 0.0 {
 		s.SegmentationTime = aws.Float64(v)
 	}
 	if v, ok := m["timed_metadata_behavior"].(string); ok && v != "" {
@@ -4811,7 +4811,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["timed_metadata_pid"].(string); ok && v != "" {
 		s.TimedMetadataPid = aws.String(v)
 	}
-	if v, ok := m["transport_stream_id"].(int); ok && v > 0 {
+	if v, ok := m["transport_stream_id"].(int); ok && v != 0 {
 		s.TransportStreamId = aws.Int32(int32(v))
 	}
 	if v, ok := m["video_pid"].(string); ok && v != "" {
@@ -4829,13 +4829,13 @@ func expandM2tsDvbNitSettings(tfList []interface{}) *types.DvbNitSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var s types.DvbNitSettings
-	if v, ok := m["network_ids"].(int); ok && v > 0 {
+	if v, ok := m["network_ids"].(int); ok && v != 0 {
 		s.NetworkId = aws.Int32(int32(v))
 	}
 	if v, ok := m["network_name"].(string); ok && v != "" {
 		s.NetworkName = aws.String(v)
 	}
-	if v, ok := m["network_ids"].(int); ok && v > 0 {
+	if v, ok := m["network_ids"].(int); ok && v != 0 {
 		s.RepInterval = aws.Int32(int32(v))
 	}
 	return &s
@@ -4852,7 +4852,7 @@ func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
 	if v, ok := m["output_sdt"].(string); ok && v != "" {
 		s.OutputSdt = types.DvbSdtOutputSdt(v)
 	}
-	if v, ok := m["rep_interval"].(int); ok && v > 0 {
+	if v, ok := m["rep_interval"].(int); ok && v != 0 {
 		s.RepInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["service_name"].(string); ok && v != "" {
@@ -4875,7 +4875,7 @@ func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.Tim
 	if v, ok := m["source"].(string); ok && v != "" {
 		config.Source = types.TimecodeConfigSource(v)
 	}
-	if v, ok := m["sync_threshold"].(int); ok && v > 0 {
+	if v, ok := m["sync_threshold"].(int); ok && v != 0 {
 		config.SyncThreshold = aws.Int32(int32(v))
 	}
 
@@ -4901,7 +4901,7 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
 			d.CodecSettings = expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
 		}
-		if v, ok := m["height"].(int); ok && v > 0 {
+		if v, ok := m["height"].(int); ok && v != 0 {
 			d.Height = aws.Int32(int32(v))
 		}
 		if v, ok := m["respond_to_afd"].(string); ok && v != "" {
@@ -4910,10 +4910,10 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		if v, ok := m["scaling_behavior"].(string); ok && v != "" {
 			d.ScalingBehavior = types.VideoDescriptionScalingBehavior(v)
 		}
-		if v, ok := m["sharpness"].(int); ok && v > 0 {
+		if v, ok := m["sharpness"].(int); ok && v != 0 {
 			d.Sharpness = aws.Int32(int32(v))
 		}
-		if v, ok := m["width"].(int); ok && v > 0 {
+		if v, ok := m["width"].(int); ok && v != 0 {
 			d.Width = aws.Int32(int32(v))
 		}
 
@@ -5044,7 +5044,7 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 	if v, ok := m["background_color"].(string); ok && len(v) > 0 {
 		out.BackgroundColor = types.BurnInBackgroundColor(v)
 	}
-	if v, ok := m["background_opacity"].(int); ok && v > 0 {
+	if v, ok := m["background_opacity"].(int); ok && v != 0 {
 		out.BackgroundOpacity = aws.Int32(int32(v))
 	}
 	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
@@ -5053,10 +5053,10 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
 		out.FontColor = types.BurnInFontColor(v)
 	}
-	if v, ok := m["font_opacity"].(int); ok && v > 0 {
+	if v, ok := m["font_opacity"].(int); ok && v != 0 {
 		out.FontOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["font_resolution"].(int); ok && v > 0 {
+	if v, ok := m["font_resolution"].(int); ok && v != 0 {
 		out.FontResolution = aws.Int32(int32(v))
 	}
 	if v, ok := m["font_size"].(string); ok && v != "" {
@@ -5065,28 +5065,28 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 	if v, ok := m["outline_color"].(string); ok && len(v) > 0 {
 		out.OutlineColor = types.BurnInOutlineColor(v)
 	}
-	if v, ok := m["outline_size"].(int); ok && v > 0 {
+	if v, ok := m["outline_size"].(int); ok && v != 0 {
 		out.OutlineSize = aws.Int32(int32(v))
 	}
 	if v, ok := m["shadow_color"].(string); ok && len(v) > 0 {
 		out.ShadowColor = types.BurnInShadowColor(v)
 	}
-	if v, ok := m["shadow_opacity"].(int); ok && v > 0 {
+	if v, ok := m["shadow_opacity"].(int); ok && v != 0 {
 		out.ShadowOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["shadow_x_offset"].(int); ok && v > 0 {
+	if v, ok := m["shadow_x_offset"].(int); ok && v != 0 {
 		out.ShadowXOffset = aws.Int32(int32(v))
 	}
-	if v, ok := m["shadow_y_offset"].(int); ok && v > 0 {
+	if v, ok := m["shadow_y_offset"].(int); ok && v != 0 {
 		out.ShadowYOffset = aws.Int32(int32(v))
 	}
 	if v, ok := m["teletext_grid_control"].(string); ok && len(v) > 0 {
 		out.TeletextGridControl = types.BurnInTeletextGridControl(v)
 	}
-	if v, ok := m["x_position"].(int); ok && v > 0 {
+	if v, ok := m["x_position"].(int); ok && v != 0 {
 		out.XPosition = aws.Int32(int32(v))
 	}
-	if v, ok := m["y_position"].(int); ok && v > 0 {
+	if v, ok := m["y_position"].(int); ok && v != 0 {
 		out.YPosition = aws.Int32(int32(v))
 	}
 
@@ -5107,7 +5107,7 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 	if v, ok := m["background_color"].(string); ok && len(v) > 0 {
 		out.BackgroundColor = types.DvbSubDestinationBackgroundColor(v)
 	}
-	if v, ok := m["background_opacity"].(int); ok && v > 0 {
+	if v, ok := m["background_opacity"].(int); ok && v != 0 {
 		out.BackgroundOpacity = aws.Int32(int32(v))
 	}
 	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
@@ -5116,10 +5116,10 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
 		out.FontColor = types.DvbSubDestinationFontColor(v)
 	}
-	if v, ok := m["font_opacity"].(int); ok && v > 0 {
+	if v, ok := m["font_opacity"].(int); ok && v != 0 {
 		out.FontOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["font_resolution"].(int); ok && v > 0 {
+	if v, ok := m["font_resolution"].(int); ok && v != 0 {
 		out.FontResolution = aws.Int32(int32(v))
 	}
 	if v, ok := m["font_size"].(string); ok && v != "" {
@@ -5128,28 +5128,28 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 	if v, ok := m["outline_color"].(string); ok && len(v) > 0 {
 		out.OutlineColor = types.DvbSubDestinationOutlineColor(v)
 	}
-	if v, ok := m["outline_size"].(int); ok && v > 0 {
+	if v, ok := m["outline_size"].(int); ok && v != 0 {
 		out.OutlineSize = aws.Int32(int32(v))
 	}
 	if v, ok := m["shadow_color"].(string); ok && len(v) > 0 {
 		out.ShadowColor = types.DvbSubDestinationShadowColor(v)
 	}
-	if v, ok := m["shadow_opacity"].(int); ok && v > 0 {
+	if v, ok := m["shadow_opacity"].(int); ok && v != 0 {
 		out.ShadowOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["shadow_x_offset"].(int); ok && v > 0 {
+	if v, ok := m["shadow_x_offset"].(int); ok && v != 0 {
 		out.ShadowXOffset = aws.Int32(int32(v))
 	}
-	if v, ok := m["shadow_y_offset"].(int); ok && v > 0 {
+	if v, ok := m["shadow_y_offset"].(int); ok && v != 0 {
 		out.ShadowYOffset = aws.Int32(int32(v))
 	}
 	if v, ok := m["teletext_grid_control"].(string); ok && len(v) > 0 {
 		out.TeletextGridControl = types.DvbSubDestinationTeletextGridControl(v)
 	}
-	if v, ok := m["x_position"].(int); ok && v > 0 {
+	if v, ok := m["x_position"].(int); ok && v != 0 {
 		out.XPosition = aws.Int32(int32(v))
 	}
-	if v, ok := m["y_position"].(int); ok && v > 0 {
+	if v, ok := m["y_position"].(int); ok && v != 0 {
 		out.YPosition = aws.Int32(int32(v))
 	}
 
@@ -5221,7 +5221,7 @@ func expandChannelEncoderSettingsGlobalConfiguration(tfList []interface{}) *type
 
 	var out types.GlobalConfiguration
 
-	if v, ok := m["initial_audio_gain"].(int); ok && v > 0 {
+	if v, ok := m["initial_audio_gain"].(int); ok && v != 0 {
 		out.InitialAudioGain = aws.Int32(int32(v))
 	}
 
@@ -5257,7 +5257,7 @@ func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []i
 
 	var out types.InputLossBehavior
 
-	if v, ok := m["black_frame_msec"].(int); ok && v > 0 {
+	if v, ok := m["black_frame_msec"].(int); ok && v != 0 {
 		out.BlackFrameMsec = aws.Int32(int32(v))
 	}
 
@@ -5273,7 +5273,7 @@ func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []i
 		out.InputLossImageType = types.InputLossImageType(v)
 	}
 
-	if v, ok := m["repeat_frame_msec"].(int); ok && v > 0 {
+	if v, ok := m["repeat_frame_msec"].(int); ok && v != 0 {
 		out.RepeatFrameMsec = aws.Int32(int32(v))
 	}
 
@@ -5363,7 +5363,7 @@ func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []interfac
 	m := tfList[0].(map[string]interface{})
 
 	var out types.FrameCaptureSettings
-	if v, ok := m["capture_interval"].(int); ok && v > 0 {
+	if v, ok := m["capture_interval"].(int); ok && v != 0 {
 		out.CaptureInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["capture_interval_units"].(string); ok && v != "" {
@@ -5387,13 +5387,13 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["afd_signaling"].(string); ok && v != "" {
 		out.AfdSignaling = types.AfdSignaling(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v > 0 {
+	if v, ok := m["bitrate"].(int); ok && v != 0 {
 		out.Bitrate = aws.Int32(int32(v))
 	}
-	if v, ok := m["buf_fill_pct"].(int); ok && v > 0 {
+	if v, ok := m["buf_fill_pct"].(int); ok && v != 0 {
 		out.BufFillPct = aws.Int32(int32(v))
 	}
-	if v, ok := m["buf_size"].(int); ok && v > 0 {
+	if v, ok := m["buf_size"].(int); ok && v != 0 {
 		out.BufSize = aws.Int32(int32(v))
 	}
 	if v, ok := m["color_metadata"].(string); ok && v != "" {
@@ -5417,22 +5417,22 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["framerate_control"].(string); ok && v != "" {
 		out.FramerateControl = types.H264FramerateControl(v)
 	}
-	if v, ok := m["framerate_denominator"].(int); ok && v > 0 {
+	if v, ok := m["framerate_denominator"].(int); ok && v != 0 {
 		out.FramerateDenominator = aws.Int32(int32(v))
 	}
-	if v, ok := m["framerate_numerator"].(int); ok && v > 0 {
+	if v, ok := m["framerate_numerator"].(int); ok && v != 0 {
 		out.FramerateNumerator = aws.Int32(int32(v))
 	}
 	if v, ok := m["gop_b_reference"].(string); ok && v != "" {
 		out.GopBReference = types.H264GopBReference(v)
 	}
-	if v, ok := m["gop_closed_cadence"].(int); ok && v > 0 {
+	if v, ok := m["gop_closed_cadence"].(int); ok && v != 0 {
 		out.GopClosedCadence = aws.Int32(int32(v))
 	}
-	if v, ok := m["gop_num_b_frames"].(int); ok && v > 0 {
+	if v, ok := m["gop_num_b_frames"].(int); ok && v != 0 {
 		out.GopNumBFrames = aws.Int32(int32(v))
 	}
-	if v, ok := m["gop_size"].(float64); ok && v > 0 {
+	if v, ok := m["gop_size"].(float64); ok && v != 0.0 {
 		out.GopSize = aws.Float64(v)
 	}
 	if v, ok := m["gop_size_units"].(string); ok && v != "" {
@@ -5444,22 +5444,22 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["look_ahead_rate_control"].(string); ok && v != "" {
 		out.LookAheadRateControl = types.H264LookAheadRateControl(v)
 	}
-	if v, ok := m["max_bitrate"].(int); ok && v > 0 {
+	if v, ok := m["max_bitrate"].(int); ok && v != 0 {
 		out.MaxBitrate = aws.Int32(int32(v))
 	}
-	if v, ok := m["min_i_interval"].(int); ok && v > 0 {
+	if v, ok := m["min_i_interval"].(int); ok && v != 0 {
 		out.MinIInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["num_ref_frames"].(int); ok && v > 0 {
+	if v, ok := m["num_ref_frames"].(int); ok && v != 0 {
 		out.NumRefFrames = aws.Int32(int32(v))
 	}
 	if v, ok := m["par_control"].(string); ok && v != "" {
 		out.ParControl = types.H264ParControl(v)
 	}
-	if v, ok := m["par_denominator"].(int); ok && v > 0 {
+	if v, ok := m["par_denominator"].(int); ok && v != 0 {
 		out.ParDenominator = aws.Int32(int32(v))
 	}
-	if v, ok := m["par_numerator"].(int); ok && v > 0 {
+	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
 	if v, ok := m["profile"].(string); ok && v != "" {
@@ -5468,7 +5468,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["quality_level"].(string); ok && v != "" {
 		out.QualityLevel = types.H264QualityLevel(v)
 	}
-	if v, ok := m["qvbr_quality_level"].(int); ok && v > 0 {
+	if v, ok := m["qvbr_quality_level"].(int); ok && v != 0 {
 		out.QvbrQualityLevel = aws.Int32(int32(v))
 	}
 	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
@@ -5480,10 +5480,10 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["scene_change_detect"].(string); ok && v != "" {
 		out.SceneChangeDetect = types.H264SceneChangeDetect(v)
 	}
-	if v, ok := m["slices"].(int); ok && v > 0 {
+	if v, ok := m["slices"].(int); ok && v != 0 {
 		out.Slices = aws.Int32(int32(v))
 	}
-	if v, ok := m["softness"].(int); ok && v > 0 {
+	if v, ok := m["softness"].(int); ok && v != 0 {
 		out.Softness = aws.Int32(int32(v))
 	}
 	if v, ok := m["spatial_aq"].(string); ok && v != "" {
@@ -5546,10 +5546,10 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	m := tfList[0].(map[string]interface{})
 
 	var out types.H265Settings
-	if v, ok := m["framerate_denominator"].(int); ok && v > 0 {
+	if v, ok := m["framerate_denominator"].(int); ok && v != 0 {
 		out.FramerateDenominator = aws.Int32(int32(v))
 	}
-	if v, ok := m["framerate_numerator"].(int); ok && v > 0 {
+	if v, ok := m["framerate_numerator"].(int); ok && v != 0 {
 		out.FramerateNumerator = aws.Int32(int32(v))
 	}
 	if v, ok := m["adaptive_quantization"].(string); ok && v != "" {
@@ -5561,10 +5561,10 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["alternative_transfer_function"].(string); ok && v != "" {
 		out.AlternativeTransferFunction = types.H265AlternativeTransferFunction(v)
 	}
-	if v, ok := m["bitrate"].(int); ok && v > 0 {
+	if v, ok := m["bitrate"].(int); ok && v != 0 {
 		out.Bitrate = aws.Int32(int32(v))
 	}
-	if v, ok := m["buf_size"].(int); ok && v > 0 {
+	if v, ok := m["buf_size"].(int); ok && v != 0 {
 		out.BufSize = aws.Int32(int32(v))
 	}
 	if v, ok := m["color_metadata"].(string); ok && v != "" {
@@ -5582,10 +5582,10 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["flicker_aq"].(string); ok && v != "" {
 		out.FlickerAq = types.H265FlickerAq(v)
 	}
-	if v, ok := m["gop_closed_cadence"].(int); ok && v > 0 {
+	if v, ok := m["gop_closed_cadence"].(int); ok && v != 0 {
 		out.GopClosedCadence = aws.Int32(int32(v))
 	}
-	if v, ok := m["gop_size"].(float64); ok && v > 0 {
+	if v, ok := m["gop_size"].(float64); ok && v != 0.0 {
 		out.GopSize = aws.Float64(v)
 	}
 	if v, ok := m["gop_size_units"].(string); ok && v != "" {
@@ -5597,22 +5597,22 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["look_ahead_rate_control"].(string); ok && v != "" {
 		out.LookAheadRateControl = types.H265LookAheadRateControl(v)
 	}
-	if v, ok := m["max_bitrate"].(int); ok && v > 0 {
+	if v, ok := m["max_bitrate"].(int); ok && v != 0 {
 		out.MaxBitrate = aws.Int32(int32(v))
 	}
-	if v, ok := m["min_i_interval"].(int); ok && v > 0 {
+	if v, ok := m["min_i_interval"].(int); ok && v != 0 {
 		out.MinIInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["par_denominator"].(int); ok && v > 0 {
+	if v, ok := m["par_denominator"].(int); ok && v != 0 {
 		out.ParDenominator = aws.Int32(int32(v))
 	}
-	if v, ok := m["par_numerator"].(int); ok && v > 0 {
+	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
 	if v, ok := m["profile"].(string); ok && v != "" {
 		out.Profile = types.H265Profile(v)
 	}
-	if v, ok := m["qvbr_quality_level"].(int); ok && v > 0 {
+	if v, ok := m["qvbr_quality_level"].(int); ok && v != 0 {
 		out.QvbrQualityLevel = aws.Int32(int32(v))
 	}
 	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
@@ -5624,7 +5624,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["scene_change_detect"].(string); ok && v != "" {
 		out.SceneChangeDetect = types.H265SceneChangeDetect(v)
 	}
-	if v, ok := m["slices"].(int); ok && v > 0 {
+	if v, ok := m["slices"].(int); ok && v != 0 {
 		out.Slices = aws.Int32(int32(v))
 	}
 	if v, ok := m["tier"].(string); ok && v != "" {
@@ -5675,10 +5675,10 @@ func expandH265Hdr10Settings(tfList []interface{}) *types.Hdr10Settings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Hdr10Settings
-	if v, ok := m["max_cll"].(int); ok && v > 0 {
+	if v, ok := m["max_cll"].(int); ok && v != 0 {
 		out.MaxCll = aws.Int32(int32(v))
 	}
-	if v, ok := m["max_fall"].(int); ok && v > 0 {
+	if v, ok := m["max_fall"].(int); ok && v != 0 {
 		out.MaxFall = aws.Int32(int32(v))
 	}
 
@@ -5771,7 +5771,7 @@ func expandNielsenNaseIiNwSettings(tfList []interface{}) *types.NielsenNaesIiNw 
 	if v, ok := m["check_digit_string"].(string); ok && v != "" {
 		out.CheckDigitString = aws.String(v)
 	}
-	if v, ok := m["sid"].(float32); ok && v > 0 {
+	if v, ok := m["sid"].(float32); ok && v != 0.0 {
 		out.Sid = aws.Float64(float64(v))
 	}
 

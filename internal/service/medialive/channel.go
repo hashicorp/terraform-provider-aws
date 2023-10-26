@@ -1196,7 +1196,7 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["denoise_filter"].(string); ok && v != "" {
 		out.DenoiseFilter = types.InputDenoiseFilter(v)
 	}
-	if v, ok := m["filter_strength"].(int); ok && v > 0 {
+	if v, ok := m["filter_strength"].(int); ok && v != 0 {
 		out.FilterStrength = aws.Int32(int32(v))
 	}
 	if v, ok := m["input_filter"].(string); ok && v != "" {
@@ -1205,7 +1205,7 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["network_input_settings"].([]interface{}); ok && len(v) > 0 {
 		out.NetworkInputSettings = expandInputAttachmentInputSettingsNetworkInputSettings(v)
 	}
-	if v, ok := m["scte35_pid"].(int); ok && v > 0 {
+	if v, ok := m["scte35_pid"].(int); ok && v != 0 {
 		out.Scte35Pid = aws.Int32(int32(v))
 	}
 	if v, ok := m["smpte2038_data_preference"].(string); ok && v != "" {
@@ -1308,7 +1308,7 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSel
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AudioPidSelection
-	if v, ok := m["pid"].(int); ok && v > 0 {
+	if v, ok := m["pid"].(int); ok && v != 0 {
 		out.Pid = aws.Int32(int32(v))
 	}
 
@@ -1346,7 +1346,7 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackS
 		}
 
 		var o types.AudioTrack
-		if v, ok := m["track"].(int); ok && v > 0 {
+		if v, ok := m["track"].(int); ok && v != 0 {
 			o.Track = aws.Int32(int32(v))
 		}
 
@@ -1441,7 +1441,7 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillary
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AncillarySourceSettings
-	if v, ok := m["source_ancillary_channel_number"].(int); ok && v > 0 {
+	if v, ok := m["source_ancillary_channel_number"].(int); ok && v != 0 {
 		out.SourceAncillaryChannelNumber = aws.Int32(int32(v))
 	}
 
@@ -1480,7 +1480,7 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedS
 	if v, ok := m["scte20_detection"].(string); ok && v != "" {
 		out.Scte20Detection = types.EmbeddedScte20Detection(v)
 	}
-	if v, ok := m["source_608_channel_number"].(int); ok && v > 0 {
+	if v, ok := m["source_608_channel_number"].(int); ok && v != 0 {
 		out.Source608ChannelNumber = aws.Int32(int32(v))
 	}
 
@@ -1498,7 +1498,7 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20Sou
 	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
 		out.Convert608To708 = types.Scte20Convert608To708(v)
 	}
-	if v, ok := m["source_608_channel_number"].(int); ok && v > 0 {
+	if v, ok := m["source_608_channel_number"].(int); ok && v != 0 {
 		out.Source608ChannelNumber = aws.Int32(int32(v))
 	}
 
@@ -1516,7 +1516,7 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27Sou
 	if v, ok := m["ocr_language"].(string); ok && v != "" {
 		out.OcrLanguage = types.Scte27OcrLanguage(v)
 	}
-	if v, ok := m["pid"].(int); ok && v > 0 {
+	if v, ok := m["pid"].(int); ok && v != 0 {
 		out.Pid = aws.Int32(int32(v))
 	}
 
@@ -1549,16 +1549,16 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextS
 	m := tfList[0].(map[string]interface{})
 
 	var out types.CaptionRectangle
-	if v, ok := m["height"].(float32); ok && v > 0 {
+	if v, ok := m["height"].(float32); ok && v != 0.0 {
 		out.Height = aws.Float64(float64(v))
 	}
-	if v, ok := m["left_offset"].(float32); ok && v > 0 {
+	if v, ok := m["left_offset"].(float32); ok && v != 0.0 {
 		out.LeftOffset = aws.Float64(float64(v))
 	}
-	if v, ok := m["top_offset"].(float32); ok && v > 0 {
+	if v, ok := m["top_offset"].(float32); ok && v != 0.0 {
 		out.TopOffset = aws.Float64(float64(v))
 	}
-	if v, ok := m["width"].(float32); ok && v > 0 {
+	if v, ok := m["width"].(float32); ok && v != 0.0 {
 		out.Width = aws.Float64(float64(v))
 	}
 
@@ -1591,16 +1591,16 @@ func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.Hls
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsInputSettings
-	if v, ok := m["bandwidth"].(int); ok && v > 0 {
+	if v, ok := m["bandwidth"].(int); ok && v != 0 {
 		out.Bandwidth = aws.Int32(int32(v))
 	}
-	if v, ok := m["buffer_segments"].(int); ok && v > 0 {
+	if v, ok := m["buffer_segments"].(int); ok && v != 0 {
 		out.BufferSegments = aws.Int32(int32(v))
 	}
-	if v, ok := m["retries"].(int); ok && v > 0 {
+	if v, ok := m["retries"].(int); ok && v != 0 {
 		out.Retries = aws.Int32(int32(v))
 	}
-	if v, ok := m["retry_interval"].(int); ok && v > 0 {
+	if v, ok := m["retry_interval"].(int); ok && v != 0 {
 		out.RetryInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["scte35_source"].(string); ok && v != "" {
@@ -1621,7 +1621,7 @@ func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *
 	if v, ok := m["secondary_input_id"].(string); ok && v != "" {
 		out.SecondaryInputId = aws.String(v)
 	}
-	if v, ok := m["error_clear_time_msec"].(int); ok && v > 0 {
+	if v, ok := m["error_clear_time_msec"].(int); ok && v != 0 {
 		out.ErrorClearTimeMsec = aws.Int32(int32(v))
 	}
 	if v, ok := m["failover_conditions"].(*schema.Set); ok && v.Len() > 0 {
@@ -1689,7 +1689,7 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	if v, ok := m["audio_selector_name"].(string); ok && v != "" {
 		out.AudioSelectorName = aws.String(v)
 	}
-	if v, ok := m["audio_silence_threshold_msec"].(int); ok && v > 0 {
+	if v, ok := m["audio_silence_threshold_msec"].(int); ok && v != 0 {
 		out.AudioSilenceThresholdMsec = aws.Int32(int32(v))
 	}
 
@@ -1704,7 +1704,7 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	m := tfList[0].(map[string]interface{})
 
 	var out types.InputLossFailoverSettings
-	if v, ok := m["input_loss_threshold_msec"].(int); ok && v > 0 {
+	if v, ok := m["input_loss_threshold_msec"].(int); ok && v != 0 {
 		out.InputLossThresholdMsec = aws.Int32(int32(v))
 	}
 
@@ -1719,10 +1719,10 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	m := tfList[0].(map[string]interface{})
 
 	var out types.VideoBlackFailoverSettings
-	if v, ok := m["black_detect_threshold"].(float32); ok && v > 0 {
+	if v, ok := m["black_detect_threshold"].(float32); ok && v != 0.0 {
 		out.BlackDetectThreshold = aws.Float64(float64(v))
 	}
-	if v, ok := m["video_black_threshold_msec"].(int); ok && v > 0 {
+	if v, ok := m["video_black_threshold_msec"].(int); ok && v != 0 {
 		out.VideoBlackThresholdMsec = aws.Int32(int32(v))
 	}
 
