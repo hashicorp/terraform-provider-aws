@@ -93,6 +93,7 @@ cleango: ## Clean up Go cache
 	go clean -modcache -testcache -cache ; \
 
 clean: cleango build tools ## Clean up Go cache and re-install tools
+	go mod tidy
 
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
