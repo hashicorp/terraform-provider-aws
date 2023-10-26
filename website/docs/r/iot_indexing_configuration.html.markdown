@@ -79,7 +79,8 @@ The `custom_field` and `managed_field` configuration blocks supports the followi
 ### filter
 
 The `filter` configuration block supports the following:
-* `named_shadow_names` - (Optional) List of shadow names that you select to index. 
+
+* `named_shadow_names` - (Optional) List of shadow names that you select to index.
 
 ## Attribute Reference
 
