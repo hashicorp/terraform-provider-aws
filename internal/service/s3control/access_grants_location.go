@@ -102,12 +102,13 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 	if data.AccountID.ValueString() == "" {
 		data.AccountID = types.StringValue(r.Meta().AccountID)
 	}
-	input := &s3control.CreateAccessGrantsLocationInput{
-		AccountId:     flex.StringFromFramework(ctx, data.AccountID),
-		IAMRoleArn:    flex.StringFromFramework(ctx, data.IAMRoleARN),
-		LocationScope: flex.StringFromFramework(ctx, data.LocationScope),
-		Tags:          getTagsInS3Control(ctx),
+	input := &s3control.CreateAccessGrantsLocationInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	input.Tags = getTagsInS3Control(ctx)
 
 	// TODO: Is this the GA error?
 	// HTTP 400 => Invalid IAM role.
@@ -163,10 +164,10 @@ func (r *resourceAccessGrantsLocation) Read(ctx context.Context, request resourc
 	}
 
 	// Set attributes for import.
-	data.AccessGrantsLocationARN = flex.StringToFramework(ctx, output.AccessGrantsLocationArn)
-	data.AccessGrantsLocationID = flex.StringToFramework(ctx, output.AccessGrantsLocationId)
-	data.IAMRoleARN = flex.StringToFrameworkARN(ctx, output.IAMRoleArn, nil)
-	data.LocationScope = flex.StringToFramework(ctx, output.LocationScope)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	tags, err := listTags(ctx, conn, data.AccessGrantsLocationARN.ValueString(), data.AccountID.ValueString())
 
@@ -199,10 +200,10 @@ func (r *resourceAccessGrantsLocation) Update(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if !new.IAMRoleARN.Equal(old.IAMRoleARN) {
-		input := &s3control.UpdateAccessGrantsLocationInput{
-			AccessGrantsLocationId: flex.StringFromFramework(ctx, new.AccessGrantsLocationID),
-			AccountId:              flex.StringFromFramework(ctx, new.AccountID),
-			IAMRoleArn:             flex.StringFromFramework(ctx, new.IAMRoleARN),
+		input := &s3control.UpdateAccessGrantsLocationInput{}
+		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
 		// TODO: Is this the GA error?
