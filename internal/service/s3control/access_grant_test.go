@@ -95,11 +95,11 @@ func testAccCheckAccessGrantExists(ctx context.Context, n string) resource.TestC
 }
 
 func testAccAccessGrantConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), `
+data "aws_iam_user" "test" {
+  user_name = "teamcity"
 }
-`, rName))
+`)
 }
 
 func testAccAccessGrantConfig_basic(rName string) string {
@@ -117,7 +117,7 @@ resource "aws_s3control_access_grant" "test" {
 
   grantee {
     grantee_type       = "IAM"
-    grantee_identifier = aws_iam_user.test.arn
+    grantee_identifier = data.aws_iam_user.test.arn
   }
 }
 `)
