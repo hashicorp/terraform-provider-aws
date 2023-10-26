@@ -94,8 +94,9 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
 
-	if err := d.Set("tags", KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	tags := KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf("setting tags: %s", err)
 	}
 
 	return diags
