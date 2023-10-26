@@ -143,6 +143,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourcePrompt,
+			TypeName: "aws_connect_prompt",
+			Name:     "Prompt",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceQueue,
 			TypeName: "aws_connect_queue",
 			Name:     "Queue",
