@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
@@ -59,12 +60,12 @@ func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.
 		return ARNUnknown(), diags
 	}
 
-	v, err := arn.Parse(in.ValueString())
-	if err != nil {
+	valueString := in.ValueString()
+	if _, err := arn.Parse(valueString); err != nil {
 		return ARNUnknown(), diags // Must not return validation errors.
 	}
 
-	return ARNValue(v), diags
+	return ARNValue(valueString), diags
 }
 
 func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -124,120 +125,40 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 }
 
 func ARNNull() ARN {
-	return ARN{
-		state: attr.ValueStateNull,
-	}
+	return ARN{StringValue: basetypes.NewStringNull()}
 }
 
 func ARNUnknown() ARN {
-	return ARN{
-		state: attr.ValueStateUnknown,
-	}
+	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
-func ARNValue(value arn.ARN) ARN {
+func ARNValue(value string) ARN {
 	return ARN{
-		state: attr.ValueStateKnown,
-		value: value,
+		StringValue: basetypes.NewStringValue(value),
+		value:       errs.Must(arn.Parse(value)),
 	}
 }
 
 type ARN struct {
-	// state represents whether the value is null, unknown, or known. The
-	// zero-value is null.
-	state attr.ValueState
-
-	// value contains the known value, if not null or unknown.
+	basetypes.StringValue
 	value arn.ARN
 }
 
-func (a ARN) Type(_ context.Context) attr.Type {
-	return ARNType
-}
-
-func (a ARN) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	switch a.state {
-	case attr.ValueStateKnown:
-		return types.StringValue(a.value.String()), nil
-	case attr.ValueStateNull:
-		return types.StringNull(), nil
-	case attr.ValueStateUnknown:
-		return types.StringUnknown(), nil
-	default:
-		return types.StringUnknown(), diag.Diagnostics{
-			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled ARN state in ToStringValue: %s", a.state), ""),
-		}
-	}
-}
-
-func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	t := ARNType.TerraformType(ctx)
-
-	switch a.state {
-	case attr.ValueStateKnown:
-		if err := tftypes.ValidateValue(t, a.value.String()); err != nil {
-			return tftypes.NewValue(t, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(t, a.value.String()), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(t, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(t, tftypes.UnknownValue), nil
-	default:
-		return tftypes.NewValue(t, tftypes.UnknownValue), fmt.Errorf("unhandled ARN state in ToTerraformValue: %s", a.state)
-	}
-}
-
-// Equal returns true if `other` is a *ARN and has the same value as `a`.
-func (a ARN) Equal(other attr.Value) bool {
-	o, ok := other.(ARN)
+func (v ARN) Equal(o attr.Value) bool {
+	other, ok := o.(ARN)
 
 	if !ok {
 		return false
 	}
 
-	if a.state != o.state {
-		return false
-	}
-
-	if a.state != attr.ValueStateKnown {
-		return true
-	}
-
-	return a.value == o.value
+	return v.StringValue.Equal(other.StringValue)
 }
 
-// IsNull returns true if the Value is not set, or is explicitly set to null.
-func (a ARN) IsNull() bool {
-	return a.state == attr.ValueStateNull
-}
-
-// IsUnknown returns true if the Value is not yet known.
-func (a ARN) IsUnknown() bool {
-	return a.state == attr.ValueStateUnknown
-}
-
-// String returns a summary representation of either the underlying Value,
-// or UnknownValueString (`<unknown>`) when IsUnknown() returns true,
-// or NullValueString (`<null>`) when IsNull() return true.
-//
-// This is an intentionally lossy representation, that are best suited for
-// logging and error reporting, as they are not protected by
-// compatibility guarantees within the framework.
-func (a ARN) String() string {
-	if a.IsUnknown() {
-		return attr.UnknownValueString
-	}
-
-	if a.IsNull() {
-		return attr.NullValueString
-	}
-
-	return a.value.String()
+func (v ARN) Type(context.Context) attr.Type {
+	return ARNType
 }
 
 // ValueARN returns the known arn.ARN value. If ARN is null or unknown, returns {}.
-func (a ARN) ValueARN() arn.ARN {
-	return a.value
+func (v ARN) ValueARN() arn.ARN {
+	return v.value
 }
