@@ -109,7 +109,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerConnectPeer_subnetArn(t *testing.T) {
+func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkmanager.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
@@ -126,7 +126,7 @@ func TestAccNetworkManagerConnectPeer_subnetArn(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectPeerConfig_subnetArn(rName, peerAddress, asn, protocol),
+				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
@@ -408,7 +408,7 @@ resource "aws_networkmanager_connect_peer" "test" {
 `, rName, insideCidrBlocks, peerAddress, asn))
 }
 
-func testAccConnectPeerConfig_subnetArn(rName string, peerAddress string, asn string, protocol string) string {
+func testAccConnectPeerConfig_subnetARN(rName string, peerAddress string, asn string, protocol string) string {
 	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName, protocol), fmt.Sprintf(`
 resource "aws_networkmanager_connect_peer" "test" {
   connect_attachment_id = aws_networkmanager_connect_attachment.test.id
