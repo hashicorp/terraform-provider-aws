@@ -26,16 +26,18 @@ func (validator awsAccountIDValidator) MarkdownDescription(ctx context.Context) 
 
 // Validate performs the validation.
 func (validator awsAccountIDValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+	configValue := request.ConfigValue
+
+	if configValue.IsNull() || configValue.IsUnknown() {
 		return
 	}
 
 	// https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-identifiers.html.
-	if !regexache.MustCompile(`^\d{12}$`).MatchString(request.ConfigValue.ValueString()) {
+	if valueString := configValue.ValueString(); !regexache.MustCompile(`^\d{12}$`).MatchString(valueString) {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			request.ConfigValue.ValueString(),
+			valueString,
 		))
 		return
 	}
