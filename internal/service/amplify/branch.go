@@ -362,7 +362,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("enable_performance_mode") {
-			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_performance_mode").(bool))
+			input.EnablePerformanceMode = aws.Bool(d.Get("enable_performance_mode").(bool))
 		}
 
 		if d.HasChange("enable_pull_request_preview") {
