@@ -32,16 +32,25 @@ The following arguments are supported:
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s Detective delegated administrator and Detective is enabled in that AWS Region.
 * `graph_arn` - (Required) ARN of the behavior graph.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the Detective Graph.
 
 ## Import
 
-Detective Organization Configurations can be imported using the Detective Graph ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
 
+```terraform
+import {
+  to = aws_detective_organization_configuration.example
+  id = 00b00fd5aecc0ab60a708659477e9617
+}
 ```
-$ terraform import aws_detective_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
+
+```console
+% terraform import aws_detective_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```

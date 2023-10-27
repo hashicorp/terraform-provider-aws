@@ -31,16 +31,27 @@ The following arguments are supported:
 
 * `account_id` - (Required) AWS account identifier to designate as a delegated administrator for Detective.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account identifier.
 
 ## Import
 
-Detective Organization Admin Account can be imported using the AWS account ID, e.g.,
+## Import
 
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using `account_id`. For example:
+
+```terraform
+import {
+  to = aws_detective_organization_admin_account.example
+  id = 123456789012
+}
 ```
-$ terraform import aws_detective_organization_admin_account.example 123456789012
+
+Using `terraform import`, import `aws_detective_organization_admin_account` using `account_id`. For example:
+
+```console
+% terraform import aws_detective_organization_admin_account.example 123456789012
 ```
