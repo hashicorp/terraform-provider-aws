@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,7 +58,8 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Schema(ctx context.Context,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"policy": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.IAMPolicyType,
+				Required:   true,
 			},
 		},
 	}
@@ -129,7 +131,10 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Read(ctx context.Context, r
 	}
 
 	// Set attributes for import.
-	data.Policy = flex.StringToFramework(ctx, output.Policy)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -219,9 +224,9 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 }
 
 type accessGrantsInstanceResourcePolicyResourceModel struct {
-	AccountID types.String `tfsdk:"account_id"`
-	ID        types.String `tfsdk:"id"`
-	Policy    types.String `tfsdk:"policy"`
+	AccountID types.String      `tfsdk:"account_id"`
+	ID        types.String      `tfsdk:"id"`
+	Policy    fwtypes.IAMPolicy `tfsdk:"policy"`
 }
 
 func (data *accessGrantsInstanceResourcePolicyResourceModel) InitFromID() error {
