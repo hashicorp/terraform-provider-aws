@@ -1,4 +1,9 @@
 ## 5.23.1 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_lambda_function: Add `vpc_config.ipv6_allowed_for_dual_stack` attribute, fixing `Invalid address to set: []string{"vpc_config", "0", "ipv6_allowed_for_dual_stack"}` errors ([#34134](https://github.com/hashicorp/terraform-provider-aws/issues/34134))
+
 ## 5.23.0 (October 26, 2023)
 
 NOTES:
