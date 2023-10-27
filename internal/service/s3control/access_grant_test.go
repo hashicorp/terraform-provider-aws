@@ -53,6 +53,29 @@ func testAccAccessGrant_basic(t *testing.T) {
 	})
 }
 
+func testAccAccessGrant_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3control_access_grant.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsLocation, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
@@ -94,8 +117,8 @@ func testAccCheckAccessGrantExists(ctx context.Context, n string) resource.TestC
 	}
 }
 
-func testAccAccessGrantConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), `
+func testAccAccessGrantConfig_baseCustomLocation(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_baseCustomLocation(rName), `
 data "aws_iam_user" "test" {
   user_name = "teamcity"
 }
@@ -103,16 +126,7 @@ data "aws_iam_user" "test" {
 }
 
 func testAccAccessGrantConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantConfig_base(rName), fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "prefixA"
-}
-
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
 resource "aws_s3control_access_grants_location" "test" {
   depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
 

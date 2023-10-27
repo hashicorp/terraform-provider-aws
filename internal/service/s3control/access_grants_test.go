@@ -27,7 +27,8 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 			"update": testAccAccessGrantsLocation_update,
 		},
 		"Grant": {
-			"basic": testAccAccessGrant_basic,
+			"basic":      testAccAccessGrant_basic,
+			"disappears": testAccAccessGrant_disappears,
 		},
 	}
 
