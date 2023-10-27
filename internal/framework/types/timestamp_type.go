@@ -21,8 +21,8 @@ type TimestampType struct {
 }
 
 var (
-	_ xattr.TypeWithValidate  = TimestampType{}
-	_ basetypes.StringTypable = TimestampType{}
+	_ xattr.TypeWithValidate  = (*TimestampType)(nil)
+	_ basetypes.StringTypable = (*TimestampType)(nil)
 )
 
 func (typ TimestampType) ValueFromString(_ context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {

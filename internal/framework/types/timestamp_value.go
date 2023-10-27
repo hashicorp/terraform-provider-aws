@@ -44,7 +44,7 @@ func newTimestampValue(s string, t time.Time) TimestampValue {
 }
 
 var (
-	_ basetypes.StringValuable = TimestampValue{}
+	_ basetypes.StringValuable = (*TimestampValue)(nil)
 )
 
 type TimestampValue struct {
