@@ -24,6 +24,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceAccessGrant,
+			Name:    "Access Grant",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
 			Factory: newResourceAccessGrantsInstance,
 			Name:    "Access Grants Instance",
 			Tags:    &types.ServicePackageResourceTags{},
