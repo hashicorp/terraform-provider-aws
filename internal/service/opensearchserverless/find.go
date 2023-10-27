@@ -164,3 +164,37 @@ func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client,
 
 	return &out.VpcEndpointDetails[0], nil
 }
+
+func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.LifecyclePolicyDetail, error) {
+	in := &opensearchserverless.BatchGetLifecyclePolicyInput{
+		Identifiers: []types.LifecyclePolicyIdentifier{
+			{
+				Name: aws.String(name),
+				Type: types.LifecyclePolicyType(policyType),
+			},
+		},
+	}
+
+	out, err := conn.BatchGetLifecyclePolicy(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.LifecyclePolicyDetails == nil || len(out.LifecyclePolicyDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if len(out.LifecyclePolicyDetails) > 1 {
+		return nil, tfresource.NewTooManyResultsError(len(out.LifecyclePolicyDetails), in)
+	}
+
+	return &out.LifecyclePolicyDetails[0], nil
+}
