@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb: Remove `dns_record.client_routing_policy` attribute on creation, fixing `InvalidConfigurationRequest` errors in AWS Gov Cloud
+```

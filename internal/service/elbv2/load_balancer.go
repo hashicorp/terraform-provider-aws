@@ -543,7 +543,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 	case elbv2.LoadBalancerTypeEnumNetwork:
-		if d.HasChange("dns_record_client_routing_policy") || d.IsNewResource() {
+		if d.HasChange("dns_record_client_routing_policy") {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("dns_record.client_routing_policy"),
 				Value: aws.String(d.Get("dns_record_client_routing_policy").(string)),
