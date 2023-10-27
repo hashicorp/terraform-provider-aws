@@ -78,9 +78,9 @@ func (dummyValueser) Values() []dummyValueser {
 }
 
 var (
-	_ xattr.TypeWithValidate   = stringEnumType[dummyValueser]{}
-	_ basetypes.StringTypable  = stringEnumType[dummyValueser]{}
-	_ basetypes.StringValuable = StringEnum[dummyValueser]{}
+	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
 )
 
 func (t stringEnumType[T]) Equal(o attr.Type) bool {
