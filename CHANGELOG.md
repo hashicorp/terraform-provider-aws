@@ -1,4 +1,4 @@
-## 5.24.0 (Unreleased)
+## 5.23.1 (Unreleased)
 ## 5.23.0 (October 26, 2023)
 
 NOTES:
