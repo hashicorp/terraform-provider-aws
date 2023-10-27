@@ -226,6 +226,10 @@ func (r *resourceAccessGrant) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
+	if isNullAccessGrantsLocationConfiguration(output.AccessGrantsLocationConfiguration) {
+		output.AccessGrantsLocationConfiguration = nil
+	}
+
 	// Set attributes for import.
 	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
@@ -370,4 +374,15 @@ func (data *accessGrantResourceModel) InitFromID() error {
 
 func (data *accessGrantResourceModel) setID() {
 	data.ID = types.StringValue(strings.Join([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDSeparator))
+}
+
+// API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.
+func isNullAccessGrantsLocationConfiguration(v *awstypes.AccessGrantsLocationConfiguration) bool {
+	if v == nil {
+		return true
+	}
+	if aws.ToString(v.S3SubPrefix) == "" {
+		return true
+	}
+	return false
 }
