@@ -28,7 +28,7 @@ func testAccAccessGrantsInstanceResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(),
+				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -40,6 +40,28 @@ func testAccAccessGrantsInstanceResourcePolicy_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"policy"},
+			},
+		},
+	})
+}
+
+func testAccAccessGrantsInstanceResourcePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3control_access_grants_instance_resource_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsInstanceResourcePolicy, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -86,8 +108,8 @@ func testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx context.Context, n
 	}
 }
 
-func testAccAccessGrantsInstanceResourcePolicyConfig_basic() string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+func testAccAccessGrantsInstanceResourcePolicyConfig_basic(action string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "target" {
   provider = "awsalternate"
 }
@@ -105,15 +127,11 @@ resource "aws_s3control_access_grants_instance_resource_policy" "test" {
     "Principal": {
       "AWS": "${data.aws_caller_identity.target.account_id}"
     },
-    "Action": [
-      "s3:ListAccessGrants",
-      "s3:ListAccessGrantsLocations",
-      "s3:GetDataAccess"
-    ],
+    "Action": [%[1]s],
     "Resource": "${aws_s3control_access_grants_instance.test.access_grants_instance_arn}"
   }]
 }
 EOF
 }
-`)
+`, action))
 }
