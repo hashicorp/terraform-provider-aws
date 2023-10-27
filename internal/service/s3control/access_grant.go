@@ -304,9 +304,9 @@ func (r *resourceAccessGrant) ModifyPlan(ctx context.Context, request resource.M
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantOutput, error) {
+func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {
 	input := &s3control.GetAccessGrantInput{
-		AccessGrantId: aws.String(locationID),
+		AccessGrantId: aws.String(grantID),
 		AccountId:     aws.String(accountID),
 	}
 

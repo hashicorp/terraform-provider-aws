@@ -21,7 +21,7 @@ import (
 func testAccAccessGrant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3control_access_grants_location.test"
+	resourceName := "aws_s3control_access_grant.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -40,7 +40,7 @@ func testAccAccessGrant_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
-					resource.TestCheckResourceAttr(resourceName, "s3_prefix_type", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -103,12 +103,21 @@ data "aws_iam_user" "test" {
 }
 
 func testAccAccessGrantConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantConfig_base(rName), `
+	return acctest.ConfigCompose(testAccAccessGrantConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "prefixA"
+}
+
 resource "aws_s3control_access_grants_location" "test" {
   depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
 
   iam_role_arn   = aws_iam_role.test.arn
-  location_scope = "s3://"
+  location_scope = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}*"
 }
 
 resource "aws_s3control_access_grant" "test" {
@@ -120,5 +129,5 @@ resource "aws_s3control_access_grant" "test" {
     grantee_identifier = data.aws_iam_user.test.arn
   }
 }
-`)
+`, rName))
 }
