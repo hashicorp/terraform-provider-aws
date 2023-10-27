@@ -29,6 +29,8 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 		"Grant": {
 			"basic":      testAccAccessGrant_basic,
 			"disappears": testAccAccessGrant_disappears,
+			// TODO Tagging not working during beta.
+			// "tags":       testAccAccessGrant_tags,
 		},
 	}
 

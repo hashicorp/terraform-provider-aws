@@ -76,6 +76,51 @@ func testAccAccessGrant_disappears(t *testing.T) {
 	})
 }
 
+func testAccAccessGrant_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3control_access_grant.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessGrantConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAccessGrantConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
@@ -122,18 +167,18 @@ func testAccAccessGrantConfig_baseCustomLocation(rName string) string {
 data "aws_iam_user" "test" {
   user_name = "teamcity"
 }
-`)
-}
 
-func testAccAccessGrantConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
 resource "aws_s3control_access_grants_location" "test" {
   depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
 
   iam_role_arn   = aws_iam_role.test.arn
   location_scope = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}*"
 }
+`)
+}
 
+func testAccAccessGrantConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
 resource "aws_s3control_access_grant" "test" {
   access_grants_location_id = aws_s3control_access_grants_location.test.access_grants_location_id
   permission                = "READ"
@@ -144,4 +189,41 @@ resource "aws_s3control_access_grant" "test" {
   }
 }
 `, rName))
+}
+
+func testAccAccessGrantConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
+resource "aws_s3control_access_grant" "test" {
+  access_grants_location_id = aws_s3control_access_grants_location.test.access_grants_location_id
+  permission                = "READWRITE"
+
+  grantee {
+    grantee_type       = "IAM"
+    grantee_identifier = data.aws_iam_user.test.arn
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccAccessGrantConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
+resource "aws_s3control_access_grant" "test" {
+  access_grants_location_id = aws_s3control_access_grants_location.test.access_grants_location_id
+  permission                = "READWRITE"
+
+  grantee {
+    grantee_type       = "IAM"
+    grantee_identifier = data.aws_iam_user.test.arn
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
