@@ -50,13 +50,13 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error enabling Detective Organization Admin Account (%s): %s", accountID, err)
+		return diag.Errorf("enabling Detective Organization Admin Account (%s): %s", accountID, err)
 	}
 
 	d.SetId(accountID)
 
 	if _, err := waitAdminAccountFound(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Detective Organization Admin Account (%s) to enable: %s", d.Id(), err)
+		return diag.Errorf("waiting for Detective Organization Admin Account (%s) to enable: %s", d.Id(), err)
 	}
 
 	return resourceOrganizationAdminAccountRead(ctx, d, meta)
@@ -74,12 +74,12 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Detective Organization Admin Account (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
 	if adminAccount == nil {
 		if d.IsNewResource() {
-			return diag.Errorf("error reading Detective Organization Admin Account (%s): %s", d.Id(), err)
+			return diag.Errorf("reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 		}
 
 		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
@@ -104,11 +104,11 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
+		return diag.Errorf("disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAdminAccountNotFound(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Detective Organization Admin Account (%s) to disable: %s", d.Id(), err)
+		return diag.Errorf("waiting for Detective Organization Admin Account (%s) to disable: %s", d.Id(), err)
 	}
 
 	return nil

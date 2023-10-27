@@ -55,7 +55,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Detective Organization Configuration (%s): %s", graphARN, err)
+		return diag.Errorf("updating Detective Organization Configuration (%s): %s", graphARN, err)
 	}
 
 	d.SetId(graphARN)
@@ -73,11 +73,11 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error reading Detective Organization Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Detective Organization Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error reading Detective Organization Configuration (%s): empty response", d.Id())
+		return diag.Errorf("reading Detective Organization Configuration (%s): empty response", d.Id())
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
