@@ -22,16 +22,16 @@ resource "aws_lightsail_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `domain_name` - (Required) A domain name for which the certificate should be issued.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the lightsail certificate (matches `name`).
 * `arn` - The ARN of the lightsail certificate.
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_lightsail_certificate` can be imported using the certificate name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_certificate` using the certificate name. For example:
 
-```shell
-$ terraform import aws_lightsail_certificate.test CertificateName
+```terraform
+import {
+  to = aws_lightsail_certificate.test
+  id = "CertificateName"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_certificate` using the certificate name. For example:
+
+```console
+% terraform import aws_lightsail_certificate.test CertificateName
 ```

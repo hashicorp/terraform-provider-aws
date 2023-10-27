@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -314,7 +317,7 @@ func DataSourceCostCategory() *schema.Resource {
 }
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
@@ -337,7 +340,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)

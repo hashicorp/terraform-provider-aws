@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3outposts
 
 import (
@@ -11,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_s3outposts_endpoint")
@@ -29,6 +34,13 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(s3outposts.EndpointAccessType_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -40,6 +52,12 @@ func ResourceEndpoint() *schema.Resource {
 			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"customer_owned_ipv4_pool": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"network_interfaces": {
 				Type:     schema.TypeSet,
@@ -77,12 +95,20 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
 		SecurityGroupId: aws.String(d.Get("security_group_id").(string)),
 		SubnetId:        aws.String(d.Get("subnet_id").(string)),
+	}
+
+	if v, ok := d.GetOk("access_type"); ok {
+		input.AccessType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateEndpointWithContext(ctx, input)
@@ -91,14 +117,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating S3 Outposts Endpoint: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Outposts Endpoint: empty response")
-	}
-
 	d.SetId(aws.StringValue(output.EndpointArn))
 
 	if _, err := waitEndpointStatusCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for S3 Outposts Endpoint (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Outposts Endpoint (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
@@ -106,35 +128,30 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
-	endpoint, err := FindEndpoint(ctx, conn, d.Id())
+	endpoint, err := FindEndpointByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Outposts Endpoint %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Outposts Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if endpoint == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading S3 Outposts Endpoint (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] S3 Outposts Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
+	d.Set("access_type", endpoint.AccessType)
 	d.Set("arn", endpoint.EndpointArn)
 	d.Set("cidr_block", endpoint.CidrBlock)
-
 	if endpoint.CreationTime != nil {
 		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}
-
+	d.Set("customer_owned_ipv4_pool", endpoint.CustomerOwnedIpv4Pool)
 	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %s", err)
 	}
-
 	d.Set("outpost_id", endpoint.OutpostsId)
 
 	return diags
@@ -142,12 +159,12 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing S3 Outposts Endpoint ARN (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// ARN resource format: outpost/<outpost-id>/endpoint/<endpoint-id>
@@ -157,12 +174,11 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "parsing S3 Outposts Endpoint ARN (%s): unknown format", d.Id())
 	}
 
-	input := &s3outposts.DeleteEndpointInput{
+	log.Printf("[DEBUG] Deleting S3 Outposts Endpoint: %s", d.Id())
+	_, err = conn.DeleteEndpointWithContext(ctx, &s3outposts.DeleteEndpointInput{
 		EndpointId: aws.String(arnResourceParts[3]),
 		OutpostId:  aws.String(arnResourceParts[1]),
-	}
-
-	_, err = conn.DeleteEndpointWithContext(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Outposts Endpoint (%s): %s", d.Id(), err)
@@ -187,6 +203,88 @@ func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, me
 	d.Set("subnet_id", subnetId)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindEndpointByARN(ctx context.Context, conn *s3outposts.S3Outposts, arn string) (*s3outposts.Endpoint, error) {
+	input := &s3outposts.ListEndpointsInput{}
+
+	output, err := findEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.EndpointArn) == arn && aws.StringValue(v.Status) != s3outposts.EndpointStatusDeleting && aws.StringValue(v.Status) != s3outposts.EndpointStatusDeleteFailed {
+			return v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findEndpoints(ctx context.Context, conn *s3outposts.S3Outposts, input *s3outposts.ListEndpointsInput) ([]*s3outposts.Endpoint, error) {
+	var output []*s3outposts.Endpoint
+
+	err := conn.ListEndpointsPagesWithContext(ctx, input, func(page *s3outposts.ListEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Endpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEndpoint(ctx context.Context, conn *s3outposts.S3Outposts, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEndpointByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEndpointStatusCreated(ctx context.Context, conn *s3outposts.S3Outposts, arn string) (*s3outposts.Endpoint, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{s3outposts.EndpointStatusPending},
+		Target:  []string{s3outposts.EndpointStatusAvailable},
+		Refresh: statusEndpoint(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*s3outposts.Endpoint); ok {
+		if failedReason := output.FailedReason; failedReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failedReason.ErrorCode), aws.StringValue(failedReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func flattenNetworkInterfaces(apiObjects []*s3outposts.NetworkInterface) []interface{} {

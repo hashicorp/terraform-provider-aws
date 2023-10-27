@@ -1,24 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwdiag
 
 import (
 	"errors"
 	"fmt"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
-func DiagnosticsError(diags diag.Diagnostics) (errs error) {
-	if !diags.HasError() {
-		return
-	}
+func DiagnosticsError(diags diag.Diagnostics) error {
+	var errs []error
 
 	for _, d := range diags.Errors() {
-		errs = multierror.Append(errs, errors.New(DiagnosticString(d)))
+		errs = append(errs, errors.New(DiagnosticString(d)))
 	}
 
-	return
+	return errors.Join(errs...)
 }
 
 // DiagnosticString formats a Diagnostic

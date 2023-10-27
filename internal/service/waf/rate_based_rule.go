@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -91,7 +94,7 @@ func ResourceRateBasedRule() *schema.Resource {
 
 func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &waf.CreateRateBasedRuleInput{
@@ -99,7 +102,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 		Name:       aws.String(name),
 		RateKey:    aws.String(d.Get("rate_key").(string)),
 		RateLimit:  aws.Int64(int64(d.Get("rate_limit").(int))),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	wr := NewRetryer(conn)
@@ -131,7 +134,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	rule, err := FindRateBasedRuleByID(ctx, conn, d.Id())
 
@@ -177,7 +180,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
@@ -196,7 +199,7 @@ func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {

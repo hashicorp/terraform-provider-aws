@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -149,7 +152,7 @@ func ResourceIntent() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"parent_intent_signature": {
@@ -192,7 +195,7 @@ func ResourceIntent() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 							),
 						},
 						"priority": {
@@ -226,7 +229,7 @@ func ResourceIntent() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+								validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
 							),
 						},
 						"slot_type_version": {
@@ -234,7 +237,7 @@ func ResourceIntent() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
-								validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
 							),
 						},
 						"value_elicitation_prompt": {
@@ -286,7 +289,7 @@ func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 
 func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -360,7 +363,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
@@ -435,7 +438,7 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -506,7 +509,7 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),

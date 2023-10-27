@@ -36,7 +36,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	accountID := d.Get("account_id").(string)
 
@@ -60,7 +60,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	adminAccount, err := FindAdminAccount(ctx, conn, d.Id())
 
@@ -90,7 +90,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DisableOrganizationAdminAccountInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -42,7 +45,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	d.SetId(d.Get("name").(string))
 
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.DescribeConnectionInput{
 		Name: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisanalytics_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
@@ -1899,7 +1902,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_analytics_application" {
@@ -1933,7 +1936,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 			return fmt.Errorf("No Kinesis Analytics Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
 
 		application, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes["name"])
 
@@ -1948,7 +1951,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
 
 	input := &kinesisanalytics.ListApplicationsInput{}
 

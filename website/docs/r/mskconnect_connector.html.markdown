@@ -74,7 +74,7 @@ resource "aws_mskconnect_connector" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity` - (Required) Information about the capacity allocated to the connector. See below.
 * `connector_configuration` - (Required) A map of keys to values that represent the configuration for the connector.
@@ -177,9 +177,9 @@ The following arguments are supported:
 * `arn` - (Required) The Amazon Resource Name (ARN) of the worker configuration.
 * `revision` - (Required) The revision of the worker configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connector.
 * `version` - The current version of the connector.
@@ -194,8 +194,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MSK Connect Connector can be imported using the connector's `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK Connect Connector using the connector's `arn`. For example:
 
+```terraform
+import {
+  to = aws_mskconnect_connector.example
+  id = "arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3"
+}
 ```
-$ terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
+
+Using `terraform import`, import MSK Connect Connector using the connector's `arn`. For example:
+
+```console
+% terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
 ```

@@ -133,7 +133,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
@@ -183,17 +183,26 @@ The following arguments are supported:
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
     * `is_value_secret` - (Optional) Specified whether the value is secret.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connection.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
 
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge connection using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_connection.test
+  id = "ngrok-connection"
+}
+```
+
+Using `terraform import`, import EventBridge EventBridge connection using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_connection.test ngrok-connection
+% terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```

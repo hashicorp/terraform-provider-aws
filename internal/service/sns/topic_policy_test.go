@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sns"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
@@ -34,7 +37,7 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -62,7 +65,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -74,8 +77,8 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 				Config: testAccTopicPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("SNS:DeleteTopic")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("SNS:DeleteTopic")),
 				),
 			},
 		},
@@ -147,7 +150,7 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
@@ -161,7 +164,7 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckTopicPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic_policy" {

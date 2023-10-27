@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -60,9 +63,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,7 +85,9 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="{{ .HumanResourceName }}")
+{{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
+{{- end }}
 func newResource{{ .Resource }}(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Resource }}{}
 	{{ if .IncludeComments }}
@@ -177,8 +184,10 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			{{- if .IncludeTags }}
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			{{- end }}
 			"type": schema.StringAttribute{
 				Required: true,
 			},
@@ -242,7 +251,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -261,6 +270,9 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 		{{- end }}
 		{{ .Resource }}Name: aws.String(plan.Name.ValueString()),
 		{{ .Resource }}Type: aws.String(plan.Type.ValueString()),
+		{{- if .IncludeTags }}
+		Tags:             getTagsIn(ctx),
+		{{- end }}
 	}
 
 	if !plan.Description.IsNull() {
@@ -349,7 +361,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
@@ -434,7 +446,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -552,7 +564,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
@@ -621,6 +633,13 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
+
+{{- if .IncludeTags }}
+func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+{{- end }}
+
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
@@ -954,8 +973,10 @@ type resource{{ .Resource }}Data struct {
 	Description     types.String   `tfsdk:"description"`
 	ID              types.String   `tfsdk:"id"`
 	Name            types.String   `tfsdk:"name"`
+	{{- if .IncludeTags }}
 	Tags            types.Map      `tfsdk:"tags"`
 	TagsAll         types.Map      `tfsdk:"tags_all"`
+	{{- end }}
 	Timeouts        timeouts.Value `tfsdk:"timeouts"`
 	Type            types.String   `tfsdk:"type"`
 }

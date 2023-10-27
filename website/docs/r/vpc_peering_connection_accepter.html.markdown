@@ -73,7 +73,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_peering_connection_id` - (Required) The VPC Peering Connection ID to manage.
 * `auto_accept` - (Optional) Whether or not to accept the peering request. Defaults to `false`.
@@ -87,9 +87,9 @@ by removing the corresponding `aws_vpc_peering_connection` resource from your co
 Removing a `aws_vpc_peering_connection_accepter` resource from your configuration will remove it
 from your statefile and management, **but will not destroy the VPC Peering Connection.**
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
@@ -103,24 +103,29 @@ In addition to all arguments above, the following attributes are exported:
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-#### Accepter and Requester Attributes Reference
+#### Accepter and Requester Attribute Reference
 
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
-* `allow_classic_link_to_remote_vpc` - Indicates whether a local ClassicLink connection can communicate
-with the peer VPC over the VPC Peering Connection.
-* `allow_vpc_to_remote_classic_link` - Indicates whether a local VPC can communicate with a ClassicLink
-connection in the peer VPC over the VPC Peering Connection.
 
 ## Import
 
-VPC Peering Connection Accepters can be imported by using the Peering Connection ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering Connection Accepters using the Peering Connection ID. For example:
 
-```sh
-$ terraform import aws_vpc_peering_connection_accepter.example pcx-12345678
+```terraform
+import {
+  to = aws_vpc_peering_connection_accepter.example
+  id = "pcx-12345678"
+}
 ```
 
-Certain resource arguments, like `auto_accept`, do not have an EC2 API method for reading the information after peering connection creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import VPC Peering Connection Accepters using the Peering Connection ID. For example:
+
+```console
+% terraform import aws_vpc_peering_connection_accepter.example pcx-12345678
+```
+
+Certain resource arguments, like `auto_accept`, do not have an EC2 API method for reading the information after peering connection creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_vpc_peering_connection_accepter" "example" {

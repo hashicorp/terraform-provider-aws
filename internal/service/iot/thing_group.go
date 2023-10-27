@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -127,11 +130,11 @@ const (
 
 func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThingGroupName: aws.String(name),
 	}
 
@@ -156,7 +159,7 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindThingGroupByName(ctx, conn, d.Id())
 
@@ -200,7 +203,7 @@ func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateThingGroupInput{
@@ -235,7 +238,7 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, thingGroupDeleteTimeout,

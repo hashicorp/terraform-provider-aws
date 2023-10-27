@@ -1,13 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -23,10 +25,6 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Plan`),
-			},
-			{
 				Config: testAccPlanDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -38,12 +36,6 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccPlanDataSourceConfig_nonExistent = `
-data "aws_backup_plan" "test" {
-  plan_id = "tf-acc-test-does-not-exist"
-}
-`
 
 func testAccPlanDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`

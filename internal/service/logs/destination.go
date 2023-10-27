@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -43,7 +46,7 @@ func resourceDestination() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 512),
-					validation.StringMatch(regexp.MustCompile(`[^:*]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
 				),
 			},
 			"role_arn": {
@@ -69,7 +72,7 @@ const (
 )
 
 func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutDestinationInput{
@@ -91,7 +94,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
 	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
-	if err := createTags(ctx, conn, aws.StringValue(destination.Arn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(destination.Arn), getTagsIn(ctx)); err != nil {
 		return diag.Errorf("setting CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
 	}
 
@@ -99,7 +102,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
@@ -122,7 +125,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatchlogs.PutDestinationInput{
@@ -144,7 +147,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
 	_, err := conn.DeleteDestinationWithContext(ctx, &cloudwatchlogs.DeleteDestinationInput{

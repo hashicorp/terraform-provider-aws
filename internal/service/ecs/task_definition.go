@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -6,9 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,6 +39,7 @@ func ResourceTaskDefinition() *schema.Resource {
 		ReadWithoutTimeout:   resourceTaskDefinitionRead,
 		UpdateWithoutTimeout: resourceTaskDefinitionUpdate,
 		DeleteWithoutTimeout: resourceTaskDefinitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
@@ -124,7 +129,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
+					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
 				),
 			},
 			"inference_accelerator": {
@@ -366,7 +371,8 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:         schema.TypeInt,
 										ForceNew:     true,
 										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
+										ValidateFunc: validation.IsPortNumberOrZero,
+										Default:      0,
 									},
 								},
 							},
@@ -441,7 +447,7 @@ func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []stri
 
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
@@ -449,22 +455,30 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
-	input := ecs.RegisterTaskDefinitionInput{
+	input := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
 		Family:               aws.String(d.Get("family").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("task_role_arn"); ok {
-		input.TaskRoleArn = aws.String(v.(string))
+	if v, ok := d.GetOk("cpu"); ok {
+		input.Cpu = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
+		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cpu"); ok {
-		input.Cpu = aws.String(v.(string))
+	if v, ok := d.GetOk("inference_accelerator"); ok {
+		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("ipc_mode"); ok {
+		input.IpcMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("memory"); ok {
@@ -475,25 +489,11 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.NetworkMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ipc_mode"); ok {
-		input.IpcMode = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("pid_mode"); ok {
 		input.PidMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("volume"); ok {
-		volumes := expandVolumes(v.(*schema.Set).List())
-		input.Volumes = volumes
-	}
-
-	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
-	}
-
-	constraints := d.Get("placement_constraints").(*schema.Set).List()
-	if len(constraints) > 0 {
+	if constraints := d.Get("placement_constraints").(*schema.Set).List(); len(constraints) > 0 {
 		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
@@ -501,60 +501,57 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PlacementConstraints = cons
 	}
 
+	if proxyConfigs := d.Get("proxy_configuration").([]interface{}); len(proxyConfigs) > 0 {
+		input.ProxyConfiguration = expandTaskDefinitionProxyConfiguration(proxyConfigs)
+	}
+
 	if v, ok := d.GetOk("requires_compatibilities"); ok && v.(*schema.Set).Len() > 0 {
 		input.RequiresCompatibilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	runtimePlatformConfigs := d.Get("runtime_platform").([]interface{})
-	if len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
+	if runtimePlatformConfigs := d.Get("runtime_platform").([]interface{}); len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
 		input.RuntimePlatform = expandTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
 	}
 
-	proxyConfigs := d.Get("proxy_configuration").([]interface{})
-	if len(proxyConfigs) > 0 {
-		input.ProxyConfiguration = expandTaskDefinitionProxyConfiguration(proxyConfigs)
+	if v, ok := d.GetOk("task_role_arn"); ok {
+		input.TaskRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
-		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
+	if v, ok := d.GetOk("volume"); ok {
+		volumes := expandVolumes(v.(*schema.Set).List())
+		input.Volumes = volumes
 	}
 
-	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
-	out, err := conn.RegisterTaskDefinitionWithContext(ctx, &input)
+	output, err := conn.RegisterTaskDefinitionWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
-		out, err = conn.RegisterTaskDefinitionWithContext(ctx, &input)
+		output, err = conn.RegisterTaskDefinitionWithContext(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
-	taskDefinition := *out.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
-
-	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
-		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
+	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.StringValue(taskDefinition.TaskDefinitionArn), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceTaskDefinitionRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ECS Task Definition (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -563,7 +560,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
@@ -651,71 +648,9 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
-}
-
-func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) []map[string]interface{} {
-	if len(pcs) == 0 {
-		return nil
-	}
-	results := make([]map[string]interface{}, 0)
-	for _, pc := range pcs {
-		c := make(map[string]interface{})
-		c["type"] = aws.StringValue(pc.Type)
-		c["expression"] = aws.StringValue(pc.Expression)
-		results = append(results, c)
-	}
-	return results
-}
-
-func flattenRuntimePlatform(rp *ecs.RuntimePlatform) []map[string]interface{} {
-	if rp == nil {
-		return nil
-	}
-
-	os := aws.StringValue(rp.OperatingSystemFamily)
-	cpu := aws.StringValue(rp.CpuArchitecture)
-
-	if os == "" && cpu == "" {
-		return nil
-	}
-
-	config := make(map[string]interface{})
-
-	if os != "" {
-		config["operating_system_family"] = os
-	}
-	if cpu != "" {
-		config["cpu_architecture"] = cpu
-	}
-
-	return []map[string]interface{}{
-		config,
-	}
-}
-
-func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
-	if pc == nil {
-		return nil
-	}
-
-	meshProperties := make(map[string]string)
-	if pc.Properties != nil {
-		for _, prop := range pc.Properties {
-			meshProperties[aws.StringValue(prop.Name)] = aws.StringValue(prop.Value)
-		}
-	}
-
-	config := make(map[string]interface{})
-	config["container_name"] = aws.StringValue(pc.ContainerName)
-	config["type"] = aws.StringValue(pc.Type)
-	config["properties"] = meshProperties
-
-	return []map[string]interface{}{
-		config,
-	}
 }
 
 func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -733,7 +668,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	_, err := conn.DeregisterTaskDefinitionWithContext(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
@@ -802,6 +737,68 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
+}
+
+func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["type"] = aws.StringValue(pc.Type)
+		c["expression"] = aws.StringValue(pc.Expression)
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenRuntimePlatform(rp *ecs.RuntimePlatform) []map[string]interface{} {
+	if rp == nil {
+		return nil
+	}
+
+	os := aws.StringValue(rp.OperatingSystemFamily)
+	cpu := aws.StringValue(rp.CpuArchitecture)
+
+	if os == "" && cpu == "" {
+		return nil
+	}
+
+	config := make(map[string]interface{})
+
+	if os != "" {
+		config["operating_system_family"] = os
+	}
+	if cpu != "" {
+		config["cpu_architecture"] = cpu
+	}
+
+	return []map[string]interface{}{
+		config,
+	}
+}
+
+func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
+	if pc == nil {
+		return nil
+	}
+
+	meshProperties := make(map[string]string)
+	if pc.Properties != nil {
+		for _, prop := range pc.Properties {
+			meshProperties[aws.StringValue(prop.Name)] = aws.StringValue(prop.Value)
+		}
+	}
+
+	config := make(map[string]interface{})
+	config["container_name"] = aws.StringValue(pc.ContainerName)
+	config["type"] = aws.StringValue(pc.Type)
+	config["properties"] = meshProperties
+
+	return []map[string]interface{}{
+		config,
+	}
 }
 
 func flattenInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
@@ -978,7 +975,6 @@ func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration
 		efsVol.TransitEncryptionPort = aws.Int64(int64(v))
 	}
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		efsVol.RootDirectory = nil
 		efsVol.AuthorizationConfig = expandVolumesEFSVolumeAuthorizationConfig(v)
 	}
 
@@ -1185,7 +1181,7 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	for i, c := range definitions {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -61,7 +64,7 @@ func ResourceProductPortfolioAssociation() *schema.Resource {
 
 func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
@@ -112,7 +115,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
 
@@ -146,7 +149,7 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 
 func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
 

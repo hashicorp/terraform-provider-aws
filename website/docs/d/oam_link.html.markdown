@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `link_identifier` - (Required) ARN of the link.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
 * `label` - Label that is assigned to this link.

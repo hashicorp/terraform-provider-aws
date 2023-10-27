@@ -40,7 +40,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
 
@@ -61,7 +61,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DescribeOrganizationConfigurationInput{
 		GraphArn: aws.String(d.Id()),

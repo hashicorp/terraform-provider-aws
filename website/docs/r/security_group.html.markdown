@@ -93,6 +93,20 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
+### Removing All Ingress and Egress Rules
+
+The `ingress` and `egress` arguments are processed in [attributes-as-blocks](https://developer.hashicorp.com/terraform/language/attr-as-blocks) mode. Due to this, removing these arguments from the configuration will **not** cause Terraform to destroy the managed rules. To subsequently remove all managed ingress and egress rules:
+
+```terraform
+resource "aws_security_group" "example" {
+  name   = "sg"
+  vpc_id = aws_vpc.example.id
+
+  ingress = []
+  egress  = []
+}
+```
+
 ### Recreating a Security Group
 
 A simple security group `name` change "forces new" the security group--Terraform destroys the security group and creates a new one. (Likewise, `description`, `name_prefix`, or `vpc_id` [cannot be changed](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/working-with-security-groups.html#creating-security-group).) Attempting to recreate the security group leads to a variety of complications depending on how it is used.
@@ -213,7 +227,7 @@ resource "null_resource" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Security group description. Defaults to `Managed by Terraform`. Cannot be `""`. **NOTE**: This field maps to the AWS `GroupDescription` attribute, for which there is no Update API. If you'd like to classify your security groups in a way that can be updated, use `tags`.
 * `egress` - (Optional, VPC only) Configuration block for egress rules. Can be specified multiple times for each egress rule. Each egress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -236,6 +250,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
+
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this ingress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
@@ -254,6 +270,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the destination of the traffic.
+
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this egress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
@@ -262,9 +280,9 @@ The following arguments are optional:
 * `security_groups` - (Optional) List of security groups. A group name can be used relative to the default VPC. Otherwise, group ID.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the security group.
 * `id` - ID of the security group.
@@ -280,8 +298,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
+```terraform
+import {
+  to = aws_security_group.elb_sg
+  id = "sg-903004f8"
+}
 ```
-$ terraform import aws_security_group.elb_sg sg-903004f8
+
+Using `terraform import`, import Security Groups using the security group `id`. For example:
+
+```console
+% terraform import aws_security_group.elb_sg sg-903004f8
 ```

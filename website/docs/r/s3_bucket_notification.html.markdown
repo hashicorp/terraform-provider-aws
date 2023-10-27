@@ -305,6 +305,19 @@ For Terraform's [JSON syntax](https://www.terraform.io/docs/configuration/syntax
 }
 ```
 
+### Emit events to EventBridge
+
+```terraform
+resource "aws_s3_bucket" "bucket" {
+  bucket = "your-bucket-name"
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket      = aws_s3_bucket.bucket.id
+  eventbridge = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -313,7 +326,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications.
+* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
 * `topic` - (Optional) Notification configuration to SNS Topic. See below.
@@ -342,14 +355,23 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `topic_arn` - (Required) SNS topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket notification using the `bucket`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_notification.bucket_notification
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_notification.bucket_notification bucket-name
+
+Using `terraform import`, import S3 bucket notification using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```

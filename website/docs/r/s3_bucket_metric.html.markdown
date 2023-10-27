@@ -49,7 +49,7 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to put metric configuration.
 * `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.
@@ -62,14 +62,23 @@ The `filter` metric configuration supports the following:
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket metric configurations can be imported using `bucket:metric`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket metric configurations using `bucket:metric`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_metric.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
 ```
-$ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
+
+Using `terraform import`, import S3 bucket metric configurations using `bucket:metric`. For example:
+
+```console
+% terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

@@ -1,25 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_catalog_database")
+// @SDKResource("aws_glue_catalog_database", name="Database")
+// @Tags(identifierAttribute="arn")
 func ResourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogDatabaseCreate,
@@ -29,6 +36,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,7 +55,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
 			"create_table_default_permission": {
@@ -96,6 +104,8 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_database": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -111,6 +121,10 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -120,7 +134,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 
 func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
@@ -151,6 +165,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &glue.CreateDatabaseInput{
 		CatalogId:     aws.String(catalogID),
 		DatabaseInput: dbInput,
+		Tags:          getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateDatabaseWithContext(ctx, input)
@@ -165,42 +180,44 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	catalogID, name, err := ReadCatalogID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		catalogID, name, err := ReadCatalogID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
+		}
 
-	dbUpdateInput := &glue.UpdateDatabaseInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(name),
-	}
+		dbUpdateInput := &glue.UpdateDatabaseInput{
+			CatalogId: aws.String(catalogID),
+			Name:      aws.String(name),
+		}
 
-	dbInput := &glue.DatabaseInput{
-		Name: aws.String(name),
-	}
+		dbInput := &glue.DatabaseInput{
+			Name: aws.String(name),
+		}
 
-	if v, ok := d.GetOk("description"); ok {
-		dbInput.Description = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("description"); ok {
+			dbInput.Description = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("location_uri"); ok {
-		dbInput.LocationUri = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("location_uri"); ok {
+			dbInput.LocationUri = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
-	}
+		if v, ok := d.GetOk("parameters"); ok {
+			dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		}
 
-	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
-		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
+			dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
+		}
 
-	dbUpdateInput.DatabaseInput = dbInput
+		dbUpdateInput.DatabaseInput = dbInput
 
-	if _, err := conn.UpdateDatabaseWithContext(ctx, dbUpdateInput); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
+		if _, err := conn.UpdateDatabaseWithContext(ctx, dbUpdateInput); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
@@ -208,26 +225,21 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
-	input := &glue.GetDatabaseInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(name),
+	out, err := FindDatabaseByName(ctx, conn, catalogID, name)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	out, err := conn.GetDatabaseWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
@@ -263,7 +275,7 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &glue.DeleteDatabaseInput{
@@ -273,6 +285,7 @@ func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Database (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
@@ -308,6 +321,10 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 		apiObject.DatabaseName = aws.String(v)
 	}
 
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -324,6 +341,10 @@ func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[strin
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap
