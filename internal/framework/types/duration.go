@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate   = DurationType
-	_ basetypes.StringTypable  = DurationType
-	_ basetypes.StringValuable = Duration{}
+	_ xattr.TypeWithValidate   = (*durationType)(nil)
+	_ basetypes.StringTypable  = (*durationType)(nil)
+	_ basetypes.StringValuable = (*Duration)(nil)
 )
 
 func (d durationType) TerraformType(_ context.Context) tftypes.Type {

@@ -31,9 +31,9 @@ var (
 )
 
 var (
-	_ xattr.TypeWithValidate   = ARNType
-	_ basetypes.StringTypable  = ARNType
-	_ basetypes.StringValuable = ARN{}
+	_ xattr.TypeWithValidate   = (*arnType)(nil)
+	_ basetypes.StringTypable  = (*arnType)(nil)
+	_ basetypes.StringValuable = (*ARN)(nil)
 )
 
 func (t arnType) Equal(o attr.Type) bool {
