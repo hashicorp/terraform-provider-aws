@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.46.3
+	github.com/aws/aws-sdk-go v1.46.5
 	github.com/aws/aws-sdk-go-v2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/config v1.19.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.127.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.128.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.17.0
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.3
