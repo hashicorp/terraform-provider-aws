@@ -33,6 +33,9 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 			// "tags":       testAccAccessGrant_tags,
 			"locationConfiguration": testAccAccessGrant_locationConfiguration,
 		},
+		"InstanceResourcePolicy": {
+			"basic": testAccAccessGrantsInstanceResourcePolicy_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

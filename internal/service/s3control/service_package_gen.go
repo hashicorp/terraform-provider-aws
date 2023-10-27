@@ -34,6 +34,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory: newResourceAccessGrantsInstanceResourcePolicy,
+			Name:    "Access Grants Instance Resource Policy",
+		},
+		{
 			Factory: newResourceAccessGrantsLocation,
 			Name:    "Access Grants Location",
 			Tags:    &types.ServicePackageResourceTags{},

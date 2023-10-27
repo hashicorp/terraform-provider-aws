@@ -27,9 +27,8 @@ import (
 )
 
 // @FrameworkResource(name="Access Grants Instance Resource Policy")
-// @Tags
 func newResourceAccessGrantsInstanceResourcePolicy(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccessGrantsInstance{}
+	r := &resourceAccessGrantsInstanceResourcePolicy{}
 
 	return r, nil
 }

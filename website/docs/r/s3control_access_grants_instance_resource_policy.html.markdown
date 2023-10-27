@@ -32,7 +32,7 @@ resource "aws_s3control_access_grants_instance_resource_policy" "example" {
       "s3:ListAccessGrantsLocations",
       "s3:GetDataAccess"
     ],
-    "Resource": "${aws_s3control_access_grants_instance.example.arn}"
+    "Resource": "${aws_s3control_access_grants_instance.example.access_grants_instance_arn}"
   }]
 }
 EOF
