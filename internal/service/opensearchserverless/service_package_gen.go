@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Collection",
 		},
 		{
+			Factory: newDataSourceLifecyclePolicy,
+			Name:    "Lifecycle Policy",
+		},
+		{
 			Factory: newDataSourceSecurityConfig,
 			Name:    "Security Config",
 		},
