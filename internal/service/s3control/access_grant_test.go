@@ -121,6 +121,36 @@ func testAccAccessGrant_tags(t *testing.T) {
 	})
 }
 
+func testAccAccessGrant_locationConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3control_access_grant.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantConfig_locationConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.0.s3_sub_prefix", "prefix1/prefix2/data.txt"),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix_type", "Object"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"s3_prefix_type"},
+			},
+		},
+	})
+}
+
 func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
@@ -177,8 +207,23 @@ resource "aws_s3control_access_grants_location" "test" {
 `)
 }
 
+func testAccAccessGrantConfig_baseDefaultLocation(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), `
+data "aws_iam_user" "test" {
+  user_name = "teamcity"
+}
+
+resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.test.arn
+  location_scope = "s3://"
+}
+`)
+}
+
 func testAccAccessGrantConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), `
 resource "aws_s3control_access_grant" "test" {
   access_grants_location_id = aws_s3control_access_grants_location.test.access_grants_location_id
   permission                = "READ"
@@ -188,7 +233,7 @@ resource "aws_s3control_access_grant" "test" {
     grantee_identifier = data.aws_iam_user.test.arn
   }
 }
-`, rName))
+`)
 }
 
 func testAccAccessGrantConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -226,4 +271,24 @@ resource "aws_s3control_access_grant" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAccessGrantConfig_locationConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), `
+resource "aws_s3control_access_grant" "test" {
+  access_grants_location_id = aws_s3control_access_grants_location.test.access_grants_location_id
+  permission                = "WRITE"
+
+  grantee {
+    grantee_type       = "IAM"
+    grantee_identifier = data.aws_iam_user.test.arn
+  }
+
+  access_grants_location_configuration {
+    s3_sub_prefix = "prefix1/prefix2/data.txt"
+  }
+
+  s3_prefix_type = "Object"
+}
+`)
 }
