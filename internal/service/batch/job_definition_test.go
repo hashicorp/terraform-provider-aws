@@ -301,7 +301,7 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
+func TestAccBatchJobDefinition_updateMakesNewRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -324,7 +324,7 @@ func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvancedUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &after),
-					testAccCheckJobDefinitionRecreated(t, &before, &after),
+					testAccCheckJobDefinitionChanged(t, &before, &after),
 				),
 			},
 			{
@@ -695,10 +695,12 @@ func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch
 	}
 }
 
-func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionChanged(t *testing.T, before, after *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.Int64Value(before.Revision) == aws.Int64Value(after.Revision) {
-			t.Fatalf("Expected change of JobDefinition Revisions, but both were %d", aws.Int64Value(before.Revision))
+		beforeRevision := aws.Int64Value(before.Revision)
+		afterRevision := aws.Int64Value(after.Revision)
+		if afterRevision-beforeRevision != 1 {
+			t.Fatalf("Expected Job Definition revision to be 1, got %d", afterRevision-beforeRevision)
 		}
 		return nil
 	}

@@ -50,7 +50,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"container_properties": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -85,13 +84,11 @@ func ResourceJobDefinition() *schema.Resource {
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"platform_capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
@@ -100,7 +97,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Default:  false,
 			},
 			"retry_strategy": {
