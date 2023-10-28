@@ -85,7 +85,7 @@ func (t cidrBlockType) ValueFromTerraform(ctx context.Context, in tftypes.Value)
 	return stringValuable, nil
 }
 
-func (t cidrBlockType) ValueType(context.Context) attr.Value {
+func (cidrBlockType) ValueType(context.Context) attr.Value {
 	return CIDRBlock{}
 }
 
@@ -145,6 +145,6 @@ func (v CIDRBlock) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-func (CIDRBlock) Type(_ context.Context) attr.Type {
+func (CIDRBlock) Type(context.Context) attr.Type {
 	return CIDRBlockType
 }
