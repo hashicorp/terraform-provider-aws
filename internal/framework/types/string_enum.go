@@ -93,7 +93,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-func (t stringEnumType[T]) String() string {
+func (stringEnumType[T]) String() string {
 	var zero T
 	return fmt.Sprintf("StringEnumType[%T]", zero)
 }
