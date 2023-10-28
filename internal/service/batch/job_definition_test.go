@@ -458,6 +458,65 @@ func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_NodeProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_NodeProperties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 0,
+						"nodeRangeProperties": [
+							{
+								"container": {
+									"command": ["echo","test"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 128,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "0:"
+							}
+						],
+						"numNodes": 1
+					}`),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "multinode"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -504,6 +563,9 @@ func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch
 				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
 					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)
+				}
+				if compare.NodeProperties != nil && compare.NodeProperties.NumNodes != nil && !reflect.DeepEqual(compare.NodeProperties, jd.NodeProperties) {
+					return fmt.Errorf("Bad Job Definition Node Properties\n\t expected: %s\n\tgot: %s\n", compare.NodeProperties, jd.NodeProperties)
 				}
 			}
 		}
@@ -646,6 +708,37 @@ resource "aws_batch_job_definition" "test" {
 CONTAINER_PROPERTIES
 
 }
+`, rName)
+}
+
+func testAccJobDefinitionConfig_NodeProperties(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+	name = %[1]q
+	type = "multinode"
+
+	node_properties = jsonencode({
+	  mainNode     = 0
+	  nodeRangeProperties = [
+		{
+		  container = {
+			command             = ["echo", "test"]
+			environment         = []
+			image               = "busybox"
+			memory              = 128
+			mountPoints         = []
+			resourceRequirements = []
+			secrets             = []
+			ulimits             = []
+			vcpus               = 1
+			volumes             = []
+		  }
+		  targetNodes = "0:"
+		}
+	  ]
+	  numNodes = 1
+	})
+  }
 `, rName)
 }
 
