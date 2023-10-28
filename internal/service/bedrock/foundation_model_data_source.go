@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -94,7 +93,7 @@ func (d *dataSourceFoundationModel) Read(ctx context.Context, request datasource
 		return
 	}
 
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, model)...)
+	data.refreshFromOutput(ctx, model)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -111,11 +110,9 @@ type foundationModel struct {
 	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
 }
 
-func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedrock.GetFoundationModelOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedrock.GetFoundationModelOutput) {
 	if model == nil {
-		return diags
+		return
 	}
 
 	data.ID = flex.StringToFramework(ctx, model.ModelDetails.ModelId)
@@ -148,6 +145,4 @@ func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedro
 	data.OutputModalities = flex.FlattenFrameworkStringValueSet(ctx, outputModalities)
 
 	data.ResponseStreamingSupported = flex.BoolToFramework(ctx, model.ModelDetails.ResponseStreamingSupported)
-
-	return diags
 }
