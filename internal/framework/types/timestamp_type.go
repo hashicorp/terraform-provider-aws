@@ -16,110 +16,101 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-type TimestampType struct {
+type timestampType struct {
 	basetypes.StringType
 }
 
 var (
-	_ xattr.TypeWithValidate  = (*TimestampType)(nil)
-	_ basetypes.StringTypable = (*TimestampType)(nil)
+	TimestampType = timestampType{}
 )
 
-func (typ TimestampType) ValueFromString(_ context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
-	if in.IsUnknown() {
-		return NewTimestampUnknown(), nil
-	}
+var (
+	_ xattr.TypeWithValidate  = (*timestampType)(nil)
+	_ basetypes.StringTypable = (*timestampType)(nil)
+)
 
-	if in.IsNull() {
-		return NewTimestampNull(), nil
-	}
+func (t timestampType) Equal(o attr.Type) bool {
+	other, ok := o.(timestampType)
 
-	s := in.ValueString()
-
-	var diags diag.Diagnostics
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		diags.AddError(
-			"Timestamp Type Validation Error",
-			fmt.Sprintf("Value %q cannot be parsed as a Timestamp.", s),
-		)
-		return nil, diags
-	}
-
-	return newTimestampValue(s, t), nil
-}
-
-func (typ TimestampType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
-	if !in.IsKnown() {
-		return NewTimestampUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewTimestampNull(), nil
-	}
-
-	var s string
-	err := in.As(&s)
-	if err != nil {
-		return nil, err
-	}
-
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return NewTimestampUnknown(), nil //nolint: nilerr // Must not return validation errors
-	}
-
-	return newTimestampValue(s, t), nil
-}
-
-func (typ TimestampType) ValueType(context.Context) attr.Value {
-	return TimestampValue{}
-}
-
-func (typ TimestampType) Equal(o attr.Type) bool {
-	other, ok := o.(TimestampType)
 	if !ok {
 		return false
 	}
 
-	return typ.StringType.Equal(other.StringType)
+	return t.StringType.Equal(other.StringType)
 }
 
-// String returns a human-friendly description of the TimestampType.
-func (typ TimestampType) String() string {
-	return "types.TimestampType"
+func (timestampType) String() string {
+	return "TimestampType"
 }
 
-func (typ TimestampType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
+func (t timestampType) ValueFromString(_ context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if in.IsUnknown() {
+		return TimestampUnknown(), diags
+	}
+
+	if in.IsNull() {
+		return TimestampNull(), diags
+	}
+
+	valueString := in.ValueString()
+	if _, err := time.Parse(time.RFC3339, valueString); err != nil {
+		return TimestampUnknown(), diags // Must not return validation errors
+	}
+
+	return TimestampValue(valueString), diags
+}
+
+func (t timestampType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	stringValue, ok := attrValue.(basetypes.StringValue)
+
+	if !ok {
+		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
+	}
+
+	stringValuable, diags := t.ValueFromString(ctx, stringValue)
+
+	if diags.HasError() {
+		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
+	}
+
+	return stringValuable, nil
+}
+
+func (timestampType) ValueType(context.Context) attr.Value {
+	return Timestamp{}
+}
+
+func (t timestampType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if !in.IsKnown() || in.IsNull() {
 		return diags
 	}
 
-	var s string
-	err := in.As(&s)
+	var value string
+	err := in.As(&value)
 	if err != nil {
 		diags.AddAttributeError(
 			path,
-			"Invalid Terraform Value",
-			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
-				"This is generally an issue with the provider schema implementation. "+
-				"Please report the following to the provider developer:\n\n"+
-				"Path: "+path.String()+"\n"+
-				"Error: "+err.Error(),
+			"Timestamp Type Validation Error",
+			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
 		)
 		return diags
 	}
 
-	_, err = time.Parse(time.RFC3339, s)
-	if err != nil {
+	if _, err = time.Parse(time.RFC3339, value); err != nil {
 		diags.AddAttributeError(
 			path,
-			"Invalid Timestamp Value",
-			fmt.Sprintf("Value %q cannot be parsed as an RFC 3339 Timestamp.\n\n"+
-				"Path: %s\n"+
-				"Error: %s", s, path, err),
+			"Timestamp Type Validation Error",
+			fmt.Sprintf("Value %q cannot be parsed as an RFC 3339 Timestamp.", value),
 		)
 		return diags
 	}
