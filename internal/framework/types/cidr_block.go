@@ -41,7 +41,7 @@ func (t cidrBlockType) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-func (t cidrBlockType) String() string {
+func (cidrBlockType) String() string {
 	return "CIDRBlockType"
 }
 
