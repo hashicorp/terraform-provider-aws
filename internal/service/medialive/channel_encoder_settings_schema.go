@@ -4898,8 +4898,8 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["scte35_pid"].(string); ok && v != "" {
 		s.Scte35Pid = aws.String(v)
 	}
-	if v, ok := m["scte35_preroll_pullup_milliseconds"].(float64); ok {
-		s.Scte35PrerollPullupMilliseconds = v
+	if v, ok := m["scte35_preroll_pullup_milliseconds"].(float64); ok && v != 0.0 {
+		s.Scte35PrerollPullupMilliseconds = aws.Float64(v)
 	}
 	if v, ok := m["segmentation_markers"].(string); ok && v != "" {
 		s.SegmentationMarkers = types.M2tsSegmentationMarkers(v)
@@ -6740,7 +6740,7 @@ func flattenOutputGroupSettingsRtmpGroupSettings(in *types.RtmpGroupSettings) []
 		"cache_full_behavior":      string(in.CacheFullBehavior),
 		"cache_length":             int(aws.ToInt32(in.CacheLength)),
 		"caption_data":             string(in.CaptionData),
-		"include_filler_nal_units": string(rt.IncludeFillerNalUnits),
+		"include_filler_nal_units": string(in.IncludeFillerNalUnits),
 		"input_loss_action":        string(in.InputLossAction),
 		"restart_delay":            int(aws.ToInt32(in.RestartDelay)),
 	}
@@ -7009,7 +7009,7 @@ func flattenGlobalConfiguration(in *types.GlobalConfiguration) []interface{} {
 		"input_end_action":             string(in.InputEndAction),
 		"input_loss_behavior":          flattenGlobalConfigurationInputLossBehavior(in.InputLossBehavior),
 		"output_locking_mode":          string(in.OutputLockingMode),
-		"output_locking_settings":      flattenGlobalConfigurationOutputLockingSettings(apiObject.OutputLockingSettings),
+		"output_locking_settings":      flattenGlobalConfigurationOutputLockingSettings(in.OutputLockingSettings),
 		"output_timing_source":         string(in.OutputTimingSource),
 		"support_low_framerate_inputs": string(in.SupportLowFramerateInputs),
 	}
