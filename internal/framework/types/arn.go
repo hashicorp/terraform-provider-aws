@@ -46,7 +46,7 @@ func (t arnType) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-func (t arnType) String() string {
+func (arnType) String() string {
 	return "ARNType"
 }
 
@@ -90,7 +90,7 @@ func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr
 	return stringValuable, nil
 }
 
-func (t arnType) ValueType(context.Context) attr.Value {
+func (arnType) ValueType(context.Context) attr.Value {
 	return ARN{}
 }
 
@@ -154,7 +154,7 @@ func (v ARN) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-func (v ARN) Type(context.Context) attr.Type {
+func (ARN) Type(context.Context) attr.Type {
 	return ARNType
 }
 
