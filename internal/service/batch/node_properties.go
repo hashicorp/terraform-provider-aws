@@ -9,15 +9,24 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/batch"
 )
 
-type nodeProperties batch.NodeProperties
+type nodeProperties struct {
+	MainNode            *int64
+	NodeRangeProperties []*nodeRangeProperty
+	NumNodes            *int64
+}
+
+type nodeRangeProperty struct {
+	Container   *containerProperties
+	TargetNodes *string
+}
 
 func (np *nodeProperties) Reduce() error {
-	// Prevent difference of API response that adds an empty array when not configured during the request
-	if len(np.NodeRangeProperties) == 0 {
-		np.NodeRangeProperties = nil
+	// Deal with Environment objects which may be re-ordered in the API
+	for _, node := range np.NodeRangeProperties {
+		cp := node.Container
+		cp.Reduce()
 	}
 
 	return nil
@@ -39,7 +48,7 @@ func EquivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 		return false, err
 	}
 
-	if err := np2.Reduce(); err != nil {
+	if err := np1.Reduce(); err != nil {
 		return false, err
 	}
 

@@ -492,9 +492,24 @@ func TestAccBatchJobDefinition_NodeProperties(t *testing.T) {
 									"volumes": []
 								},
 								"targetNodes": "0:"
+							},
+							{
+								"container": {
+									"command": ["echo","test"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 128,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "1:"
 							}
 						],
-						"numNodes": 1
+						"numNodes": 2
 					}`),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
@@ -506,6 +521,41 @@ func TestAccBatchJobDefinition_NodeProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "multinode"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_NodePropertiesupdateForcesNewResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesAdvanced(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &before),
+					testAccCheckJobDefinitionAttributes(&before, nil),
+				),
+			},
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &after),
+					testAccCheckJobDefinitionRecreated(t, &before, &after),
 				),
 			},
 			{
@@ -734,9 +784,24 @@ resource "aws_batch_job_definition" "test" {
 			volumes             = []
 		  }
 		  targetNodes = "0:"
-		}
+		},
+		{
+			container = {
+			  command             = ["echo", "test"]
+			  environment         = []
+			  image               = "busybox"
+			  memory              = 128
+			  mountPoints         = []
+			  resourceRequirements = []
+			  secrets             = []
+			  ulimits             = []
+			  vcpus               = 1
+			  volumes             = []
+			}
+			targetNodes = "1:"
+		  }
 	  ]
-	  numNodes = 1
+	  numNodes = 2
 	})
   }
 `, rName)
@@ -957,4 +1022,123 @@ resource "aws_batch_job_definition" "test" {
   type = "container"
 }
 `, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesAdvanced(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_batch_job_definition" "test" {
+	name = %[1]q
+	type = "multinode"
+	parameters = {
+	  param1 = "val1"
+	  param2 = "val2"
+	}
+	timeout {
+	  attempt_duration_seconds = 60
+	}
+
+	node_properties = jsonencode({
+		mainNode     = 1
+		nodeRangeProperties = [
+		{
+			container = {
+				"command": ["ls", "-la"],
+				"image": "busybox",
+				"memory": 512,
+				"vcpus": 1,
+				"volumes": [
+				{
+					"host": {
+					"sourcePath": "/tmp"
+					},
+					"name": "tmp"
+				}
+				],
+				"environment": [
+					{"name": "VARNAME", "value": "VARVAL"}
+				],
+				"mountPoints": [
+					{
+					"sourceVolume": "tmp",
+					"containerPath": "/tmp",
+					"readOnly": false
+					}
+				],
+				"ulimits": [
+				{
+					"hardLimit": 1024,
+					"name": "nofile",
+					"softLimit": 1024
+				}
+				]
+			}
+			targetNodes = "0:"
+		},
+		{
+			container = {
+			  command             = ["echo", "test"]
+			  environment         = []
+			  image               = "busybox"
+			  memory              = 128
+			  mountPoints         = []
+			  resourceRequirements = []
+			  secrets             = []
+			  ulimits             = []
+			  vcpus               = 1
+			  volumes             = []
+			}
+			targetNodes = "1:"
+		}
+		]
+		numNodes = 4
+	})
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName string) string {
+	return fmt.Sprintf(`
+
+	resource "aws_batch_job_definition" "test" {
+		name = %[1]q
+		type = "multinode"
+		parameters = {
+		  param1 = "val1"
+		  param2 = "val2"
+		}
+		timeout {
+		  attempt_duration_seconds = 60
+		}
+
+		node_properties = jsonencode({
+			mainNode     = 1
+			nodeRangeProperties = [
+			{
+				container = {
+					"command": ["ls", "-la"],
+					"image": "busybox",
+					"memory": 512,
+					"vcpus": 1
+				}
+				targetNodes = "0:"
+			},
+			{
+				container = {
+				  command             = ["echo", "test"]
+				  environment         = []
+				  image               = "busybox"
+				  memory              = 128
+				  mountPoints         = []
+				  ulimits             = []
+				  vcpus               = 1
+				  volumes             = []
+				}
+				targetNodes = "1:"
+			}
+			]
+			numNodes = 4
+		})
+	}
+	`, rName)
 }
