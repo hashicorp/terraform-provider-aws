@@ -75,7 +75,6 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"command": ["ls", "-la"],
 				"image": "busybox",
 				"memory":512
 			},
@@ -86,7 +85,6 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"command": [],
 				"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 				"memory":128
 			},
@@ -108,7 +106,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"command": ["ls", "-la"],
+				"command": [],
 				"image": "busybox",
 				"memory":512
 			},
@@ -119,7 +117,6 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"command": [],
 				"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
 				"memory":128
 			},
