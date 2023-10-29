@@ -55,10 +55,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 			"attachment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointAttachmentType_Values(), false),
-				ForceNew:     true,
+				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -74,20 +74,20 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ForceNew:     true,
 			},
-			"endpoint_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"endpoint_domain_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+			"endpoint_domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"endpoint_type": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointType_Values(), false),
-				ForceNew:     true,
+				ForceNew: true,
 			},
 			"load_balancer_options": {
 				Type:     schema.TypeList,
@@ -107,8 +107,8 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:         schema.TypeString,
-							Optional:     true,
+							Type:     schema.TypeString,
+							Optional: true,
 							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
 						},
 						"subnet_ids": {
@@ -136,12 +136,18 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:         schema.TypeString,
-							Optional:     true,
+							Type:     schema.TypeString,
+							Optional: true,
 							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
 						},
 					},
 				},
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"sse_specification": {
 				Type:     schema.TypeList,
@@ -152,22 +158,15 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 						"customer_managed_key_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
-							ForceNew:     true,
 						},
 					},
 				},
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -189,7 +188,6 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 	}
 }
 
-
 const (
 	ResNameVerifiedAccessEndpoint = "Verified Access Endpoint"
 )
@@ -198,15 +196,15 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	
+
 	in := &ec2.CreateVerifiedAccessEndpointInput{
-		ApplicationDomain: aws.String(d.Get("name").(string)),
+		ApplicationDomain:     aws.String(d.Get("application_domain").(string)),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
-		EndpointDomainPrefix: aws.String(d.Get("endpoint_domain_prefix").(string)),
+		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
-		AttachmentType: types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
-		EndpointType: types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
+		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
+		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
+		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -224,7 +222,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.SseSpecification = expandCreateVerifiedAccessEndpointSseSpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
-	
+
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		in.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -232,23 +230,23 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	out, err := conn.CreateVerifiedAccessEndpoint(ctx, in)
 	if err != nil {
 
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Get("name").(string), err)...)
+		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
 
 	if out == nil || out.VerifiedAccessEndpoint == nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Get("name").(string), errors.New("empty output"))...)
+		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Id(), errors.New("empty output"))...)
 	}
 
 	if out == nil || out.VerifiedAccessEndpoint == nil {
 		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, "", errors.New("empty output"))
 	}
-	
+
 	d.SetId(aws.ToString(out.VerifiedAccessEndpoint.VerifiedAccessEndpointId))
-	
+
 	if _, err := waitVerifiedAccessEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionWaitingForCreation, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
-	
+
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
@@ -256,9 +254,9 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	
+
 	out, err := FindVerifiedAccessEndpointByID(ctx, conn, d.Id())
-	
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VerifiedAccessEndpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -268,7 +266,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
-	
+
 	d.Set("application_domain", out.ApplicationDomain)
 	d.Set("attachment_type", out.AttachmentType)
 	d.Set("description", out.Description)
@@ -277,9 +275,9 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("endpoint_domain", out.EndpointDomain)
 	d.Set("endpoint_type", out.EndpointType)
 	d.Set("security_group_ids", aws.StringSlice(out.SecurityGroupIds))
-	d.Set("status", out.Status)
 	d.Set("verified_access_group_id", out.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", out.VerifiedAccessInstanceId)
+	d.Set("status", string(out.Status.Code))
 
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(out.LoadBalancerOptions)); err != nil {
 		return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessEndpoint, d.Id(), err)
@@ -334,17 +332,17 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	if !update {
 		return diags
 	}
-	
+
 	log.Printf("[DEBUG] Updating EC2 VerifiedAccessEndpoint (%s): %#v", d.Id(), in)
 	_, err := conn.ModifyVerifiedAccessEndpoint(ctx, in)
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
-	
+
 	if _, err := waitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.EC2, create.ErrActionWaitingForUpdate, ResNameVerifiedAccessEndpoint, d.Id(), err)
 	}
-	
+
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
@@ -352,21 +350,21 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	
+
 	log.Printf("[INFO] Deleting EC2 VerifiedAccessEndpoint %s", d.Id())
-	
+
 	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
 		VerifiedAccessEndpointId: aws.String(d.Id()),
 	})
-		
+
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionDeleting, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
-	
+
 	if _, err := waitVerifiedAccessEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionWaitingForDeletion, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
-	
+
 	return diags
 }
 
@@ -408,10 +406,10 @@ func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id
 
 func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting,types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
-		Target:                    []string{},
-		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
+		Target:  []string{},
+		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -508,7 +506,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 	}
 
 	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiobject.SubnetIds =  flex.ExpandStringValueSet(v)
+		apiobject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiobject

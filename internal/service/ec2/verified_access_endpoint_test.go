@@ -35,25 +35,31 @@ func TestAccEC2VerifiedAccessEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate),
+				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					// resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					// resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					// resource.TestCheckResourceAttr(resourceName, "description", ""),
-					// resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					// acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					// resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					// resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					// resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
-					// resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
-					// resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
 			},
 		},
 	})
@@ -77,7 +83,7 @@ func TestAccEC2VerifiedAccessEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate),
+				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessEndpoint(), resourceName),
@@ -137,28 +143,29 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, 
 func testAccVerifiedAccessEndpointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 
-	resource "aws_security_group" "test" {
-		vpc_id = aws_vpc.test.id
-		  
-		tags = {
-			Name = %[1]q
-			}
-	}
 
-	resource "aws_network_interface" "test" {
-	subnet_id = aws_subnet.test[0].id
-	  
-	tags = {
-		Name = %[1]q
-		}
-	}
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
 
-	resource "aws_lb" "test" {
-		name               = %[1]q
-		internal           = true
-		load_balancer_type = "network"
-		subnets            = aws_subnet.test[*].id
-	  }
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
 
 resource "aws_verifiedaccess_instance" "test" {
   tags = {
@@ -192,44 +199,72 @@ resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
 }
 
 resource "aws_verifiedaccess_group" "test" {
-	verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
-  }
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+
+
 
 
 
 `, rName))
 }
 
-func testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
+func testAccVerifiedAccessEndpointConfig_basic(rName string, key string, certificate string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName), fmt.Sprintf(`
 
-	resource "aws_acm_certificate" "test" {
-		certificate_body = "%[2]s"
-		private_key      = "%[3]s"
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"	
+  certificate_body = "%[3]s"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+	port     = 443
+	protocol = "TLS"
+	vpc_id   = aws_vpc.test.id
+  }
+
+resource "aws_lb_listener" "test" {
+	load_balancer_arn = aws_lb.test.arn
+	port              = "443"
+	protocol          = "TLS"
+	ssl_policy        = "ELBSecurityPolicy-2016-08"
+	certificate_arn   = aws_acm_certificate.test.arn
+  
+	default_action {
+	  target_group_arn = aws_lb_target_group.test.arn
+	  type             = "forward"
+	}
+  }
 
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
   description            = "example"
-  domain_certificate_arn = aws_acm_certificate.example.arn
+  domain_certificate_arn = aws_acm_certificate.test.arn
   endpoint_domain_prefix = "example"
   endpoint_type          = "load-balancer"
+  sse_specification {
+	customer_managed_key_enabled = false
+
+  }
   load_balancer_options {
     load_balancer_arn = aws_lb.test.arn
     port              = 443
     protocol          = "https"
     subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
   }
-  security_group_ids       = [aws_security_group.example.id]
-  verified_access_group_id = aws_verifiedaccess_group.example.id
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
 
   tags = {
     Name = %[1]q
+  }
 }
 `, rName, key, certificate))
 }
