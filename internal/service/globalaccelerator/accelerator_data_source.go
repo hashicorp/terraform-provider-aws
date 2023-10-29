@@ -149,7 +149,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	accelerator := results[0]
 	acceleratorARN := aws.StringValue(accelerator.AcceleratorArn)
-	data.ARN = flex.StringToFrameworkARN(ctx, accelerator.AcceleratorArn, nil)
+	data.ARN = flex.StringToFrameworkARN(ctx, accelerator.AcceleratorArn)
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
