@@ -72,9 +72,9 @@ The following arguments are optional:
 * `security_group_ids` - (Optional) List of the the security groups IDs to associate with the Verified Access endpoint.
 * `tags` - (Optional) Key-value tags for the Verified Access Endpoint. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `device_validation_domain` - Returned if endpoint has a device trust provider attached.
 * `endpoint_domain` - A DNS name that is generated for the endpoint.
@@ -91,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Verified Access Endpoints can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Access Instances using the `id`. For example:
 
+```terraform
+import {
+  to = aws_verifiedaccess_endpoint.example
+  id = "vae-8012925589"
+}
 ```
-$ terraform import aws_verifiedaccess_endpoint.example vae-8012925589
+
+Using `terraform import`, import Verified Access Instances using the  `id`. For example:
+
+```console
+% terraform import aws_verifiedaccess_endpoint.example vae-8012925589
 ```

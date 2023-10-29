@@ -229,16 +229,11 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 	out, err := conn.CreateVerifiedAccessEndpoint(ctx, in)
 	if err != nil {
-
 		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Id(), err)...)
 	}
 
 	if out == nil || out.VerifiedAccessEndpoint == nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, d.Id(), errors.New("empty output"))...)
-	}
-
-	if out == nil || out.VerifiedAccessEndpoint == nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessEndpoint, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VerifiedAccessEndpoint.VerifiedAccessEndpointId))
@@ -436,7 +431,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = types.VerifiedAccessEndpointProtocol(v)
+		tfmap["protocol"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -462,7 +457,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = types.VerifiedAccessEndpointProtocol(v)
+		tfmap["protocol"] = v
 	}
 
 	return []interface{}{tfmap}
