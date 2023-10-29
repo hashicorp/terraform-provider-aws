@@ -458,11 +458,11 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueARN().String()),
+		AlarmArn: aws.String(m.AlarmARN.ValueString()),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueARN().String())
+		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
 	}
 
 	return result
