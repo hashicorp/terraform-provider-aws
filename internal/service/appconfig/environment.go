@@ -442,7 +442,7 @@ func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *
 
 	values := make([]attr.Value, len(apiObjects))
 	for i, o := range apiObjects {
-		values[i] = flattenMonitorData(ctx, o, diags).value(ctx, diags)
+		values[i] = flattenMonitorData(ctx, o).value(ctx, diags)
 	}
 
 	result, d := types.SetValueFrom(ctx, elemType, values)
@@ -468,10 +468,10 @@ func (m monitorData) expand() awstypes.Monitor {
 	return result
 }
 
-func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *diag.Diagnostics) monitorData {
+func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) monitorData {
 	return monitorData{
-		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn, diags),
-		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn, diags),
+		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn),
+		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn),
 	}
 }
 

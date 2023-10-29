@@ -358,7 +358,7 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 	r.Name = flex.StringToFramework(ctx, out.JobQueueName)
 	r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
-	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn, &diags)
+	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
 	r.State = flex.StringToFrameworkLegacy(ctx, out.State)
 
 	setTagsOut(ctx, out.Tags)
