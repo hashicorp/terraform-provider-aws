@@ -458,7 +458,7 @@ func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_NodeProperties(t *testing.T) {
+func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -480,7 +480,7 @@ func TestAccBatchJobDefinition_NodeProperties(t *testing.T) {
 						"nodeRangeProperties": [
 							{
 								"container": {
-									"command": ["echo","test"],
+									"command": ["ls","-la"],
 									"environment": [],
 									"image": "busybox",
 									"memory": 128,
@@ -833,52 +833,6 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
-func testAccJobDefinitionConfig_NodeProperties(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "multinode"
-
-	node_properties = jsonencode({
-	  mainNode     = 0
-	  nodeRangeProperties = [
-		{
-		  container = {
-			command             = ["echo", "test"]
-			environment         = []
-			image               = "busybox"
-			memory              = 128
-			mountPoints         = []
-			resourceRequirements = []
-			secrets             = []
-			ulimits             = []
-			vcpus               = 1
-			volumes             = []
-		  }
-		  targetNodes = "0:"
-		},
-		{
-			container = {
-			  command             = ["echo", "test"]
-			  environment         = []
-			  image               = "busybox"
-			  memory              = 128
-			  mountPoints         = []
-			  resourceRequirements = []
-			  secrets             = []
-			  ulimits             = []
-			  vcpus               = 1
-			  volumes             = []
-			}
-			targetNodes = "1:"
-		  }
-	  ]
-	  numNodes = 2
-	})
-  }
-`, rName)
-}
-
 func testAccJobDefinitionConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
@@ -1093,6 +1047,40 @@ resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "container"
 }
+`, rName)
+}
+
+func testAccJobDefinitionConfig_NodeProperties(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+	name = %[1]q
+	type = "multinode"
+
+	node_properties = jsonencode({
+	  mainNode     = 0
+	  nodeRangeProperties = [
+		{
+		  container = {
+			command             = ["ls", "-la"]
+			image               = "busybox"
+			memory              = 128
+			vcpus               = 1
+		  }
+		  targetNodes = "0:"
+		},
+		{
+			container = {
+			  command             = ["echo", "test"]
+			  image               = "busybox"
+			  memory              = 128
+			  vcpus               = 1
+			}
+			targetNodes = "1:"
+		  }
+	  ]
+	  numNodes = 2
+	})
+  }
 `, rName)
 }
 
