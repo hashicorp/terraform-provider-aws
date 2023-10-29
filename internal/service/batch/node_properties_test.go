@@ -85,7 +85,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+				"image": "nginx",
 				"memory":128
 			},
 			"targetNodes": "0:",
@@ -117,7 +117,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		{
 			"container":
 			{
-				"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+				"image": "nginx",
 				"memory":128
 			},
 			"targetNodes": "0:",

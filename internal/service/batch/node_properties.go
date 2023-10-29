@@ -26,7 +26,9 @@ func (np *nodeProperties) Reduce() error {
 	// Deal with Environment objects which may be re-ordered in the API
 	for _, node := range np.NodeRangeProperties {
 		cp := node.Container
-		cp.Reduce()
+		if err := cp.Reduce(); err != nil {
+			return err
+		}
 	}
 
 	return nil

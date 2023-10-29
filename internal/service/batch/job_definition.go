@@ -214,7 +214,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if jobDefinitionType == batch.JobDefinitionTypeContainer {
-		if v, ok := d.GetOk("node_properties"); ok && v.(interface{}) != nil {
+		if v, ok := d.GetOk("node_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `node_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
 
@@ -224,7 +224,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 			}
 
-			if *input.Type == batch.JobDefinitionTypeContainer {
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
 				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
 				input.ContainerProperties = props
 			}
@@ -232,7 +232,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if jobDefinitionType == batch.JobDefinitionTypeMultinode {
-		if v, ok := d.GetOk("container_properties"); ok && v.(interface{}) != nil {
+		if v, ok := d.GetOk("container_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
 

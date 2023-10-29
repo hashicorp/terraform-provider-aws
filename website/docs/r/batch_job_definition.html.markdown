@@ -72,34 +72,34 @@ resource "aws_batch_job_definition" "test" {
 
 ```terraform
 resource "aws_batch_job_definition" "test" {
-	name = "tf_test_batch_job_definition_multinode"
-	type = "multinode"
+  name = "tf_test_batch_job_definition_multinode"
+  type = "multinode"
 
-	node_properties = jsonencode({
-	  mainNode     = 0
-	  nodeRangeProperties = [
-		{
-		  container = {
-			command             = ["ls", "-la"]
-			image               = "busybox"
-			memory              = 128
-			vcpus               = 1
-		  }
-		  targetNodes = "0:"
-		},
-		{
-			container = {
-			  command             = ["echo", "test"]
-			  image               = "busybox"
-			  memory              = 128
-			  vcpus               = 1
-			}
-			targetNodes = "1:"
-		  }
-	  ]
-	  numNodes = 2
-	})
-  }
+  node_properties = jsonencode({
+    mainNode = 0
+    nodeRangeProperties = [
+      {
+        container = {
+          command = ["ls", "-la"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command = ["echo", "test"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 2
+  })
+}
 ```
 
 ### Fargate Platform Capability

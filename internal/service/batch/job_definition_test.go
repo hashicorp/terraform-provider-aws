@@ -632,7 +632,7 @@ func TestAccBatchJobDefinition_createTypeMultiNodeWithContainerProperties(t *tes
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobDefinitionConfig_createTypeMultiNodeWithBothProperties(rName),
+				Config:      testAccJobDefinitionConfig_createTypeMultiNodeWithContainerProperties(rName),
 				ExpectError: regexache.MustCompile("No `container_properties` can be specified when `type` is \"multinode\""),
 			},
 		},
@@ -1053,106 +1053,107 @@ resource "aws_batch_job_definition" "test" {
 func testAccJobDefinitionConfig_NodeProperties(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "multinode"
+  name = %[1]q
+  type = "multinode"
 
-	node_properties = jsonencode({
-	  mainNode     = 0
-	  nodeRangeProperties = [
-		{
-		  container = {
-			command             = ["ls", "-la"]
-			image               = "busybox"
-			memory              = 128
-			vcpus               = 1
-		  }
-		  targetNodes = "0:"
-		},
-		{
-			container = {
-			  command             = ["echo", "test"]
-			  image               = "busybox"
-			  memory              = 128
-			  vcpus               = 1
-			}
-			targetNodes = "1:"
-		  }
-	  ]
-	  numNodes = 2
-	})
-  }
+  node_properties = jsonencode({
+    mainNode = 0
+    nodeRangeProperties = [
+      {
+        container = {
+          command = ["ls", "-la"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command = ["echo", "test"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 2
+  })
+}
 `, rName)
 }
 
 func testAccJobDefinitionConfig_nodePropertiesAdvanced(rName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "multinode"
-	parameters = {
-	  param1 = "val1"
-	  param2 = "val2"
-	}
-	timeout {
-	  attempt_duration_seconds = 60
-	}
 
-	node_properties = jsonencode({
-		mainNode     = 1
-		nodeRangeProperties = [
-		{
-			container = {
-				"command": ["ls", "-la"],
-				"image": "busybox",
-				"memory": 512,
-				"vcpus": 1,
-				"volumes": [
-				{
-					"host": {
-					"sourcePath": "/tmp"
-					},
-					"name": "tmp"
-				}
-				],
-				"environment": [
-					{"name": "VARNAME", "value": "VARVAL"}
-				],
-				"mountPoints": [
-					{
-					"sourceVolume": "tmp",
-					"containerPath": "/tmp",
-					"readOnly": false
-					}
-				],
-				"ulimits": [
-				{
-					"hardLimit": 1024,
-					"name": "nofile",
-					"softLimit": 1024
-				}
-				]
-			}
-			targetNodes = "0:"
-		},
-		{
-			container = {
-			  command             = ["echo", "test"]
-			  environment         = []
-			  image               = "busybox"
-			  memory              = 128
-			  mountPoints         = []
-			  resourceRequirements = []
-			  secrets             = []
-			  ulimits             = []
-			  vcpus               = 1
-			  volumes             = []
-			}
-			targetNodes = "1:"
-		}
-		]
-		numNodes = 4
-	})
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
+
+  node_properties = jsonencode({
+    mainNode = 1
+    nodeRangeProperties = [
+      {
+        container = {
+          "command" : ["ls", "-la"],
+          "image" : "busybox",
+          "memory" : 512,
+          "vcpus" : 1,
+          "volumes" : [
+            {
+              "host" : {
+                "sourcePath" : "/tmp"
+              },
+              "name" : "tmp"
+            }
+          ],
+          "environment" : [
+            { "name" : "VARNAME", "value" : "VARVAL" }
+          ],
+          "mountPoints" : [
+            {
+              "sourceVolume" : "tmp",
+              "containerPath" : "/tmp",
+              "readOnly" : false
+            }
+          ],
+          "ulimits" : [
+            {
+              "hardLimit" : 1024,
+              "name" : "nofile",
+              "softLimit" : 1024
+            }
+          ]
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command              = ["echo", "test"]
+          environment          = []
+          image                = "busybox"
+          memory               = 128
+          mountPoints          = []
+          resourceRequirements = []
+          secrets              = []
+          ulimits              = []
+          vcpus                = 1
+          volumes              = []
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 4
+  })
 }
 `, rName)
 }
@@ -1160,225 +1161,230 @@ resource "aws_batch_job_definition" "test" {
 func testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "multinode"
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-		timeout {
-		  attempt_duration_seconds = 60
-		}
 
-		node_properties = jsonencode({
-			mainNode     = 1
-			nodeRangeProperties = [
-			{
-				container = {
-					"command": ["ls", "-la"],
-					"image": "busybox",
-					"memory": 512,
-					"vcpus": 1
-				}
-				targetNodes = "0:"
-			},
-			{
-				container = {
-				  command             = ["echo", "test"]
-				  environment         = []
-				  image               = "busybox"
-				  memory              = 128
-				  mountPoints         = []
-				  ulimits             = []
-				  vcpus               = 1
-				  volumes             = []
-				}
-				targetNodes = "1:"
-			}
-			]
-			numNodes = 4
-		})
-	}
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
+
+  node_properties = jsonencode({
+    mainNode = 1
+    nodeRangeProperties = [
+      {
+        container = {
+          "command" : ["ls", "-la"],
+          "image" : "busybox",
+          "memory" : 512,
+          "vcpus" : 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command     = ["echo", "test"]
+          environment = []
+          image       = "busybox"
+          memory      = 128
+          mountPoints = []
+          ulimits     = []
+          vcpus       = 1
+          volumes     = []
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 4
+  })
+}
 	`, rName)
 }
 
 func testAccJobDefinitionConfig_createTypeContainerWithBothProperties(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "container"
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-		timeout {
-		  attempt_duration_seconds = 60
-		}
 
-		container_properties = jsonencode({
-			command = ["echo", "test"]
-			image   = "busybox"
-			memory  = 128
-			vcpus   = 1
-		  })
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
 
-		node_properties = jsonencode({
-			mainNode     = 1
-			nodeRangeProperties = [
-			{
-				container = {
-					"command": ["ls", "-la"],
-					"image": "busybox",
-					"memory": 512,
-					"vcpus": 1
-				}
-				targetNodes = "0:"
-			},
-			{
-				container = {
-				  command             = ["echo", "test"]
-				  environment         = []
-				  image               = "busybox"
-				  memory              = 128
-				  mountPoints         = []
-				  ulimits             = []
-				  vcpus               = 1
-				  volumes             = []
-				}
-				targetNodes = "1:"
-			}
-			]
-			numNodes = 4
-		})
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
 
-	}
+  node_properties = jsonencode({
+    mainNode = 1
+    nodeRangeProperties = [
+      {
+        container = {
+          "command" : ["ls", "-la"],
+          "image" : "busybox",
+          "memory" : 512,
+          "vcpus" : 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command     = ["echo", "test"]
+          environment = []
+          image       = "busybox"
+          memory      = 128
+          mountPoints = []
+          ulimits     = []
+          vcpus       = 1
+          volumes     = []
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 4
+  })
+
+}
 	`, rName)
 }
 
 func testAccJobDefinitionConfig_createTypeContainerWithNodeProperties(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "container"
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-		timeout {
-		  attempt_duration_seconds = 60
-		}
 
-		node_properties = jsonencode({
-			mainNode     = 1
-			nodeRangeProperties = [
-			{
-				container = {
-					"command": ["ls", "-la"],
-					"image": "busybox",
-					"memory": 512,
-					"vcpus": 1
-				}
-				targetNodes = "0:"
-			},
-			{
-				container = {
-				  command             = ["echo", "test"]
-				  environment         = []
-				  image               = "busybox"
-				  memory              = 128
-				  mountPoints         = []
-				  ulimits             = []
-				  vcpus               = 1
-				  volumes             = []
-				}
-				targetNodes = "1:"
-			}
-			]
-			numNodes = 4
-		})
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
 
-	}
+  node_properties = jsonencode({
+    mainNode = 1
+    nodeRangeProperties = [
+      {
+        container = {
+          "command" : ["ls", "-la"],
+          "image" : "busybox",
+          "memory" : 512,
+          "vcpus" : 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command     = ["echo", "test"]
+          environment = []
+          image       = "busybox"
+          memory      = 128
+          mountPoints = []
+          ulimits     = []
+          vcpus       = 1
+          volumes     = []
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 4
+  })
+
+}
 	`, rName)
 }
 
 func testAccJobDefinitionConfig_createTypeMultiNodeWithBothProperties(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "multinode"
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-		timeout {
-		  attempt_duration_seconds = 60
-		}
 
-		container_properties = jsonencode({
-			command = ["echo", "test"]
-			image   = "busybox"
-			memory  = 128
-			vcpus   = 1
-		  })
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
 
-		node_properties = jsonencode({
-			mainNode     = 1
-			nodeRangeProperties = [
-			{
-				container = {
-					"command": ["ls", "-la"],
-					"image": "busybox",
-					"memory": 512,
-					"vcpus": 1
-				}
-				targetNodes = "0:"
-			},
-			{
-				container = {
-				  command             = ["echo", "test"]
-				  environment         = []
-				  image               = "busybox"
-				  memory              = 128
-				  mountPoints         = []
-				  ulimits             = []
-				  vcpus               = 1
-				  volumes             = []
-				}
-				targetNodes = "1:"
-			}
-			]
-			numNodes = 4
-		})
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
 
-	}
+  node_properties = jsonencode({
+    mainNode = 1
+    nodeRangeProperties = [
+      {
+        container = {
+          "command" : ["ls", "-la"],
+          "image" : "busybox",
+          "memory" : 512,
+          "vcpus" : 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command     = ["echo", "test"]
+          environment = []
+          image       = "busybox"
+          memory      = 128
+          mountPoints = []
+          ulimits     = []
+          vcpus       = 1
+          volumes     = []
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 4
+  })
+
+}
 	`, rName)
 }
 
 func testAccJobDefinitionConfig_createTypeMultiNodeWithContainerProperties(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "multinode"
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-		timeout {
-		  attempt_duration_seconds = 60
-		}
 
-		container_properties = jsonencode({
-			command = ["echo", "test"]
-			image   = "busybox"
-			memory  = 128
-			vcpus   = 1
-		  })
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
 
-	}
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+
+}
 	`, rName)
 }
