@@ -6,13 +6,17 @@ package detective
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -42,7 +46,6 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	accountID := d.Get("account_id").(string)
-
 	input := &detective.EnableOrganizationAdminAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -55,8 +58,12 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	if _, err := waitAdminAccountFound(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Detective Organization Admin Account (%s) to enable: %s", d.Id(), err)
+	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+		return FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for Detective Organization Admin Account (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceOrganizationAdminAccountRead(ctx, d, meta)
@@ -65,9 +72,9 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	adminAccount, err := FindAdminAccount(ctx, conn, d.Id())
+	administrator, err := FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -77,17 +84,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	if adminAccount == nil {
-		if d.IsNewResource() {
-			return diag.Errorf("reading Detective Organization Admin Account (%s): %s", d.Id(), err)
-		}
-
-		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("account_id", adminAccount.AccountId)
+	d.Set("account_id", administrator.AccountId)
 
 	return nil
 }
@@ -95,9 +92,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	input := &detective.DisableOrganizationAdminAccountInput{}
-
-	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
+	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, &detective.DisableOrganizationAdminAccountInput{})
 
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 		return nil
@@ -107,9 +102,62 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 		return diag.Errorf("disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitAdminAccountNotFound(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Detective Organization Admin Account (%s) to disable: %s", d.Id(), err)
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+		return FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for Detective Organization Admin Account (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Detective, accountID string) (*detective.Administrator, error) {
+	input := &detective.ListOrganizationAdminAccountsInput{}
+
+	return findOrganizationAdminAccount(ctx, conn, input, func(v *detective.Administrator) bool {
+		return aws.StringValue(v.AccountId) == accountID
+	})
+}
+
+func findOrganizationAdminAccount(ctx context.Context, conn *detective.Detective, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*detective.Administrator]) (*detective.Administrator, error) {
+	output, err := findOrganizationAdminAccounts(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Detective, input *detective.ListOrganizationAdminAccountsInput, filter tfslices.Predicate[*detective.Administrator]) ([]*detective.Administrator, error) {
+	var output []*detective.Administrator
+
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *detective.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Administrators {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

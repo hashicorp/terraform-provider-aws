@@ -109,7 +109,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			adminAccount, err := tfdetective.FindAdminAccount(ctx, conn, rs.Primary.ID)
+			adminAccount, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
 
 			// Because of this resource's dependency, the Organizations organization
 			// will be deleted first, resulting in the following valid error
@@ -141,7 +141,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
-		adminAccount, err := tfdetective.FindAdminAccount(ctx, conn, rs.Primary.ID)
+		adminAccount, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
