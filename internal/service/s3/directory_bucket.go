@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -51,6 +50,10 @@ func (r *resourceDirectoryBucket) Metadata(_ context.Context, request resource.M
 }
 
 func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	dataRedundancyType := fwtypes.StringEnumType[awstypes.DataRedundancy]()
+	bucketTypeType := fwtypes.StringEnumType[awstypes.BucketType]()
+	locationTypeType := fwtypes.StringEnumType[awstypes.LocationType]()
+
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -64,14 +67,12 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 				},
 			},
 			"data_redundancy": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  enum.FrameworkDefault(awstypes.DataRedundancySingleAvailabilityZone),
+				CustomType: dataRedundancyType,
+				Optional:   true,
+				Computed:   true,
+				Default:    dataRedundancyType.AttributeDefault(awstypes.DataRedundancySingleAvailabilityZone),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.DataRedundancy](),
 				},
 			},
 			"force_destroy": schema.BoolAttribute{
@@ -81,20 +82,18 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 			},
 			names.AttrID: framework.IDAttribute(),
 			"type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  enum.FrameworkDefault(awstypes.BucketTypeDirectory),
+				CustomType: bucketTypeType,
+				Optional:   true,
+				Computed:   true,
+				Default:    bucketTypeType.AttributeDefault(awstypes.BucketTypeDirectory),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.BucketType](),
 				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"location": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceDirectoryBucketLocationData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -104,14 +103,12 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 							},
 						},
 						"type": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  enum.FrameworkDefault(awstypes.LocationTypeAvailabilityZone),
+							CustomType: locationTypeType,
+							Optional:   true,
+							Computed:   true,
+							Default:    locationTypeType.AttributeDefault(awstypes.LocationTypeAvailabilityZone),
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
-							},
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.LocationType](),
 							},
 						},
 					},
@@ -126,7 +123,7 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 }
 
 func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceDirectoryBucketData
+	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -134,7 +131,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	locationData, diags := data.Location.ToPtr(ctx)
+	locationInfoData, diags := data.Location.ToPtr(ctx)
 
 	response.Diagnostics.Append(diags...)
 
@@ -148,12 +145,12 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 		Bucket: flex.StringFromFramework(ctx, data.Bucket),
 		CreateBucketConfiguration: &awstypes.CreateBucketConfiguration{
 			Bucket: &awstypes.BucketInfo{
-				DataRedundancy: awstypes.DataRedundancy(data.DataRedundancy.ValueString()),
+				DataRedundancy: data.DataRedundancy.ValueEnum(),
 				Type:           awstypes.BucketType(data.Type.ValueString()),
 			},
 			Location: &awstypes.LocationInfo{
-				Name: flex.StringFromFramework(ctx, locationData.Name),
-				Type: awstypes.LocationType(locationData.Type.ValueString()),
+				Name: flex.StringFromFramework(ctx, locationInfoData.Name),
+				Type: locationInfoData.Type.ValueEnum(),
 			},
 		},
 	}
@@ -168,13 +165,13 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
-	data.ID = data.Bucket
+	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceDirectoryBucketData
+	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -182,9 +179,15 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
 	conn := r.Meta().S3Client(ctx)
 
-	err := findBucket(ctx, conn, data.ID.ValueString(), useRegionalEndpointInUSEast1)
+	err := findBucket(ctx, conn, data.Bucket.ValueString(), useRegionalEndpointInUSEast1)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -200,23 +203,23 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.arn(data.ID.ValueString()))
-	data.Bucket = data.ID
+	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+
 	// No API to return bucket type, location etc.
-	data.DataRedundancy = flex.StringValueToFramework(ctx, awstypes.DataRedundancySingleAvailabilityZone)
+	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
 	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
-		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &resourceDirectoryBucketLocationData{
+		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &locationInfoModel{
 			Name: flex.StringValueToFramework(ctx, matches[2]),
-			Type: flex.StringValueToFramework(ctx, awstypes.LocationTypeAvailabilityZone),
+			Type: fwtypes.StringEnumValue(awstypes.LocationTypeAvailabilityZone),
 		})
 	}
-	data.Type = flex.StringValueToFramework(ctx, awstypes.BucketTypeDirectory)
+	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceDirectoryBucket) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceDirectoryBucketData
+	var old, new directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 
@@ -234,7 +237,7 @@ func (r *resourceDirectoryBucket) Update(ctx context.Context, request resource.U
 }
 
 func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceDirectoryBucketData
+	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -245,7 +248,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().S3Client(ctx)
 
 	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-		Bucket: flex.StringFromFramework(ctx, data.ID),
+		Bucket: flex.StringFromFramework(ctx, data.Bucket),
 	}, useRegionalEndpointInUSEast1)
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
@@ -281,17 +284,26 @@ func (r *resourceDirectoryBucket) arn(bucket string) string {
 	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
-type resourceDirectoryBucketData struct {
-	ARN            types.String                                                         `tfsdk:"arn"`
-	Bucket         types.String                                                         `tfsdk:"bucket"`
-	DataRedundancy types.String                                                         `tfsdk:"data_redundancy"`
-	ForceDestroy   types.Bool                                                           `tfsdk:"force_destroy"`
-	Location       fwtypes.ListNestedObjectValueOf[resourceDirectoryBucketLocationData] `tfsdk:"location"`
-	ID             types.String                                                         `tfsdk:"id"`
-	Type           types.String                                                         `tfsdk:"type"`
+type directoryBucketResourceModel struct {
+	ARN            types.String                                       `tfsdk:"arn"`
+	Bucket         types.String                                       `tfsdk:"bucket"`
+	DataRedundancy fwtypes.StringEnum[awstypes.DataRedundancy]        `tfsdk:"data_redundancy"`
+	ForceDestroy   types.Bool                                         `tfsdk:"force_destroy"`
+	Location       fwtypes.ListNestedObjectValueOf[locationInfoModel] `tfsdk:"location"`
+	ID             types.String                                       `tfsdk:"id"`
+	Type           fwtypes.StringEnum[awstypes.BucketType]            `tfsdk:"type"`
 }
 
-type resourceDirectoryBucketLocationData struct {
-	Name types.String `tfsdk:"name"`
-	Type types.String `tfsdk:"type"`
+func (data *directoryBucketResourceModel) InitFromID() error {
+	data.Bucket = data.ID
+	return nil
+}
+
+func (data *directoryBucketResourceModel) setID() {
+	data.ID = data.Bucket
+}
+
+type locationInfoModel struct {
+	Name types.String                              `tfsdk:"name"`
+	Type fwtypes.StringEnum[awstypes.LocationType] `tfsdk:"type"`
 }
