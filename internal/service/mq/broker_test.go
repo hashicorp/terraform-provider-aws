@@ -1298,7 +1298,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", "data.aws_subnets.default", "ids.#"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access": "false",
@@ -2146,6 +2146,17 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
 }
 `, rName, version)
 }
