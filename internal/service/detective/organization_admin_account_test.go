@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccOrganizationAdminAccount_basic(t *testing.T) {
@@ -73,7 +73,6 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 
 func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_detective_organization_admin_account.test"
 	altResourceName := "aws_detective_organization_admin_account.alternate"
 	thirdResourceName := "aws_detective_organization_admin_account.third"
@@ -109,11 +108,9 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			adminAccount, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
+			_, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
 
-			// Because of this resource's dependency, the Organizations organization
-			// will be deleted first, resulting in the following valid error
-			if tfawserr.ErrMessageContains(err, detective.ErrCodeValidationException, "account is not a member of an organization") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -121,37 +118,25 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			if adminAccount == nil {
-				continue
-			}
-
-			return fmt.Errorf("expected Detective Organization Admin Account (%s) to be removed", rs.Primary.ID)
+			return fmt.Errorf("Detective Organization Admin Account %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
-		adminAccount, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
+		_, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if adminAccount == nil {
-			return fmt.Errorf("Detective Organization Admin Account (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -177,9 +162,7 @@ resource "aws_detective_organization_admin_account" "test" {
 }
 
 func testAccOrganizationAdminAccountConfig_multiRegion() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(3), `
 data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}

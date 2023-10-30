@@ -148,7 +148,7 @@ func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Detectiv
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrMessageContains(err, detective.ErrCodeValidationException, "account is not a member of an organization") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
