@@ -77,7 +77,7 @@ func (r *resourceExampleResource) Schema(ctx context.Context, request resource.S
 
 ## Tagging
 
-Tagging in the Plugin Framework is done by implementing the `ModifyPlan()` method on a resource. 
+Tagging in the Plugin Framework is done by implementing the `ModifyPlan()` method on a resource.
 
 ```go
 func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -100,7 +100,7 @@ func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigu
 
 It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
 
-!!! tip 
+!!! tip
     `VersionConstraint` should be set to the most recently published version of the AWS Provider.
 
 ```go
