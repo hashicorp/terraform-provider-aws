@@ -13,12 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,10 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
-// Tagging annotations are used for "transparent tagging".
-// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessEndpoint() *schema.Resource {
 	return &schema.Resource{
@@ -55,10 +50,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 			"attachment_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointAttachmentType_Values(), false),
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(verifiedAccessAttachmentType_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -71,8 +66,8 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 			"domain_certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: verify.ValidARN,
 				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"endpoint_domain_prefix": {
 				Type:     schema.TypeString,
@@ -84,10 +79,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"endpoint_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointType_Values(), false),
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(verifiedAccessEndpointType_Values(), false),
 			},
 			"load_balancer_options": {
 				Type:     schema.TypeList,
@@ -98,8 +93,8 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 						"load_balancer_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: verify.ValidARN,
 							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"port": {
 							Type:         schema.TypeInt,
@@ -107,9 +102,9 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
@@ -136,9 +131,9 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
 						},
 					},
 				},
@@ -168,19 +163,15 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"verified_access_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"verified_access_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"verified_access_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -272,7 +263,6 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("security_group_ids", aws.StringSlice(out.SecurityGroupIds))
 	d.Set("verified_access_group_id", out.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", out.VerifiedAccessInstanceId)
-	d.Set("status", string(out.Status.Code))
 
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(out.LoadBalancerOptions)); err != nil {
 		return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessEndpoint, d.Id(), err)
@@ -361,58 +351,6 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	return diags
-}
-
-func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
-		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
-		Target:  []string{},
-		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
-	}
-
-	return nil, err
 }
 
 func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []interface{} {

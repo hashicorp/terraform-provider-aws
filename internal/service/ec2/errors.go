@@ -100,6 +100,7 @@ const (
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound        = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidTransitGatewayIDNotFound                   = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound    = "InvalidTransitGatewayMulticastDomainId.NotFound"
+	errCodeInvalidVerifiedAccessEndpointIdNotFound           = "InvalidVerifiedAccessEndpointId.NotFound"
 	errCodeInvalidVerifiedAccessGroupIdNotFound              = "InvalidVerifiedAccessGroupId.NotFound"
 	errCodeInvalidVerifiedAccessInstanceIdNotFound           = "InvalidVerifiedAccessInstanceId.NotFound"
 	errCodeInvalidVerifiedAccessTrustProviderIdNotFound      = "InvalidVerifiedAccessTrustProviderId.NotFound"
@@ -122,7 +123,6 @@ const (
 	errCodeVolumeInUse                                       = "VolumeInUse"
 	errCodeVPNConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
-	errCodeInvalidVerifiedAccessEndpointIdNotFound           = "InvalidVerifiedAccessEndpointId.NotFound"
 )
 
 func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {

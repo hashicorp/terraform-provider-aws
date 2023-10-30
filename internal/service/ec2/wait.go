@@ -3334,3 +3334,55 @@ func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client
 
 	return err
 }
+
+func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
+		Target:  []string{},
+		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
