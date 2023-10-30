@@ -20,6 +20,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -36,6 +37,14 @@ func RegisterSweepers() {
 			"aws_s3_access_point",
 			"aws_s3_object",
 			"aws_s3control_multi_region_access_point",
+		},
+	})
+
+	resource.AddTestSweepers("aws_s3_directory_bucket", &resource.Sweeper{
+		Name: "aws_s3_directory_bucket",
+		F:    sweepDirectoryBuckets,
+		Dependencies: []string{
+			"aws_s3_object",
 		},
 	})
 }
@@ -224,4 +233,47 @@ func bucketRegionFilter(ctx context.Context, conn *s3.Client, region string, s3U
 
 		return true
 	}
+}
+
+func sweepDirectoryBuckets(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	conn := client.S3Client(ctx)
+	input := &s3.ListDirectoryBucketsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := s3.NewListDirectoryBucketsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping S3 Directory Bucket sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing S3 Directory Buckets (%s): %w", region, err)
+		}
+
+		for _, v := range page.Buckets {
+			if !bucketNameFilter(v) {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDirectoryBucket, client,
+				framework.NewAttribute("id", aws.ToString(v.Name)),
+			))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Directory Buckets (%s): %w", region, err)
+	}
+
+	return nil
 }
