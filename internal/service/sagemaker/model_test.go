@@ -292,7 +292,6 @@ func TestAccSageMakerModel_primaryContainerModelPackageName(t *testing.T) {
 	})
 }
 
-// remi
 func TestAccSageMakerModel_primaryContainerModelDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -309,7 +308,7 @@ func TestAccSageMakerModel_primaryContainerModelDataSource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source"),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source.compression_typedd"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source.compression_type"),
 				),
 			},
 			{
@@ -780,7 +779,6 @@ resource "aws_sagemaker_model" "test" {
 `, rName))
 }
 
-// remi
 func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
