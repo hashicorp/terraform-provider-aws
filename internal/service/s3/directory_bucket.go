@@ -248,7 +248,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().S3Client(ctx)
 
 	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-		Bucket: flex.StringFromFramework(ctx, data.Bucket),
+		Bucket: flex.StringFromFramework(ctx, data.ID),
 	}, useRegionalEndpointInUSEast1)
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
