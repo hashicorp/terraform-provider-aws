@@ -6,7 +6,6 @@ package types_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -126,13 +125,4 @@ func TestTimestampTypeValidate(t *testing.T) {
 			}
 		})
 	}
-}
-
-func locationFromString(t *testing.T, s string) *time.Location {
-	location, err := time.LoadLocation(s)
-	if err != nil {
-		t.Fatalf("loading time.Location %q: %s", s, err)
-	}
-
-	return location
 }
