@@ -7,15 +7,16 @@ import (
 	"context"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestDurationTypeValueFromTerraform(t *testing.T) {
+func TestStringEnumTypeValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -24,19 +25,15 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwtypes.DurationNull(),
+			expected: fwtypes.StringEnumNull[awstypes.AclPermission](),
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwtypes.DurationUnknown(),
+			expected: fwtypes.StringEnumUnknown[awstypes.AclPermission](),
 		},
-		"valid duration": {
-			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwtypes.DurationValue("2h"),
-		},
-		"invalid duration": {
-			val:      tftypes.NewValue(tftypes.String, "not ok"),
-			expected: fwtypes.DurationUnknown(),
+		"valid enum": {
+			val:      tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionRead)),
+			expected: fwtypes.StringEnumValue(awstypes.AclPermissionRead),
 		},
 	}
 
@@ -46,7 +43,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			val, err := fwtypes.DurationType.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.StringEnumType[awstypes.AclPermission]().ValueFromTerraform(ctx, test.val)
 
 			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
@@ -59,7 +56,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestDurationTypeValidate(t *testing.T) {
+func TestStringEnumTypeValidate(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -77,11 +74,11 @@ func TestDurationTypeValidate(t *testing.T) {
 		"null string": {
 			val: tftypes.NewValue(tftypes.String, nil),
 		},
-		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "2h"),
+		"valid enum": {
+			val: tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionWrite)),
 		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
+		"invalid enum": {
+			val:         tftypes.NewValue(tftypes.String, "LIST"),
 			expectError: true,
 		},
 	}
@@ -93,7 +90,7 @@ func TestDurationTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.DurationType.Validate(ctx, test.val, path.Root("test"))
+			diags := fwtypes.StringEnumType[awstypes.AclPermission]().(xattr.TypeWithValidate).Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -101,43 +98,6 @@ func TestDurationTypeValidate(t *testing.T) {
 
 			if diags.HasError() && !test.expectError {
 				t.Fatalf("got unexpected error: %#v", diags)
-			}
-		})
-	}
-}
-
-func TestDurationToStringValue(t *testing.T) {
-	t.Parallel()
-
-	tests := map[string]struct {
-		duration fwtypes.Duration
-		expected types.String
-	}{
-		"value": {
-			duration: fwtypes.DurationValue("2h"),
-			expected: types.StringValue("2h"),
-		},
-		"null": {
-			duration: fwtypes.DurationNull(),
-			expected: types.StringNull(),
-		},
-		"unknown": {
-			duration: fwtypes.DurationUnknown(),
-			expected: types.StringUnknown(),
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := context.Background()
-
-			s, _ := test.duration.ToStringValue(ctx)
-
-			if !test.expected.Equal(s) {
-				t.Fatalf("expected %#v to equal %#v", s, test.expected)
 			}
 		})
 	}
