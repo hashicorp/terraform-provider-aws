@@ -136,7 +136,7 @@ resource "aws_redshift_resource_policy" "test" {
         AWS = "arn:${data.aws_partition.test.partition}:iam::${data.aws_caller_identity.test.account_id}:root"
       }
       Action = "redshift:CreateInboundIntegration"
-	  Resource = aws_redshift_cluster.test.cluster_namespace_arn
+      Resource = aws_redshift_cluster.test.cluster_namespace_arn
       Sid = ""
     }]
   })
