@@ -26,6 +26,8 @@ tfsdk2fw -resource aws_example_resource examplepackage ResourceName internal/ser
 
 Terraform Plugin Framework introduced `null` values, which differ from `zero` values. Since the Plugin SDKv2 marked both `null` and `zero` values as the same, it will be necessary to use the [State Upgrader](https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade).
 
+An example to a resource with an upgraded stated, while migrating, can be found [here](https://github.com/hashicorp/terraform-provider-aws/blob/88447d09f85dc737597243b31c5d0c8e212d055b/internal/service/batch/job_queue.go#L330).
+
 ### Custom Types
 
 The Plugin Framework introduced [custom types](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types/custom) that allow custom validation on basic types. The following attribute types will require a state upgrade to utilize these custom types.
@@ -34,6 +36,40 @@ The Plugin Framework introduced [custom types](https://developer.hashicorp.com/t
 - CIDR Blocks
 - Duration
 - Timestamps
+
+SDKv2 `ARN` attribute.
+
+```go
+func ResourceExampleResource {
+    return &schema.Schema{
+        "arn_attribute": {		
+	        Type:         schema.TypeString,
+	        Optional:     true,
+	        ValidateFunc: verify.ValidARN,
+        },
+        
+        // other schema attributes
+    }
+}
+```
+
+Framework `ARN` attribute.
+
+```go
+func (r *resourceExampleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+    return schema.Schema{
+        "arn_attribute": schema.StringAttribute{
+            CustomType: fwtypes.ARNType,
+            Optional:   true,
+            PlanModifiers: []planmodifier.String{
+                stringplanmodifier.UseStateForUnknown(),
+            },
+        },
+
+        // other schema attributes
+    }
+}
+```
 
 ## Tagging
 
@@ -60,7 +96,8 @@ func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigu
 
 It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
 
-**Note**: `VersionConstraint` should be set to the most recently published version of the AWS Provider.
+!!! tip 
+    `VersionConstraint` should be set to the most recently published version of the AWS Provider.
 
 ```go
 func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
@@ -78,7 +115,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.21.0", // always use most recently published version of the Provider
+						VersionConstraint: "5.23.0", // always use most recently published version of the Provider
 					},
 				},
 				Config: testAccExampleResourceConfig_basic(rName),
