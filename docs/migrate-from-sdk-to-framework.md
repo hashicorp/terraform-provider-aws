@@ -37,11 +37,22 @@ The Plugin Framework introduced [custom types](https://developer.hashicorp.com/t
 
 ## Tagging
 
-Tagging in the Plugin Framework is done by implementing the `ModifyPlan()` method on a resource.
+Tagging in the Plugin Framework is done by implementing the `ModifyPlan()` method on a resource. 
 
 ```go
 func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
+}
+```
+
+Transparent Tagging that is used in SDKv2 also applies to the Framework by using the `@Tags` decorator when defining the resource.
+
+```go
+// @FrameworkResource(name="Example Resource")
+// @Tags(identifierAttribute="arn")
+func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := resourceExampleResource{}
+	return &r, nil
 }
 ```
 
