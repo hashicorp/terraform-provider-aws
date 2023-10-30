@@ -14,8 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -117,8 +119,8 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("creating Detective Member (%s): %s", id, err)
 	}
 
-	if _, err = MemberStatusUpdated(ctx, conn, graphARN, accountID, detective.MemberStatusInvited); err != nil {
-		return diag.Errorf("waiting for Detective Member (%s) to be invited: %s", d.Id(), err)
+	if _, err := waitMemberInvited(ctx, conn, graphARN, accountID); err != nil {
+		return diag.Errorf("waiting for Detective Member (%s) invited: %s", d.Id(), err)
 	}
 
 	d.SetId(id)
@@ -129,38 +131,32 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	graphArn, accountId, err := MemberParseResourceID(d.Id())
+	graphARN, accountID, err := MemberParseResourceID(d.Id())
 	if err != nil {
-		return diag.Errorf("decoding ID Detective Member (%s): %s", d.Id(), err)
+		return diag.FromErr(err)
 	}
 
-	resp, err := FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
+	member, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
 
-	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) ||
-			tfresource.NotFound(err) {
-			log.Printf("[WARN] Detective Member (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return diag.Errorf("reading Detective Member (%s): %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && resp == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("account_id", resp.AccountId)
-	d.Set("administrator_id", resp.AdministratorId)
-	d.Set("disabled_reason", resp.DisabledReason)
-	d.Set("email_address", resp.EmailAddress)
-	d.Set("graph_arn", resp.GraphArn)
-	d.Set("invited_time", aws.TimeValue(resp.InvitedTime).Format(time.RFC3339))
-	d.Set("status", resp.Status)
-	d.Set("updated_time", aws.TimeValue(resp.UpdatedTime).Format(time.RFC3339))
-	d.Set("volume_usage_in_bytes", resp.VolumeUsageInBytes)
+	if err != nil {
+		return diag.Errorf("reading Detective Member (%s): %s", d.Id(), err)
+	}
+
+	d.Set("account_id", member.AccountId)
+	d.Set("administrator_id", member.AdministratorId)
+	d.Set("disabled_reason", member.DisabledReason)
+	d.Set("email_address", member.EmailAddress)
+	d.Set("graph_arn", member.GraphArn)
+	d.Set("invited_time", aws.TimeValue(member.InvitedTime).Format(time.RFC3339))
+	d.Set("status", member.Status)
+	d.Set("updated_time", aws.TimeValue(member.UpdatedTime).Format(time.RFC3339))
+	d.Set("volume_usage_in_bytes", member.VolumeUsageInBytes)
 
 	return nil
 }
@@ -207,4 +203,91 @@ func MemberParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected graph_arn%[2]saccount_id", id, memberResourceIDSeparator)
+}
+
+func FindMemberByGraphByTwoPartKey(ctx context.Context, conn *detective.Detective, graphARN, accountID string) (*detective.MemberDetail, error) {
+	input := &detective.ListMembersInput{
+		GraphArn: aws.String(graphARN),
+	}
+
+	return findMember(ctx, conn, input, func(v *detective.MemberDetail) bool {
+		return aws.StringValue(v.AccountId) == accountID
+	})
+}
+
+func findMember(ctx context.Context, conn *detective.Detective, input *detective.ListMembersInput, filter tfslices.Predicate[*detective.MemberDetail]) (*detective.MemberDetail, error) {
+	output, err := findMembers(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findMembers(ctx context.Context, conn *detective.Detective, input *detective.ListMembersInput, filter tfslices.Predicate[*detective.MemberDetail]) ([]*detective.MemberDetail, error) {
+	var output []*detective.MemberDetail
+
+	err := conn.ListMembersPagesWithContext(ctx, input, func(page *detective.ListMembersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.MemberDetails {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusMember(ctx context.Context, conn *detective.Detective, graphARN, adminAccountID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, adminAccountID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitMemberInvited(ctx context.Context, conn *detective.Detective, graphARN, adminAccountID string) (*detective.MemberDetail, error) {
+	const (
+		timeout = 4 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{detective.MemberStatusVerificationInProgress},
+		Target:  []string{detective.MemberStatusInvited},
+		Refresh: statusMember(ctx, conn, graphARN, adminAccountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*detective.MemberDetail); ok {
+		return output, err
+	}
+
+	return nil, err
 }

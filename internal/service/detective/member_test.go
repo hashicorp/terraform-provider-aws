@@ -145,7 +145,7 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, detectiv
 			return err
 		}
 
-		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
+		resp, err := tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphArn, accountId)
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			resp, err := tfdetective.FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
+			resp, err := tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphArn, accountId)
 			if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 				continue
 			}
