@@ -140,7 +140,7 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, detectiv
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
-		graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
+		graphArn, accountId, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
+			graphArn, accountId, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
