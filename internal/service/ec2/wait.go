@@ -3335,7 +3335,7 @@ func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client
 	return err
 }
 
-func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
 		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
@@ -3346,14 +3346,17 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Clie
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
 		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
@@ -3364,14 +3367,17 @@ func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Clie
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
 		Target:  []string{},
@@ -3380,8 +3386,11 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Clie
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
 	}
 
 	return nil, err
