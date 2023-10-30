@@ -12,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -76,18 +78,20 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	resp, err := FindGraphByARN(ctx, conn, d.Id())
+	graph, err := FindGraphByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Detective Graph (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return diag.Errorf("reading detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Detective Graph (%s): %s", d.Id(), err)
 	}
 
-	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
-	d.Set("graph_arn", resp.Arn)
+	d.Set("created_time", aws.TimeValue(graph.CreatedTime).Format(time.RFC3339))
+	d.Set("graph_arn", graph.Arn)
 
 	return nil
 }
@@ -114,4 +118,53 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {
+	input := &detective.ListGraphsInput{}
+
+	return findGraph(ctx, conn, input, func(v *detective.Graph) bool {
+		return aws.StringValue(v.Arn) == arn
+	})
+}
+
+func findGraph(ctx context.Context, conn *detective.Detective, input *detective.ListGraphsInput, filter tfslices.Predicate[*detective.Graph]) (*detective.Graph, error) {
+	output, err := findGraphs(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findGraphs(ctx context.Context, conn *detective.Detective, input *detective.ListGraphsInput, filter tfslices.Predicate[*detective.Graph]) ([]*detective.Graph, error) {
+	var output []*detective.Graph
+
+	err := conn.ListGraphsPagesWithContext(ctx, input, func(page *detective.ListGraphsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GraphList {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

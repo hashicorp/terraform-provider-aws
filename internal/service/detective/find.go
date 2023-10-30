@@ -39,47 +39,6 @@ func FindAdminAccount(ctx context.Context, conn *detective.Detective, adminAccou
 	return result, err
 }
 
-func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {
-	input := &detective.ListGraphsInput{}
-	var result *detective.Graph
-
-	err := conn.ListGraphsPagesWithContext(ctx, input, func(page *detective.ListGraphsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, graph := range page.GraphList {
-			if graph == nil {
-				continue
-			}
-
-			if aws.StringValue(graph.Arn) == arn {
-				result = graph
-				return false
-			}
-		}
-		return !lastPage
-	})
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			Message:     fmt.Sprintf("No detective graph with arn %q", arn),
-			LastRequest: input,
-		}
-	}
-
-	return result, nil
-}
-
 func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
 	input := &detective.ListInvitationsInput{}
 
