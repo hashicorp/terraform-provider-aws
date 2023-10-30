@@ -22,9 +22,11 @@ func ResourceInvitationAccepter() *schema.Resource {
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
 		ReadWithoutTimeout:   resourceInvitationAccepterRead,
 		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"graph_arn": {
 				Type:         schema.TypeString,
@@ -39,19 +41,18 @@ func ResourceInvitationAccepter() *schema.Resource {
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	graphArn := d.Get("graph_arn").(string)
-
-	acceptInvitationInput := &detective.AcceptInvitationInput{
-		GraphArn: aws.String(graphArn),
+	graphARN := d.Get("graph_arn").(string)
+	input := &detective.AcceptInvitationInput{
+		GraphArn: aws.String(graphARN),
 	}
 
-	_, err := conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
+	_, err := conn.AcceptInvitationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("accepting Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return diag.Errorf("accepting Detective Invitation (%s): %s", graphARN, err)
 	}
 
-	d.SetId(graphArn)
+	d.SetId(graphARN)
 
 	return resourceInvitationAccepterRead(ctx, d, meta)
 }
@@ -78,16 +79,18 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	input := &detective.DisassociateMembershipInput{
+	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
+	_, err := conn.DisassociateMembershipWithContext(ctx, &detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DisassociateMembershipWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.Errorf("disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
+
 	return nil
 }
