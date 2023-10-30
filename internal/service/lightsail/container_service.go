@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"log"
 	"reflect"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -65,7 +68,7 @@ func ResourceContainerService() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{1,2}|[a-z0-9][a-z0-9-]+[a-z0-9]$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z]{1,2}|[0-9a-z][0-9a-z-]+[0-9a-z]$`), ""),
 				),
 			},
 			"power": {

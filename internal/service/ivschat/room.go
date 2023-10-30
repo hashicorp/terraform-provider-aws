@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -89,7 +92,7 @@ func ResourceRoom() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),

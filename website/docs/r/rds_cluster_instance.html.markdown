@@ -51,7 +51,7 @@ resource "aws_rds_cluster" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
@@ -59,6 +59,7 @@ The following arguments are supported:
 * `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
 * `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
 * `engine_version` - (Optional) Database engine version.
@@ -77,9 +78,9 @@ The following arguments are supported:
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - RDS Cluster Identifier
@@ -116,8 +117,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS Cluster Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import RDS Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```

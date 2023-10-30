@@ -22,7 +22,7 @@ data "aws_autoscaling_group" "foo" {
 
 * `name` - Specify the exact name of the desired autoscaling group.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.

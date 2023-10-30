@@ -1,4 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package enum
+
+import (
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+)
 
 type valueser[T ~string] interface {
 	~string
@@ -18,4 +26,8 @@ func Slice[T valueser[T]](l ...T) []string {
 	}
 
 	return result
+}
+
+func FrameworkDefault[T ~string](t T) defaults.String {
+	return stringdefault.StaticString(string(t))
 }

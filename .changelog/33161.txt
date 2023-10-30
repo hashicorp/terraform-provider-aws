@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Skip setting `definition.*.parameter_declarations.*.*_parameter_declaration.static_values` when empty, preventing persistent differences.
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Skip setting `definition.*.parameter_declarations.*.*_parameter_declaration.static_values` when empty, preventing persistent differences.
+```
+```release-note:bug
+resource/aws_quicksight_template: Skip setting `definition.*.parameter_declarations.*.*_parameter_declaration.static_values` when empty, preventing persistent differences.
+```

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -111,7 +114,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -120,7 +123,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -151,7 +154,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -165,7 +168,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -197,7 +200,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -274,7 +277,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -397,7 +400,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},

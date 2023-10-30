@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sns"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -47,7 +50,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(`terraform-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
@@ -280,7 +283,7 @@ func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTopicConfig_fakeIAMRole(rName),
-				ExpectError: regexp.MustCompile(`PrincipalNotFound`),
+				ExpectError: regexache.MustCompile(`PrincipalNotFound`),
 			},
 		},
 	})
@@ -496,7 +499,7 @@ func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTopicConfig_expectContentBasedDeduplicationError(rName),
-				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO topics`),
+				ExpectError: regexache.MustCompile(`content-based deduplication can only be set for FIFO topics`),
 			},
 		},
 	})

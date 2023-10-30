@@ -54,9 +54,9 @@ The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the MedicalVocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the MedicalVocabulary.
 * `arn` - ARN of the MedicalVocabulary.
@@ -72,8 +72,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transcribe MedicalVocabulary can be imported using the `vocabulary_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transcribe MedicalVocabulary using the `vocabulary_name`. For example:
 
+```terraform
+import {
+  to = aws_transcribe_medical_vocabulary.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_transcribe_medical_vocabulary.example example-name
+
+Using `terraform import`, import Transcribe MedicalVocabulary using the `vocabulary_name`. For example:
+
+```console
+% terraform import aws_transcribe_medical_vocabulary.example example-name
 ```

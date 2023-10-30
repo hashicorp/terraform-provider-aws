@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -63,7 +66,7 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
 				},
 			},
 			"name": {
@@ -108,14 +111,13 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		input.LicenseRules = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating License Manager License Configuration: %s", input)
-	resp, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
+	output, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating License Manager License Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.LicenseConfigurationArn))
+	d.SetId(aws.StringValue(output.LicenseConfigurationArn))
 
 	return resourceLicenseConfigurationRead(ctx, d, meta)
 }
@@ -164,7 +166,6 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 			input.LicenseCount = aws.Int64(int64(v.(int)))
 		}
 
-		log.Printf("[DEBUG] Updating License Manager License Configuration: %s", input)
 		_, err := conn.UpdateLicenseConfigurationWithContext(ctx, input)
 
 		if err != nil {
@@ -183,7 +184,7 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
+	if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
 		return nil
 	}
 
@@ -201,7 +202,7 @@ func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Lic
 
 	output, err := conn.GetLicenseConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
+	if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

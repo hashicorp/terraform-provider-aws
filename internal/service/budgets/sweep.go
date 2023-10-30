@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package budgets
 
@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
 		Name: "aws_budgets_budget_action",
 		F:    sweepBudgetActions,
@@ -31,7 +32,7 @@ func init() {
 
 func sweepBudgetActions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -58,7 +59,7 @@ func sweepBudgetActions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Budget Action sweep for %s: %s", region, err)
 		return nil
 	}
@@ -67,7 +68,7 @@ func sweepBudgetActions(region string) error {
 		return fmt.Errorf("error listing Budget Actions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budget Actions (%s): %w", region, err)
@@ -78,7 +79,7 @@ func sweepBudgetActions(region string) error {
 
 func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -111,7 +112,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Budget sweep for %s: %s", region, err)
 		return nil
 	}
@@ -120,7 +121,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		return fmt.Errorf("error listing Budgets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budgets (%s): %w", region, err)

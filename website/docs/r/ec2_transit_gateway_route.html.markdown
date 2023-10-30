@@ -34,23 +34,32 @@ resource "aws_ec2_transit_gateway_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_cidr_block` - (Required) IPv4 or IPv6 RFC1924 CIDR used for destination matches. Routing decisions are based on the most specific match.
 * `transit_gateway_attachment_id` - (Optional) Identifier of EC2 Transit Gateway Attachment (required if `blackhole` is set to false).
 * `blackhole` - (Optional) Indicates whether to drop traffic that matches this route (default to `false`).
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Route Table identifier combined with destination
 
 ## Import
 
-`aws_ec2_transit_gateway_route` can be imported by using the EC2 Transit Gateway Route Table, an underscore, and the destination, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_route` using the EC2 Transit Gateway Route Table, an underscore, and the destination. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_route.example
+  id = "tgw-rtb-12345678_0.0.0.0/0"
+}
 ```
-$ terraform import aws_ec2_transit_gateway_route.example tgw-rtb-12345678_0.0.0.0/0
+
+Using `terraform import`, import `aws_ec2_transit_gateway_route` using the EC2 Transit Gateway Route Table, an underscore, and the destination. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_route.example tgw-rtb-12345678_0.0.0.0/0
 ```

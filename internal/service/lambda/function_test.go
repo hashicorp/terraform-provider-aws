@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -6,15 +9,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	signertypes "github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/signer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -370,7 +374,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(rName),
-				ExpectError: regexp.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
+				ExpectError: regexache.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
 			},
 		},
 	})
@@ -575,7 +579,7 @@ func TestAccLambdaFunction_nameValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_basic(badFuncName, rName, rName, rName),
-				ExpectError: regexp.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
+				ExpectError: regexache.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
 			},
 		},
 	})
@@ -903,7 +907,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_nilDeadLetter(rName),
-				ExpectError: regexp.MustCompile(
+				ExpectError: regexache.MustCompile(
 					fmt.Sprintf("nil dead_letter_config supplied for function: %s", rName)),
 			},
 		},
@@ -1820,7 +1824,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1839,7 +1843,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -1886,7 +1890,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1904,7 +1908,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(updatedPath, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -1941,7 +1945,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1960,7 +1964,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -1997,7 +2001,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -2016,7 +2020,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -2074,7 +2078,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		{
 			// Test invalid runtime.
 			Config:      testAccFunctionConfig_runtime(rName, rName),
-			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
+			ExpectError: regexache.MustCompile(`expected runtime to be one of`),
 		},
 	}
 	for _, runtime := range types.Runtime("").Values() {
@@ -2147,11 +2151,48 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_zipNoHandler(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
 				Config:      testAccFunctionConfig_zipNoRuntime(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_ipv6AllowedForDualStack(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", "true"),
+				),
 			},
 		},
 	})
@@ -3731,11 +3772,6 @@ resource "aws_s3_bucket" "artifacts" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
   versioning_configuration {
@@ -3790,11 +3826,6 @@ func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
 resource "aws_s3_bucket" "artifacts" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "o" {
@@ -3875,6 +3906,45 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  vpc_config {
+    ipv6_allowed_for_dual_stack = true
+    subnet_ids                  = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids          = [aws_security_group.sg_for_lambda.id]
+  }
+}
+`, rName))
+}
+
 func testAccFunctionConfig_skipDestroy(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
@@ -3895,38 +3965,37 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-	var foundPlatform bool
-	err := conn.ListSigningPlatformsPagesWithContext(ctx, &signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {
+	input := &signer.ListSigningPlatformsInput{}
+
+	pages := signer.NewListSigningPlatformsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
 		if page == nil {
-			return !lastPage
+			t.Skip("skipping acceptance testing: empty response")
 		}
 
 		for _, platform := range page.Platforms {
-			if platform == nil {
+			if platform == (signertypes.SigningPlatform{}) {
 				continue
 			}
 
 			if aws.ToString(platform.PlatformId) == platformID {
-				foundPlatform = true
-
-				return false
+				return
 			}
 		}
-
-		return !lastPage
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if !foundPlatform {
-		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
-	}
+	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }

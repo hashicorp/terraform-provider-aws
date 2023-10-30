@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package deploy_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDeployDeploymentGroup_basic(t *testing.T) {
@@ -383,7 +387,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -404,7 +408,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -1790,6 +1794,66 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 	})
 }
 
+func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName, "UPDATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "UPDATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName, "IGNORE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "outdated_instances_strategy", "IGNORE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 	t.Parallel()
 
@@ -2344,47 +2408,39 @@ func testAccCheckDeploymentGroupDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
-				ApplicationName:     aws.String(rs.Primary.Attributes["app_name"]),
-				DeploymentGroupName: aws.String(rs.Primary.Attributes["deployment_group_name"]),
-			})
+			_, err := tfcodedeploy.FindDeploymentGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_name"], rs.Primary.Attributes["deployment_group_name"])
 
-			if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if err == nil {
-				if resp.DeploymentGroupInfo.DeploymentGroupName != nil {
-					return fmt.Errorf("CodeDeploy deployment group still exists:\n%#v", *resp.DeploymentGroupInfo.DeploymentGroupName)
-				}
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("CodeDeploy Deployment Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDeploymentGroupExists(ctx context.Context, name string, group *codedeploy.DeploymentGroupInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentGroupExists(ctx context.Context, n string, v *codedeploy.DeploymentGroupInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn(ctx)
 
-		resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
-			ApplicationName:     aws.String(rs.Primary.Attributes["app_name"]),
-			DeploymentGroupName: aws.String(rs.Primary.Attributes["deployment_group_name"]),
-		})
+		output, err := tfcodedeploy.FindDeploymentGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_name"], rs.Primary.Attributes["deployment_group_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*group = *resp.DeploymentGroupInfo
+		*v = *output
 
 		return nil
 	}
@@ -3710,4 +3766,15 @@ resource "aws_codedeploy_deployment_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccDeploymentGroupConfig_outdatedInstancesStrategy(rName string, outdatedInstancesStrategy string) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name                    = aws_codedeploy_app.test.name
+  deployment_group_name       = "tf-acc-test-%[1]s"
+  service_role_arn            = aws_iam_role.test.arn
+  outdated_instances_strategy = "%[2]s"
+}
+`, rName, outdatedInstancesStrategy) + testAccDeploymentGroupConfig_base(rName)
 }

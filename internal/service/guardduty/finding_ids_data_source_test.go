@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
@@ -8,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccGuardDutyFindingIdsDataSource_basic(t *testing.T) {
+func testAccFindingIDsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_finding_ids.test"
 	detectorDataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
@@ -22,7 +25,7 @@ func TestAccGuardDutyFindingIdsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingIdsDataSourceConfig_basic(),
+				Config: testAccFindingIDsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, "id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "has_findings"),
@@ -33,7 +36,7 @@ func TestAccGuardDutyFindingIdsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFindingIdsDataSourceConfig_basic() string {
+func testAccFindingIDsDataSourceConfig_basic() string {
 	return `
 data "aws_guardduty_detector" "test" {}
 

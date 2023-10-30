@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -104,7 +107,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
-					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexp.MustCompile(`[^0]+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexache.MustCompile(`[^0]+`)),
 				),
 			},
 		},

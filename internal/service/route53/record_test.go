@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -661,7 +664,7 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRecordConfig_aliasCustomVPCEndpointSwappedAliasAttributes(rName),
-				ExpectError: regexp.MustCompile(`expected length of`),
+				ExpectError: regexache.MustCompile(`expected length of`),
 			},
 			{
 				Config: testAccRecordConfig_customVPCEndpoint(rName),
@@ -1519,7 +1522,7 @@ func testAccRecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFun
 			t.Fatalf("Expected an error but got none")
 		}
 
-		re := regexp.MustCompile(`Tried to create resource record set \[name='www.domain.test.', type='A'] but it already exists`)
+		re := regexache.MustCompile(`Tried to create resource record set \[name='www.domain.test.', type='A'] but it already exists`)
 		if !re.MatchString(err.Error()) {
 			t.Fatalf("Expected an error with pattern, no match on: %s", err)
 		}

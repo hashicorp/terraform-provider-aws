@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(`ruledestination/vpc/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),

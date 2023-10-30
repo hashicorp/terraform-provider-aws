@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk
 
@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elastic_beanstalk_application", &resource.Sweeper{
 		Name:         "aws_elastic_beanstalk_application",
 		Dependencies: []string{"aws_elastic_beanstalk_environment"},
@@ -30,7 +31,7 @@ func init() {
 
 func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -38,7 +39,7 @@ func sweepApplications(region string) error {
 
 	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
 			return nil
 		}
@@ -71,7 +72,7 @@ func sweepApplications(region string) error {
 
 func sweepEnvironments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -99,7 +100,7 @@ func sweepEnvironments(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
 		return nil
 	}
@@ -108,7 +109,7 @@ func sweepEnvironments(region string) error {
 		return fmt.Errorf("listing Elastic Beanstalk Environments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Elastic Beanstalk Environments (%s): %w", region, err)

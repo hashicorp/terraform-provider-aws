@@ -35,7 +35,7 @@ resource "aws_vpn_connection" "transit" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) ID of the gateway.
 * `filter` - (Optional) One or more [name-value pairs][dcg-filters] to filter by.
@@ -44,7 +44,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the customer gateway.
 * `bgp_asn` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).

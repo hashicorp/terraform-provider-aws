@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,7 +44,7 @@ func TestAccAuditManagerFramework_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "control_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.controls.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexp.MustCompile(`assessmentFramework/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexache.MustCompile(`assessmentFramework/+.`)),
 				),
 			},
 			{

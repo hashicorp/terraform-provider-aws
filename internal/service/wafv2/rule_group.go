@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -53,80 +58,95 @@ func ResourceRuleGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"custom_response_body": customResponseBodySchema(),
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
-				),
-			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow":     allowConfigSchema(),
-									"block":     blockConfigSchema(),
-									"captcha":   captchaConfigSchema(),
-									"challenge": challengeConfigSchema(),
-									"count":     countConfigSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"custom_response_body": customResponseBodySchema(),
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name_prefix"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				"name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"name"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				"rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allow":     allowConfigSchema(),
+										"block":     blockConfigSchema(),
+										"captcha":   captchaConfigSchema(),
+										"challenge": challengeConfigSchema(),
+										"count":     countConfigSchema(),
+									},
 								},
 							},
+							"captcha_config": outerCaptchaConfigSchema(),
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"priority": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"rule_label":        ruleLabelsSchema(),
+							"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
+							"visibility_config": visibilityConfigSchema(),
 						},
-						"captcha_config": outerCaptchaConfigSchema(),
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"rule_label":        ruleLabelsSchema(),
-						"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
-						"visibility_config": visibilityConfigSchema(),
 					},
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:      tftags.TagsSchema(),
-			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
-			"visibility_config": visibilityConfigSchema(),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:      tftags.TagsSchema(),
+				names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+				"visibility_config": visibilityConfigSchema(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -136,7 +156,7 @@ func ResourceRuleGroup() *schema.Resource {
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
@@ -162,9 +182,8 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("creating WAFv2 RuleGroup (%s): %s", name, err)
 	}
 
-	output := outputRaw.(*wafv2.CreateRuleGroupOutput)
-
-	d.SetId(aws.StringValue(output.Summary.Id))
+	d.SetId(aws.StringValue(outputRaw.(*wafv2.CreateRuleGroupOutput).Summary.Id))
+	d.Set("name", name) // Required in Read.
 
 	return resourceRuleGroupRead(ctx, d, meta)
 }
@@ -193,6 +212,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("description", ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", ruleGroup.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(ruleGroup.Name)))
 	if err := d.Set("rule", flattenRules(ruleGroup.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
@@ -224,7 +244,6 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating WAFv2 RuleGroup: %s", input)
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupUpdateTimeout, func() (interface{}, error) {
 			return conn.UpdateRuleGroupWithContext(ctx, input)
 		}, wafv2.ErrCodeWAFUnavailableEntityException)

@@ -76,7 +76,7 @@ See [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) for examples with ACL gra
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Optional, Forces new resource) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
@@ -338,9 +338,9 @@ The `website` configuration block supports the following arguments:
 * `routing_rules` - (Optional) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
   describing redirect behavior and when redirects are applied.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the bucket.
 * `arn` - ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
@@ -363,8 +363,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket can be imported using the `bucket`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket using the `bucket`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket.bucket
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket.bucket bucket-name
+
+Using `terraform import`, import S3 bucket using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket.bucket bucket-name
 ```

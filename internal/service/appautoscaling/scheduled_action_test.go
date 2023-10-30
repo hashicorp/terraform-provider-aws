@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -46,7 +49,7 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
@@ -65,7 +68,7 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "9"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", updatedTimezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
@@ -101,7 +104,7 @@ func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -135,7 +138,7 @@ func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -194,7 +197,7 @@ func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -232,7 +235,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testi
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
@@ -268,7 +271,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testin
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
@@ -307,7 +310,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *tes
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
@@ -350,7 +353,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", scheduleTimezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "start_time", startTimeUtc.Format(time.RFC3339)),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTimeUtc.Format(time.RFC3339)),
 				),
@@ -368,7 +371,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 				),
@@ -404,7 +407,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testin
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
@@ -443,7 +446,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *tes
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
@@ -479,7 +482,7 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
@@ -535,7 +538,7 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),

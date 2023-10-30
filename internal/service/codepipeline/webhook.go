@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -94,7 +97,7 @@ func ResourceWebhook() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
 			"url": {

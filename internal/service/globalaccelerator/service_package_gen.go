@@ -5,6 +5,7 @@ package globalaccelerator
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -73,4 +74,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GlobalAccelerator
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

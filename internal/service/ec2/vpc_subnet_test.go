@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -33,7 +36,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
@@ -796,6 +799,42 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv4ToIPv6Before(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccVPCSubnetConfig_ipv4ToIPv6After(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet ec2.Subnet
@@ -1487,6 +1526,58 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   outpost_arn       = data.aws_outposts_outpost.test.arn
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCSubnetConfig_ipv4ToIPv6Before(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.10.0.0/16"
+  assign_generated_ipv6_cidr_block = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  assign_ipv6_address_on_creation                = false
+  cidr_block                                     = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  enable_dns64                                   = false
+  enable_resource_name_dns_aaaa_record_on_launch = false
+  ipv6_cidr_block                                = null
+  vpc_id                                         = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCSubnetConfig_ipv4ToIPv6After(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.10.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  assign_ipv6_address_on_creation                = true
+  cidr_block                                     = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  enable_dns64                                   = true
+  enable_resource_name_dns_aaaa_record_on_launch = true
+  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  vpc_id                                         = aws_vpc.test.id
 
   tags = {
     Name = %[1]q

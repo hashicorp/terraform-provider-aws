@@ -813,9 +813,9 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 * `instance_role` - (Required) Role of the instance in the cluster. Valid Values: `MASTER`, `CORE`, `TASK`.
 * `placement_strategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `SPREAD`, `PARTITION`, `CLUSTER`, `NONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `applications` - Applications installed on this cluster.
 * `arn`- ARN of the cluster.
@@ -835,13 +835,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR clusters can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR clusters using the `id`. For example:
 
-```
-$ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```terraform
+import {
+  to = aws_emr_cluster.cluster
+  id = "j-123456ABCDEF"
+}
 ```
 
-Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.,
+Using `terraform import`, import EMR clusters using the `id`. For example:
+
+```console
+% terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences. For example:
 
 ```terraform
 resource "aws_emr_cluster" "example" {

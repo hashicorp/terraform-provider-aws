@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -52,7 +55,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
 			"create_table_default_permission": {
@@ -117,6 +120,10 @@ func ResourceCatalogDatabase() *schema.Resource {
 						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -314,6 +321,10 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 		apiObject.DatabaseName = aws.String(v)
 	}
 
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -330,6 +341,10 @@ func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[strin
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap

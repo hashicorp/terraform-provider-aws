@@ -206,9 +206,9 @@ The following arguments are optional:
 * `metric_name` - (Required) The name of the metric.
 * `namespace` - (Required) The namespace of the metric.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the metric stream.
 * `creation_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was created.
@@ -218,8 +218,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch metric streams can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch metric streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_metric_stream.sample
+  id = "sample-stream-name"
+}
 ```
-$ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
+
+Using `terraform import`, import CloudWatch metric streams using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -242,6 +245,11 @@ func ResourceS3Endpoint() *schema.Resource {
 					return json
 				},
 			},
+			"glue_catalog_generation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ignore_header_rows": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -457,6 +465,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
 		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
 		d.Set("encryption_mode", s3settings.EncryptionMode)
+		d.Set("glue_catalog_generation", s3settings.GlueCatalogGeneration)
 		d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
 		d.Set("parquet_version", s3settings.ParquetVersion)
 		d.Set("preserve_transactions", s3settings.PreserveTransactions)
@@ -567,8 +576,8 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.AddColumnName = aws.Bool(v)
 	}
 
-	if v, ok := d.Get("add_trailing_padding_character").(bool); ok && target { // target
-		s3s.AddTrailingPaddingCharacter = aws.Bool(v)
+	if v, ok := d.GetOk("add_trailing_padding_character"); ok && target { // target
+		s3s.AddTrailingPaddingCharacter = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("bucket_folder"); ok {
@@ -669,6 +678,10 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 
 	if v, ok := d.GetOk("external_table_definition"); ok {
 		s3s.ExternalTableDefinition = aws.String(v.(string))
+	}
+
+	if v, ok := d.Get("glue_catalog_generation").(bool); ok { // target
+		s3s.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	if v, ok := d.GetOk("ignore_header_rows"); ok {

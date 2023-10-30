@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -32,7 +35,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`association/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
@@ -602,6 +605,35 @@ func TestAccSSMAssociation_rateControl(t *testing.T) {
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "20%"),
 					resource.TestCheckResourceAttr(resourceName, "max_errors", "20%"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMAssociation_syncCompliance(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "AWS-RunPatchBaselineAssociation"
+	resourceName := "aws_ssm_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationSyncComplianceConfig(rName, "MANUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "MANUAL"),
+				),
+			},
+			{
+				Config: testAccAssociationSyncComplianceConfig(rName, "AUTO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "AUTO"),
 				),
 			},
 		},
@@ -1567,6 +1599,30 @@ resource "aws_ssm_association" "test" {
   }
 }
 `, rName, rate)
+}
+
+func testAccAssociationSyncComplianceConfig(rName, syncCompliance string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_association" "test" {
+  name = %[1]q
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
+  }
+  apply_only_at_cron_interval = false
+  sync_compliance             = %[2]q
+  parameters = {
+    Operation    = "Scan"
+    RebootOption = "NoReboot"
+  }
+  schedule_expression = "cron(0 6 ? * * *)"
+  lifecycle {
+    ignore_changes = [
+      parameters["AssociationId"]
+    ]
+  }
+}
+`, rName, syncCompliance)
 }
 
 func testAccAssociationConfig_outputLocationAndWaitForSuccess(rName string) string {

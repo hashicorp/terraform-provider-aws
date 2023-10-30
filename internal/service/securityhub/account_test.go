@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -5,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +21,10 @@ import (
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
+	controlFindingGeneratorDefaultValueFromAWS := "SECURITY_CONTROL"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		controlFindingGeneratorDefaultValueFromAWS = ""
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -29,7 +37,7 @@ func testAccAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorDefaultValueFromAWS),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
 				),
 			},
@@ -91,27 +99,26 @@ func testAccAccount_full(t *testing.T) {
 	resourceName := "aws_securityhub_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		// control_finding_generator not supported in AWS GovCloud.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_basic,
+				Config: testAccAccountConfig_full(false, "STANDARD_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
 			},
 			{
-				Config: testAccAccountConfig_full,
+				Config: testAccAccountConfig_full(true, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 		},
@@ -139,6 +146,46 @@ func testAccAccount_migrateV0(t *testing.T) {
 					testAccCheckAccountExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_default_standards"),
 				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_basic,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33039 et al.
+func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+	controlFindingGeneratorExpectedValue := "SECURITY_CONTROL"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		controlFindingGeneratorExpectedValue = ""
+	}
+	expectNonEmptyPlan := acctest.Partition() == endpoints.AwsUsGovPartitionID
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.13.0",
+					},
+				},
+				Config: testAccAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorExpectedValue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+				),
+				ExpectNonEmptyPlan: expectNonEmptyPlan,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -204,10 +251,11 @@ resource "aws_securityhub_account" "test" {
 }
 `
 
-const testAccAccountConfig_full = `
+func testAccAccountConfig_full(autoEnableControls bool, controlFindingGenerator string) string {
+	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {
-  enable_default_standards  = false
-  control_finding_generator = "STANDARD_CONTROL"
-  auto_enable_controls      = false
+  control_finding_generator = %[2]q
+  auto_enable_controls      = %[1]t
 }
-`
+`, autoEnableControls, controlFindingGenerator)
+}

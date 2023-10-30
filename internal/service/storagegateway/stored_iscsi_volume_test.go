@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -35,16 +38,16 @@ func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
 					resource.TestCheckResourceAttr(resourceName, "preserve_existing_data", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", "data.aws_storagegateway_local_disk.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", "aws_instance.test", "private_ip"),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
+					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-+`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
@@ -105,7 +108,7 @@ func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -119,7 +122,7 @@ func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -129,7 +132,7 @@ func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -154,16 +157,16 @@ func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", "aws_instance.test", "private_ip"),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", "aws_ebs_snapshot.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
+					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-+`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 				),
 			},

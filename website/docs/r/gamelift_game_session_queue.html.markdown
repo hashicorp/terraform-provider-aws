@@ -38,7 +38,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the session queue.
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
@@ -55,17 +55,26 @@ The following arguments are supported:
 * `maximum_individual_player_latency_milliseconds` - (Required) Maximum latency value that is allowed for any player.
 * `policy_duration_seconds` - (Optional) Length of time that the policy is enforced while placing a new game session. Absence of value for this attribute means that the policy is enforced until the queue times out.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Game Session Queue ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-GameLift Game Session Queues can be imported by their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Game Session Queues using their `name`. For example:
 
+```terraform
+import {
+  to = aws_gamelift_game_session_queue.example
+  id = "example"
+}
 ```
-$ terraform import aws_gamelift_game_session_queue.example example
+
+Using `terraform import`, import GameLift Game Session Queues using their `name`. For example:
+
+```console
+% terraform import aws_gamelift_game_session_queue.example example
 ```

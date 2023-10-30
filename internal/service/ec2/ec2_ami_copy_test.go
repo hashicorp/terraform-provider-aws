@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -30,7 +33,7 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
 					testAccCheckAMICopyAttributes(&image, rName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),

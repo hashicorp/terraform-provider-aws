@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func testAccDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),

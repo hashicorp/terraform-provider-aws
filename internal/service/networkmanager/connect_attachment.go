@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -69,7 +72,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
 				),
 			},
 			"edge_location": {
@@ -78,7 +81,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+					validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 				),
 			},
 			"options": {
@@ -90,7 +93,7 @@ func ResourceConnectAttachment() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"GRE"}, false),
+							ValidateFunc: validation.StringInSlice(networkmanager.TunnelProtocol_Values(), false),
 						},
 					},
 				},
@@ -119,7 +122,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
 				),
 			},
 		},

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/oam/types"
@@ -45,7 +48,7 @@ func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`link/+.`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
@@ -122,7 +125,7 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`link/+.`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
@@ -136,7 +139,7 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 				Config: testAccLinkConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`link/+.`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccStreamConsumerExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),

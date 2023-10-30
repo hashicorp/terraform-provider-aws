@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -410,16 +413,16 @@ func expandMultiplexSettings(tfList []interface{}) *types.MultiplexSettings {
 	s := types.MultiplexSettings{}
 
 	if v, ok := m["transport_stream_bitrate"]; ok {
-		s.TransportStreamBitrate = int32(v.(int))
+		s.TransportStreamBitrate = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := m["transport_stream_id"]; ok {
-		s.TransportStreamId = int32(v.(int))
+		s.TransportStreamId = aws.Int32(int32(v.(int)))
 	}
 	if val, ok := m["maximum_video_buffer_delay_milliseconds"]; ok {
-		s.MaximumVideoBufferDelayMilliseconds = int32(val.(int))
+		s.MaximumVideoBufferDelayMilliseconds = aws.Int32(int32(val.(int)))
 	}
 	if val, ok := m["transport_stream_reserved_bitrate"]; ok {
-		s.TransportStreamReservedBitrate = int32(val.(int))
+		s.TransportStreamReservedBitrate = aws.Int32(int32(val.(int)))
 	}
 
 	return &s

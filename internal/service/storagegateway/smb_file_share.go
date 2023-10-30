@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -158,7 +161,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Optional: true,
 				Default:  "{}",
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
 					validation.StringLenBetween(2, 100),
 				),
 			},
@@ -401,6 +404,8 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		// This value can only be set when KMSEncrypted is true.
 		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
+			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
+		} else if d.Get("kms_encrypted").(bool) && d.Get("kms_key_arn").(string) != "" {
 			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
 		}
 

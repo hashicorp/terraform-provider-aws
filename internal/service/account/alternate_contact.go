@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -57,7 +60,7 @@ func resourceAlternateContact() *schema.Resource {
 			"email_address": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[\w+=,.-]+@[\w.-]+\.[\w]+`), "must be a valid email address"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w+=,.-]+@[\w.-]+\.[\w]+`), "must be a valid email address"),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -67,7 +70,7 @@ func resourceAlternateContact() *schema.Resource {
 			"phone_number": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\s0-9()+-]+$`), "must be a valid phone number"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9\s()+-]+$`), "must be a valid phone number"),
 			},
 			"title": {
 				Type:         schema.TypeString,

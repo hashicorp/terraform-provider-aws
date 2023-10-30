@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +39,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("account/.+")),
 				),
 			},
 			{

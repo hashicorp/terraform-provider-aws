@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
@@ -26,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	flex_ "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -61,7 +63,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[a-z0-9]{4,7}$`),
+						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
 						"value must contain 4-7 lowercase letters or numbers",
 					),
 				},
@@ -342,7 +344,7 @@ func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, m
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -364,7 +366,7 @@ func (d *resourceEnvironmentData) refreshFromGetOutput(ctx context.Context, meta
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -386,7 +388,7 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -431,7 +433,7 @@ func expandMonitors(l []monitorData) []awstypes.Monitor {
 }
 
 func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *diag.Diagnostics) types.Set {
-	monitorDataTypes := framework.AttributeTypesMust[monitorData](ctx)
+	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
 	elemType := types.ObjectType{AttrTypes: monitorDataTypes}
 
 	if len(apiObjects) == 0 {
@@ -474,7 +476,7 @@ func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *
 }
 
 func (m monitorData) value(ctx context.Context, diags *diag.Diagnostics) types.Object {
-	monitorDataTypes := framework.AttributeTypesMust[monitorData](ctx)
+	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
 
 	obj, d := types.ObjectValueFrom(ctx, monitorDataTypes, m)
 	diags.Append(d...)

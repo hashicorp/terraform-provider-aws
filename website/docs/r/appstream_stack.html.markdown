@@ -121,9 +121,9 @@ The following arguments are optional:
 * `preferred_protocol` - (Optional) The preferred protocol that you want to use while streaming your application.
   Valid values are `TCP` and `UDP`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream stack.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
@@ -131,8 +131,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_stack` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_stack` using the id. For example:
 
+```terraform
+import {
+  to = aws_appstream_stack.example
+  id = "stackID"
+}
 ```
-$ terraform import aws_appstream_stack.example stackID
+
+Using `terraform import`, import `aws_appstream_stack` using the id. For example:
+
+```console
+% terraform import aws_appstream_stack.example stackID
 ```

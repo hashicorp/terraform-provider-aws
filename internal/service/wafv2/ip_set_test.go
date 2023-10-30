@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -47,7 +50,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_update(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -105,7 +108,7 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 				Config: testAccIPSetConfig_v6(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -142,7 +145,7 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 				Config: testAccIPSetConfig_minimal(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -177,7 +180,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -189,7 +192,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -240,7 +243,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Config: testAccIPSetConfig_oneTag(ipSetName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 				),
@@ -255,7 +258,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Config: testAccIPSetConfig_twoTags(ipSetName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -265,7 +268,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Config: testAccIPSetConfig_oneTag(ipSetName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
@@ -290,7 +293,7 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 				Config: testAccIPSetConfig_large(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),

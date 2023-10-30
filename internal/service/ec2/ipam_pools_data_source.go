@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,7 +22,7 @@ func DataSourceIPAMPools() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -105,7 +108,7 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

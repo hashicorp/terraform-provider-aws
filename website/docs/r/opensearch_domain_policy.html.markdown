@@ -19,20 +19,22 @@ resource "aws_opensearch_domain" "example" {
 }
 
 data "aws_iam_policy_document" "main" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "*"
-    identifiers = ["*"]
-  }
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
 
-  actions   = ["es:*"]
-  resources = ["${aws_opensearch_domain.example.arn}/*"]
+    actions   = ["es:*"]
+    resources = ["${aws_opensearch_domain.example.arn}/*"]
 
-  condition {
-    test     = "IpAddress"
-    variable = "aws:SourceIp"
-    values   = "127.0.0.1/32"
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["127.0.0.1/32"]
+    }
   }
 }
 
@@ -44,14 +46,14 @@ resource "aws_opensearch_domain_policy" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `domain_name` - (Required) Name of the domain.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 

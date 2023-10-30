@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -7,6 +10,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -186,7 +190,7 @@ func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
 			},
 		},
 	})

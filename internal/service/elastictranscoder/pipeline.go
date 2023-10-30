@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elastictranscoder
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -114,7 +117,7 @@ func ResourcePipeline() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
 						"only alphanumeric characters, hyphens, underscores, and periods allowed"),
 					validation.StringLenBetween(1, 40),
 				),

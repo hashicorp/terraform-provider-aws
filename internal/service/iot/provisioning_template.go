@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -67,7 +70,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 36),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters and/or the following: _-"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters and/or the following: _-"),
 				),
 			},
 			"pre_provisioning_hook": {
@@ -105,6 +108,13 @@ func ResourceProvisioningTemplate() *schema.Resource {
 					validation.StringLenBetween(0, 10240),
 				),
 			},
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(iot.TemplateType_Values(), false),
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -135,6 +145,10 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
+	}
+
+	if v, ok := d.Get("type").(string); ok && v != "" {
+		input.Type = aws.String(v)
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
@@ -181,6 +195,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	}
 	d.Set("provisioning_role_arn", output.ProvisioningRoleArn)
 	d.Set("template_body", output.TemplateBody)
+	d.Set("type", output.Type)
 
 	return nil
 }

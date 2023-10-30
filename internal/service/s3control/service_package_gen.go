@@ -10,6 +10,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	s3control_sdkv1 "github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,9 +108,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return s3control_sdkv2.NewFromConfig(cfg, func(o *s3control_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

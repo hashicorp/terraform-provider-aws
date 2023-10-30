@@ -1,7 +1,7 @@
 name: "Report a Bug"
 description: "Choose this option to let us know about an unexpected error, a crash, or otherwise incorrect behavior."
 title: "[Bug]: "
-labels: ["bug", "needs-triage"]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:

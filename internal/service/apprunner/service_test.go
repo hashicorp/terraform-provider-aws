@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,8 +36,8 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexache.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", apprunner.HealthCheckProtocolTcp),

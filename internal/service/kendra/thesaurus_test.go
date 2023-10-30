@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -47,7 +50,7 @@ func TestAccKendraThesaurus_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", "key"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "thesaurus_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/thesaurus/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/thesaurus/.+$`)),
 				),
 			},
 			{

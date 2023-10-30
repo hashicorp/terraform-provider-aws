@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -40,6 +43,7 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
+					resource.TestCheckResourceAttr(resourceName, "type", "FLEET_PROVISIONING"),
 				),
 			},
 			{

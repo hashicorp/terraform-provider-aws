@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -177,6 +178,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 		},
 		{
+			Factory:  ResourcePipeline,
+			TypeName: "aws_sagemaker_pipeline",
+			Name:     "Pipeline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceProject,
 			TypeName: "aws_sagemaker_project",
 			Name:     "Project",
@@ -238,4 +247,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*s
 	return sagemaker_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

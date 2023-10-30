@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -77,6 +80,10 @@ func ResourceWorkgroup() *schema.Resource {
 								"max_query_temp_blocks_to_disk",
 								"max_join_row_count",
 								"max_nested_loop_join_row_count",
+								// default SSL parameters automatically added by AWS
+								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+								"require_ssl",
+								"use_fips_ssl",
 							}, false),
 							Required: true,
 						},

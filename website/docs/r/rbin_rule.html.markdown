@@ -78,9 +78,9 @@ The following arguments are required:
 * `unlock_delay_unit` - (Required) The unit of time in which to measure the unlock delay. Currently, the unlock delay can be measure only in days.
 * `unlock_delay_value` - (Required) The unlock delay period, measured in the unit specified for UnlockDelayUnit.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - (String) ID of the Rule.
 * `lock_end_time` - (Timestamp) The date and time at which the unlock delay is set to expire. Only returned for retention rules that have been unlocked and that are still within the unlock delay period.
@@ -89,8 +89,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RBin Rule can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RBin Rule using the `id`. For example:
 
+```terraform
+import {
+  to = aws_rbin_rule.example
+  id = "examplerule"
+}
 ```
-$ terraform import aws_rbin_rule.example examplerule
+
+Using `terraform import`, import RBin Rule using the `id`. For example:
+
+```console
+% terraform import aws_rbin_rule.example examplerule
 ```

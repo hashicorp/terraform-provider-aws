@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -81,4 +84,8 @@ const (
 	TrafficSourceStateInService = "InService"
 	TrafficSourceStateRemoving  = "Removing"
 	TrafficSourceStateRemoved   = "Removed"
+)
+
+const (
+	launchTemplateIDUnknown = "unknown"
 )

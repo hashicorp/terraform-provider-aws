@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,7 +58,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 			"default_phone_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
@@ -71,15 +74,15 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
-	input := &chime.PutVoiceConnectorTerminationInput{
+	input := &chimesdkvoice.PutVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(vcId),
 	}
 
-	termination := &chime.Termination{
+	termination := &chimesdkvoice.Termination{
 		CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
 		CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
 	}
@@ -108,15 +111,15 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.GetVoiceConnectorTerminationInput{
+	input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -147,10 +150,10 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
-		termination := &chime.Termination{
+		termination := &chimesdkvoice.Termination{
 			CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
 			CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
 			CpsLimit:        aws.Int64(int64(d.Get("cps_limit").(int))),
@@ -164,7 +167,7 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 			termination.Disabled = aws.Bool(v.(bool))
 		}
 
-		input := &chime.PutVoiceConnectorTerminationInput{
+		input := &chimesdkvoice.PutVoiceConnectorTerminationInput{
 			VoiceConnectorId: aws.String(d.Id()),
 			Termination:      termination,
 		}
@@ -180,15 +183,15 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.DeleteVoiceConnectorTerminationInput{
+	input := &chimesdkvoice.DeleteVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		return nil
 	}
 

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -51,7 +54,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryConfig_base,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam-resource-discovery/ipam-res-disco-[\da-f]+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexache.MustCompile(`ipam-resource-discovery/ipam-res-disco-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, "name"),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),

@@ -268,7 +268,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Configuration name.
 * `resource_access_role_arn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.
@@ -340,9 +340,9 @@ The following arguments are supported:
         * `time_period` - (Optional) Analysis interval.
 * `disabled` - (Optional) Disables real time alert rules.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Media Insights Pipeline Configuration.
 * `id` - Unique ID of the Media Insights Pipeline Configuration.
@@ -357,8 +357,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Chime SDK Media Pipelines Media Insights Pipeline Configuration can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
 
+```terraform
+import {
+  to = aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example
+  id = "abcdef123456"
+}
 ```
-$ terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
+
+Using `terraform import`, import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
+
+```console
+% terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```

@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,6 +58,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceOutboundConnection,
 			TypeName: "aws_opensearch_outbound_connection",
 		},
+		{
+			Factory:  ResourcePackage,
+			TypeName: "aws_opensearch_package",
+		},
+		{
+			Factory:  ResourcePackageAssociation,
+			TypeName: "aws_opensearch_package_association",
+		},
+		{
+			Factory:  ResourceVPCEndpoint,
+			TypeName: "aws_opensearch_vpc_endpoint",
+		},
 	}
 }
 
@@ -71,4 +84,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*o
 	return opensearchservice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
 
@@ -12,9 +12,10 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_apigatewayv2_api", &resource.Sweeper{
 		Name: "aws_apigatewayv2_api",
 		F:    sweepAPIs,
@@ -44,7 +45,7 @@ func init() {
 
 func sweepAPIs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -68,7 +69,7 @@ func sweepAPIs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
 		return nil
 	}
@@ -77,7 +78,7 @@ func sweepAPIs(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 APIs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 APIs (%s): %w", region, err)
@@ -88,7 +89,7 @@ func sweepAPIs(region string) error {
 
 func sweepAPIMappings(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -125,7 +126,7 @@ func sweepAPIMappings(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -137,7 +138,7 @@ func sweepAPIMappings(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API Mapping sweep for %s: %s", region, err)
 		return nil
 	}
@@ -146,7 +147,7 @@ func sweepAPIMappings(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway v2 API Mappings (%s): %w", region, err))
@@ -157,7 +158,7 @@ func sweepAPIMappings(region string) error {
 
 func sweepDomainNames(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -181,7 +182,7 @@ func sweepDomainNames(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
@@ -190,7 +191,7 @@ func sweepDomainNames(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 Domain Names (%s): %w", region, err)
@@ -201,7 +202,7 @@ func sweepDomainNames(region string) error {
 
 func sweepVPCLinks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -225,7 +226,7 @@ func sweepVPCLinks(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
 		return nil
 	}
@@ -234,7 +235,7 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 VPC Links (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 VPC Links (%s): %w", region, err)

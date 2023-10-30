@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -91,8 +94,8 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric or hyphen characters"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
+					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
 			},
 			"multi_party_conference_enabled": {

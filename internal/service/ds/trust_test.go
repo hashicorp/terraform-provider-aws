@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +41,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
@@ -455,7 +458,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 				Config: testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
 				),

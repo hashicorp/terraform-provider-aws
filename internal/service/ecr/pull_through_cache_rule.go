@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -34,7 +37,7 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 20),
 					validation.StringMatch(
-						regexp.MustCompile(`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`),
+						regexache.MustCompile(`^[0-9a-z]+(?:[._-][0-9a-z]+)*$`),
 						"must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},

@@ -244,7 +244,7 @@ resource "aws_cloudtrail" "example" {
       field = "resources.ARN"
 
       #The trailing slash is intentional; do not exclude it.
-      equals = [
+      starts_with = [
         "${data.aws_s3_bucket.important-bucket-1.arn}/",
         "${data.aws_s3_bucket.important-bucket-2.arn}/"
       ]
@@ -277,7 +277,6 @@ resource "aws_cloudtrail" "example" {
     field_selector {
       field = "resources.ARN"
 
-      #The trailing slash is intentional; do not exclude it.
       equals = [
         "${data.aws_s3_bucket.important-bucket-3.arn}/important-prefix"
       ]
@@ -365,9 +364,9 @@ The following arguments are optional:
 * `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
@@ -376,8 +375,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrails using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail.sample
+  id = "my-sample-trail"
+}
 ```
-$ terraform import aws_cloudtrail.sample my-sample-trail
+
+Using `terraform import`, import Cloudtrails using the `name`. For example:
+
+```console
+% terraform import aws_cloudtrail.sample my-sample-trail
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -115,7 +118,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10),
 											validation.StringMatch(
-												regexp.MustCompile(`[0-9]+[s]`),
+												regexache.MustCompile(`[0-9]+[s]`),
 												"numeric string followed by the character \"s\"",
 											),
 										),
@@ -237,7 +240,7 @@ func ResourceIndex() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"The name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -353,7 +356,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 2048),
 											validation.StringMatch(
-												regexp.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
+												regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
 												"Must be valid URL",
 											),
 										),

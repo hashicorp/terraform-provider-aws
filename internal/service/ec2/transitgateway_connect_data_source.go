@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -23,7 +26,7 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -56,7 +59,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

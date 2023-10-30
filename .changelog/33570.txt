@@ -1,0 +1,38 @@
+```release-note:note
+resource/aws_iam_*: This release introduces additional validation of IAM policy JSON arguments to detect duplicate keys. Previously, arguments with duplicated keys resulted in all but one of the key values being overwritten. Since this results in unexpected IAM policies being submitted to AWS, we have updated the validation logic to error in these cases. This may cause existing IAM policy arguments to fail validation, however, those policies are likely not what was originally intended.
+```
+
+```release-note:bug
+resource/aws_glacier_vault_lock: Fail validation if duplicated keys are found in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_role: Fail validation if duplicated keys are found in `assume_role_policy`
+```
+```release-note:bug
+resource/aws_iam_policy: Fail validation if duplicated keys are found in `policy`
+```
+```release-note:bug
+resource/aws_iam_group_policy: Fail validation if duplicated keys are found in `policy`
+```
+```release-note:bug
+resource/aws_iam_user_policy: Fail validation if duplicated keys are found in `policy`
+```
+```release-note:bug
+resource/aws_iam_role_policy: Fail validation if duplicated keys are found in `policy`
+```
+
+```release-note:bug
+resource/aws_mediastore_container_policy: Fail validation if duplicated keys are found in `policy`
+```
+
+```release-note:bug
+resource/aws_ssoadmin_permission_set_inline_policy: Fail validation if duplicated keys are found in `inline_policy`
+```
+
+```release-note:bug
+resource/aws_transfer_access: Fail validation if duplicated keys are found in `policy`
+```
+```release-note:bug
+resource/aws_transfer_user: Fail validation if duplicated keys are found in `policy`
+```

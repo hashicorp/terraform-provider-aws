@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -62,7 +65,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,9 +86,11 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
+{{- if .IncludeTags }}
 // Tagging annotations are used for "transparent tagging".
 // Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")
+{{- end }}
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}
@@ -190,11 +197,14 @@ func Resource{{ .Resource }}() *schema.Resource {
 					},
 				},
 			},
+			{{- if .IncludeTags }}
 			names.AttrTags:    tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			{{- end }}
 		},
-
+		{{- if .IncludeTags }}
 		CustomizeDiff: verify.SetTagsDiff,
+		{{- end }}
 	}
 }
 
@@ -239,7 +249,9 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// below. Many resources do include tags so this a reminder to include them
 		// where possible.
 		{{- end }}
+		{{- if .IncludeTags }}
 		Tags: getTagsIn(ctx),
+		{{- end }}
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {

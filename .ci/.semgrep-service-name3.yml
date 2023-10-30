@@ -2942,6 +2942,64 @@ rules:
             - pattern-not-regex: "^TestAccVerifiedAccess"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: verifiedpermissions-in-func-name
+    languages:
+      - go
+    message: Do not use "VerifiedPermissions" in func name inside verifiedpermissions package
+    paths:
+      include:
+        - internal/service/verifiedpermissions
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)VerifiedPermissions"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: verifiedpermissions-in-test-name
+    languages:
+      - go
+    message: Include "VerifiedPermissions" in test name
+    paths:
+      include:
+        - internal/service/verifiedpermissions/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccVerifiedPermissions"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: verifiedpermissions-in-const-name
+    languages:
+      - go
+    message: Do not use "VerifiedPermissions" in const name inside verifiedpermissions package
+    paths:
+      include:
+        - internal/service/verifiedpermissions
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)VerifiedPermissions"
+    severity: WARNING
+  - id: verifiedpermissions-in-var-name
+    languages:
+      - go
+    message: Do not use "VerifiedPermissions" in var name inside verifiedpermissions package
+    paths:
+      include:
+        - internal/service/verifiedpermissions
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)VerifiedPermissions"
+    severity: WARNING
   - id: vpc-in-test-name
     languages:
       - go
