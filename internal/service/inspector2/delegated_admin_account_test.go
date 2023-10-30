@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2_test
 
 import (
@@ -25,7 +28,7 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -76,7 +79,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),

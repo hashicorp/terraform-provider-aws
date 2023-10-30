@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
 	"context"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -52,7 +55,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
+					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
 				),
 				ExactlyOneOf: []string{"name", "arn"},
 			},

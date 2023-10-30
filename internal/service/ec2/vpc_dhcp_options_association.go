@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -76,7 +79,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 

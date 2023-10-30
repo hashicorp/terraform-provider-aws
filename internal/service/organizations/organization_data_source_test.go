@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -51,6 +54,7 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),

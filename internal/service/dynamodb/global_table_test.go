@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -34,21 +37,21 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
-				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
+				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(256)),
-				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
+				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
 				Config:      testAccGlobalTableConfig_invalidName("!!!!"),
-				ExpectError: regexp.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
+				ExpectError: regexache.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
 			},
 			{
 				Config: testAccGlobalTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
@@ -81,7 +84,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				Config: testAccGlobalTableConfig_multipleRegions1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),

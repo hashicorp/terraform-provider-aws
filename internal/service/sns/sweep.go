@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package sns
 
@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
 		Name: "aws_sns_platform_application",
 		F:    sweepPlatformApplications,
@@ -52,7 +53,7 @@ func init() {
 
 func sweepPlatformApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -76,7 +77,7 @@ func sweepPlatformApplications(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
 		return nil
 	}
@@ -85,7 +86,7 @@ func sweepPlatformApplications(region string) error {
 		return fmt.Errorf("error listing SNS Platform Applications: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Platform Applications (%s): %w", region, err)
@@ -96,7 +97,7 @@ func sweepPlatformApplications(region string) error {
 
 func sweepTopics(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -120,7 +121,7 @@ func sweepTopics(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SNS Topics sweep for %s: %s", region, err)
 		return nil
 	}
@@ -129,7 +130,7 @@ func sweepTopics(region string) error {
 		return fmt.Errorf("error listing SNS Topics: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topics (%s): %w", region, err)
@@ -140,7 +141,7 @@ func sweepTopics(region string) error {
 
 func sweepTopicSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -169,7 +170,7 @@ func sweepTopicSubscriptions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SNS Topic Subscriptions sweep for %s: %s", region, err)
 		return nil
 	}
@@ -178,7 +179,7 @@ func sweepTopicSubscriptions(region string) error {
 		return fmt.Errorf("error listing SNS Topic Subscriptions: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topic Subscriptions (%s): %w", region, err)

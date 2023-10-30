@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -468,7 +471,7 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			}) {
 				return true
 			}
-			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.FilterEquals(types.StatusDisabled)) {
+			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -536,6 +539,9 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
+			if k == "LambdaCode" {
+				k = "LAMBDA_CODE"
+			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
 		results[aws.ToString(a.AccountId)] = status

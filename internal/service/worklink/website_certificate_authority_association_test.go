@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -37,7 +40,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
 						"aws_worklink_fleet.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr(resourceName, "certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{

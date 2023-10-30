@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -23,6 +26,11 @@ func DataSourceDataLakeSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"read_only_admins": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -118,6 +126,7 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	settings := output.DataLakeSettings
 
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
 	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))

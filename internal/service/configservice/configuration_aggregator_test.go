@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +38,7 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
 					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),

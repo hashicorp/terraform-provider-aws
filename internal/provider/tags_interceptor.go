@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -53,20 +56,21 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	stateTags := make(map[string]string)
 	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
 		s := state.GetAttr(names.AttrTagsAll)
-		for k, v := range s.AsValueMap() {
-			stateTags[k] = v.AsString()
+		if !s.IsNull() {
+			for k, v := range s.AsValueMap() {
+				if !v.IsNull() {
+					stateTags[k] = v.AsString()
+				}
+			}
 		}
 	}
 
-	tagsAll := tftags.New(ctx, stateTags)
+	oldTags := tftags.New(ctx, stateTags)
 	// if tags_all was computed because not wholly known
 	// Merge the resource's configured tags with any provider configured default_tags.
-	configAll := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
+	newTags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
 	// Remove system tags.
-	configAll = configAll.IgnoreSystem(inContext.ServicePackageName)
-
-	toAdd := configAll.Difference(tagsAll)
-	toRemove := tagsAll.Difference(configAll)
+	newTags = newTags.IgnoreSystem(inContext.ServicePackageName)
 
 	// If the service package has a generic resource update tags methods, call it.
 	var err error
@@ -74,11 +78,11 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	if v, ok := sp.(interface {
 		UpdateTags(context.Context, any, string, any, any) error
 	}); ok {
-		err = v.UpdateTags(ctx, meta, identifier, toRemove, toAdd)
+		err = v.UpdateTags(ctx, meta, identifier, oldTags, newTags)
 	} else if v, ok := sp.(interface {
 		UpdateTags(context.Context, any, string, string, any, any) error
 	}); ok && spt.ResourceType != "" {
-		err = v.UpdateTags(ctx, meta, identifier, spt.ResourceType, toRemove, toAdd)
+		err = v.UpdateTags(ctx, meta, identifier, spt.ResourceType, oldTags, newTags)
 	}
 
 	// ISO partitions may not support tagging, giving error.

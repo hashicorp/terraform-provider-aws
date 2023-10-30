@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -57,7 +60,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -122,7 +125,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -133,7 +136,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 		},

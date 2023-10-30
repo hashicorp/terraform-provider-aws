@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -485,7 +488,7 @@ resource "aws_redshift_scheduled_action" "test" {
 func TestAccRedshiftScheduledAction_validScheduleName(t *testing.T) {
 	t.Parallel()
 
-	var f = validation.StringMatch(regexp.MustCompile(`^[a-z0-9-]{1,63}$`), "")
+	var f = validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), "")
 
 	validIds := []string{
 		"tf-test-schedule-action-1",

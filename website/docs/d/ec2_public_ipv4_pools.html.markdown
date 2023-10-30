@@ -43,6 +43,8 @@ which take the following arguments:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribePublicIpv4Pools.html).
 * `values` - (Required) Set of values that are accepted for the given field. Pool IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `pool_ids` - List of all the pool IDs found.

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -117,19 +120,21 @@ func TestDiffUsers(t *testing.T) {
 			OldUsers: []interface{}{},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          aws.StringSlice([]string{"admin"}),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{},
@@ -138,24 +143,27 @@ func TestDiffUsers(t *testing.T) {
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{
@@ -166,22 +174,25 @@ func TestDiffUsers(t *testing.T) {
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111updated",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111updated",
+					"replication_user": false,
 				},
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{},
@@ -190,11 +201,12 @@ func TestDiffUsers(t *testing.T) {
 			},
 			Updates: []*mq.UpdateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          aws.StringSlice([]string{"admin"}),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 		},
@@ -256,13 +268,13 @@ func TestAccMQBroker_basic(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
@@ -271,15 +283,15 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
@@ -425,8 +437,8 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
@@ -451,18 +463,18 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 		},
@@ -509,7 +521,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -542,28 +554,28 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 			{
@@ -579,7 +591,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "3"),
 				),
 			},
@@ -590,7 +602,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 				),
 			},
@@ -638,7 +650,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -671,28 +683,28 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 			{
@@ -708,7 +720,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "3"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
@@ -723,7 +735,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 				),
 			},
@@ -1090,13 +1102,61 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 				Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitConfig(rName, testAccRabbitVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
@@ -1136,13 +1196,13 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 				Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
@@ -1180,7 +1240,7 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, true),
-				ExpectError: regexp.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
+				ExpectError: regexache.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
 			},
 			{
 				// Special case: allow explicitly setting logs.0.audit to false,
@@ -1246,12 +1306,12 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 				),
 			},
 			{
@@ -1539,7 +1599,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody)
 }
 
-func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+func testAccBrokerConfig_baseCustomVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -1579,7 +1639,11 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   name           = %[3]q
   engine_type    = "ActiveMQ"
@@ -1948,6 +2012,49 @@ resource "aws_mq_broker" "test" {
   engine_version     = %[2]q
   host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version)
+}
+
+func testAccBrokerConfig_rabbitConfig(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = %[2]q
+
+  data = <<DATA
+  # Default RabbitMQ delivery acknowledgement timeout is 30 minutes
+  consumer_timeout = 1800000
+  
+  DATA
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  configuration {
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
+  }
 
   user {
     username = "Test"

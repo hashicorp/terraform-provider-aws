@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
 	"context"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -101,14 +106,14 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var workspace *workspaces.Workspace
+	var workspace types.Workspace
 
 	if workspaceID, ok := d.GetOk("workspace_id"); ok {
-		resp, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
-			WorkspaceIds: aws.StringSlice([]string{workspaceID.(string)}),
+		resp, err := conn.DescribeWorkspaces(ctx, &workspaces.DescribeWorkspacesInput{
+			WorkspaceIds: []string{workspaceID.(string)},
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace (%s): %s", workspaceID, err)
@@ -120,14 +125,14 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		workspace = resp.Workspaces[0]
 
-		if workspace == nil {
+		if reflect.DeepEqual(workspace, (types.Workspace{})) {
 			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace with ID %q found", workspaceID)
 		}
 	}
 
 	if directoryID, ok := d.GetOk("directory_id"); ok {
 		userName := d.Get("user_name").(string)
-		resp, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
+		resp, err := conn.DescribeWorkspaces(ctx, &workspaces.DescribeWorkspacesInput{
 			DirectoryId: aws.String(directoryID.(string)),
 			UserName:    aws.String(userName),
 		})
@@ -141,12 +146,12 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		workspace = resp.Workspaces[0]
 
-		if workspace == nil {
+		if reflect.DeepEqual(workspace, (types.Workspace{})) {
 			return sdkdiag.AppendErrorf(diags, "no %q Workspace in %q directory found", userName, directoryID)
 		}
 	}
 
-	d.SetId(aws.StringValue(workspace.WorkspaceId))
+	d.SetId(aws.ToString(workspace.WorkspaceId))
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
 	d.Set("ip_address", workspace.IpAddress)

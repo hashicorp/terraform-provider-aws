@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
@@ -7,9 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -96,7 +99,7 @@ func ResourcePipeline() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
 			"role_arn": {
@@ -123,7 +126,7 @@ func ResourcePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
@@ -140,7 +143,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
 									"namespace": {
@@ -148,7 +151,7 @@ func ResourcePipeline() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
 										),
 									},
 									"output_artifacts": {
@@ -187,7 +190,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
 										),
 									},
 								},
@@ -198,7 +201,7 @@ func ResourcePipeline() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 							),
 						},
 					},

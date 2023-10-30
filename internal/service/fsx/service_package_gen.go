@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,6 +25,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceONTAPFileSystem,
+			TypeName: "aws_fsx_ontap_file_system",
+			Name:     "Ontap File System",
+		},
+		{
+			Factory:  DataSourceONTAPStorageVirtualMachine,
+			TypeName: "aws_fsx_ontap_storage_virtual_machine",
+			Name:     "ONTAP Storage Virtual Machine",
+		},
+		{
+			Factory:  DataSourceONTAPStorageVirtualMachines,
+			TypeName: "aws_fsx_ontap_storage_virtual_machines",
+			Name:     "ONTAP Storage Virtual Machines",
+		},
 		{
 			Factory:  DataSourceOpenzfsSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
@@ -70,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOntapFileSystem,
+			Factory:  ResourceONTAPFileSystem,
 			TypeName: "aws_fsx_ontap_file_system",
 			Name:     "ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOntapStorageVirtualMachine,
+			Factory:  ResourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
 			Tags: &types.ServicePackageResourceTags{
@@ -86,7 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOntapVolume,
+			Factory:  ResourceONTAPVolume,
 			TypeName: "aws_fsx_ontap_volume",
 			Name:     "ONTAP Volume",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,7 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOpenzfsFileSystem,
+			Factory:  ResourceOpenZFSFileSystem,
 			TypeName: "aws_fsx_openzfs_file_system",
 			Name:     "OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
@@ -110,7 +126,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOpenzfsVolume,
+			Factory:  ResourceOpenZFSVolume,
 			TypeName: "aws_fsx_openzfs_volume",
 			Name:     "OpenZFS Volume",
 			Tags: &types.ServicePackageResourceTags{
@@ -139,4 +155,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*f
 	return fsx_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

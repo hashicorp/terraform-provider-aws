@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -71,10 +74,10 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
 			"iam_role_arn": {

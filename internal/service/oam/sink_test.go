@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/oam/types"
@@ -44,7 +47,7 @@ func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -43,6 +46,10 @@ func main() {
 		}
 
 		if l[names.ColExclude] != "" {
+			continue
+		}
+
+		if l[names.ColNotImplemented] != "" {
 			continue
 		}
 

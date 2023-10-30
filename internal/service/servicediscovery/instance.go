@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_service_discovery_instance")
@@ -36,11 +38,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: verify.ValidAllDiag(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 255),
-					validation.MapKeyMatch(regexp.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
+					validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!-~]+$`), ""),
 					validation.MapValueLenBetween(0, 1024),
-					validation.MapValueMatch(regexp.MustCompile(`^([a-zA-Z0-9!-~][ \ta-zA-Z0-9!-~]*){0,1}[a-zA-Z0-9!-~]{0,1}$`), ""),
+					validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
 				),
 			},
 			"instance_id": {
@@ -49,7 +51,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_/:.@-]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
 				),
 			},
 			"service_id": {

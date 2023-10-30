@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -101,7 +104,7 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 		},
 	})

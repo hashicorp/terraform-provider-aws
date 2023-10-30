@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -563,7 +566,7 @@ func TestAccSQSQueue_FIFOQueue_expectNameError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccQueueConfig_fifo(rName),
-				ExpectError: regexp.MustCompile(`invalid queue name:`),
+				ExpectError: regexache.MustCompile(`invalid queue name:`),
 			},
 		},
 	})
@@ -649,7 +652,7 @@ func TestAccSQSQueue_StandardQueue_expectContentBasedDeduplicationError(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccQueueConfig_standardExpectContentBasedDeduplicationError(rName),
-				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO queue`),
+				ExpectError: regexache.MustCompile(`content-based deduplication can only be set for FIFO queue`),
 			},
 		},
 	})

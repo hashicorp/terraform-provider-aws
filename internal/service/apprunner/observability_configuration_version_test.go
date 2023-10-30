@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,7 +35,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),
@@ -62,7 +65,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 				Config: testAccObservabilityConfigurationConfig_traceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),

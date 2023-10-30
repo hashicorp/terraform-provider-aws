@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -6,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,14 +19,18 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
+func testAccVoiceConnectorLogging_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,14 +51,18 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
+func testAccVoiceConnectorLogging_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,14 +78,18 @@ func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
+func testAccVoiceConnectorLogging_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,8 +157,8 @@ func testAccCheckVoiceConnectorLoggingExists(ctx context.Context, name string) r
 			return fmt.Errorf("no Chime Voice Connector logging ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
-		input := &chime.GetVoiceConnectorLoggingConfigurationInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+		input := &chimesdkvoice.GetVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 

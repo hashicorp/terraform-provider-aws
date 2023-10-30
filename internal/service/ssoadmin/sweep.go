@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
 
@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ssoadmin_account_assignment", &resource.Sweeper{
 		Name: "aws_ssoadmin_account_assignment",
 		F:    sweepAccountAssignments,
@@ -34,7 +34,7 @@ func init() {
 
 func sweepAccountAssignments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -43,23 +43,22 @@ func sweepAccountAssignments(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if tfawserr.ErrCodeContains(err, "AccessDenied") {
-		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	// To sweep account assignments, we need to first determine which Permission Sets
 	// are available and then search for their respective assignments
@@ -110,7 +109,7 @@ func sweepAccountAssignments(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping SSO Account Assignment sweep (PermissionSet %s) for %s: %s", permissionSetArn, region, err)
 				continue
 			}
@@ -122,7 +121,7 @@ func sweepAccountAssignments(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -130,7 +129,7 @@ func sweepAccountAssignments(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets for Account Assignment sweep: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Account Assignments: %w", err))
 	}
 
@@ -139,7 +138,7 @@ func sweepAccountAssignments(region string) error {
 
 func sweepPermissionSets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -148,23 +147,22 @@ func sweepPermissionSets(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if tfawserr.ErrCodeContains(err, "AccessDenied") {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	input := &ssoadmin.ListPermissionSetsInput{
 		InstanceArn: aws.String(instanceArn),
@@ -194,7 +192,7 @@ func sweepPermissionSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -202,7 +200,7 @@ func sweepPermissionSets(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Permission Sets: %w", err))
 	}
 

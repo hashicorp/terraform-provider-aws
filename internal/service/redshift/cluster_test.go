@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,7 +42,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
-					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
@@ -629,7 +632,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 			},
 			{
 				Config:      testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 1),
-				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
+				ExpectError: regexache.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
 	})

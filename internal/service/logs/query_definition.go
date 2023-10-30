@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -37,7 +40,7 @@ func resourceQueryDefinition() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
+					validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
 				),
 			},
 			"log_group_names": {
@@ -142,7 +145,7 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
 	}
 
-	matcher := regexp.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
+	matcher := regexache.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
 	matches := matcher.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())

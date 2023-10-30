@@ -198,7 +198,7 @@ resource "aws_appautoscaling_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the policy. Must be between 1 and 255 characters in length.
 * `policy_type` - (Optional) Policy type. Valid values are `StepScaling` and `TargetTrackingScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
@@ -341,9 +341,9 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 * `predefined_metric_type` - (Required) Metric type.
 * `resource_label` - (Optional) Reserved for future use if the `predefined_metric_type` is not `ALBRequestCountPerTarget`. If the `predefined_metric_type` is `ALBRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.
@@ -352,8 +352,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_policy.test-policy
+  id = "service-namespace/resource-id/scalable-dimension/policy-name"
+}
 ```
-$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+
+Using `terraform import`, import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
 ```

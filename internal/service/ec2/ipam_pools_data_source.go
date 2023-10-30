@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,16 +22,12 @@ func DataSourceIPAMPools() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"address_family": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -59,6 +58,10 @@ func DataSourceIPAMPools() *schema.Resource {
 							Computed: true,
 						},
 						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -105,7 +108,7 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -136,7 +139,6 @@ func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *
 func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	pool := make(map[string]interface{})
 
-	pool["id"] = aws.StringValue(p.IpamPoolId)
 	pool["address_family"] = aws.StringValue(p.AddressFamily)
 	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
@@ -146,6 +148,7 @@ func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tft
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
 	pool["description"] = aws.StringValue(p.Description)
+	pool["id"] = aws.StringValue(p.IpamPoolId)
 	pool["ipam_scope_id"] = strings.Split(aws.StringValue(p.IpamScopeArn), "/")[1]
 	pool["ipam_scope_type"] = aws.StringValue(p.IpamScopeType)
 	pool["locale"] = aws.StringValue(p.Locale)
@@ -153,7 +156,6 @@ func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tft
 	pool["publicly_advertisable"] = aws.BoolValue(p.PubliclyAdvertisable)
 	pool["source_ipam_pool_id"] = aws.StringValue(p.SourceIpamPoolId)
 	pool["state"] = aws.StringValue(p.State)
-
 	if v := p.Tags; v != nil {
 		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}

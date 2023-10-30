@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/waf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`sizeconstraintset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`sizeconstraintset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", sizeConstraintSet),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{

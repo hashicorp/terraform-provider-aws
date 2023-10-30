@@ -28,9 +28,9 @@ The following arguments are required:
 
 * `account_id` - (Required) Account to enable as delegated admin account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `relationship_status` - Status of this delegated admin account.
 
@@ -43,8 +43,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Inspector Delegated Admin Account can be imported using the `account_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Delegated Admin Account using the `account_id`. For example:
 
+```terraform
+import {
+  to = aws_inspector2_delegated_admin_account.example
+  id = "012345678901"
+}
 ```
-$ terraform import aws_inspector2_delegated_admin_account.example 012345678901
+
+Using `terraform import`, import Inspector Delegated Admin Account using the `account_id`. For example:
+
+```console
+% terraform import aws_inspector2_delegated_admin_account.example 012345678901
 ```

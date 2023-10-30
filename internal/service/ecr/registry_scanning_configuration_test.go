@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -105,6 +108,25 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRegistryScanningConfigurationConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

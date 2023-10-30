@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +28,7 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretVersionDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				ExpectError: regexache.MustCompile(`not found`),
 			},
 			{
 				Config: testAccSecretVersionDataSourceConfig_stageDefault(rName),

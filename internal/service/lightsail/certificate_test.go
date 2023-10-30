@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -42,7 +45,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 				Config: testAccCertificateConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Certificate/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`Certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),

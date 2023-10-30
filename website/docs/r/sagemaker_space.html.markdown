@@ -23,7 +23,7 @@ resource "aws_sagemaker_space" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `space_name` - (Required) The name of the space.
 * `domain_id` - (Required) The ID of the associated Domain.
@@ -64,9 +64,9 @@ The following arguments are supported:
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The space's Amazon Resource Name (ARN).
 * `arn` - The space's Amazon Resource Name (ARN).
@@ -75,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Spaces can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Spaces using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_space.test_space
+  id = "arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name"
+}
 ```
-$ terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
+
+Using `terraform import`, import SageMaker Spaces using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```

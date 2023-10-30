@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify_test
 
 import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,7 +36,7 @@ func testAccBranch_basic(t *testing.T) {
 				Config: testAccBranchConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
@@ -58,7 +61,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_Multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
 					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
@@ -156,7 +159,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 				Config:                   testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, "id"),
 					resource.TestCheckResourceAttr(tagResourceName, "key", "Name"),
 					resource.TestCheckResourceAttr(tagResourceName, "value", rName),

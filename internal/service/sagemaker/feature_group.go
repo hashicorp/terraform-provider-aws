@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -49,7 +52,7 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
@@ -67,7 +70,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 									"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 							),
 						},
@@ -85,7 +88,7 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
 				),
 			},
@@ -189,7 +192,7 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},

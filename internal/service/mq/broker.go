@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -7,11 +10,11 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -23,10 +26,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
@@ -325,6 +328,11 @@ func ResourceBroker() *schema.Resource {
 							Required:     true,
 							Sensitive:    true,
 							ValidateFunc: ValidBrokerPassword,
+						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"username": {
 							Type:         schema.TypeString,
@@ -803,11 +811,12 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserRequest{
-					BrokerId:      aws.String(bId),
-					ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-					Groups:        flex.ExpandStringList(ng),
-					Password:      aws.String(newUserMap["password"].(string)),
-					Username:      aws.String(username),
+					BrokerId:        aws.String(bId),
+					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+					Groups:          flex.ExpandStringList(ng),
+					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+					Password:        aws.String(newUserMap["password"].(string)),
+					Username:        aws.String(username),
 				})
 			}
 
@@ -815,10 +824,11 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 			delete(existingUsers, username)
 		} else {
 			cur := &mq.CreateUserRequest{
-				BrokerId:      aws.String(bId),
-				ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-				Password:      aws.String(newUserMap["password"].(string)),
-				Username:      aws.String(username),
+				BrokerId:        aws.String(bId),
+				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+				Password:        aws.String(newUserMap["password"].(string)),
+				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+				Username:        aws.String(username),
 			}
 			if len(ng) > 0 {
 				cur.Groups = flex.ExpandStringList(ng)
@@ -904,6 +914,9 @@ func expandUsers(cfg []interface{}) []*mq.User {
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
+		if v, ok := u["replication_user"]; ok {
+			user.ReplicationUser = aws.Bool(v.(bool))
+		}
 		if v, ok := u["groups"]; ok {
 			user.Groups = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -930,9 +943,10 @@ func expandUsersForBroker(ctx context.Context, conn *mq.MQ, brokerId string, inp
 		}
 
 		user := &mq.User{
-			ConsoleAccess: uOut.ConsoleAccess,
-			Groups:        uOut.Groups,
-			Username:      uOut.Username,
+			ConsoleAccess:   uOut.ConsoleAccess,
+			Groups:          uOut.Groups,
+			ReplicationUser: uOut.ReplicationUser,
+			Username:        uOut.Username,
 		}
 
 		rawUsers = append(rawUsers, user)
@@ -964,6 +978,9 @@ func flattenUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.BoolValue(u.ConsoleAccess)
+		}
+		if u.ReplicationUser != nil {
+			m["replication_user"] = aws.BoolValue(u.ReplicationUser)
 		}
 		if len(u.Groups) > 0 {
 			m["groups"] = flex.FlattenStringSet(u.Groups)
@@ -1189,5 +1206,5 @@ func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput 
 
 var ValidateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )

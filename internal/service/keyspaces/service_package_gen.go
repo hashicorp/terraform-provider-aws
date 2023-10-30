@@ -5,9 +5,9 @@ package keyspaces
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	keyspaces_sdkv1 "github.com/aws/aws-sdk-go/service/keyspaces"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceKeyspace,
+			Factory:  resourceKeyspace,
 			TypeName: "aws_keyspaces_keyspace",
 			Name:     "Keyspace",
 			Tags: &types.ServicePackageResourceTags{
@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTable,
+			Factory:  resourceTable,
 			TypeName: "aws_keyspaces_table",
 			Name:     "Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -51,11 +51,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Keyspaces
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*keyspaces_sdkv1.Keyspaces, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*keyspaces_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return keyspaces_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return keyspaces_sdkv2.NewFromConfig(cfg, func(o *keyspaces_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

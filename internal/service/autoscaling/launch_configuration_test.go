@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -35,7 +38,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),

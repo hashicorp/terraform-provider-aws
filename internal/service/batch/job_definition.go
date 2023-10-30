@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -5,9 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -122,7 +125,7 @@ func ResourceJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexp.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
 										),
 									},
 									"on_reason": {
@@ -131,7 +134,7 @@ func ResourceJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
 										),
 									},
 									"on_status_reason": {
@@ -140,7 +143,7 @@ func ResourceJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
 										),
 									},
 								},

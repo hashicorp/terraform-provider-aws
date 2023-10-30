@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -456,11 +459,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 `, rName)
 }

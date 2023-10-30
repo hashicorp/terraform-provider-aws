@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -20,70 +23,104 @@ func DataSourceTheme() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceThemeRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"base_theme_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"colors": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"base_theme_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"colors": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"empty_fill_color": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"min_max_gradient": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"empty_fill_color": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"min_max_gradient": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
 							},
-						},
-						"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Computed: true,
+							"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
 															},
 														},
 													},
@@ -91,33 +128,21 @@ func DataSourceTheme() *schema.Resource {
 											},
 										},
 									},
-									"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Computed: true,
-															},
-														},
+								},
+							},
+							"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"font_family": {
+														Type:     schema.TypeString,
+														Computed: true,
 													},
 												},
 											},
@@ -125,148 +150,128 @@ func DataSourceTheme() *schema.Resource {
 									},
 								},
 							},
-						},
-						"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"font_family": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+							"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"accent": {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
-									},
-								},
-							},
-						},
-						"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"accent": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"accent_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"danger": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"danger_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"dimension": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"dimension_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"measure": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"measure_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"primary_background": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"primary_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"secondary_background": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"secondary_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"success": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"success_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"warning": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"warning_foreground": {
-										Type:     schema.TypeString,
-										Computed: true,
+										"accent_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"danger": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"danger_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"dimension": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"dimension_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"measure": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"measure_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"primary_background": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"primary_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"secondary_background": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"secondary_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"success": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"success_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"warning": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"warning_foreground": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"theme_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"theme_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permissions": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"version_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"version_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

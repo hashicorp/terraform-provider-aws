@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -64,12 +67,12 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 			"transit_gateway_default_route_table_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 			"transit_gateway_default_route_table_propagation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 			"transit_gateway_id": {
 				Type:         schema.TypeString,
@@ -129,11 +132,22 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways.
 	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(output.TransitGatewayVpcAttachment.VpcOwnerId) {
-		if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
+		// Default values of transit_gateway_default_route_table_association and transit_gateway_default_route_table_propagation are both 'true'.
+		transitGatewayDefaultRouteTableAssociation := true
+		if v := d.GetRawConfig().GetAttr("transit_gateway_default_route_table_association"); v.IsKnown() && !v.IsNull() {
+			transitGatewayDefaultRouteTableAssociation = v.True()
+		}
+
+		if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), transitGatewayDefaultRouteTableAssociation); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway VPC Attachment: %s", err)
 		}
 
-		if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
+		transitGatewayDefaultRouteTablePropagation := true
+		if v := d.GetRawConfig().GetAttr("transit_gateway_default_route_table_propagation"); v.IsKnown() && !v.IsNull() {
+			transitGatewayDefaultRouteTablePropagation = v.True()
+		}
+
+		if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), transitGatewayDefaultRouteTablePropagation); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway VPC Attachment: %s", err)
 		}
 	}

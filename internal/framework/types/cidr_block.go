@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type cidrBlockType uint8
@@ -21,7 +24,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = CIDRBlockType
+	_ xattr.TypeWithValidate   = CIDRBlockType
+	_ basetypes.StringValuable = CIDRBlock{}
 )
 
 func (t cidrBlockType) TerraformType(_ context.Context) tftypes.Type {
@@ -54,7 +58,7 @@ func (t cidrBlockType) ValueFromTerraform(_ context.Context, in tftypes.Value) (
 		return nil, err
 	}
 
-	if err := verify.ValidateCIDRBlock(s); err != nil {
+	if err := itypes.ValidateCIDRBlock(s); err != nil {
 		return CIDRBlockUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
@@ -85,8 +89,7 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
+			fmt.Sprintf("%sExpected String value, received %T with value: %v", ProviderErrorDetailPrefix, in, in),
 		)
 		return diags
 	}
@@ -101,13 +104,12 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to string: %s", err),
+			fmt.Sprintf("%sCannot convert value to string: %s", ProviderErrorDetailPrefix, err),
 		)
 		return diags
 	}
 
-	if err := verify.ValidateCIDRBlock(value); err != nil {
+	if err := itypes.ValidateCIDRBlock(value); err != nil {
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",

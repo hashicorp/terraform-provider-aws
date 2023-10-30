@@ -33,7 +33,9 @@ data "aws_secretsmanager_secret" "by-name" {
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
 * `description` - Description of the secret.

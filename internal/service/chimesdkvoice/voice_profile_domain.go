@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +67,7 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 200),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9 _.-]+`), "Name must match expression: ^[0-9a-zA-Z._-]+"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_ .-]+`), "Name must match expression: ^[0-9A-Za-z_ .-]+"),
 				),
 			},
 			"server_side_encryption_configuration": {

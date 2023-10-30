@@ -1,29 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,7 +67,7 @@ func ResourceTargetGroup() *schema.Resource {
 			"connection_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"deregistration_delay": {
 				Type:         nullable.TypeNullableInt,
@@ -184,6 +187,7 @@ func ResourceTargetGroup() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validTargetGroupNamePrefix,
@@ -312,6 +316,19 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"target_health_state": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_unhealthy_connection_termination": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"target_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -338,27 +355,23 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = id.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = id.PrefixedUniqueId("tf-")
-	}
-
-	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+	exist, err := FindTargetGroupByName(ctx, conn, name)
 
 	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
 	}
 
-	if existingTg != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", groupName)
+	if exist != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
 	}
 
 	input := &elbv2.CreateTargetGroupInput{
-		Name:       aws.String(groupName),
+		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
@@ -449,7 +462,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s): %s", name, err)
 	}
 
 	if len(output.TargetGroups) == 0 {
@@ -534,6 +547,22 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 						Value: aws.String(failover["on_unhealthy"].(string)),
 					},
 				)
+			}
+		}
+
+		// Only supported for TCP & TLS protocols
+		if v, ok := d.Get("protocol").(string); ok {
+			if v == elbv2.ProtocolEnumTcp || v == elbv2.ProtocolEnumTls {
+				if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 {
+					targetHealthStateBlock := v.([]interface{})
+					targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
+							Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
+						},
+					)
+				}
 			}
 		}
 
@@ -789,6 +818,18 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			})
 		}
 
+		if d.HasChange("target_health_state") {
+			targetHealthStateBlock := d.Get("target_health_state").([]interface{})
+			if len(targetHealthStateBlock) == 1 {
+				targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
+						Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
+					})
+			}
+		}
+
 		if d.HasChange("target_failover") {
 			failoverBlock := d.Get("target_failover").([]interface{})
 			if len(failoverBlock) == 1 {
@@ -1008,7 +1049,7 @@ func TargetGroupSuffixFromARN(arn *string) string {
 		return ""
 	}
 
-	if arnComponents := regexp.MustCompile(`arn:.*:targetgroup/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
+	if arnComponents := regexache.MustCompile(`arn:.*:targetgroup/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
 		if len(arnComponents[0]) == 2 {
 			return fmt.Sprintf("targetgroup/%s", arnComponents[0][1])
 		}
@@ -1023,9 +1064,10 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("target_type", targetGroup.TargetType)
 	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set("name", targetGroup.TargetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
+	d.Set("target_type", targetGroup.TargetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)
@@ -1101,6 +1143,14 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
+	targetHealthStateAttr, err := flattenTargetHealthState(attrResp.Attributes)
+	if err != nil {
+		return fmt.Errorf("flattening target health state: %w", err)
+	}
+	if err := d.Set("target_health_state", targetHealthStateAttr); err != nil {
+		return fmt.Errorf("setting target health state: %w", err)
+	}
+
 	// Set target failover attributes for GWLB
 	targetFailoverAttr := flattenTargetGroupFailover(attrResp.Attributes)
 	if err != nil {
@@ -1112,6 +1162,27 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return nil
+}
+
+func flattenTargetHealthState(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
+	if len(attributes) == 0 {
+		return []interface{}{}, nil
+	}
+
+	m := make(map[string]interface{})
+
+	for _, attr := range attributes {
+		switch aws.StringValue(attr.Key) {
+		case "target_health_state.unhealthy.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return nil, fmt.Errorf("converting target_health_state.unhealthy.connection_termination to bool: %s", aws.StringValue(attr.Value))
+			}
+			m["enable_unhealthy_connection_termination"] = enabled
+		}
+	}
+
+	return []interface{}{m}, nil
 }
 
 func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {

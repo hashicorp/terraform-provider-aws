@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/opsworks/opsworksiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -54,7 +56,7 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 	return aws.StringMap(tags.Map())
 }
 
-// KeyValueTags creates KeyValueTags from opsworks service tags.
+// KeyValueTags creates tftags.KeyValueTags from opsworks service tags.
 func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
@@ -93,6 +95,8 @@ func createTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier 
 func updateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.OpsWorks)

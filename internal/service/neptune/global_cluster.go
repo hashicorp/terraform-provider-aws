@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -233,7 +236,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 					return diag.Errorf("modifying Neptune Cluster (%s) engine version: %s", clusterID, err)
 				}
 
-				if _, err := waitClusterAvailable(ctx, conn, clusterID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return diag.Errorf("waiting for Neptune Cluster (%s) update: %s", clusterID, err)
 				}
 			}

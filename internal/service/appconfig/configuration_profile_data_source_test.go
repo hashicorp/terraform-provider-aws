@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,8 +34,8 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 				Config: testAccConfigurationProfileDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_id", appResourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexp.MustCompile(`application/([a-z\d]{4,7})/configurationprofile/+.`)),
-					resource.TestMatchResourceAttr(dataSourceName, "configuration_profile_id", regexp.MustCompile(`[a-z\d]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/configurationprofile/+.`)),
+					resource.TestMatchResourceAttr(dataSourceName, "configuration_profile_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "retrieval_role_arn", ""),

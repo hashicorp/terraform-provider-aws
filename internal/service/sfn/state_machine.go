@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -56,6 +59,10 @@ func ResourceStateMachine() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"logging_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -88,7 +95,7 @@ func ResourceStateMachine() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
 			"name_prefix": {
@@ -99,15 +106,28 @@ func ResourceStateMachine() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
+			},
+			"publish": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,6 +155,10 @@ func ResourceStateMachine() *schema.Resource {
 				Default:      sfn.StateMachineTypeStandard,
 				ValidateFunc: validation.StringInSlice(sfn.StateMachineType_Values(), false),
 			},
+			"version_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -148,6 +172,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
+		Publish:    aws.Bool(d.Get("publish").(bool)),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
 		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
@@ -173,7 +198,8 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
+	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
+	d.SetId(arn)
 
 	return resourceStateMachineRead(ctx, d, meta)
 }
@@ -200,6 +226,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("creation_date", nil)
 	}
 	d.Set("definition", output.Definition)
+	d.Set("description", output.Description)
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
@@ -209,7 +236,9 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
 	d.Set("role_arn", output.RoleArn)
+	d.Set("revision_id", output.RevisionId)
 	d.Set("status", output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
@@ -219,6 +248,23 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("tracing_configuration", nil)
 	}
 	d.Set("type", output.Type)
+
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	listVersionsOutput, err := conn.ListStateMachineVersionsWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
+	}
+
+	// The results are sorted in descending order of the version creation time.
+	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
+	if len(listVersionsOutput.StateMachineVersions) > 0 {
+		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
+	} else {
+		d.Set("state_machine_version_arn", nil)
+	}
 
 	return nil
 }
@@ -232,6 +278,11 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			Definition:      aws.String(d.Get("definition").(string)),
 			RoleArn:         aws.String(d.Get("role_arn").(string)),
 			StateMachineArn: aws.String(d.Id()),
+			Publish:         aws.Bool(d.Get("publish").(bool)),
+		}
+
+		if v, ok := d.GetOk("publish"); ok && v == true {
+			input.VersionDescription = aws.String(d.Get("version_description").(string))
 		}
 
 		if d.HasChange("logging_configuration") {
@@ -262,6 +313,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
 				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
+				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
 				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {

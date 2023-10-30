@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -30,6 +33,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z1BKCTXD74EZPE",
 	endpoints.EuWest2RegionID:      "Z3GKZC51ZF0DB4",
 	endpoints.EuWest3RegionID:      "Z3R1K369G5AVDG",
+	endpoints.IlCentral1RegionID:   "Z09640613K4A3MN55U7GU",
 	endpoints.MeCentral1RegionID:   "Z06143092I8HRXZRUZROF",
 	endpoints.MeSouth1RegionID:     "Z1MPMWCPA7YB62",
 	endpoints.SaEast1RegionID:      "Z7KQH4QJS55SO",

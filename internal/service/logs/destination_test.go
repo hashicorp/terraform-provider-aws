@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +37,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexp.MustCompile(`destination:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexache.MustCompile(`destination:.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),

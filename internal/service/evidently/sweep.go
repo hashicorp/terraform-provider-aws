@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package evidently
 
@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_evidently_project", &resource.Sweeper{
 		Name: "aws_evidently_project",
 		F:    sweepProject,
@@ -23,7 +24,7 @@ func init() {
 
 func sweepProject(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -48,7 +49,7 @@ func sweepProject(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Evidently Project sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -57,7 +58,7 @@ func sweepProject(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Evidently Projects for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Evidently Projects for %s: %w", region, err))
 	}
 

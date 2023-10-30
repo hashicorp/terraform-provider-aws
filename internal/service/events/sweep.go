@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package events
 
@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudwatch_event_api_destination", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_api_destination",
 		F:    sweepAPIDestination,
@@ -68,7 +69,7 @@ func init() {
 
 func sweepAPIDestination(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -83,7 +84,7 @@ func sweepAPIDestination(region string) error {
 	for {
 		output, err := conn.ListApiDestinationsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EventBridge API Destination sweep for %s: %s", region, err)
 			return nil
 		}
@@ -101,7 +102,6 @@ func sweepAPIDestination(region string) error {
 	}
 
 	for _, apiDestination := range apiDestinations {
-
 		input := &eventbridge.DeleteApiDestinationInput{
 			Name: apiDestination.Name,
 		}
@@ -119,7 +119,7 @@ func sweepAPIDestination(region string) error {
 
 func sweepArchives(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -130,7 +130,7 @@ func sweepArchives(region string) error {
 	for {
 		output, err := conn.ListArchivesWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EventBridge archive sweep for %s: %s", region, err)
 			return nil
 		}
@@ -170,7 +170,7 @@ func sweepArchives(region string) error {
 
 func sweepBuses(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -200,7 +200,7 @@ func sweepBuses(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge event bus sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -208,7 +208,7 @@ func sweepBuses(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Event Buses: %w", err))
 	}
 
@@ -217,7 +217,7 @@ func sweepBuses(region string) error {
 
 func sweepConnection(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -232,7 +232,7 @@ func sweepConnection(region string) error {
 	for {
 		output, err := conn.ListConnectionsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EventBridge Connection sweep for %s: %s", region, err)
 			return nil
 		}
@@ -265,7 +265,7 @@ func sweepConnection(region string) error {
 
 func sweepPermissions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -273,7 +273,7 @@ func sweepPermissions(region string) error {
 
 	output, err := conn.DescribeEventBusWithContext(ctx, &eventbridge.DescribeEventBusInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EventBridge Permission sweep for %s: %s", region, err)
 			return nil
 		}
@@ -310,7 +310,7 @@ func sweepPermissions(region string) error {
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -354,7 +354,7 @@ func sweepRules(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -366,7 +366,7 @@ func sweepRules(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -380,7 +380,7 @@ func sweepRules(region string) error {
 
 func sweepTargets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -438,7 +438,7 @@ func sweepTargets(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -450,7 +450,7 @@ func sweepTargets(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -462,7 +462,7 @@ func sweepTargets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

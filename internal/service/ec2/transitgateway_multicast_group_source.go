@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -78,7 +81,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 		return diag.FromErr(err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	}, d.IsNewResource())
 
@@ -137,7 +140,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 		return fmt.Errorf("deleting EC2 Transit Gateway Multicast Group Source (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	})
 

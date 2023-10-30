@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -181,6 +184,12 @@ func findListenerCertificate(ctx context.Context, conn *elbv2.ELBV2, certificate
 	}
 
 	resp, err := conn.DescribeListenerCertificatesWithContext(ctx, params)
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+		return &retry.NotFoundError{
+			LastRequest: params,
+			LastError:   err,
+		}
+	}
 	if err != nil {
 		return err
 	}

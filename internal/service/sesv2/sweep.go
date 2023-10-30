@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package sesv2
 
@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_sesv2_configuration_set", &resource.Sweeper{
 		Name: "aws_sesv2_configuration_set",
 		F:    sweepConfigurationSets,
@@ -28,7 +29,7 @@ func init() {
 
 func sweepConfigurationSets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -61,11 +62,11 @@ func sweepConfigurationSets(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Configuration Sets for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Configuration Sets for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Configuration Sets sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -75,7 +76,7 @@ func sweepConfigurationSets(region string) error {
 
 func sweepContactLists(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -108,11 +109,11 @@ func sweepContactLists(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Contact Lists for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Contact Lists for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Contact Lists sweep for %s: %s", region, errs)
 		return nil
 	}

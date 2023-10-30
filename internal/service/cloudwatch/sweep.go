@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
 
@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudwatch_composite_alarm", &resource.Sweeper{
 		Name: "aws_cloudwatch_composite_alarm",
 		F:    sweepCompositeAlarms,
@@ -22,7 +23,7 @@ func init() {
 
 func sweepCompositeAlarms(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -48,7 +49,7 @@ func sweepCompositeAlarms(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] SkippingCloudWatch Composite Alarm sweep for %s: %s", region, err)
 		return nil
 	}
@@ -57,7 +58,7 @@ func sweepCompositeAlarms(region string) error {
 		return fmt.Errorf("error listing CloudWatch Composite Alarms (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Composite Alarms (%s): %w", region, err)

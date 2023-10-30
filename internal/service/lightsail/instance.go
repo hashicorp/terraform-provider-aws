@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -51,7 +54,7 @@ func ResourceInstance() *schema.Resource {
 						"snapshot_time": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
 						},
 						"status": {
 							Type:         schema.TypeString,
@@ -67,8 +70,8 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]`), "must begin with an alphanumeric character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with an alphanumeric character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"availability_zone": {

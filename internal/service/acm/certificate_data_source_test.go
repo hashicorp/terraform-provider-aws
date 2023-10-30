@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm_test
 
 import (
@@ -6,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/acm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,9 +28,9 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	var domain string
 
 	if os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN") != "" {
-		arnRe = regexp.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN")))
+		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN")))
 	} else {
-		arnRe = regexp.MustCompile(certificateRE)
+		arnRe = regexache.MustCompile(certificateRE)
 	}
 
 	if os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN") != "" {
@@ -112,9 +116,9 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	var domain string
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN") != "" {
-		arnRe = regexp.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
+		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
 	} else {
-		arnRe = regexp.MustCompile(certificateRE)
+		arnRe = regexache.MustCompile(certificateRE)
 	}
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN") != "" {
@@ -132,15 +136,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -182,27 +186,27 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 		},
 	})

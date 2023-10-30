@@ -99,11 +99,12 @@ resource "aws_lb" "example" {
 
 ~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
+* `dns_record_client_routing_policy` - (Optional) Indicates how traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
 * `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled. For `network` and `gateway` type load balancers, this feature is disabled by default (`false`). For `application` load balancer this feature is always enabled (`true`) and cannot be disabled. Defaults to `false`.
 * `enable_deletion_protection` - (Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to `false`.
@@ -119,7 +120,7 @@ The following arguments are supported:
 must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified,
 Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
+* `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
 * `preserve_host_header` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
 * `subnet_mapping` - (Optional) A subnet mapping block as documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
@@ -141,9 +142,9 @@ for load balancers of type `network` will force a recreation of the resource.
 * `ipv6_address` - (Optional) The IPv6 address. You associate IPv6 CIDR blocks with your VPC and choose the subnets where you launch both internet-facing and internal Application Load Balancers or Network Load Balancers.
 * `private_ipv4_address` - (Optional) The private IPv4 address for an internal load balancer.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
@@ -163,8 +164,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-LBs can be imported using their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lb.bar
+  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+}
 ```
-$ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
+
+Using `terraform import`, import LBs using their ARN. For example:
+
+```console
+% terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```

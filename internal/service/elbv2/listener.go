@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -5,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -219,7 +222,7 @@ func ResourceListener() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
 									},
 								},
 							},

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -50,7 +53,7 @@ func ResourceSubnetGroup() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
 					validation.StringNotInSlice([]string{"default"}, false),
 				),
 			},

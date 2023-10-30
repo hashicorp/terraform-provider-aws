@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +38,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 				Config: testAccJobDefinitionConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "container_properties", `{
 						"command": ["echo", "test"],
 						"image": "busybox",
@@ -109,7 +112,7 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 				Config: testAccJobDefinitionConfig_capabilitiesEC2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "container_properties", `{
 						"command": ["echo", "test"],
 						"image": "busybox",
@@ -159,7 +162,7 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 				Config: testAccJobDefinitionConfig_capabilitiesFargateContainerPropertiesDefaults(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(command)", "0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, "container_properties", "executionRoleArn", "aws_iam_role.ecs_task_execution_role", "arn"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "fargatePlatformConfiguration.platformVersion", "LATEST"),
@@ -203,7 +206,7 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 				Config: testAccJobDefinitionConfig_capabilitiesFargate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.CheckResourceAttrJMESPair(resourceName, "container_properties", "executionRoleArn", "aws_iam_role.ecs_task_execution_role", "arn"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "fargatePlatformConfiguration.platformVersion", "LATEST"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "networkConfiguration.assignPublicIp", "DISABLED"),
@@ -395,7 +398,7 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 				Config: testAccJobDefinitionConfig_propagateTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "container_properties", `{
 						"command": ["echo", "test"],
 						"image": "busybox",

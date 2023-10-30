@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
@@ -286,10 +289,6 @@ func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, n string, v
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Account Public Access Block ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)

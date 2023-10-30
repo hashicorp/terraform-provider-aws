@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -85,7 +88,7 @@ func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.O
 
 	output = append(output, accounts...)
 
-	ous, err := findOUsForParent(ctx, conn, id)
+	ous, err := findOrganizationalUnitsForParentByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err

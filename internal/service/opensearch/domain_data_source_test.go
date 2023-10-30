@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
@@ -48,6 +51,8 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
+					resource.TestCheckResourceAttrPair(datasourceName, "software_update_options.#", resourceName, "software_update_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "software_update_options.0.auto_software_update_enabled", resourceName, "software_update_options.0.auto_software_update_enabled"),
 				),
 			},
 		},
@@ -175,6 +180,10 @@ POLICY
 
   snapshot_options {
     automated_snapshot_start_hour = 23
+  }
+
+  software_update_options {
+    auto_software_update_enabled = true
   }
 }
 

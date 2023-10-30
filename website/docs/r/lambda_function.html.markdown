@@ -59,7 +59,7 @@ resource "aws_lambda_function" "test_lambda" {
 
   source_code_hash = data.archive_file.lambda.output_base64sha256
 
-  runtime = "nodejs16.x"
+  runtime = "nodejs18.x"
 
   environment {
     variables = {
@@ -112,7 +112,7 @@ resource "aws_lambda_function" "test_lambda" {
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.test"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs18.x"
 
   ephemeral_storage {
     size = 10240 # Min 512 MB and the Max 10240 MB
@@ -319,7 +319,7 @@ Container image configuration values that override the values in the container i
 
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -331,14 +331,15 @@ Snap start settings for low-latency startups. This feature is currently only sup
 
 For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC. When you connect a function to a VPC, it can only access resources and the internet through that VPC. See [VPC Settings][7].
 
-~> **NOTE:** If both `subnet_ids` and `security_group_ids` are empty then `vpc_config` is considered to be empty or unset.
+~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
 
+* `ipv6_allowed_for_dual_stack` - (Optional) Allows outbound IPv6 traffic on VPC functions that are connected to dual-stack subnets. Default is `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
@@ -375,8 +376,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function.test_lambda
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function.test_lambda my_test_lambda_function
+
+Using `terraform import`, import Lambda Functions using the `function_name`. For example:
+
+```console
+% terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```

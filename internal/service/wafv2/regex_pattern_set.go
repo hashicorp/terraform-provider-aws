@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -50,51 +53,53 @@ func ResourceRegexPatternSet() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"regular_expression": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"regex_string": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 200),
-								validation.StringIsValidRegExp,
-							),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"regular_expression": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"regex_string": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 200),
+									validation.StringIsValidRegExp,
+								),
+							},
 						},
 					},
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

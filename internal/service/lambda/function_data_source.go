@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -191,6 +194,10 @@ func DataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Computed: true,

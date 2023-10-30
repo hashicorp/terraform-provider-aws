@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -94,7 +97,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							ValidateDiagFunc: verify.ValidAllDiag(
+							ValidateDiagFunc: validation.AllDiag(
 								validation.MapKeyLenBetween(1, 63),
 								validation.MapValueLenBetween(1, 253),
 							),

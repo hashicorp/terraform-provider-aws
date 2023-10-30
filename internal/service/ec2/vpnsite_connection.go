@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -6,11 +9,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"regexp"
 	"sort"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -1668,8 +1671,8 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1688,7 +1691,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 
 	return validation.All(
 		validation.IsCIDRNetwork(30, 30),
-		validation.StringMatch(regexp.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
+		validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
 		validation.StringNotInSlice(disallowedCidrs, false),
 	)
 }
@@ -1696,7 +1699,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
 }
 

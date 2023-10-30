@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,12 +8,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -73,7 +76,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
 			"name_prefix": {
@@ -84,7 +87,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
 			"owner_id": {
@@ -397,7 +400,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 

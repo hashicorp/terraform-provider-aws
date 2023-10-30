@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,7 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service", name="Service")
 // @Tags(identifierAttribute="arn")
-func ResourceService() *schema.Resource {
+func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
 		ReadWithoutTimeout:   resourceServiceRead,
@@ -124,12 +128,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	out, err := conn.CreateService(ctx, in)
+
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), err)
-	}
-
-	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -189,8 +190,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.CertificateArn = aws.String(d.Get("certificate_arn").(string))
 		}
 
-		log.Printf("[DEBUG] Updating VPCLattice Service (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateService(ctx, in)
+
 		if err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameService, d.Id(), err)
 		}
@@ -207,12 +208,11 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ServiceIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameService, d.Id(), err)
 	}
 
@@ -260,6 +260,7 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 func statusService(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -277,15 +278,15 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 		ServiceIdentifier: aws.String(id),
 	}
 	out, err := conn.GetService(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -294,6 +295,40 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	}
 
 	return out, nil
+}
+
+func findService(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceSummary]) (*types.ServiceSummary, error) {
+	output, err := findServices(ctx, conn, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServices(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceSummary]) ([]types.ServiceSummary, error) {
+	input := &vpclattice.ListServicesInput{}
+	var output []types.ServiceSummary
+	paginator := vpclattice.NewListServicesPaginator(conn, input, func(options *vpclattice.ListServicesPaginatorOptions) {
+		options.Limit = 100
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {

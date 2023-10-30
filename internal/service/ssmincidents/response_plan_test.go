@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
@@ -22,8 +25,7 @@ func testResponsePlan_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rImpact := "3"
@@ -72,8 +74,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	iniName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -153,8 +154,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -253,8 +253,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -324,8 +323,7 @@ func testResponsePlan_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	impact := "3"
@@ -357,8 +355,7 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -431,8 +428,7 @@ func testResponsePlan_displayName(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	oldDisplayName := rName + "-old-display-name"
 	newDisplayName := rName + "-new-display-name"
@@ -483,8 +479,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	chatChannelTopic1 := "aws_sns_topic.topic1"
 	chatChannelTopic2 := "aws_sns_topic.topic2"
@@ -565,8 +560,7 @@ func testResponsePlan_engagement(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	//lintignore:AWSAT003
 	//lintignore:AWSAT005
@@ -651,8 +645,7 @@ func testResponsePlan_action(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_ssmincidents_response_plan.test"
@@ -798,8 +791,7 @@ func testResponsePlan_action(t *testing.T) {
 //		t.Skip("skipping long-running test in short mode")
 //	}
 //
-//	ctx := context.Background()
-//
+//  ctx := acctest.Context(t)
 //	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 //
 //	resourceName := "aws_ssmincidents_response_plan.test"

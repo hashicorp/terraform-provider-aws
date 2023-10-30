@@ -118,7 +118,9 @@ The capacity_configuration block supports the following arguments:
 The cache_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of cache storage . The valid values are:
-    * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
+    * CACHE_1000 - This type provides 1000 MB/s disk access throughput.
+    * CACHE_250 - This type provides 250 MB/s disk access throughput.
+    * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
 
 ### code
@@ -134,7 +136,7 @@ The code block supports the following arguments:
 The database block supports the following arguments:
 
 * `database_name` - (Required) Name of the KX database.
-* `cache_configurations` - (Required)  Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
+* `cache_configurations` - (Optional) Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
 * `changeset_id` - (Optional) A unique identifier of the changeset that is associated with the cluster.
 
 #### cache_configurations
@@ -142,7 +144,7 @@ The database block supports the following arguments:
 The cache_configuration block supports the following arguments:
 
 * `cache_type` - (Required) Type of disk cache.
-* `db_paths` - (Required) Paths within the database to cache.
+* `db_paths` - (Optional) Paths within the database to cache.
 
 ### savedown_storage_configuration
 
@@ -150,7 +152,7 @@ The savedown_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in bytes.
+* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
 
 ### vpc_configuration
 
@@ -161,9 +163,9 @@ The vpc_configuration block supports the following arguments:
 * `subnet_ids `- (Required) Identifier of the subnet that the Privatelink VPC endpoint uses to connect to the cluster.
 * `ip_address_type` - (Required) IP address type for cluster network configuration parameters. The following type is available: IP_V4 - IP address version 4.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX cluster.
 * `created_timestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
@@ -175,14 +177,23 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
+* `create` - (Default `45m`)
 * `update` - (Default `2m`)
-* `delete` - (Default `40m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
-An AWS FinSpace Kx Cluster can be imported using the `id` (environment ID and cluster name, comma-delimited), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
 
+```terraform
+import {
+  to = aws_finspace_kx_cluster.example
+  id = "n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster"
+}
 ```
-$ terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
+
+Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
+
+```console
+% terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
