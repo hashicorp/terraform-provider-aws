@@ -67,6 +67,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A description for the Verified Access endpoint.
+* `sse_specification` - (Optional) The options in use for server side encryption.
 * `load_balancer_options` - (Optional) The load balancer details. This parameter is required if the endpoint type is `load-balancer`.
 * `network_interface_options` - (Optional) The network interface details. This parameter is required if the endpoint type is `network-interface`.
 * `security_group_ids` - (Optional) List of the the security groups IDs to associate with the Verified Access endpoint.

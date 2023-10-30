@@ -55,10 +55,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 			"attachment_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointAttachmentType_Values(), false),
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointAttachmentType](),
+				ForceNew:         true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -84,10 +84,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"endpoint_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointType_Values(), false),
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointType](),
+				ForceNew:         true,
 			},
 			"load_balancer_options": {
 				Type:     schema.TypeList,
@@ -107,9 +107,9 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
@@ -136,9 +136,9 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// ValidateFunc: validation.StringInSlice(ec2.VerifiedAccessEndpointProtocol_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
 						},
 					},
 				},
@@ -152,13 +152,13 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 			"sse_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"customer_managed_key_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
 						},
 						"kms_key_arn": {
 							Type:         schema.TypeString,
