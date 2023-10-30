@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.46.5 h1:NYYUrhOftwiXPkqZwEpB3043bMukegJAt15ozrqJbEY=
-github.com/aws/aws-sdk-go v1.46.5/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.46.6 h1:6wFnNC9hETIZLMf6SOTN7IcclrOGwp/n9SLp8Pjt6E8=
+github.com/aws/aws-sdk-go v1.46.6/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.21.1/go.mod h1:ErQhvNuEMhJjweavOYhxVkn2RUx7kQXVATHrjKtxIpM=
 github.com/aws/aws-sdk-go-v2 v1.21.2 h1:+LXZ0sgo8quN9UOKXXzAWRT3FWd4NxeXWOZom9pE7GA=
 github.com/aws/aws-sdk-go-v2 v1.21.2/go.mod h1:ErQhvNuEMhJjweavOYhxVkn2RUx7kQXVATHrjKtxIpM=
@@ -162,8 +162,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.34.0 h1:C04Uf6qSXocZG79rsY3E4H
 github.com/aws/aws-sdk-go-v2/service/s3control v1.34.0/go.mod h1:RCYpYoSEUpDfeQeZYHMFgY15cUNc/IbG06sF7IDSSO0=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.2 h1:VYWFZZ2jYWRu0bZ5+nSJiToRrUd1MyQt5ox3MlA+VsU=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.2/go.mod h1:vPsUqtS4023/mjhV5zyXUaGmCgBMomsPTPvJFhaPhZY=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.2 h1:UWaB/MOz3+efoi5lbiqMGKlAQ13zM/N1RsU8oDoDp0k=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.2/go.mod h1:bT7d8k/k7DbfzbDdOv4IiiBpvPiet4aDpocpxeB0AtQ=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.3 h1:s+lF7mmqMRBQae3Jx+R+RJpqIVyzdqoxo4v7WsJXwyk=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.3/go.mod h1:bT7d8k/k7DbfzbDdOv4IiiBpvPiet4aDpocpxeB0AtQ=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.2 h1:7dfERjekFyE/OAd4ZyA+EpW/8CW/aL2ou3yOgNyigqk=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.16.2/go.mod h1:N5a9dNF+SH34X/nWhpUePVebcnNRa0A2W4IByMpB3gg=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.21.0 h1:4iHtFr1ZsqFJK03vJqaZFUcg2fJeiCTdnwuBH6U64os=
