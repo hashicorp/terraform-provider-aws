@@ -351,7 +351,7 @@ type resourceJobQueueData struct {
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 
-func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics {
+func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	r.ARN = flex.StringToFrameworkLegacy(ctx, out.JobQueueArn)
