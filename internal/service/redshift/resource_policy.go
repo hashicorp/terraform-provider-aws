@@ -5,7 +5,6 @@ package redshift
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -99,27 +97,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("resource_arn", out.ResourceArn)
 
-	doc := resourcePolicyDoc{}
-	log.Printf("policy is %s:", aws.StringValue(out.Policy))
-
-	if err := json.Unmarshal([]byte(aws.StringValue(out.Policy)), &doc); err != nil {
-		return sdkdiag.AppendErrorf(diags, "unmarshaling policy: %s", err)
-	}
-
-	doc.Statement.Resources = nil
-
-	policyDoc := tfiam.IAMPolicyDoc{}
-
-	policyDoc.Id = doc.Id
-	policyDoc.Version = doc.Version
-	policyDoc.Statements = []*tfiam.IAMPolicyStatement{doc.Statement}
-
-	formattedPolicy, err := json.Marshal(policyDoc)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "marshling policy: %s", err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), string(formattedPolicy))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(out.Policy))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -128,7 +106,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -154,10 +132,4 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
-}
-
-type resourcePolicyDoc struct {
-	Version   string                    `json:",omitempty"`
-	Id        string                    `json:",omitempty"`
-	Statement *tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
 }
