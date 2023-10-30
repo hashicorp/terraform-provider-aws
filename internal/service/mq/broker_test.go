@@ -239,9 +239,9 @@ func TestDiffUsers(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.16.3"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.15.12" // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.8.6"   // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
