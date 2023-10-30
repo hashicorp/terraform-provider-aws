@@ -47,6 +47,9 @@ class MyConvertedCode extends TerraformStack {
           },
         ],
         deviceDefenderIndexingMode: "VIOLATIONS",
+        filter: {
+          namedShadowNames: ["thing1shadow"],
+        },
         namedShadowIndexingMode: "ON",
         thingConnectivityIndexingMode: "STATUS",
         thingIndexingMode: "REGISTRY_AND_SHADOW",
@@ -78,6 +81,7 @@ The `thingIndexingConfiguration` configuration block supports the following:
 * `deviceDefenderIndexingMode` - (Optional) Device Defender indexing mode. Valid values: `violations`, `off`. Default: `off`.
 * `managedField` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
 * `namedShadowIndexingMode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `on`, `off`. Default: `off`.
+* `filter` - (Optional) Required if `namedShadowIndexingMode` is `on`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
 * `thingConnectivityIndexingMode` - (Optional) Thing connectivity indexing mode. Valid values: `status`, `off`. Default: `off`.
 * `thingIndexingMode` - (Required) Thing indexing mode. Valid values: `registry`, `registryAndShadow`, `off`.
 
@@ -88,8 +92,14 @@ The `customField` and `managedField` configuration blocks supports the following
 * `name` - (Optional) The name of the field.
 * `type` - (Optional) The data type of the field. Valid values: `number`, `string`, `boolean`.
 
+### filter
+
+The `filter` configuration block supports the following:
+
+* `namedShadowNames` - (Optional) List of shadow names that you select to index.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-f7efbd9e6b20237c5f64b6bb401a63af7cf9384ee0544a5856bb5370e10c1f1e -->
+<!-- cache-key: cdktf-0.18.0 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->
