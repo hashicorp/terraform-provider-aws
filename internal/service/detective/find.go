@@ -5,12 +5,9 @@ package detective
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindAdminAccount(ctx context.Context, conn *detective.Detective, adminAccountID string) (*detective.Administrator, error) {
@@ -37,38 +34,4 @@ func FindAdminAccount(ctx context.Context, conn *detective.Detective, adminAccou
 	})
 
 	return result, err
-}
-
-func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
-	input := &detective.ListInvitationsInput{}
-
-	var result *string
-
-	err := conn.ListInvitationsPagesWithContext(ctx, input, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
-		for _, invitation := range page.Invitations {
-			if aws.StringValue(invitation.GraphArn) == graphARN {
-				result = invitation.GraphArn
-				return false
-			}
-		}
-		return !lastPage
-	})
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			Message:     fmt.Sprintf("No member found with arn %q ", graphARN),
-			LastRequest: input,
-		}
-	}
-
-	return result, nil
 }

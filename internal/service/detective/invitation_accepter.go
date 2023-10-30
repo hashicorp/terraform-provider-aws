@@ -11,8 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -60,19 +63,20 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
+	member, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Detective InvitationAccepter (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Detective Invitation Accepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("listing Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Detective Invitation Accepter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("graph_arn", graphArn)
+	d.Set("graph_arn", member.GraphArn)
+
 	return nil
 }
 
@@ -93,4 +97,53 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return nil
+}
+
+func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*detective.MemberDetail, error) {
+	input := &detective.ListInvitationsInput{}
+
+	return findInvitation(ctx, conn, input, func(v *detective.MemberDetail) bool {
+		return aws.StringValue(v.GraphArn) == graphARN
+	})
+}
+
+func findInvitation(ctx context.Context, conn *detective.Detective, input *detective.ListInvitationsInput, filter tfslices.Predicate[*detective.MemberDetail]) (*detective.MemberDetail, error) {
+	output, err := findInvitations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findInvitations(ctx context.Context, conn *detective.Detective, input *detective.ListInvitationsInput, filter tfslices.Predicate[*detective.MemberDetail]) ([]*detective.MemberDetail, error) {
+	var output []*detective.MemberDetail
+
+	err := conn.ListInvitationsPagesWithContext(ctx, input, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Invitations {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
