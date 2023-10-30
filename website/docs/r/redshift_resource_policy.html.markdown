@@ -22,9 +22,9 @@ resource "aws_redshift_resource_policy" "example" {
       Principal = {
         AWS = "arn:aws:iam::12345678901:root"
       }
-      Action = "redshift:CreateInboundIntegration"
+      Action   = "redshift:CreateInboundIntegration"
       Resource = aws_redshift_cluster.example.cluster_namespace_arn
-      Sid = ""
+      Sid      = ""
     }]
   })
 }
