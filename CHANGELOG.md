@@ -18,7 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* data_source/aws_vpc_ipam_pools: Add `id` attribute for individual IPAM pools ([#32133](https://github.com/hashicorp/terraform-provider-aws/issues/32133))
+* data-source/aws_vpc_ipam_pools: Add `id` attribute for individual IPAM pools ([#32133](https://github.com/hashicorp/terraform-provider-aws/issues/32133))
 
 ## 5.23.1 (October 27, 2023)
 
