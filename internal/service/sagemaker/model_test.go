@@ -280,7 +280,7 @@ func TestAccSageMakerModel_primaryContainerModelPackageName(t *testing.T) {
 				Config: testAccModelConfig_primaryContainerPackageName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_package_nameblop"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_package_name"),
 				),
 			},
 			{
