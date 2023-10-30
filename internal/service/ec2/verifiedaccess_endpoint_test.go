@@ -121,11 +121,11 @@ func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, verifiedaccessendpoint *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -136,7 +136,7 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, 
 			return err
 		}
 
-		*verifiedaccessendpoint = *output
+		*v = *output
 
 		return nil
 	}
@@ -144,9 +144,8 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, 
 
 func testAccVerifiedAccessEndpointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-
-
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -202,22 +201,18 @@ resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
 
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-
-
-
-
-
-
 `, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_basic(rName string, key string, certificate string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName), fmt.Sprintf(`
-
-
 resource "aws_acm_certificate" "test" {
-  private_key      = "%[2]s"	
+  private_key      = "%[2]s"
   certificate_body = "%[3]s"
 
   tags = {
@@ -226,23 +221,28 @@ resource "aws_acm_certificate" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-	port     = 443
-	protocol = "TLS"
-	vpc_id   = aws_vpc.test.id
-  }
+  name     = %[1]q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = aws_vpc.test.id
+}
 
 resource "aws_lb_listener" "test" {
-	load_balancer_arn = aws_lb.test.arn
-	port              = "443"
-	protocol          = "TLS"
-	ssl_policy        = "ELBSecurityPolicy-2016-08"
-	certificate_arn   = aws_acm_certificate.test.arn
+  load_balancer_arn = aws_lb.test.arn
+  port              = "443"
+  protocol          = "TLS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.test.arn
   
-	default_action {
-	  target_group_arn = aws_lb_target_group.test.arn
-	  type             = "forward"
-	}
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
@@ -252,8 +252,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
   endpoint_domain_prefix = "example"
   endpoint_type          = "load-balancer"
   sse_specification {
-	customer_managed_key_enabled = false
-
+    customer_managed_key_enabled = false
   }
   load_balancer_options {
     load_balancer_arn = aws_lb.test.arn
@@ -263,10 +262,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
   }
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName, key, certificate))
 }
