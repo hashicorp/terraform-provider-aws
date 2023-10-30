@@ -22,6 +22,10 @@ Example:
 tfsdk2fw -resource aws_example_resource examplepackage ResourceName internal/service/examplepackage/resource_name_fw.go
 ```
 
+This command creates a separate file that exists alongside the existing SDKv2 resource. Ultimately, the new file should replace the SDKv2 resource.
+
+When done creating the resource using the Framework run `make gen` to remove the SDK resource and add the Framework resource to the list of generated service packages.
+
 ## State Upgrade
 
 Terraform Plugin Framework introduced `null` values, which differ from `zero` values. Since the Plugin SDKv2 marked both `null` and `zero` values as the same, it will be necessary to use the [State Upgrader](https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade).
