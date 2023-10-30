@@ -280,7 +280,36 @@ func TestAccSageMakerModel_primaryContainerModelPackageName(t *testing.T) {
 				Config: testAccModelConfig_primaryContainerPackageName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_package_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_package_nameblop"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// remi
+func TestAccSageMakerModel_primaryContainerModelDataSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerUncompressedModel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source.compression_typedd"),
 				),
 			},
 			{
@@ -746,6 +775,28 @@ resource "aws_sagemaker_model" "test" {
   primary_container {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
     mode  = "SingleModel"
+  }
+}
+`, rName))
+}
+
+// remi
+func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+
+	model_data_source {
+		s3_data_source {
+			s3_data_type = "S3Prefix"
+			s3_uri       = "s3://bucket/prefix"
+			compression_type = "None"
+		}	
+	}
   }
 }
 `, rName))
