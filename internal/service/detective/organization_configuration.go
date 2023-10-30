@@ -31,7 +31,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-
 			"graph_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -46,7 +45,6 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
-
 	input := &detective.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
 		GraphArn:   aws.String(graphARN),
@@ -58,7 +56,9 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("updating Detective Organization Configuration (%s): %s", graphARN, err)
 	}
 
-	d.SetId(graphARN)
+	if d.IsNewResource() {
+		d.SetId(graphARN)
+	}
 
 	return resourceOrganizationConfigurationRead(ctx, d, meta)
 }
@@ -74,10 +74,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	if err != nil {
 		return diag.Errorf("reading Detective Organization Configuration (%s): %s", d.Id(), err)
-	}
-
-	if output == nil {
-		return diag.Errorf("reading Detective Organization Configuration (%s): empty response", d.Id())
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
