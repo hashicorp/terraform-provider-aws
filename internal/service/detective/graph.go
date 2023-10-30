@@ -5,13 +5,13 @@ package detective
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,9 +28,11 @@ func ResourceGraph() *schema.Resource {
 		ReadWithoutTimeout:   resourceGraphRead,
 		UpdateWithoutTimeout: resourceGraphUpdate,
 		DeleteWithoutTimeout: resourceGraphDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"created_time": {
 				Type:     schema.TypeString,
@@ -43,41 +45,30 @@ func ResourceGraph() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 4 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.CreateGraphInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	var output *detective.CreateGraphOutput
-	var err error
-	err = retry.RetryContext(ctx, GraphOperationTimeout, func() *retry.RetryError {
-		output, err = conn.CreateGraphWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, detective.ErrCodeInternalServerException) {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateGraphWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+		return conn.CreateGraphWithContext(ctx, input)
+	}, detective.ErrCodeInternalServerException)
 
 	if err != nil {
-		return diag.Errorf("creating detective Graph: %s", err)
+		return diag.Errorf("creating Detective Graph: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.GraphArn))
+	d.SetId(aws.StringValue(outputRaw.(*detective.CreateGraphOutput).GraphArn))
 
 	return resourceGraphRead(ctx, d, meta)
 }
@@ -109,16 +100,17 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	input := &detective.DeleteGraphInput{
+	log.Printf("[DEBUG] Deleting Detective Graph: %s", d.Id())
+	_, err := conn.DeleteGraphWithContext(ctx, &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DeleteGraphWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.Errorf("deleting detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Detective Graph (%s): %s", d.Id(), err)
 	}
 
 	return nil

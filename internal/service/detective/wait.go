@@ -17,8 +17,6 @@ const (
 	// Maximum amount of time to wait for an Administrator to return NotFound
 	adminAccountNotFoundTimeout = 5 * time.Minute
 
-	// GraphOperationTimeout Maximum amount of time to wait for a detective graph to be created, deleted
-	GraphOperationTimeout = 4 * time.Minute
 	// MemberStatusPropagationTimeout Maximum amount of time to wait for a detective member status to return Invited
 	MemberStatusPropagationTimeout = 4 * time.Minute
 )
