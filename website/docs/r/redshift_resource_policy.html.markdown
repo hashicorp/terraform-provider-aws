@@ -20,7 +20,7 @@ resource "aws_redshift_resource_policy" "example" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        AWS = ["arn:aws:iam::12345678901:root"]
+        AWS = "arn:aws:iam::12345678901:root"
       }
       Action = "redshift:CreateInboundIntegration"
       Resource = aws_redshift_cluster.example.cluster_namespace_arn
