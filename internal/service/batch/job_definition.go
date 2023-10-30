@@ -47,6 +47,10 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"container_properties": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -289,6 +293,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
+	d.Set("arn_prefix", strings.TrimSuffix(*jobDefinition.JobDefinitionArn, fmt.Sprintf(":%d", *jobDefinition.Revision)))
 
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 
