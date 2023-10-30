@@ -535,7 +535,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -1581,7 +1581,7 @@ resource "aws_mq_broker" "test" {
     time_zone   = "CET"
   }
 
-  publicly_accessible = true
+  publicly_accessible = false
   security_groups     = aws_security_group.test[*].id
 
   user {
