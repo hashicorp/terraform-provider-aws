@@ -124,7 +124,6 @@ func ResourceModel() *schema.Resource {
 									"s3_data_source": {
 										Type:     schema.TypeList,
 										Required: true,
-										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"s3_uri": {
@@ -271,7 +270,6 @@ func ResourceModel() *schema.Resource {
 									"s3_data_source": {
 										Type:     schema.TypeList,
 										Required: true,
-										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"s3_uri": {
@@ -625,6 +623,9 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	if container.ModelDataUrl != nil {
 		cfg["model_data_url"] = aws.StringValue(container.ModelDataUrl)
 	}
+	if container.ModelDataSource != nil {
+		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
+	}
 	if container.ModelPackageName != nil {
 		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
@@ -634,6 +635,40 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 
 	if container.ImageConfig != nil {
 		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenModelDataSource(modelDataSource *sagemaker.ModelDataSource) []interface{} {
+	if modelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if modelDataSource.S3DataSource != nil {
+		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenS3ModelDataSource(s3ModelDataSource *sagemaker.S3ModelDataSource) []interface{} {
+	if s3ModelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if s3ModelDataSource.S3Uri != nil {
+		cfg["s3_uri"] = aws.StringValue(s3ModelDataSource.S3Uri)
+	}
+	if s3ModelDataSource.S3DataType != nil {
+		cfg["s3_data_type"] = aws.StringValue(s3ModelDataSource.S3DataType)
+	}
+	if s3ModelDataSource.CompressionType != nil {
+		cfg["compression_type"] = aws.StringValue(s3ModelDataSource.CompressionType)
 	}
 
 	return []interface{}{cfg}
