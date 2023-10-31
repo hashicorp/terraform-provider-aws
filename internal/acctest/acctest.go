@@ -744,6 +744,16 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+// CheckResourceAttrHasPrefix ensures the Terraform state value has the specified prefix.
+func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasPrefix(value, prefix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected prefix %#v, got %#v", name, key, prefix, value)
+	})
+}
+
 // Copied and inlined from the SDK testing code
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]

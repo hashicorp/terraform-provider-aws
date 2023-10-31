@@ -1,4 +1,28 @@
 ## 5.24.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_detective_organization_admin_account: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#25237](https://github.com/hashicorp/terraform-provider-aws/issues/25237))
+* resource/aws_detective_organization_configuration: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#25237](https://github.com/hashicorp/terraform-provider-aws/issues/25237))
+
+FEATURES:
+
+* **New Resource:** `aws_detective_organization_admin_account` ([#25237](https://github.com/hashicorp/terraform-provider-aws/issues/25237))
+* **New Resource:** `aws_detective_organization_configuration` ([#25237](https://github.com/hashicorp/terraform-provider-aws/issues/25237))
+* **New Resource:** `aws_verifiedaccess_endpoint` ([#30763](https://github.com/hashicorp/terraform-provider-aws/issues/30763))
+
+ENHANCEMENTS:
+
+* resource/aws_amplify_app: Add `custom_headers` argument ([#31561](https://github.com/hashicorp/terraform-provider-aws/issues/31561))
+* resource/aws_networkmanager_connect_attachment: Add `NO_ENCAP` as a valid `options.protocol` value ([#34109](https://github.com/hashicorp/terraform-provider-aws/issues/34109))
+* resource/aws_networkmanager_connect_peer: Add `subnet_arn` argument to support [Tunnel-less Connect attachments](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-connect-attachment.html#cloudwan-connect-tlc) ([#34109](https://github.com/hashicorp/terraform-provider-aws/issues/34109))
+* resource/aws_networkmanager_connect_peer: `inside_cidr_blocks` is Optional ([#34109](https://github.com/hashicorp/terraform-provider-aws/issues/34109))
+
+BUG FIXES:
+
+* data-source/aws_vpc_ipam_pools: Add `id` attribute for individual IPAM pools ([#32133](https://github.com/hashicorp/terraform-provider-aws/issues/32133))
+* resource/aws_amplify_branch: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `enable_performance_mode` ([#34141](https://github.com/hashicorp/terraform-provider-aws/issues/34141))
+
 ## 5.23.1 (October 27, 2023)
 
 BUG FIXES:
