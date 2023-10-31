@@ -2095,6 +2095,7 @@ resource "aws_s3_object" "object" {
 }
 
 func testAccObjectConfig_withIgnoreDefaultTags(rName, key, content string, ignore bool, label string, numDefault, numCustom int) string {
+
 	var defaultTags string
 	for i := 1; i <= numDefault; i++ {
 		defaultTags += fmt.Sprintf(`

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_object: add ignore_default_tags option to work around apply failure if your provider has more than 10 default tags 
-```
