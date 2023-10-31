@@ -36,9 +36,9 @@ func TestAccRDSEngineVersionsDataSource_basic(t *testing.T) {
 
 func testAccEngineVersionsDataSourceConfig_basic() string {
 	return `data "aws_rds_engine_versions" "test" {
-		filter {
-			name   = "engine"
-			values = ["mysql"]
-		}
-	}`
+    filter {
+      name   = "engine"
+      values = ["mysql"]
+    }
+  }`
 }
