@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.46.6
+	github.com/aws/aws-sdk-go v1.46.7
 	github.com/aws/aws-sdk-go-v2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/config v1.19.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.128.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.7
@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.16.2
