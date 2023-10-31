@@ -325,6 +325,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"snapshot_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"snapshot_identifier"},
+			},
 			"snapshot_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -353,9 +360,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"snapshot_arn"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -491,7 +499,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		backupInput.SnapshotIdentifier = aws.String(v.(string))
+	}
 
+	if v, ok := d.GetOk("snapshot_arn"); ok {
+		backupInput.SnapshotArn = aws.String(v.(string))
+	}
+
+	if backupInput.SnapshotArn != nil || backupInput.SnapshotIdentifier != nil {
 		if v, ok := d.GetOk("owner_account"); ok {
 			backupInput.OwnerAccount = aws.String(v.(string))
 		}
