@@ -243,7 +243,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			for _, node := range props.NodeRangeProperties {
-				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("container_properties"))
+				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
 			}
 			input.NodeProperties = props
 		}
