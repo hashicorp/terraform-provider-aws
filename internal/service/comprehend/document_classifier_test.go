@@ -464,7 +464,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexache.MustCompile(`s3://.+/outputs`)),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexache.MustCompile(`s3://.+/outputs/[-A-Za-z0-9]+/output/output.tar.gz`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexache.MustCompile(`s3://.+/outputs/[0-9A-Za-z-]+/output/output.tar.gz`)),
 				),
 			},
 			{

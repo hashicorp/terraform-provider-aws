@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketRequestPaymentConfiguration_Basic_BucketOwner(t *testing.T) {
@@ -26,16 +26,16 @@ func TestAccS3BucketRequestPaymentConfiguration_Basic_BucketOwner(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerBucketOwner),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerBucketOwner)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "payer", s3.PayerBucketOwner),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerBucketOwner)),
 				),
 			},
 			{
@@ -54,16 +54,16 @@ func TestAccS3BucketRequestPaymentConfiguration_Basic_Requester(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerRequester),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "payer", s3.PayerRequester),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerRequester)),
 				),
 			},
 			{
@@ -82,20 +82,22 @@ func TestAccS3BucketRequestPaymentConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerRequester),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerRequester)),
 				),
 			},
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerBucketOwner),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerBucketOwner)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerBucketOwner)),
 				),
 			},
 			{
@@ -104,9 +106,10 @@ func TestAccS3BucketRequestPaymentConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerRequester),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerRequester)),
 				),
 			},
 		},
@@ -121,22 +124,22 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_noChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_requestPayer(rName, s3.PayerRequester),
+				Config: testAccBucketConfig_requestPayer(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", s3.PayerRequester),
+					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", string(types.PayerRequester)),
 				),
 			},
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerRequester),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "payer", s3.PayerRequester),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerRequester)),
 				),
 			},
 		},
@@ -151,22 +154,22 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_withChange(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_requestPayer(rName, s3.PayerRequester),
+				Config: testAccBucketConfig_requestPayer(rName, string(types.PayerRequester)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", s3.PayerRequester),
+					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", string(types.PayerRequester)),
 				),
 			},
 			{
-				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, s3.PayerBucketOwner),
+				Config: testAccBucketRequestPaymentConfigurationConfig_basic(rName, string(types.PayerBucketOwner)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "payer", s3.PayerBucketOwner),
+					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerBucketOwner)),
 				),
 			},
 		},
@@ -175,7 +178,7 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_withChange(t *testing.T)
 
 func testAccCheckBucketRequestPaymentConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_request_payment_configuration" {
@@ -187,70 +190,40 @@ func testAccCheckBucketRequestPaymentConfigurationDestroy(ctx context.Context) r
 				return err
 			}
 
-			input := &s3.GetBucketRequestPaymentInput{
-				Bucket: aws.String(bucket),
-			}
+			_, err = tfs3.FindBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 
-			if expectedBucketOwner != "" {
-				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-			}
-
-			output, err := conn.GetBucketRequestPaymentWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting S3 bucket request payment configuration (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil && aws.StringValue(output.Payer) != s3.PayerBucketOwner {
-				return fmt.Errorf("S3 bucket request payment configuration (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("S3 Bucket Request Payment Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBucketRequestPaymentConfigurationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketRequestPaymentConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketRequestPaymentInput{
-			Bucket: aws.String(bucket),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
+		_, err = tfs3.FindBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 
-		output, err := conn.GetBucketRequestPaymentWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 bucket request payment configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("S3 Bucket request payment configuration (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

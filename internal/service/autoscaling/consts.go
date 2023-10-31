@@ -85,3 +85,7 @@ const (
 	TrafficSourceStateRemoving  = "Removing"
 	TrafficSourceStateRemoved   = "Removed"
 )
+
+const (
+	launchTemplateIDUnknown = "unknown"
+)

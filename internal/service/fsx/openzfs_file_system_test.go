@@ -959,7 +959,7 @@ func testAccCheckOpenZFSFileSystemDestroy(ctx context.Context) resource.TestChec
 func testAccCheckOpenZFSFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx OpenZFS File System (%s) recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for OpenZFS File System (%s) recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil
@@ -969,7 +969,7 @@ func testAccCheckOpenZFSFileSystemNotRecreated(i, j *fsx.FileSystem) resource.Te
 func testAccCheckOpenZFSFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx OpenZFS File System (%s) not recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for OpenZFS File System (%s) not recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil

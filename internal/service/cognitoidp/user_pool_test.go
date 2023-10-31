@@ -49,7 +49,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, nil),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-idp", regexache.MustCompile(`userpool/.+`)),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),

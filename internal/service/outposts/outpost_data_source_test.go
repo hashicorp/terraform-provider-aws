@@ -29,7 +29,7 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone", regexache.MustCompile(`^.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone_id", regexache.MustCompile(`^.+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
-					resource.TestMatchResourceAttr(dataSourceName, "lifecycle_status", regexache.MustCompile(`^[ A-Za-z]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "lifecycle_status", regexache.MustCompile(`^[A-Za-z ]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^op-.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "name", regexache.MustCompile(`^.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "owner_id", regexache.MustCompile(`\d{12}`)),

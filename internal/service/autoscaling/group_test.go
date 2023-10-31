@@ -1098,6 +1098,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	launchTemplateNameUpdated := fmt.Sprintf("%s_updated", rName)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1127,7 +1128,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig_launchTemplateName(rName),
+				Config: testAccGroupConfig_launchTemplateName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
@@ -1157,6 +1158,17 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", "aws_launch_template.test", "default_version"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_launchTemplateName(rName, launchTemplateNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
 				),
 			},
 		},
@@ -1222,7 +1234,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
@@ -1238,7 +1252,45 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_instanceRefreshScaleInProtectedInstances(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.auto_rollback", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Wait"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_instanceRefreshStandbyInstances(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.auto_rollback", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Ignore"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Wait"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
@@ -1259,7 +1311,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.4", "100"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", "10"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Refresh"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Terminate"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
@@ -1382,7 +1436,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
@@ -1398,7 +1454,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.scale_in_protected_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
@@ -1928,7 +1986,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
+	launchTemplateNameUpdated := fmt.Sprintf("%s_updated", rName)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -1936,7 +1994,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1946,6 +2004,16 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 				),
 			},
 			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, launchTemplateNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+				),
+			},
 		},
 	})
 }
@@ -4755,8 +4823,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_launchTemplateName(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t2.micro"), fmt.Sprintf(`
+func testAccGroupConfig_launchTemplateName(rName, launchTemplateName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(launchTemplateName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   max_size           = 0
@@ -4883,6 +4951,62 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupConfig_instanceRefreshScaleInProtectedInstances(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      min_healthy_percentage       = 0
+      scale_in_protected_instances = "Wait"
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_instanceRefreshStandbyInstances(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      min_healthy_percentage = 0
+      standby_instances      = "Wait"
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
 func testAccGroupConfig_instanceRefreshAutoRollback(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
@@ -4933,6 +5057,9 @@ resource "aws_autoscaling_group" "test" {
       min_healthy_percentage = 50
       checkpoint_delay       = 25
       checkpoint_percentages = [1, 20, 25, 50, 100]
+
+      scale_in_protected_instances = "Refresh"
+      standby_instances            = "Terminate"
     }
   }
 
@@ -5613,8 +5740,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotMaxPrice))
 }
 
-func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t3.micro"), fmt.Sprintf(`
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName, launchTemplateName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(launchTemplateName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0

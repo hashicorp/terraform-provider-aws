@@ -58,6 +58,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This argument supports the following arguments:
 
+* `allowMajorVersionUpgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `applyImmediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.
@@ -136,4 +137,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-eede64a39122a67c569f25e7e4e6d345177b71b6d9088b2069c7b5ba2888281d -->
+<!-- cache-key: cdktf-0.18.0 input-7cf348aecf73384b6129a72828575287fcb17575843e5c9cf838a6b1a7e65009 -->

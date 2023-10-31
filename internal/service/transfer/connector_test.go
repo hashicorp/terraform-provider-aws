@@ -60,6 +60,41 @@ func TestAccTransferConnector_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransferConnector_sftpConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedConnector
+	resourceName := "aws_transfer_connector.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
@@ -259,6 +294,25 @@ resource "aws_transfer_connector" "test" {
   url = %[2]q
 }
 `, rName, url))
+}
+
+func testAccConnectorConfig_sftpConfig(rName, url, publickey string) string {
+	return acctest.ConfigCompose(testAccConnectorConfig_base(rName), fmt.Sprintf(`
+resource "aws_transfer_connector" "test" {
+  access_role = aws_iam_role.test.arn
+
+  sftp_config {
+    trusted_host_keys = [%[3]q]
+    user_secret_id    = aws_secretsmanager_secret.test.id
+  }
+
+  url = %[2]q
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+`, rName, url, publickey))
 }
 
 func testAccConnectorConfig_tags1(rName, url, tagKey1, tagValue1 string) string {

@@ -458,7 +458,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -470,7 +470,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -515,7 +515,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},

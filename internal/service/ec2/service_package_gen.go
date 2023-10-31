@@ -572,6 +572,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceImageBlockPublicAccess,
+			TypeName: "aws_ec2_image_block_public_access",
+			Name:     "Image Block Public Access",
+		},
+		{
 			Factory:  ResourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
 		},
@@ -944,6 +949,48 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceVerifiedAccessEndpoint,
+			TypeName: "aws_verifiedaccess_endpoint",
+			Name:     "Verified Access Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessGroup,
+			TypeName: "aws_verifiedaccess_group",
+			Name:     "Verified Access Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstance,
+			TypeName: "aws_verifiedaccess_instance",
+			Name:     "Verified Access Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstanceLoggingConfiguration,
+			TypeName: "aws_verifiedaccess_instance_logging_configuration",
+			Name:     "Verified Access Instance Logging Configuration",
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstanceTrustProviderAttachment,
+			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
+			Name:     "Verified Access Instance Trust Provider Attachment",
+		},
+		{
+			Factory:  ResourceVerifiedAccessTrustProvider,
+			TypeName: "aws_verifiedaccess_trust_provider",
+			Name:     "Verified Access Trust Provider",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
 		},
@@ -1147,7 +1194,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

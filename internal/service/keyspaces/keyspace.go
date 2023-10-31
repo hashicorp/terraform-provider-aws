@@ -54,7 +54,7 @@ func resourceKeyspace() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+					regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
 					"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},

@@ -87,6 +87,78 @@ resource "aws_wafv2_web_acl" "example" {
 }
 ```
 
+### Account Creation Fraud Prevention
+
+```terraform
+resource "aws_wafv2_web_acl" "acfp-example" {
+  name        = "managed-acfp-example"
+  description = "Example of a managed ACFP rule."
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "acfp-rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesACFPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_acfp_rule_set {
+            creation_path          = "/signin"
+            registration_page_path = "/register"
+
+            request_inspection {
+              email_field {
+                identifier = "/email"
+              }
+
+              password_field {
+                identifier = "/password"
+              }
+
+              payload_type = "JSON"
+
+              username_field {
+                identifier = "/username"
+              }
+            }
+
+            response_inspection {
+              status_code {
+                failure_codes = ["403"]
+                success_codes = ["200"]
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ### Account Takeover Protection
 
 ```terraform
@@ -588,7 +660,8 @@ You can't nest a `rate_based_statement`, for example for use inside a `not_state
 
 The `rate_based_statement` block supports the following arguments:
 
-* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `FORWARDED_IP` or `IP`. Default: `IP`.
+* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `CUSTOM_KEYS`, `FORWARDED_IP`, or `IP`. Default: `IP`.
+* `custom_key` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [`custom_key`](#custom_key-block) below for details.
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for details.
 * `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
@@ -666,6 +739,7 @@ The `rule_action_override` block supports the following arguments:
 The `managed_rule_group_configs` block support the following arguments:
 
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
+* `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `login_path` - (Optional, **Deprecated**) The path of the login endpoint for your application.
 * `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
@@ -675,6 +749,14 @@ The `managed_rule_group_configs` block support the following arguments:
 ### `aws_managed_rules_bot_control_rule_set` Block
 
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
+
+### `aws_managed_rules_acfp_rule_set` Block
+
+* `creation_path` - (Required) The path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
+* `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
+* `registration_page_path` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
+* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
+* `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
 
 ### `aws_managed_rules_atp_rule_set` Block
 
@@ -732,12 +814,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [`cookies`](#cookies-block) below for details.
 * `headers` - (Optional) Inspect the request headers. See [`headers`](#headers-block) below for details.
+* `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [`json_body`](#json_body-block) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -776,6 +859,12 @@ The `headers` block supports the following arguments:
     * `excluded_headers` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
 * `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
+### `ja3_fingerprint` Block
+
+The `ja3_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### `json_body` Block
 
@@ -856,6 +945,91 @@ The `request_body` block supports the following arguments:
 The `cloudfront` block supports the following arguments:
 
 * `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated CloudFront distribution should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+
+### `custom_key` Block
+
+Aggregate the request counts using one or more web request components as the aggregate keys. With this option, you must specify the aggregate keys in the `custom_keys` block. To aggregate on only the IP address or only the forwarded IP address, don't use custom keys. Instead, set the `aggregate_key_type` to `IP` or `FORWARDED_IP`.
+
+The `custom_key` block supports the following arguments:
+
+* `cookie` - (Optional) Use the value of a cookie in the request as an aggregate key. See [RateLimit `cookie`](#ratelimit-cookie-block) below for details.
+* `forwarded_ip` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwarded_ip`](#ratelimit-forwarded_ip-block) below for details.
+* `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
+* `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
+* `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
+* `label_namespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `label_namespace`](#ratelimit-label_namespace-block) below for details.
+* `query_argument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `query_argument`](#ratelimit-query_argument-block) below for details.
+* `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
+* `uri_path` - (Optional) Use the request's URI path as an aggregate key. See [RateLimit `uri_path`](#ratelimit-uri_path-block) below for details.
+
+### RateLimit `cookie` Block
+
+Use the value of a cookie in the request as an aggregate key. Each distinct value in the cookie contributes to the aggregation instance. If you use a single cookie as your custom key, then each value fully defines an aggregation instance.
+
+The `cookie` block supports the following arguments:
+
+* `name`: The name of the cookie to use.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
+
+### RateLimit `forwarded_ip` Block
+
+Use the first IP address in an HTTP header as an aggregate key. Each distinct forwarded IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the forwarded IP address by specifying `FORWARDED_IP` in your rate-based statement's `aggregate_key_type`. With this option, you must specify the header to use in the rate-based rule's [`forwarded_ip_config`](#forwarded_ip_config-block) block.
+
+The `forwarded_ip` block is configured as an empty block `{}`.
+
+### RateLimit `http_method` Block
+
+Use the request's HTTP method as an aggregate key. Each distinct HTTP method contributes to the aggregation instance. If you use just the HTTP method as your custom key, then each method fully defines an aggregation instance.
+
+The `http_method` block is configured as an empty block `{}`.
+
+### RateLimit `header` Block
+
+Use the value of a header in the request as an aggregate key. Each distinct value in the header contributes to the aggregation instance. If you use a single header as your custom key, then each value fully defines an aggregation instance.
+
+The `header` block supports the following arguments:
+
+* `name`: The name of the header to use.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
+
+### RateLimit `ip` Block
+
+Use the request's originating IP address as an aggregate key. Each distinct IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the IP address by specifying `IP` in your rate-based statement's `aggregate_key_type`.
+
+The `ip` block is configured as an empty block `{}`.
+
+### RateLimit `label_namespace` Block
+
+Use the specified label namespace as an aggregate key. Each distinct fully qualified label name that has the specified label namespace contributes to the aggregation instance. If you use just one label namespace as your custom key, then each label name fully defines an aggregation instance. This uses only labels that have been added to the request by rules that are evaluated before this rate-based rule in the web ACL. For information about label namespaces and names, see Label syntax and naming requirements (https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-label-requirements.html) in the WAF Developer Guide.
+
+The `label_namespace` block supports the following arguments:
+
+* `namespace`: The namespace to use for aggregation
+
+### RateLimit `query_argument` Block
+
+Use the specified query argument as an aggregate key. Each distinct value for the named query argument contributes to the aggregation instance. If you use a single query argument as your custom key, then each value fully defines an aggregation instance.
+
+The `query_argument` block supports the following arguments:
+
+* `name`: The name of the query argument to use.
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
+
+### RateLimit `query_string` Block
+
+Use the request's query string as an aggregate key. Each distinct string contributes to the aggregation instance. If you use just the query string as your custom key, then each string fully defines an aggregation instance.
+
+The `query_string` block supports the following arguments:
+
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
+
+### RateLimit `uri_path` Block
+
+Use the request's URI path as an aggregate key. Each distinct URI path contributes to the aggregation instance. If you use just the URI path as your custom key, then each URI path fully defines an aggregation instance.
+
+The `uri_path` block supports the following arguments:
+
+* `text_transformation`: Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. They are used in rate-based rule statements, to transform request components before using them as custom aggregation keys. Atleast one transformation is required. See [`text_transformation`](#text_transformation-block) above for details.
 
 ## Attribute Reference
 

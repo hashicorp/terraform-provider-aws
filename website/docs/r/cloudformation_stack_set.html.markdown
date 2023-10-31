@@ -148,7 +148,7 @@ Import CloudFormation StackSets when acting a delegated administrator in a membe
 ```terraform
 import {
   to = aws_cloudformation_stack_set.example
-  id = "example/DELEGATED_ADMIN"
+  id = "example,DELEGATED_ADMIN"
 }
 ```
 
@@ -161,5 +161,5 @@ Using `terraform import`, import CloudFormation StackSets using the `name`. For 
 Using `terraform import`, import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_cloudformation_stack_set.example example/DELEGATED_ADMIN
+% terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```

@@ -20,7 +20,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -119,6 +118,17 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dns_record_client_routing_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "any_availability_zone",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+				ValidateFunc: validation.StringInSlice([]string{
+					"availability_zone_affinity",
+					"partial_availability_zone_affinity",
+					"any_availability_zone",
+				}, false),
+			},
 			"drop_invalid_header_fields": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -196,6 +206,7 @@ func ResourceLoadBalancer() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
@@ -307,15 +318,11 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = id.PrefixedUniqueId(v.(string))
-	} else {
-		name = id.PrefixedUniqueId("tf-lb-")
-	}
-
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-lb-"),
+	).Generate()
 	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
 		Names: aws.StringSlice([]string{name}),
 	})
@@ -325,7 +332,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if exist != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Load Balancer (%s) already exists", name)
 	}
 
 	d.Set("name", name)
@@ -527,7 +534,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			})
 		}
 
-	case elbv2.LoadBalancerTypeEnumGateway, elbv2.LoadBalancerTypeEnumNetwork:
+	case elbv2.LoadBalancerTypeEnumGateway:
+		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
+			})
+		}
+
+	case elbv2.LoadBalancerTypeEnumNetwork:
+		if d.HasChange("dns_record_client_routing_policy") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("dns_record.client_routing_policy"),
+				Value: aws.String(d.Get("dns_record_client_routing_policy").(string)),
+			})
+		}
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -922,6 +943,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 	d.Set("name", lb.LoadBalancerName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
@@ -955,6 +977,10 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
 			accessLogMap["prefix"] = aws.StringValue(attr.Value)
+		case "dns_record.client_routing_policy":
+			dnsClientRoutingPolicy := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting NLB DNS Record Client Routing Policy: %s", dnsClientRoutingPolicy)
+			d.Set("dns_record_client_routing_policy", dnsClientRoutingPolicy)
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {

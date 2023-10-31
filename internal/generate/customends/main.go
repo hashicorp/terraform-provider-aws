@@ -32,7 +32,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `../../../website/docs/guides/custom-service-endpoints.html.md`
+		filename      = `../../../website/docs/guides/custom-service-endpoints.html.markdown`
 		namesDataFile = "../../../names/names_data.csv"
 	)
 	g := common.NewGenerator()

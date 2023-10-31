@@ -1672,7 +1672,7 @@ func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
 		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 

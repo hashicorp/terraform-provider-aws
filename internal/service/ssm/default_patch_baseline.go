@@ -238,7 +238,7 @@ func ownerIsAWSFilter() types.PatchOrchestratorFilter { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This function is called from a sweeper.
+func ownerIsSelfFilter() types.PatchOrchestratorFilter {
 	return types.PatchOrchestratorFilter{
 		Key:    aws.String("OWNER"),
 		Values: []string{"Self"},
@@ -335,7 +335,7 @@ func FindDefaultDefaultPatchBaselineIDForOS(ctx context.Context, conn *ssm.Clien
 		operatingSystemFilter(os),
 		ownerIsAWSFilter(),
 	)
-	re := regexache.MustCompile(`^AWS-[A-Za-z0-9]+PatchBaseline$`)
+	re := regexache.MustCompile(`^AWS-[0-9A-Za-z]+PatchBaseline$`)
 	var baselineIdentityIDs []string
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)

@@ -155,6 +155,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bedrock:
+  - 'internal/service/bedrock/**/*'
+  - 'website/**/bedrock_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -361,6 +364,7 @@ service/ec2:
   - 'website/**/ec2_capacity_*'
   - 'website/**/ec2_fleet*'
   - 'website/**/ec2_host*'
+  - 'website/**/ec2_image_*'
   - 'website/**/ec2_instance_*'
   - 'website/**/ec2_public_ipv4_pool*'
   - 'website/**/ec2_serial_*'
@@ -623,15 +627,15 @@ service/lambda:
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
-service/lexmodelsv2:
-  - 'internal/service/lexmodelsv2/**/*'
-  - 'website/**/lexmodelsv2_*'
 service/lexruntime:
   - 'internal/service/lexruntime/**/*'
   - 'website/**/lexruntime_*'
 service/lexruntimev2:
   - 'internal/service/lexruntimev2/**/*'
   - 'website/**/lexruntimev2_*'
+service/lexv2models:
+  - 'internal/service/lexv2models/**/*'
+  - 'website/**/lexv2models_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
   - 'website/**/licensemanager_*'
@@ -680,7 +684,7 @@ service/marketplacemetering:
   - 'website/**/marketplacemetering_*'
 service/mediaconnect:
   - 'internal/service/mediaconnect/**/*'
-  - 'website/**/media_connect_*'
+  - 'website/**/mediaconnect_*'
 service/mediaconvert:
   - 'internal/service/mediaconvert/**/*'
   - 'website/**/media_convert_*'
@@ -1045,7 +1049,7 @@ service/translate:
   - 'website/**/translate_*'
 service/verifiedaccess:
   - 'internal/service/ec2/**/verifiedaccess_*'
-  - 'website/**/verifiedaccess*'
+  - 'website/**/verifiedaccess_*'
 service/verifiedpermissions:
   - 'internal/service/verifiedpermissions/**/*'
   - 'website/**/verifiedpermissions_*'

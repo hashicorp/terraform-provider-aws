@@ -145,6 +145,10 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"self_service_portal_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"server_certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -247,6 +251,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
 	}
+	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)

@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `functionName` - (Required) he name (or ARN) of the Lambda function.
+* `functionName` - (Required) The name (or ARN) of the Lambda function.
 * `qualifier` - (Optional) Alias name or `"$latest"`.
 
 ## Attribute Reference
@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `lastModifiedTime` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `urlId` - Generated ID for the endpoint.
 
-<!-- cache-key: cdktf-0.18.0 input-854b2f3b33d8d2f28452798da526cac323edaafd3f9f362153c62fd3405d67c1 -->
+<!-- cache-key: cdktf-0.18.0 input-0a5c606b8160ad05d35175dbe2ca99c3d1ab9ce2b9e1e2ff92b850ec19ea50b9 -->

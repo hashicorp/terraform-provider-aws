@@ -93,3 +93,23 @@ func Chunks[S ~[]E, E any](s S, size int) []S {
 
 	return chunks
 }
+
+// AppendUnique appends unique (not already in the slice) values to a slice.
+func AppendUnique[T comparable](s []T, vs ...T) []T {
+	for _, v := range vs {
+		var exists bool
+
+		for _, e := range s {
+			if e == v {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			s = append(s, v)
+		}
+	}
+
+	return s
+}

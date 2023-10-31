@@ -65,6 +65,7 @@ class MyConvertedCode(TerraformStack):
         aws_iot_policy_device_policy.override_logical_id("device_policy")
         IotProvisioningTemplate(self, "fleet",
             description="My provisioning template",
+            enabled=True,
             name="FleetTemplate",
             provisioning_role_arn=iot_fleet_provisioning.arn,
             template_body=Token.as_string(
@@ -106,6 +107,7 @@ This resource supports the following arguments:
 * `provisioning_role_arn` - (Required) The role ARN for the role associated with the fleet provisioning template. This IoT role grants permission to provision a device.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_body` - (Required) The JSON formatted contents of the fleet provisioning template.
+* `type` - (Optional) The type you define in a provisioning template.
 
 ### pre_provisioning_hook
 
@@ -141,4 +143,4 @@ Using `terraform import`, import IoT fleet provisioning templates using the `nam
 % terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7af56109ad7a10168e9f1d55ceba0bdbd7fbdb52c825efedc754265c43d2b0e5 -->
+<!-- cache-key: cdktf-0.18.0 input-0caa47853f782deb3ce1c0adf39db30dd119e9251e987dbe84f960ceed581db6 -->

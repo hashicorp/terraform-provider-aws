@@ -73,7 +73,7 @@ data "aws_rds_orderable_db_instance" "custom-oracle" {
   engine_version             = "19.c.ee.002"      # CEV engine version to be used
   license_model              = "bring-your-own-license"
   storage_type               = "gp3"
-  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
 }
 
 # The RDS instance resource requires an ARN. Look up the ARN of the KMS key associated with the CEV.
@@ -83,7 +83,7 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "default" {
   allocated_storage           = 50
-  auto_minor_version_upgrade  = false                         # Custom for Oracle not support minor version upgrades
+  auto_minor_version_upgrade  = false                         # Custom for Oracle does not support minor version upgrades
   custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name
@@ -117,6 +117,46 @@ resource "aws_db_instance" "test-replica" {
   multi_az                    = false # Custom for Oracle does not support multi-az
   skip_final_snapshot         = true
   storage_encrypted           = true
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+```
+
+### RDS Custom for SQL Server
+
+```terraform
+# Lookup the available instance classes for the custom engine for the region being operated in
+data "aws_rds_orderable_db_instance" "custom-sqlserver" {
+  engine                     = "custom-sqlserver-se" # CEV engine to be used
+  engine_version             = "15.00.4249.2.v1"     # CEV engine version to be used
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
+}
+
+# The RDS instance resource requires an ARN. Look up the ARN of the KMS key.
+data "aws_kms_key" "by_id" {
+  key_id = "example-ef278353ceba4a5a97de6784565b9f78" # KMS key
+}
+
+resource "aws_db_instance" "example" {
+  allocated_storage           = 500
+  auto_minor_version_upgrade  = false                               # Custom for SQL Server does not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
+  backup_retention_period     = 7
+  db_subnet_group_name        = local.db_subnet_group_name # Copy the subnet group from the RDS Console
+  engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine
+  engine_version              = data.aws_rds_orderable_db_instance.custom-sqlserver.engine_version
+  identifier                  = "sql-instance-demo"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-sqlserver.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  multi_az                    = false # Custom for SQL Server does support multi-az
+  password                    = "avoid-plaintext-passwords"
+  storage_encrypted           = true
+  username                    = "test"
 
   timeouts {
     create = "3h"
@@ -211,7 +251,7 @@ Defaults to true.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
-  See [blue_green_update](#blue_green_update) below
+  See [`blue_green_update`](#blue_green_update) below.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -226,7 +266,7 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
@@ -248,8 +288,12 @@ Cannot be specified for gp3 storage if the `allocated_storage` value is below a 
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
-SE1) License model information for this DB instance.
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
+    * RDS for MariaDB: `general-public-license`
+    * RDS for Microsoft SQL Server: `license-included`
+    * RDS for MySQL: `general-public-license`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresql-license`
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
@@ -367,7 +411,7 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-## blue_green_update
+### `blue_green_update`
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.

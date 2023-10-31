@@ -24,7 +24,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_custom_routing_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ipRegex := regexache.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
-	dnsNameRegex := regexache.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
+	dnsNameRegex := regexache.MustCompile(`^a[0-9a-f]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

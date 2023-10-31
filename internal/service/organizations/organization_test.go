@@ -47,7 +47,7 @@ func testAccOrganization_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexache.MustCompile(`r-[a-z0-9]{4,32}`)),
+					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexache.MustCompile(`r-[0-9a-z]{4,32}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.arn"),
 					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", "0"),

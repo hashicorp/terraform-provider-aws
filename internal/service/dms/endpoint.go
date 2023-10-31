@@ -571,6 +571,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -1426,7 +1431,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	// For some reason the AWS API only accepts lowercase type but returns it as uppercase
-	d.Set("endpoint_type", strings.ToLower(*endpoint.EndpointType))
+	d.Set("endpoint_type", strings.ToLower(aws.StringValue(endpoint.EndpointType)))
 	d.Set("engine_name", endpoint.EngineName)
 	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 
@@ -2023,6 +2028,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["external_table_definition"].(string); ok {
 		apiObject.ExternalTableDefinition = aws.String(v)
 	}
+	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
+		apiObject.GlueCatalogGeneration = aws.Bool(v)
+	}
 	if v, ok := tfMap["ignore_header_rows"].(int); ok {
 		apiObject.IgnoreHeaderRows = aws.Int64(int64(v))
 	}
@@ -2144,6 +2152,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.ExternalTableDefinition; v != nil {
 		tfMap["external_table_definition"] = aws.StringValue(v)
+	}
+	if v := apiObject.GlueCatalogGeneration; v != nil {
+		tfMap["glue_catalog_generation"] = aws.BoolValue(v)
 	}
 	if v := apiObject.IgnoreHeaderRows; v != nil {
 		tfMap["ignore_header_rows"] = aws.Int64Value(v)

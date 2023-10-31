@@ -130,7 +130,7 @@ The following arguments are optional:
 * `roleArn` - (Optional) Concise argument description.
 * `startChannel` - (Optional) Whether to start/stop channel. Default: `false`
 * `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Settings for the VPC outputs.
+* `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
 
@@ -159,7 +159,8 @@ The following arguments are optional:
 
 * `inputAttachmentName` - (Optional) User-specified name for the attachment.
 * `inputId` - (Required) The ID of the input.
-* `inputSettings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details
+* `inputSettings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details.
+* `automaticInputFailoverSettings` - (Optional) User-specified settings for defining what the conditions are for declaring the input unhealthy and failing over to a different input. See [Automatic Input Failover Settings](#automatic-input-failover-settings) for more details.
 
 ### Input Settings
 
@@ -222,7 +223,7 @@ The following arguments are optional:
 ### Caption Selector Settings
 
 * `ancillarySourceSettings` - (Optional) Ancillary Source Settings. See [Ancillary Source Settings](#ancillary-source-settings) for more details.
-* `aribSourceSettings` - (Optional) Arib Source Settings.
+* `aribSourceSettings` - (Optional) ARIB Source Settings.
 * `dvbSubSourceSettings` - (Optional) DVB Sub Source Settings. See [DVB Sub Source Settings](#dvb-sub-source-settings) for more details.
 * `embeddedSourceSettings` - (Optional) Embedded Source Settings. See [Embedded Source Settings](#embedded-source-settings) for more details.
 * `scte20SourceSettings` - (Optional) SCTE20 Source Settings. See [SCTE 20 Source Settings](#scte-20-source-settings) for more details.
@@ -248,11 +249,6 @@ The following arguments are optional:
 
 * `convert608To708` – (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
 * `source608ChannelNumber` - (Optional) Specifies the 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
-
-### SCTE 20 Source Settings
-
-* `ocrLanguage` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
-* `pid` - (Optional) The pid field is used in conjunction with the caption selector languageCode field as follows: - Specify PID and Language: Extracts captions from that PID; the language is “informational”. - Specify PID and omit Language: Extracts the specified PID. - Omit PID and specify Language: Extracts the specified language, whichever PID that happens to be. - Omit PID and omit Language: Valid only if source is DVB-Sub that is being passed through; all languages will be passed through.
 
 ### SCTE 27 Source Settings
 
@@ -283,6 +279,37 @@ The following arguments are optional:
 * `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
 * `retryInterval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
 * `scte35SourceType` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
+
+### Automatic Input Failover Settings
+
+* `secondaryInputId` - (Required) The input ID of the secondary input in the automatic input failover pair.
+* `errorClearTimeMsec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
+* `failoverConditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `inputPreference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
+
+### Failover Conditions
+
+* `failoverConditionSettings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
+
+### Failover Condition Settings
+
+* `audioSilenceSettings` - (Optional) MediaLive will perform a failover if the specified audio selector is silent for the specified period. See [Audio Silence Failover Settings](#audio-silence-failover-settings) for more details.
+* `inputLossSettings` - (Optional) MediaLive will perform a failover if content is not detected in this input for the specified period. See [Input Loss Failover Settings](#input-loss-failover-settings) for more details.
+* `videoBlackSettings` - (Optional) MediaLive will perform a failover if content is considered black for the specified period. See [Video Black Failover Settings](#video-black-failover-settings) for more details.
+
+### Audio Silence Failover Settings
+
+* `audioSelectorName` - (Required) The name of the audio selector in the input that MediaLive should monitor to detect silence. Select your most important rendition. If you didn't create an audio selector in this input, leave blank.
+* `audioSilenceThresholdMsec` - (Optional) The amount of time (in milliseconds) that the active input must be silent before automatic input failover occurs. Silence is defined as audio loss or audio quieter than -50 dBFS.
+
+### Input Loss Failover Settings
+
+* `inputLossThresholdMsec` - (Optional) The amount of time (in milliseconds) that no input is detected. After that time, an input failover will occur.
+
+### Video Black Failover Settings
+
+* `blackDetectThreshold` - (Optional) A value used in calculating the threshold below which MediaLive considers a pixel to be 'black'. For the input to be considered black, every pixel in a frame must be below this threshold. The threshold is calculated as a percentage (expressed as a decimal) of white. Therefore .1 means 10% white (or 90% black). Note how the formula works for any color depth. For example, if you set this field to 0.1 in 10-bit color depth: (10230.1=102.3), which means a pixel value of 102 or less is 'black'. If you set this field to .1 in an 8-bit color depth: (2550.1=25.5), which means a pixel value of 25 or less is 'black'. The range is 0.0 to 1.0, with any number of decimal places.
+* `videoBlackThresholdMsec` - (Optional) The amount of time (in milliseconds) that the active input must be black before automatic input failover occurs.
 
 ### Maintenance
 
@@ -357,7 +384,7 @@ The following arguments are optional:
 ### EAC3 Atmos Settings
 
 * `bitrate` - (Optional) Average bitrate in bits/second.
-* `codingMode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
+* `codingMode` - (Optional) Dolby Digital Plus with Dolby Atmos coding mode.
 * `dialnorm` - (Optional) Sets the dialnorm for the output.
 * `drcLine` - (Optional) Sets the Dolby dynamic range compression profile.
 * `drcRf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
@@ -513,7 +540,7 @@ The following arguments are optional:
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
 * `timecodeBurninSettings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
-* `timecodeInsertion` = (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `timecodeInsertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
 
 ### H265 Color Space Settings
 
@@ -554,7 +581,7 @@ The following arguments are optional:
 
 ### Destination Settings
 
-* `aribDestinationSettings` - (Optional) Arib Destination Settings.
+* `aribDestinationSettings` - (Optional) ARIB Destination Settings.
 * `burnInDestinationSettings` - (Optional) Burn In Destination Settings. See [Burn In Destination Settings](#burn-in-destination-settings) for more details.
 * `dvbSubDestinationSettings` - (Optional) DVB Sub Destination Settings. See [DVB Sub Destination Settings](#dvb-sub-destination-settings) for more details.
 * `ebuTtDDestinationSettings` - (Optional) EBU TT D Destination Settings. See [EBU TT D Destination Settings](#ebu-tt-d-destination-settings) for more details.
@@ -713,7 +740,7 @@ The following arguments are optional:
 * `mediaPackageOutputSettings` - (Optional) Media package output settings. This can be set as an empty block.
 * `multiplexOutputSettings` - (Optional) Multiplex output settings. See [Multiplex Output Settings](#multiplex-output-settings) for more details.
 * `rtmpOutputSettings` - (Optional) RTMP output settings. See [RTMP Output Settings](#rtmp-output-settings) for more details.
-* `udpOutputSettings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details
+* `udpOutputSettings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details.
 
 ### Archive Output Settings
 
@@ -734,7 +761,7 @@ The following arguments are optional:
 
 ### Container Settings
 
-* `m2TsSettings` - (Optional) M2ts Settings. See [M2ts Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
+* `m2TsSettings` - (Optional) M2TS Settings. See [M2TS Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
 * `rawSettings`- (Optional) Raw Settings. This can be set as an empty block.
 
 ### UDP Output Settings
@@ -749,6 +776,12 @@ The following arguments are optional:
 * `columnDepth` - (Optional) The height of the FEC protection matrix.
 * `includeFec` - (Optional) Enables column only or column and row based FEC.
 * `rowLength` - (Optional) The width of the FEC protection matrix.
+
+### VPC
+
+* `subnetIds` - (Required) A list of VPC subnet IDs from the same VPC. If STANDARD channel, subnet IDs must be mapped to two unique availability zones (AZ).
+* `publicAddressAllocationIds` - (Required) List of public address allocation ids to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
+* `securityGroupIds` - (Optional) A list of up to 5 EC2 VPC security group IDs to attach to the Output VPC network interfaces. If none are specified then the VPC default security group will be used.
 
 ## Attribute Reference
 
@@ -787,4 +820,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c77c00877634043a44e5b525efc176344d144f1e847a22855eed5012b86ea5b5 -->
+<!-- cache-key: cdktf-0.18.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->

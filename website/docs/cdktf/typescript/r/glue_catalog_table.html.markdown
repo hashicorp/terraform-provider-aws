@@ -117,6 +117,7 @@ The follow arguments are optional:
 * `catalogId` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
+* `openTableFormatInput` - (Optional) Configuration block for open table formats. See [`openTableFormatInput`](#open_table_format_input) below.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 * `partitionIndex` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partitionIndex`](#partition_index) below.
 * `partitionKeys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partitionKeys`](#partition_keys) below.
@@ -126,6 +127,21 @@ The follow arguments are optional:
 * `targetTable` - (Optional) Configuration block of a target table for resource linking. See [`targetTable`](#target_table) below.
 * `viewExpandedText` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `viewOriginalText` - (Optional) If the table is a view, the original text of the view; otherwise null.
+
+### open_table_format_input
+
+~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glueCatalogTable`.
+This will destroy and recreate the table, possibly resulting in data loss.
+
+* `icebergInput` - (Required) Configuration block for iceberg table config. See [`icebergInput`](#iceberg_input) below.
+
+### iceberg_input
+
+~> **NOTE:** A `icebergInput` cannot be added to an existing `openTableFormatInput`.
+This will destroy and recreate the table, possibly resulting in data loss.
+
+* `metadataOperation` - (Required) A required metadata operation. Can only be set to CREATE.
+* `version` - (Optional) The table version for the Iceberg table. Defaults to 2.
 
 ### partition_index
 
@@ -229,4 +245,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ff7fb8c6fcfc1469b99b484f4b1ac1169d394119306bf4f803a2616e5024e786 -->
+<!-- cache-key: cdktf-0.18.0 input-45918d95d1ee42b18f0a38282d1c7f92c766f0d90f43a1e0cd1f7c41e6fd3936 -->

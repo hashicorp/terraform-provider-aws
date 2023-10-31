@@ -791,7 +791,7 @@ func TestAccFSxLustreFileSystem_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
-					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
+					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
 				),
 			},
@@ -1005,7 +1005,7 @@ func testAccCheckLustreFileSystemDestroy(ctx context.Context) resource.TestCheck
 func testAccCheckLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx for File System (%s) recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for Lustre File System (%s) recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil
@@ -1015,7 +1015,7 @@ func testAccCheckLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.Tes
 func testAccCheckLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx for File System (%s) not recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for Lustre File System (%s) not recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil

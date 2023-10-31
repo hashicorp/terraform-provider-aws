@@ -1948,12 +1948,12 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 
 func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter or number", value))
 	}
 
-	if !regexache.MustCompile(`^[A-Za-z0-9\-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, hyphens and underscores allowed in %q", value))
 	}
@@ -1974,7 +1974,7 @@ func validProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []
 		return
 	}
 
-	simplePattern := `^[a-z0-9][^/]*\/(.+)$`
+	simplePattern := `^[0-9a-z][^/]*\/(.+)$`
 	if !regexache.MustCompile(simplePattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q does not match pattern (%q): %q",

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package route53
 
 import (
@@ -18,10 +15,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_route53_health_check", &resource.Sweeper{
 		Name: "aws_route53_health_check",
 		F:    sweepHealthChecks,
@@ -67,28 +66,25 @@ func init() {
 func sweepHealthChecks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
 	conn := client.Route53Conn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &route53.ListHealthChecksInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListHealthChecksPagesWithContext(ctx, input, func(page *route53.ListHealthChecksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, detail := range page.HealthChecks {
-			if detail == nil {
+		for _, v := range page.HealthChecks {
+			id := aws.StringValue(v.Id)
+
+			if v.LinkedService != nil {
+				log.Printf("[INFO] Skipping Route 53 Health Check %s: %s", id, aws.StringValue(v.LinkedService.Description))
 				continue
 			}
-
-			id := aws.StringValue(detail.Id)
 
 			r := ResourceHealthCheck()
 			d := r.Data(nil)
@@ -100,20 +96,22 @@ func sweepHealthChecks(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Health Checks for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Health Checks for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Route53 Health Checks sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Health Check sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("listing Route 53 Health Checks (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Health Checks (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepKeySigningKeys(region string) error {
@@ -174,7 +172,6 @@ func sweepKeySigningKeys(region string) error {
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
-
 		}
 
 		return !lastPage
@@ -188,7 +185,7 @@ func sweepKeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Route53 Key-Signing Keys sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -226,7 +223,7 @@ func sweepQueryLogs(region string) error {
 	})
 	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
 	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
-	if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	if awsv1.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -243,6 +240,10 @@ func sweepQueryLogs(region string) error {
 
 func sweepTrafficPolicies(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -267,7 +268,7 @@ func sweepTrafficPolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -287,6 +288,10 @@ func sweepTrafficPolicies(region string) error {
 
 func sweepTrafficPolicyInstances(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -311,7 +316,7 @@ func sweepTrafficPolicyInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -332,16 +337,12 @@ func sweepTrafficPolicyInstances(region string) error {
 func sweepZones(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
 	conn := client.Route53Conn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &route53.ListHostedZonesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListHostedZonesPagesWithContext(ctx, input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
 		if page == nil {
@@ -349,25 +350,26 @@ func sweepZones(region string) error {
 		}
 
 	MAIN:
-		for _, detail := range page.HostedZones {
-			if detail == nil {
-				continue
-			}
-
-			id := aws.StringValue(detail.Id)
+		for _, v := range page.HostedZones {
+			id := aws.StringValue(v.Id)
 
 			for _, domain := range hostedZonesToPreserve() {
-				if strings.Contains(aws.StringValue(detail.Name), domain) {
-					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
+				if strings.Contains(aws.StringValue(v.Name), domain) {
+					log.Printf("[DEBUG] Skipping Route53 Hosted Zone %s: %s", id, domain)
 					continue MAIN
 				}
+			}
+
+			if v.LinkedService != nil {
+				log.Printf("[INFO] Skipping Route 53 Hosted Zone %s: %s", id, aws.StringValue(v.LinkedService.Description))
+				continue MAIN
 			}
 
 			r := ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("force_destroy", true)
-			d.Set("name", detail.Name)
+			d.Set("name", v.Name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -375,20 +377,22 @@ func sweepZones(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Hosted Zones for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Hosted Zones for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Route53 Hosted Zones sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Hosted Zone sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("listing Route 53 Hosted Zones (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Hosted Zones (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func hostedZonesToPreserve() []string {

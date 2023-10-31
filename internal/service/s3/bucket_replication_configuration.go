@@ -328,7 +328,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return retry.RetryableError(err)
@@ -349,7 +349,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
 		return FindBucketReplicationConfigurationByID(ctx, conn, d.Id())
 	})
 
@@ -405,7 +405,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return retry.RetryableError(err)

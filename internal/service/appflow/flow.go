@@ -48,7 +48,7 @@ func ResourceFlow() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+				ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -90,7 +90,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -757,7 +757,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),

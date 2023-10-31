@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -343,12 +344,32 @@ func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
-	input := &efs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(id),
+func findFileSystem(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*efs.FileSystemDescription]) (*efs.FileSystemDescription, error) {
+	output, err := findFileSystems(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	output, err := conn.DescribeFileSystemsWithContext(ctx, input)
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findFileSystems(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*efs.FileSystemDescription]) ([]*efs.FileSystemDescription, error) {
+	var output []*efs.FileSystemDescription
+
+	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FileSystems {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 		return nil, &retry.NotFoundError{
@@ -361,11 +382,15 @@ func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Fil
 		return nil, err
 	}
 
-	if output == nil || output.FileSystems == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return output, nil
+}
+
+func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
+	input := &efs.DescribeFileSystemsInput{
+		FileSystemId: aws.String(id),
 	}
 
-	return output.FileSystems[0], nil
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*efs.FileSystemDescription]())
 }
 
 func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {

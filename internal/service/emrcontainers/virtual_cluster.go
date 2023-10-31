@@ -99,7 +99,7 @@ func ResourceVirtualCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),

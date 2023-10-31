@@ -42,7 +42,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 					testAccCheckAccountAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
-					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
+					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 					testAccCheckAccountAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
-					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
+					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")),
 				),
 			},
 			{

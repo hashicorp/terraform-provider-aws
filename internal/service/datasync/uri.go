@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	locationURIPattern                      = regexache.MustCompile(`^(azure-blob|efs|fsx[a-z0-9-]+|hdfs|nfs|s3|smb)://(.+)$`)
-	locationURIGlobalIDAndSubdirPattern     = regexache.MustCompile(`^([a-zA-Z0-9.\-]+)(?::\d{0,5})?(/.*)$`)
+	locationURIPattern                      = regexache.MustCompile(`^(azure-blob|efs|fsx[0-9a-z-]+|hdfs|nfs|s3|smb)://(.+)$`)
+	locationURIGlobalIDAndSubdirPattern     = regexache.MustCompile(`^([0-9A-Za-z.-]+)(?::\d{0,5})?(/.*)$`)
 	s3OutpostsAccessPointARNResourcePattern = regexache.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )
 

@@ -51,7 +51,7 @@ func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resou
 		accountID = v.(string)
 	}
 
-	output, err := FindPublicAccessBlockByAccountID(ctx, conn, accountID)
+	output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 	if err != nil {
 		return diag.Errorf("reading S3 Account Public Access Block (%s): %s", accountID, err)

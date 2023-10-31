@@ -13,27 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdministrativeActionByFileSystemIDAndActionType(ctx context.Context, conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
-	fileSystem, err := FindFileSystemByID(ctx, conn, fsID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, administrativeAction := range fileSystem.AdministrativeActions {
-		if administrativeAction == nil {
-			continue
-		}
-
-		if aws.StringValue(administrativeAction.AdministrativeActionType) == actionType {
-			return administrativeAction, nil
-		}
-	}
-
-	// If the administrative action isn't found, assume it's complete.
-	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
-}
-
 func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
 		BackupIds: aws.StringSlice([]string{id}),
@@ -90,45 +69,6 @@ func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.File
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 	return fileCaches[0], nil
-}
-
-func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
-	input := &fsx.DescribeStorageVirtualMachinesInput{
-		StorageVirtualMachineIds: []*string{aws.String(id)},
-	}
-
-	var storageVirtualMachines []*fsx.StorageVirtualMachine
-
-	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		storageVirtualMachines = append(storageVirtualMachines, page.StorageVirtualMachines...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(storageVirtualMachines) == 0 || storageVirtualMachines[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(storageVirtualMachines); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return storageVirtualMachines[0], nil
 }
 
 func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {

@@ -26,7 +26,7 @@ data "aws_lambda_function_url" "existing" {
 
 This data source supports the following arguments:
 
-* `function_name` - (Required) he name (or ARN) of the Lambda function.
+* `function_name` - (Required) The name (or ARN) of the Lambda function.
 * `qualifier` - (Optional) Alias name or `"$LATEST"`.
 
 ## Attribute Reference

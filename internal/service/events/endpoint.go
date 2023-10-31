@@ -68,7 +68,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\.\-_A-Za-z0-9]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
 			},
 			"replication_config": {
 				Type:     schema.TypeList,

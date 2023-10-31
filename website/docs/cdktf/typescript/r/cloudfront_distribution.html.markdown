@@ -493,8 +493,8 @@ argument should not be specified.
 * `originAccessControlId` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
 * `originId` (Required) - Unique identifier for the origin.
 * `originPath` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
-* `originShield` - The [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
-* `s3OriginConfig` - The [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
+* `originShield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
 
 ##### Custom Origin Config Arguments
 
@@ -508,7 +508,7 @@ argument should not be specified.
 ##### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
-* `originShieldRegion` (Required) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
+* `originShieldRegion` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `usEast2`.
 
 ##### S3 Origin Config Arguments
 
@@ -601,4 +601,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d59d261b41093d6587aaea58fec640fd7ae412355956f2a4bcabe69daf5621e9 -->
+<!-- cache-key: cdktf-0.18.0 input-0b6496126422015df51ee5b7114c332b4222965bc778c7ff2aecedac14a3a375 -->

@@ -8,8 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
@@ -52,12 +50,6 @@ func validClusterSnapshotIdentifier(v interface{}, k string) (ws []string, error
 			"%q cannot end with a hyphen", k))
 	}
 	return
-}
-
-func validEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		"docdb",
-	}, false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
@@ -171,7 +163,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 
 func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
@@ -188,7 +180,7 @@ func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error)
 
 func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}

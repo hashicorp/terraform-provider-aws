@@ -124,8 +124,8 @@ func ResourceStackSet() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"operation_preferences": {
@@ -169,7 +169,7 @@ func ResourceStackSet() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
 							},
 						},
 					},

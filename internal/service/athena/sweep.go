@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package athena
 
 import (
@@ -12,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_athena_database", &resource.Sweeper{
 		Name: "aws_athena_database",
 		F:    sweepDatabases,
@@ -34,13 +31,14 @@ func sweepDatabases(region string) error {
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}
-	var errs *multierror.Error
-
 	sweepResources := make([]sweep.Sweepable, 0)
-	for {
-		output, err := conn.ListDatabasesWithContext(ctx, input)
 
-		for _, v := range output.DatabaseList {
+	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *athena.ListDatabasesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DatabaseList {
 			name := aws.StringValue(v.Name)
 			if name == "default" {
 				continue
@@ -48,34 +46,28 @@ func sweepDatabases(region string) error {
 			r := ResourceDatabase()
 			d := r.Data(nil)
 			d.SetId(name)
-
-			if err != nil {
-				err := fmt.Errorf("error listing Athena Databases (%s): %w", name, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			d.Set("force_destroy", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
-	}
-
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Athena Database sweep for %s: %s", region, err)
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Athena Databases (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err))
+		return fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }

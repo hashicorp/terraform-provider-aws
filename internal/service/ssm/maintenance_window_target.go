@@ -81,7 +81,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
 			},
 
 			"description": {

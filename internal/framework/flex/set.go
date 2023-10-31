@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
+func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
 	var output []*string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -19,7 +20,7 @@ func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
 	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v types.Set) Set[string] {
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
 	var output []string
 
 	panicOnError(Expand(ctx, v, &output))

@@ -47,7 +47,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -63,7 +63,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
