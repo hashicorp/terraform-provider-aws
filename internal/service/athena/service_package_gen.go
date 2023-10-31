@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDatabase,
+			Factory:  resourceDatabase,
 			TypeName: "aws_athena_database",
 		},
 		{
