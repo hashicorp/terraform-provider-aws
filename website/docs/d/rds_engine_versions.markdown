@@ -51,7 +51,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `versions` - List of all matching RDS engine versions. Each item contains:
-  * `engine`
-  * `engine_version`
-  * `db_parameter_group_family`
-  * `status` - Status of this version, either 'available' or 'deprecated'.
+    * `engine`
+    * `engine_version`
+    * `db_parameter_group_family`
+    * `status` - Status of this version, either 'available' or 'deprecated'.
