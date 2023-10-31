@@ -408,8 +408,9 @@ Snap start settings for low-latency startups. This feature is currently only sup
 
 For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC. When you connect a function to a VPC, it can only access resources and the internet through that VPC. See [VPC Settings][7].
 
-~> **NOTE:** If both `subnetIds` and `securityGroupIds` are empty then `vpcConfig` is considered to be empty or unset.
+~> **NOTE:** If `subnetIds`, `securityGroupIds` and `ipv6AllowedForDualStack` are empty then `vpcConfig` is considered to be empty or unset.
 
+* `ipv6AllowedForDualStack` - (Optional) Allows outbound IPv6 traffic on VPC functions that are connected to dual-stack subnets. Default is `false`.
 * `securityGroupIds` - (Required) List of security group IDs associated with the Lambda function.
 * `subnetIds` - (Required) List of subnet IDs associated with the Lambda function.
 
@@ -472,4 +473,4 @@ Using `terraform import`, import Lambda Functions using the `functionName`. For 
 % terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4063c6ec7eb7c114a564493d213060c5dbe3c6b735e20add8d4ea6802b6c378d -->
+<!-- cache-key: cdktf-0.18.0 input-169b7bbe476a39e939fb773a4176feae6d770083a7a351a021d29d9dd52746cd -->
