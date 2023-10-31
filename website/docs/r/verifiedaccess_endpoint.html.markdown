@@ -80,7 +80,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `device_validation_domain` - Returned if endpoint has a device trust provider attached.
 * `endpoint_domain` - A DNS name that is generated for the endpoint.
 * `id` - The ID of the AWS Verified Access endpoint.
-* `status` - The endpoint status.
 
 ## Timeouts
 

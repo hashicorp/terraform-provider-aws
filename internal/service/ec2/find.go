@@ -7339,6 +7339,13 @@ func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client,
 		return nil, err
 	}
 
+	if status := output.Status; status != nil && status.Code == awstypes.VerifiedAccessEndpointStatusCodeDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status.Code),
+			LastRequest: input,
+		}
+	}
+
 	// Eventual consistency check.
 	if aws_sdkv2.ToString(output.VerifiedAccessEndpointId) != id {
 		return nil, &retry.NotFoundError{

@@ -221,11 +221,11 @@ func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, verifiedaccessendpoint *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -236,7 +236,7 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, 
 			return err
 		}
 
-		*verifiedaccessendpoint = *output
+		*v = *output
 
 		return nil
 	}
@@ -244,9 +244,8 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, name string, 
 
 func testAccVerifiedAccessEndpointConfig_base(rName, key, certificate string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-
-
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -276,6 +275,30 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "443"
+  protocol          = "TLS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_verifiedaccess_instance" "test" {
@@ -311,34 +334,16 @@ resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
 
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-
-
 `, rName, key, certificate))
 }
 
 func testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
-
-resource "aws_lb_target_group" "test" {
-  port     = 443
-  protocol = "TLS"
-  vpc_id   = aws_vpc.test.id
-}
-
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
-  port              = "443"
-  protocol          = "TLS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = aws_acm_certificate.test.arn
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.arn
-    type             = "forward"
-  }
-}
 
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
@@ -349,7 +354,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
   endpoint_type          = "load-balancer"
   sse_specification {
     customer_managed_key_enabled = false
-
   }
   load_balancer_options {
     load_balancer_arn = aws_lb.test.arn
@@ -369,7 +373,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
 
 func testAccVerifiedAccessEndpointConfig_networkInterface(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
 
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
@@ -397,9 +400,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
 
 func testAccVerifiedAccessEndpointConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
-
-
-
 
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
@@ -448,7 +448,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
     %[6]q = %[7]q
   }
 }
-
 
 `, rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2))
 }
