@@ -53,7 +53,12 @@ func ResourceObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
-			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if ignoreProviderDefaultTags(ctx, d) {
+					return d.SetNew("tags_all", d.Get("tags"))
+				}
+				return verify.SetTagsDiff(ctx, d, meta)
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -193,9 +198,10 @@ func ResourceObject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"tags": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										ValidateDiagFunc: verify.MapLenBetween(0, 0),
 									},
 								},
 							},
@@ -424,7 +430,13 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
+
+	if ignoreProviderDefaultTags(ctx, d) {
+		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
+	} else {
+		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
+	}
 
 	var body io.ReadSeeker
 
@@ -689,6 +701,16 @@ func sdkv1CompatibleCleanKey(key string) string {
 	key = strings.TrimLeft(key, "/")
 	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 	return key
+}
+
+func ignoreProviderDefaultTags(ctx context.Context, d verify.ResourceDiffer) bool {
+	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
+			return len(data.DefaultTagsConfig.Tags) == 0
+		}
+	}
+
+	return false
 }
 
 type overrideProviderModel struct {
