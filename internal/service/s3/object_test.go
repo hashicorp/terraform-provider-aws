@@ -1107,6 +1107,41 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_DefaultTags_providerOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccObjectConfig_basic(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -2210,7 +2245,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket             = aws_s3_bucket.test.bucket
   key                = "test-key"
-  content            = %q
+  content            = %[2]q
   kms_key_id         = aws_kms_key.test.arn
   bucket_key_enabled = true
 }
@@ -2246,7 +2281,7 @@ resource "aws_s3_object" "object" {
 
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
-  content = %q
+  content = %[2]q
 }
 `, rName, content)
 }
