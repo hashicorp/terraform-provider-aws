@@ -46,18 +46,6 @@ func ResourceSecretRotation() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
-							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
-								return exists
-							},
-							DiffSuppressOnRefresh: true,
-							ValidateFunc:          validation.IntBetween(1, 1000),
-						},
 						"duration": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -69,6 +57,24 @@ func ResourceSecretRotation() *schema.Resource {
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
 							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+						},
+						"automatically_after_days": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
+							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
+
+								if exists {
+									_, new := d.GetChange("rotation_rules.0.schedule_expression")
+									return new != nil && new != ""
+								}
+
+								return false
+							},
+							DiffSuppressOnRefresh: true,
+							ValidateFunc:          validation.IntBetween(1, 1000),
 						},
 					},
 				},
@@ -147,6 +153,7 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
@@ -204,16 +211,14 @@ func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 
 	tfMap := l[0].(map[string]interface{})
 
-	if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
+	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+		rules.ScheduleExpression = aws.String(v)
+	} else if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		rules.Duration = aws.String(v)
-	}
-
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
-		rules.ScheduleExpression = aws.String(v)
 	}
 
 	return rules
@@ -226,19 +231,17 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 
 	m := map[string]interface{}{}
 
-	if v := rules.AutomaticallyAfterDays; v != nil && rules.ScheduleExpression == nil {
-		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
+	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
+	if s := rules.ScheduleExpression; s != nil && *s != "" {
+		m["schedule_expression"] = aws.StringValue(s)
+	}
+
+	if v := rules.AutomaticallyAfterDays; v != nil && *v != 0 {
 		m["automatically_after_days"] = int(aws.Int64Value(v))
 	}
 
 	if v := rules.Duration; v != nil {
 		m["duration"] = aws.StringValue(v)
-	}
-
-	if v := rules.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.StringValue(v)
-		// Clear out automatically_after_days in case there was a value left over from running under a version lower than 5.7.0 and updating the provider later
-		m["automatically_after_days"] = nil
 	}
 
 	return []interface{}{m}
