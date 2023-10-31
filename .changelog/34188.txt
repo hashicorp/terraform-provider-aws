@@ -1,0 +1,3 @@
+```release-note:bug
+resource/secretsmanager: Fix bug where automatically_after_days was not being set properly when schedule_expression had been set in previously
+```
