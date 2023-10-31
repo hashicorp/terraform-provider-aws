@@ -45,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_athena_named_query",
 		},
 		{
-			Factory:  ResourceWorkGroup,
+			Factory:  resourceWorkGroup,
 			TypeName: "aws_athena_workgroup",
 			Name:     "WorkGroup",
 			Tags: &types.ServicePackageResourceTags{
