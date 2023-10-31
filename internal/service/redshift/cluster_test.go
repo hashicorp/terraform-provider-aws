@@ -768,7 +768,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.Cluster
-	resourceName := "aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -803,7 +803,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 func TestAccRedshiftCluster_restoreFromSnapshotArn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.Cluster
-	resourceName := "aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
