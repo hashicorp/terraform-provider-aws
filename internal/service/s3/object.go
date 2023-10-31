@@ -180,6 +180,29 @@ func ResourceObject() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"override_provider": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_tags": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"server_side_encryption": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -666,4 +689,36 @@ func sdkv1CompatibleCleanKey(key string) string {
 	key = strings.TrimLeft(key, "/")
 	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 	return key
+}
+
+type overrideProviderModel struct {
+	DefaultTagsConfig *tftags.DefaultConfig
+}
+
+func expandOverrideProviderModel(ctx context.Context, tfMap map[string]interface{}) *overrideProviderModel {
+	if tfMap == nil {
+		return nil
+	}
+
+	data := &overrideProviderModel{}
+
+	if v, ok := tfMap["default_tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]interface{}))
+	}
+
+	return data
+}
+
+func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	data := &tftags.DefaultConfig{}
+
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
+		data.Tags = tftags.New(ctx, v)
+	}
+
+	return data
 }
