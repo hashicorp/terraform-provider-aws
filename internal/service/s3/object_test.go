@@ -2139,7 +2139,7 @@ provider "aws" {
   alias = "ignore_default_tags"
   default_tags {
     tags = {
-      %[5]s
+	  %[5]s
     }
   }
 }
@@ -2150,7 +2150,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 
   tags = {
-    %[6]s
+	%[6]s
   }
 }
 
@@ -2169,7 +2169,7 @@ resource "aws_s3_object" "object" {
   content = %[3]q
 
   tags = {
-    %[7]s
+	%[7]s
   }
 
   ignore_default_tags = %[4]t
