@@ -17,6 +17,8 @@ Provides a Redshift Cluster Resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_redshift_cluster" "example" {
   cluster_identifier = "tf-redshift-cluster"
@@ -28,12 +30,26 @@ resource "aws_redshift_cluster" "example" {
 }
 ```
 
+### With Managed Credentials
+
+```terraform
+resource "aws_redshift_cluster" "example" {
+  cluster_identifier = "tf-redshift-cluster"
+  database_name      = "mydb"
+  master_username    = "exampleuser"
+  node_type          = "dc1.large"
+  cluster_type       = "single-node"
+
+  manage_master_password = true
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
@@ -41,9 +57,15 @@ This argument supports the following arguments:
 * `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
-* `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user.
-  Note that this may show up in logs, and it will be stored in the state file. Password must contain at least 8 chars and
-  contain at least one uppercase letter, one lowercase letter, and one number.
+* `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
+  Conflicts with `master_password`.
+  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+* `master_password` - (Optional) Password for the master DB user.
+  Conflicts with `manage_master_password`.
+  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+  Note that this may show up in logs, and it will be stored in the state file.
+  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
@@ -117,6 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `encrypted` - Whether the data in the cluster is encrypted
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
 * `dns_name` - The DNS name of the cluster
+* `master_password_secret_arn` - ARN of the cluster admin credentials secret
 * `port` - The Port the cluster responds on
 * `cluster_version` - The version of Redshift engine software
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster
