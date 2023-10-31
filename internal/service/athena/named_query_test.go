@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
@@ -67,7 +70,7 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 
 func testAccCheckNamedQueryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_named_query" {
 				continue
@@ -99,7 +102,7 @@ func testAccCheckNamedQueryExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		input := &athena.GetNamedQueryInput{
 			NamedQueryId: aws.String(rs.Primary.ID),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -71,8 +74,6 @@ func testAccQueue_basic(t *testing.T) {
 }
 
 func testAccQueue_disappears(t *testing.T) {
-	t.Skip("Queues do not support deletion today")
-
 	ctx := acctest.Context(t)
 
 	var v connect.DescribeQueueOutput
@@ -509,7 +510,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, function 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeQueueInput{
 			QueueId:    aws.String(queueID),
@@ -534,7 +535,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
 

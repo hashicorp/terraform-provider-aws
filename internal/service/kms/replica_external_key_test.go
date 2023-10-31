@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kms"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 				Config: testAccReplicaExternalKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -40,7 +43,7 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
@@ -213,6 +216,23 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccReplicaExternalKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_safety_check",
+					"deletion_window_in_days",
+					"key_material_base64",
+				},
+			},
 		},
 	})
 }
@@ -314,7 +334,7 @@ resource "aws_kms_external_key" "test" {
 }
 
 resource "aws_kms_replica_external_key" "test" {
-  description     = %[2]q
+  description     = "%[1]s-Replica"
   enabled         = true
   primary_key_arn = aws_kms_external_key.test.arn
 
@@ -349,7 +369,7 @@ resource "aws_kms_external_key" "test" {
 }
 
 resource "aws_kms_replica_external_key" "test" {
-  description     = %[2]q
+  description     = "%[1]s-Replica"
   enabled         = true
   primary_key_arn = aws_kms_external_key.test.arn
 
@@ -363,4 +383,31 @@ resource "aws_kms_replica_external_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccReplicaExternalKeyConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+# ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
+resource "aws_kms_external_key" "test" {
+  provider = awsalternate
+
+  description  = %[1]q
+  multi_region = true
+  enabled      = true
+
+  key_material_base64 = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
+
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_replica_external_key" "test" {
+  description     = "%[1]s-Replica"
+  enabled         = true
+  primary_key_arn = aws_kms_external_key.test.arn
+
+  key_material_base64 = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
+
+  deletion_window_in_days = 7
+}
+`, rName))
 }

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -449,7 +452,7 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 
 func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_insight" {
@@ -484,7 +487,7 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
 
@@ -507,7 +510,7 @@ func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, "arn", regexache.MustCompile(expectedArn))(s)
 	}
 }
 

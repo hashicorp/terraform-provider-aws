@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -59,12 +62,12 @@ func ResourceBus() *schema.Resource {
 
 func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("name").(string)
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_source_name"); ok {
@@ -87,7 +90,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(eventBusName)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.EventBusArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -105,7 +108,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	output, err := FindEventBusByName(ctx, conn, d.Id())
 
@@ -135,7 +138,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Event Bus: %s", d.Id())
 	_, err := conn.DeleteEventBusWithContext(ctx, &eventbridge.DeleteEventBusInput{

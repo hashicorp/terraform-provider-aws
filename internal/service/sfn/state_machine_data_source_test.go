@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn_test
 
 import (
@@ -28,6 +31,7 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "revision_id", dataSourceName, "revision_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 				),
 			},

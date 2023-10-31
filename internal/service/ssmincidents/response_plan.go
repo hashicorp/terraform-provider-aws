@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -191,7 +194,7 @@ func ResourceResponsePlan() *schema.Resource {
 }
 
 func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
 		Actions:          expandAction(d.Get("action").([]interface{})),
@@ -201,7 +204,7 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
 		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
 		Name:             aws.String(d.Get("name").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := client.CreateResponsePlan(ctx, input)
@@ -220,7 +223,7 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
@@ -242,7 +245,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ssmincidents.UpdateResponsePlanInput{
@@ -286,7 +289,7 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMIncidents ResponsePlan %s", d.Id())
 

@@ -67,16 +67,16 @@ resource "aws_cognito_user_pool_ui_customization" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_id` (Optional) The client ID for the client app. Defaults to `ALL`. If `ALL` is specified, the `css` and/or `image_file` settings will be used for every client that has no UI customization set previously.
 * `css` (Optional) - The CSS values in the UI customization, provided as a String. At least one of `css` or `image_file` is required.
 * `image_file` (Optional) - The uploaded logo image for the UI customization, provided as a base64-encoded String. Drift detection is not possible for this argument. At least one of `css` or `image_file` is required.
 * `user_pool_id` (Required) - The user pool ID for the user pool.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `creation_date` - The creation date in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) for the UI customization.
 * `css_version` - The CSS version number.
@@ -85,8 +85,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool UI Customizations can be imported using the `user_pool_id` and `client_id` separated by `,`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pool UI Customizations using the `user_pool_id` and `client_id` separated by `,`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool_ui_customization.example
+  id = "us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq"
+}
 ```
-$ terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
+
+Using `terraform import`, import Cognito User Pool UI Customizations using the `user_pool_id` and `client_id` separated by `,`. For example:
+
+```console
+% terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
 ```

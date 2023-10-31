@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,7 +35,7 @@ func ResourceVaultNotifications() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
@@ -59,7 +62,7 @@ func ResourceVaultNotifications() *schema.Resource {
 
 func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
@@ -79,7 +82,7 @@ func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.GetBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -107,7 +110,7 @@ func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceVaultNotificationsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),

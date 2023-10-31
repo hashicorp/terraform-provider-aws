@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -92,7 +95,7 @@ func ResourceStage() *schema.Resource {
 						},
 						"stage_variable_overrides": {
 							Type:     schema.TypeMap,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 						},
 						"use_stage_cache": {
@@ -159,7 +162,7 @@ func ResourceStage() *schema.Resource {
 
 func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restAPIID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -168,7 +171,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		RestApiId:    aws.String(restAPIID),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentID),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	waitForCache := false
@@ -228,7 +231,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restAPIID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -288,14 +291,14 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("web_acl_arn", stage.WebAclArn)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	SetTagsOut(ctx, stage.Tags)
+	setTagsOut(ctx, stage.Tags)
 
 	return diags
 }
 
 func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restAPIID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -421,7 +424,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
 	_, err := conn.DeleteStageWithContext(ctx, &apigateway.DeleteStageInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect_test
 
 import (
@@ -140,7 +143,7 @@ func testAccCheckCustomPluginExists(ctx context.Context, name string) resource.T
 			return fmt.Errorf("No MSK Connect Custom Plugin ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
 
 		_, err := tfkafkaconnect.FindCustomPluginByARN(ctx, conn, rs.Primary.ID)
 
@@ -150,7 +153,7 @@ func testAccCheckCustomPluginExists(ctx context.Context, name string) resource.T
 
 func testAccCheckCustomPluginDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mskconnect_custom_plugin" {
@@ -181,13 +184,8 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket_acl.test.bucket
+  bucket = aws_s3_bucket.test.bucket
 
   versioning_configuration {
     status = %[2]t ? "Enabled" : "Suspended"

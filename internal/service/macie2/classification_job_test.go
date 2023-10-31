@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
@@ -394,7 +397,7 @@ func testAccCheckClassificationJobExists(ctx context.Context, resourceName strin
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
@@ -415,7 +418,7 @@ func testAccCheckClassificationJobExists(ctx context.Context, resourceName strin
 
 func testAccCheckClassificationJobDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_classification_job" {

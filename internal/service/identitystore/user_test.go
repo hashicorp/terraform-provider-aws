@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
@@ -980,7 +983,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_identitystore_user" {
@@ -1014,7 +1017,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *identitystore.Desc
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, n, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		output, err := tfidentitystore.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["user_id"])
 
@@ -1029,8 +1032,8 @@ func testAccCheckUserExists(ctx context.Context, n string, v *identitystore.Desc
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
-	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
+	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instances, err := ssoadminConn.ListInstancesWithContext(ctx, &ssoadmin.ListInstancesInput{MaxResults: aws.Int64(1)})
 

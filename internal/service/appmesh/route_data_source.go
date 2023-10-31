@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -60,7 +63,7 @@ func DataSourceRoute() *schema.Resource {
 
 func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	routeName := d.Get("name").(string)
@@ -91,7 +94,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var tags tftags.KeyValueTags
 
 	if meshOwner == meta.(*conns.AWSClient).AccountID {
-		tags, err = ListTags(ctx, conn, arn)
+		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)

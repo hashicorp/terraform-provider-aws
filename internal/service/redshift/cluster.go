@@ -1,14 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -60,6 +62,10 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(redshift.AquaConfigurationStatus_Values(), false),
+				Deprecated:   "This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -85,11 +91,15 @@ func ResourceCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
+			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
@@ -148,8 +158,8 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_$]+$`), "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
-					validation.StringMatch(regexp.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_$]+$`), "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
+					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
 				),
 			},
 			"default_iam_role_arn": {
@@ -186,9 +196,9 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
 			"iam_roles": {
@@ -257,10 +267,10 @@ func ResourceCluster() *schema.Resource {
 				Sensitive: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(8, 64),
-					validation.StringMatch(regexp.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
-					validation.StringMatch(regexp.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
-					validation.StringMatch(regexp.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
-					validation.StringMatch(regexp.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+					validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
+					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
 				),
 			},
 			"master_username": {
@@ -269,8 +279,8 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^\w+$`), "must contain only alphanumeric characters"),
-					validation.StringMatch(regexp.MustCompile(`(?i)^[a-z_]`), "first character must be a letter"),
+					validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain only alphanumeric characters"),
+					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter"),
 				),
 			},
 			"node_type": {
@@ -360,12 +370,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
-					return errors.New("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true")
-				}
-				return nil
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() == "" {
 					return nil
 				}
@@ -384,7 +388,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
@@ -407,7 +411,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("aqua_configuration_status"); ok {
@@ -562,7 +566,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	rsc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -604,6 +608,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
@@ -665,14 +670,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiList))
 
-	SetTagsOut(ctx, rsc.Tags)
+	setTagsOut(ctx, rsc.Tags)
 
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "snapshot_copy", "tags", "tags_all") {
 		input := &redshift.ModifyClusterInput{
@@ -887,7 +892,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &redshift.DeleteClusterInput{

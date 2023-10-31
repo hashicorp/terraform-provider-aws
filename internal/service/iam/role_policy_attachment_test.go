@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -128,7 +131,7 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 
 func testAccCheckRolePolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role_policy_attachment" {
@@ -168,7 +171,7 @@ func testAccCheckRolePolicyAttachmentExists(ctx context.Context, n string, c int
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		role := rs.Primary.Attributes["role"]
 
 		attachedPolicies, err := conn.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
@@ -208,7 +211,7 @@ func testAccCheckRolePolicyAttachmentAttributes(policies []string, out *iam.List
 
 func testAccCheckRolePolicyAttachmentDisappears(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 

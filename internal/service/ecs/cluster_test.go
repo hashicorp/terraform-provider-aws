@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
@@ -263,7 +266,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_cluster" {
@@ -298,7 +301,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *ecs.Cluster) re
 			return fmt.Errorf("No ECS Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		output, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -73,7 +76,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
@@ -81,7 +84,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -105,7 +108,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, d.Id())
 
@@ -131,7 +134,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChanges("name", "mutation_protection", "priority") {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
@@ -159,7 +162,7 @@ func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceFirewallRuleGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group Association: %s", d.Id())
 	_, err := conn.DisassociateFirewallRuleGroupWithContext(ctx, &route53resolver.DisassociateFirewallRuleGroupInput{

@@ -328,13 +328,17 @@ The following arguments are optional:
 * `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
-* `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`. See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains). Defaults to `OpenSearch_1.1`.
+* `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
+  See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
+  Defaults to the lastest version of OpenSearch.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
 * `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
+* `software_update_options` - (Optional) Software update options for the domain. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
+* `off_peak_window_options` - (Optional) Configuration to add Off Peak update options. ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)). Detailed below.
 
 ### advanced_security_options
 
@@ -436,6 +440,10 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily snapshot of the indices in the domain.
 
+### software_update_options
+
+* `auto_software_update_enabled` - (Optional) Whether automatic service software updates are enabled for the domain. Defaults to `false`.
+
 ### vpc_options
 
 AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-vpc.html)
@@ -447,9 +455,19 @@ AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://d
 * `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the OpenSearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
 * `subnet_ids` - (Required) List of VPC Subnet IDs for the OpenSearch domain endpoints to be created in.
 
-## Attributes Reference
+### off_peak_window_options
 
-In addition to all arguments above, the following attributes are exported:
+AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)
+
+* `enabled` - (Optional) Enabled disabled toggle for off-peak update window.
+* `off_peak_window` - (Optional)
+    * `window_start_time` - (Optional) 10h window for updates
+        * `hours` - (Required) Starting hour of the 10-hour window for updates
+        * `minutes` - (Required) Starting minute of the 10-hour window for updates
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
@@ -471,8 +489,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpenSearch domains can be imported using the `domain_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch domains using the `domain_name`. For example:
 
+```terraform
+import {
+  to = aws_opensearch_domain.example
+  id = "domain_name"
+}
 ```
-$ terraform import aws_opensearch_domain.example domain_name
+
+Using `terraform import`, import OpenSearch domains using the `domain_name`. For example:
+
+```console
+% terraform import aws_opensearch_domain.example domain_name
 ```

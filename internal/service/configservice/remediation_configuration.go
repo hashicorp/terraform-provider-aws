@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -144,7 +147,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 
 func resourceRemediationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("config_rule_name").(string)
 	input := configservice.RemediationConfiguration{
@@ -198,7 +201,7 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 
 func resourceRemediationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	out, err := conn.DescribeRemediationConfigurationsWithContext(ctx, &configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
@@ -251,7 +254,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("config_rule_name").(string)
 
@@ -395,8 +398,16 @@ func flattenRemediationParameterValues(parameters map[string]*configservice.Reme
 		items = append(items, item)
 	}
 
-	slices.SortFunc(items, func(a, b interface{}) bool {
-		return a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string)
+	slices.SortFunc(items, func(a, b interface{}) int {
+		if a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string) {
+			return -1
+		}
+
+		if a.(map[string]interface{})["name"].(string) > b.(map[string]interface{})["name"].(string) {
+			return 1
+		}
+
+		return 0
 	})
 
 	return items

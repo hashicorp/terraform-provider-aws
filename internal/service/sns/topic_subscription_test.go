@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
@@ -5,10 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -84,7 +87,7 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_sqs_queue.test", "arn"),
@@ -345,7 +348,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTopicSubscriptionConfig_filterPolicyScope_policyNotSet(rName),
-				ExpectError: regexp.MustCompile(`filter_policy is required when filter_policy_scope is set`),
+				ExpectError: regexache.MustCompile(`filter_policy is required when filter_policy_scope is set`),
 			},
 		},
 	})
@@ -596,7 +599,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_email(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", acctest.DefaultEmailAddress),
@@ -627,7 +630,7 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
@@ -691,7 +694,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 
 func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic_subscription" {
@@ -730,7 +733,7 @@ func testAccCheckTopicSubscriptionExists(ctx context.Context, n string, v *map[s
 			return fmt.Errorf("No SNS Topic Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		output, err := tfsns.FindSubscriptionAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -1315,11 +1318,6 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "firehose_role" {
@@ -1344,9 +1342,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = %[1]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

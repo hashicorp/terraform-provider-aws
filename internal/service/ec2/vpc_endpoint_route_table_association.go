@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -43,7 +46,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 
 func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -74,14 +77,14 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, RouteTableAssociationPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
@@ -100,7 +103,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 
 func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)

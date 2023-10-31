@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -49,7 +52,7 @@ func resourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.CreateLogStreamInput{
@@ -77,7 +80,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	ls, err := FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
@@ -98,7 +101,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
 	_, err := conn.DeleteLogStreamWithContext(ctx, &cloudwatchlogs.DeleteLogStreamInput{
@@ -175,7 +178,7 @@ func FindLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWa
 
 func validStreamName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if regexp.MustCompile(`:`).MatchString(value) {
+	if regexache.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"colons not allowed in %q:", k))
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -97,7 +100,7 @@ const (
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
 
@@ -194,7 +197,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	accountIDs, _, err := parseEnablerID(d.Id())
 	if err != nil {
@@ -240,7 +243,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 	var typeDisable []types.ResourceScanType
@@ -319,7 +322,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient)
-	conn := client.Inspector2Client()
+	conn := client.Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
 	admin := slices.Contains(accountIDs, client.AccountID)
@@ -468,7 +471,7 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			}) {
 				return true
 			}
-			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.FilterEquals(types.StatusDisabled)) {
+			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -536,6 +539,9 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
+			if k == "LambdaCode" {
+				k = "LAMBDA_CODE"
+			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
 		results[aws.ToString(a.AccountId)] = status

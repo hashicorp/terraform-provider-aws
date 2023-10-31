@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -128,7 +131,7 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_identity_policy" {
@@ -171,7 +174,7 @@ func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {

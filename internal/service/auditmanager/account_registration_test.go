@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -137,7 +140,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 // registration is inactive, simply that the status check returns a valid response.
 func testAccCheckAccountRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_account_registration" {
@@ -166,7 +169,7 @@ func testAccCheckAccountRegisterationIsActive(ctx context.Context, name string) 
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		out, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, rs.Primary.ID, err)

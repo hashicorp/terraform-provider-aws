@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -131,6 +134,12 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -179,6 +188,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -355,12 +371,12 @@ func ResourceReplicationGroup() *schema.Resource {
 
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -400,6 +416,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		input.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
@@ -517,7 +541,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ReplicationGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -535,7 +559,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	rgp, err := FindReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -593,6 +617,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
+
+	d.Set("ip_discovery", rgp.IpDiscovery)
+	d.Set("network_type", rgp.NetworkType)
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rgp.SnapshotWindow)
@@ -662,7 +689,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChanges(
@@ -688,6 +715,16 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("description") {
 			input.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("ip_discovery") {
+			input.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("network_type") {
+			input.IpDiscovery = aws.String(d.Get("network_type").(string))
 			requestUpdate = true
 		}
 
@@ -843,7 +880,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {
@@ -1001,12 +1038,12 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	log.Printf("[DEBUG] Modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), input)
 	_, err := conn.ModifyReplicationGroupShardConfigurationWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
+		return fmt.Errorf("modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
 	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1025,11 +1062,11 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		}
 		_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+			return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
 		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
+			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
 	} else {
 		input := &elasticache.DecreaseReplicaCountInput{
@@ -1039,11 +1076,11 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		}
 		_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+			return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
 		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
+			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
 	}
 
@@ -1072,12 +1109,12 @@ func increaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 	}
 	_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
+		return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
 	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
 
 	return nil
@@ -1091,12 +1128,12 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 	}
 	_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
+		return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
 	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
+		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
 
 	return nil
@@ -1104,8 +1141,8 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )

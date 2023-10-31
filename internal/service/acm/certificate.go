@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm
 
 import (
@@ -7,11 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -90,7 +93,7 @@ func resourceCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 				ExactlyOneOf:  []string{"domain_name", "private_key"},
 				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
@@ -205,7 +208,7 @@ func resourceCertificate() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
 				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
@@ -325,7 +328,7 @@ func resourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if _, ok := d.GetOk("domain_name"); ok {
 		_, v1 := d.GetOk("certificate_authority_arn")
@@ -339,7 +342,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input := &acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
 			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
-			Tags:             GetTagsIn(ctx),
+			Tags:             getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -377,7 +380,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input := &acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
 			PrivateKey:  []byte(d.Get("private_key").(string)),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_chain"); ok {
@@ -401,7 +404,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
@@ -470,7 +473,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
@@ -526,7 +529,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
@@ -910,7 +913,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 	return nil, err
 }
 
-var validateHybridDuration = verify.ValidAnyDiag(
+var validateHybridDuration = validation.AnyDiag(
 	sdktypes.ValidateDuration,
 	sdktypes.ValidateRFC3339Duration,
 )

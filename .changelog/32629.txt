@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_apigatewayv2_authorizer: Skip setting authorizer TTL when there are no identity sources
+```

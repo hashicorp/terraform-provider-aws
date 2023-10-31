@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
 	//"errors"
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,7 +37,7 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_neptune_cluster.test", "cluster_identifier"),
@@ -158,7 +161,7 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 
 func testAccCheckClusterEndpointDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_endpoint" {
@@ -196,7 +199,7 @@ func testAccCheckClusterEndpointExistsWithProvider(ctx context.Context, n string
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 		resp, err := tfneptune.FindEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Neptune Cluster Endpoint (%s) not found: %w", rs.Primary.ID, err)
@@ -218,7 +221,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 }
 `, rName))

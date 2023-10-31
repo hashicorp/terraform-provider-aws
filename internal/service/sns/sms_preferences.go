@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
@@ -17,7 +20,7 @@ import (
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
 	vInt := v.(int)
 	if vInt < 0 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
 	}
 	return
 }
@@ -25,7 +28,7 @@ func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error)
 func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors []error) {
 	vInt, _ := strconv.Atoi(v.(string))
 	if vInt < 0 || vInt > 100 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
 	}
 	return
 }
@@ -138,7 +141,7 @@ func ResourceSMSPreferences() *schema.Resource {
 }
 
 func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -162,7 +165,7 @@ func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	output, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
 
@@ -174,7 +177,7 @@ func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)

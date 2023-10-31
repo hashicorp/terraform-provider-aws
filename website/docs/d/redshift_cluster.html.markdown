@@ -21,14 +21,6 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
   name        = "terraform-kinesis-firehose-example-stream"
   destination = "redshift"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
   redshift_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
     cluster_jdbcurl    = "jdbc:redshift://${data.aws_redshift_cluster.example.endpoint}/${data.aws_redshift_cluster.example.database_name}"
@@ -37,19 +29,27 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
     data_table_name    = "example-table"
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "example-col"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffer_size        = 10
+      buffer_interval    = 400
+      compression_format = "GZIP"
+    }
   }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_identifier` - (Required) Cluster identifier
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster.
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
@@ -65,8 +65,9 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_revision_number` - The cluster revision number
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_type` - Cluster type
+* `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
 * `database_name` - Name of the default database in the cluster
-* `default_iam_role_arn` - ∂The ARN for the IAM role that was set as default for the cluster when the cluster was created.
+* `default_iam_role_arn` - The ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `elastic_ip` - Elastic IP of the cluster
 * `enable_logging` - Whether cluster logging is enabled
 * `encrypted` - Whether the cluster data is encrypted

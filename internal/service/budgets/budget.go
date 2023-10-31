@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package budgets
 
 import (
@@ -286,7 +289,7 @@ func ResourceBudget() *schema.Resource {
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
 
@@ -326,7 +329,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -448,7 +451,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
@@ -481,7 +484,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -706,7 +709,7 @@ func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]
 		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
 	}
 
-	if *autoAdjustData.HistoricalOptions != (budgets.HistoricalOptions{}) { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
+	if *autoAdjustData.HistoricalOptions != (budgets.HistoricalOptions{}) { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 		attrs["historical_options"] = flattenHistoricalOptions(autoAdjustData.HistoricalOptions)
 	}
 

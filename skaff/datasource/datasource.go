@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasource
 
 import (
@@ -32,6 +35,7 @@ type TemplateData struct {
 	DataSourceLower      string
 	DataSourceSnake      string
 	IncludeComments      bool
+	IncludeTags          bool
 	HumanFriendlyService string
 	ServicePackage       string
 	Service              string
@@ -43,7 +47,7 @@ type TemplateData struct {
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2, pluginFramework bool) error {
+func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -86,6 +90,7 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework bool)
 		DataSourceSnake:      snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),

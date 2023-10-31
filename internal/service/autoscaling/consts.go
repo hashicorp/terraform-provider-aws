@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -74,3 +77,15 @@ func PolicyType_Values() []string {
 		PolicyTypeTargetTrackingScaling,
 	}
 }
+
+const (
+	TrafficSourceStateAdding    = "Adding"
+	TrafficSourceStateAdded     = "Added"
+	TrafficSourceStateInService = "InService"
+	TrafficSourceStateRemoving  = "Removing"
+	TrafficSourceStateRemoved   = "Removed"
+)
+
+const (
+	launchTemplateIDUnknown = "unknown"
+)

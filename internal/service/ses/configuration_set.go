@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -78,7 +81,7 @@ func ResourceConfigurationSet() *schema.Resource {
 						"custom_redirect_domain": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 						},
 					},
 				},
@@ -89,7 +92,7 @@ func ResourceConfigurationSet() *schema.Resource {
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configurationSetName := d.Get("name").(string)
 
@@ -159,7 +162,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
@@ -211,7 +214,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
@@ -266,7 +269,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
 	input := &ses.DeleteConfigurationSetInput{

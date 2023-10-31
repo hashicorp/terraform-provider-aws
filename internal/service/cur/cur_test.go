@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cur_test
 
 import (
@@ -13,13 +16,15 @@ func TestAccCUR_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ReportDefinition": {
-			"basic":      testAccReportDefinition_basic,
-			"disappears": testAccReportDefinition_disappears,
-			"textOrCsv":  testAccReportDefinition_textOrCSV,
-			"parquet":    testAccReportDefinition_parquet,
-			"athena":     testAccReportDefinition_athena,
-			"refresh":    testAccReportDefinition_refresh,
-			"overwrite":  testAccReportDefinition_overwrite,
+			"basic":                 testAccReportDefinition_basic,
+			"disappears":            testAccReportDefinition_disappears,
+			"textOrCsv":             testAccReportDefinition_textOrCSV,
+			"parquet":               testAccReportDefinition_parquet,
+			"athena":                testAccReportDefinition_athena,
+			"refresh":               testAccReportDefinition_refresh,
+			"overwrite":             testAccReportDefinition_overwrite,
+			"DataSource_basic":      testAccReportDefinitionDataSource_basic,
+			"DataSource_additional": testAccReportDefinitionDataSource_additional,
 		},
 	}
 

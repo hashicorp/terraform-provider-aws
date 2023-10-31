@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -78,7 +81,7 @@ func ResourceVocabulary() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 140),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
 				),
 			},
 			"state": {
@@ -96,7 +99,7 @@ func ResourceVocabulary() *schema.Resource {
 }
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	vocabularyName := d.Get("name").(string)
@@ -105,7 +108,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get("content").(string)),
 		LanguageCode:   aws.String(d.Get("language_code").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		VocabularyName: aws.String(vocabularyName),
 	}
 
@@ -113,11 +116,11 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateVocabularyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Vocabulary (%s): %w", vocabularyName, err))
+		return diag.Errorf("creating Connect Vocabulary (%s): %s", vocabularyName, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Vocabulary (%s): empty output", vocabularyName))
+		return diag.Errorf("creating Connect Vocabulary (%s): empty output", vocabularyName)
 	}
 
 	vocabularyID := aws.StringValue(output.VocabularyId)
@@ -126,14 +129,14 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// waiter since the status changes from CREATION_IN_PROGRESS to either ACTIVE or CREATION_FAILED
 	if _, err := waitVocabularyCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), instanceID, vocabularyID); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Vocabulary (%s) creation: %w", d.Id(), err))
+		return diag.Errorf("waiting for Vocabulary (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceVocabularyRead(ctx, d, meta)
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
 
@@ -153,11 +156,11 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Vocabulary (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Vocabulary == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Vocabulary (%s): empty response", d.Id())
 	}
 
 	vocabulary := resp.Vocabulary
@@ -172,7 +175,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("state", vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	SetTagsOut(ctx, resp.Vocabulary.Tags)
+	setTagsOut(ctx, resp.Vocabulary.Tags)
 
 	return nil
 }
@@ -183,7 +186,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
 
@@ -197,11 +200,11 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Vocabulary (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Vocabulary (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVocabularyDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), instanceID, vocabularyID); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Vocabulary (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for Vocabulary (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

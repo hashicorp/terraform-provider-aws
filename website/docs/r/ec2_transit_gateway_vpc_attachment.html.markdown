@@ -24,7 +24,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `subnet_ids` - (Required) Identifiers of EC2 Subnets.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
@@ -36,9 +36,9 @@ The following arguments are supported:
 * `transit_gateway_default_route_table_association` - (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -46,8 +46,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_transit_gateway_vpc_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_vpc_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_vpc_attachment.example
+  id = "tgw-attach-12345678"
+}
 ```
-$ terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
+
+Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
 ```

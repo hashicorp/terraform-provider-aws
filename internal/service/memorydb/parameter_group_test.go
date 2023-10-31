@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb_test
 
 import (
@@ -268,7 +271,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_parameter_group" {
@@ -303,7 +306,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No MemoryDB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		_, err := tfmemorydb.FindParameterGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 

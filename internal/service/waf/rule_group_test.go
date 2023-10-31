@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -48,7 +51,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 						"priority":      "50",
 						"type":          waf.WafRuleTypeRegular,
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -205,7 +208,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := tfwaf.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwaf.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{
@@ -303,7 +306,7 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 
 func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 
 		rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
@@ -354,7 +357,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
 				RuleGroupId: aws.String(rs.Primary.ID),
 			})
@@ -387,7 +390,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, group *waf.RuleG
 			return fmt.Errorf("No WAF Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -679,6 +681,49 @@ func TestAccGlueCatalogTable_disappears(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogTableConfig_openTableFormat(rName, "comment1"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.metadata_operation", "CREATE"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.version", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"open_table_format_input"},
+			},
+			{
+				Config:  testAccCatalogTableConfig_openTableFormat(rName, "comment2"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.metadata_operation", "CREATE"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCatalogTableConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
@@ -1126,64 +1171,52 @@ resource "aws_glue_catalog_table" "test" {
 
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_table" {
 				continue
 			}
 
-			catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
+			catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			if _, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName); err != nil {
-				//Verify the error is what we want
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-					continue
-				}
+			_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
 
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
 				return err
 			}
-			return fmt.Errorf("still exists")
+
+			return fmt.Errorf("Glue Catalog Table %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckCatalogTableExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckCatalogTableExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
+		catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
-		out, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName)
-		if err != nil {
-			return err
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
-		if out.Table == nil {
-			return fmt.Errorf("No Glue Table Found")
-		}
+		_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
 
-		if aws.StringValue(out.Table.Name) != resourceName {
-			return fmt.Errorf("Glue Table Mismatch - existing: %q, state: %q",
-				aws.StringValue(out.Table.Name), resourceName)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1406,4 +1439,46 @@ resource "aws_glue_catalog_table" "test2" {
   database_name = aws_glue_catalog_database.test2.name
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_openTableFormat(rName, columnComment string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  table_type    = "EXTERNAL_TABLE"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
+  }
+
+  storage_descriptor {
+    location = "s3://%[1]s/files/"
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+      comment = %[2]q
+    }
+
+    columns {
+      name    = "my_column_2"
+      type    = "string"
+      comment = %[2]q
+    }
+  }
+}
+`, rName, columnComment)
 }

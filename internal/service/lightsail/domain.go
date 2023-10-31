@@ -1,12 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,8 +38,8 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
-	_, err := conn.CreateDomainWithContext(ctx, &lightsail.CreateDomainInput{
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	_, err := conn.CreateDomain(ctx, &lightsail.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
 
@@ -52,13 +54,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
-	resp, err := conn.GetDomainWithContext(ctx, &lightsail.GetDomainInput{
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	resp, err := conn.GetDomain(ctx, &lightsail.GetDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		if IsANotFoundError(err) {
 			log.Printf("[WARN] Lightsail Domain (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -72,8 +74,8 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
-	_, err := conn.DeleteDomainWithContext(ctx, &lightsail.DeleteDomainInput{
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	_, err := conn.DeleteDomain(ctx, &lightsail.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
 

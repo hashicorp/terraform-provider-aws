@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -91,7 +94,7 @@ func testAccCheckEventStreamExists(ctx context.Context, n string, stream *pinpoi
 			return fmt.Errorf("No Pinpoint event stream with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the app exists
 		params := &pinpoint.GetEventStreamInput{
@@ -169,7 +172,7 @@ EOF
 
 func testAccCheckEventStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_event_stream" {

@@ -22,7 +22,7 @@ data "aws_autoscaling_group" "foo" {
 
 * `name` - Specify the exact name of the desired autoscaling group.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
@@ -116,6 +116,9 @@ interpolation.
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
+* `traffic_source` -Traffic sources.
+    * `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+    * `type` - Traffic source type.
 * `vpc_zone_identifier` - VPC ID for the group.
 * `warm_pool` - List of warm pool configuration objects.
     * `instance_reuse_policy` - List of instance reuse policy objects.

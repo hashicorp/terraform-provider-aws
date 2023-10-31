@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -1207,7 +1210,7 @@ func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
 }
 
 func testAccPreCheckMQ(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
 
 	input := &mq.ListBrokersInput{}
 
@@ -1223,7 +1226,7 @@ func testAccPreCheckMQ(ctx context.Context, t *testing.T) {
 }
 
 func testAccPreCheckMSK(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 	input := &kafka.ListClustersInput{}
 
@@ -1239,7 +1242,7 @@ func testAccPreCheckMSK(ctx context.Context, t *testing.T) {
 }
 
 func testAccPreCheckSecretsManager(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 
@@ -1256,7 +1259,7 @@ func testAccPreCheckSecretsManager(ctx context.Context, t *testing.T) {
 
 func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 		// Disable enabled state
 		err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -1306,7 +1309,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *la
 
 func testAccCheckEventSourceMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_event_source_mapping" {
@@ -1341,7 +1344,7 @@ func testAccCheckEventSourceMappingExists(ctx context.Context, n string, v *lamb
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -1597,7 +1600,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs18.x"
 }
 `, rName, streamStatus, streamViewType)
 }

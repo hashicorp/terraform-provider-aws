@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,8 +24,8 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexp.MustCompile(`outpost/op-.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^lgw-`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
 				),

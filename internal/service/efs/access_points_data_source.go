@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -39,7 +42,7 @@ func DataSourceAccessPoints() *schema.Resource {
 
 func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fileSystemID := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -5,8 +8,8 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
@@ -244,9 +247,9 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							ValidateDiagFunc: allDiagFunc(
 								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
+								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
 								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+								validation.MapValueMatch(regexache.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
 							),
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
@@ -260,9 +263,9 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							ValidateDiagFunc: allDiagFunc(
 								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+								validation.MapKeyMatch(regexache.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
 								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+								validation.MapValueMatch(regexache.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
 							),
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
@@ -299,7 +302,7 @@ func ResourceTarget() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
 								mapMaxItems(targetInputTransformerMaxInputPaths),
-								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
+								mapKeysDoNotMatch(regexache.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
 						"input_template": {
@@ -415,6 +418,33 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
+			"sagemaker_pipeline_target": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"pipeline_parameter_list": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 200,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"sqs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -440,7 +470,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	rule := d.Get("rule").(string)
 
@@ -476,7 +506,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -537,6 +567,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	if t.SageMakerPipelineParameters != nil {
+		if err := d.Set("sagemaker_pipeline_target", flattenTargetSageMakerPipelineParameters(t.SageMakerPipelineParameters)); err != nil {
+			return diag.Errorf("setting sagemaker_pipeline_parameters: %s", err)
+		}
+	}
+
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
 			return diag.Errorf("setting sqs_target: %s", err)
@@ -565,7 +601,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := buildPutTargetInputStruct(ctx, d)
 
@@ -584,7 +620,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
@@ -696,6 +732,10 @@ func buildPutTargetInputStruct(ctx context.Context, d *schema.ResourceData) *eve
 
 	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.SqsParameters = expandTargetSQSParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("sagemaker_pipeline_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		e.SageMakerPipelineParameters = expandTargetSageMakerPipelineParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -915,6 +955,48 @@ func expandTargetSQSParameters(config []interface{}) *eventbridge.SqsParameters 
 	return sqsParameters
 }
 
+func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []*eventbridge.SageMakerPipelineParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []*eventbridge.SageMakerPipelineParameter
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := &eventbridge.SageMakerPipelineParameter{}
+
+		if v, ok := tfMap["name"].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
+		}
+
+		if v, ok := tfMap["value"].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
+func expandTargetSageMakerPipelineParameters(config []interface{}) *eventbridge.SageMakerPipelineParameters {
+	sageMakerPipelineParameters := &eventbridge.SageMakerPipelineParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["pipeline_parameter_list"].(*schema.Set); ok && v.Len() > 0 {
+			sageMakerPipelineParameters.PipelineParameterList = expandTargetSageMakerPipelineParameterList(v.List())
+		}
+	}
+
+	return sageMakerPipelineParameters
+}
+
 func expandTargetHTTPParameters(tfMap map[string]interface{}) *eventbridge.HttpParameters {
 	if tfMap == nil {
 		return nil
@@ -1064,6 +1146,28 @@ func flattenTargetKinesisParameters(kinesisParameters *eventbridge.KinesisParame
 	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
 	result := []map[string]interface{}{config}
 	return result
+}
+
+func flattenTargetSageMakerPipelineParameters(sageMakerParameters *eventbridge.SageMakerPipelineParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["pipeline_parameter_list"] = flattenTargetSageMakerPipelineParameter(sageMakerParameters.PipelineParameterList)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetSageMakerPipelineParameter(pcs []*eventbridge.SageMakerPipelineParameter) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["name"] = aws.StringValue(pc.Name)
+		c["value"] = aws.StringValue(pc.Value)
+
+		results = append(results, c)
+	}
+	return results
 }
 
 func flattenTargetSQSParameters(sqsParameters *eventbridge.SqsParameters) []map[string]interface{} {

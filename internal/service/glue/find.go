@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -85,17 +88,25 @@ func FindDatabaseByName(ctx context.Context, conn *glue.Glue, catalogID, name st
 	return output, nil
 }
 
-// FindTableByName returns the Table corresponding to the specified name.
-func FindTableByName(ctx context.Context, conn *glue.Glue, catalogID, dbName, name string) (*glue.GetTableOutput, error) {
-	input := &glue.GetTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		Name:         aws.String(name),
+func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Glue, name string) (*glue.GetDataQualityRulesetOutput, error) {
+	input := &glue.GetDataQualityRulesetInput{
+		Name: aws.String(name),
 	}
 
-	output, err := conn.GetTableWithContext(ctx, input)
+	output, err := conn.GetDataQualityRulesetWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

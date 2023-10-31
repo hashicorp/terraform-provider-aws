@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
@@ -90,7 +93,7 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
 
@@ -134,7 +137,7 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string) re
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
 

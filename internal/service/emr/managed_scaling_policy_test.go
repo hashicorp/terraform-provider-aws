@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
@@ -170,7 +173,7 @@ func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 		resp, err := conn.GetManagedScalingPolicyWithContext(ctx, &emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
@@ -187,7 +190,7 @@ func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resou
 
 func testAccCheckManagedScalingPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_managed_scaling_policy" {
 				continue

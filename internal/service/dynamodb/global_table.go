@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -64,7 +67,7 @@ func ResourceGlobalTable() *schema.Resource {
 
 func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &dynamodb.CreateGlobalTableInput{
@@ -89,7 +92,7 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	globalTableDescription, err := FindGlobalTableByName(ctx, conn, d.Id())
 
@@ -114,7 +117,7 @@ func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	o, n := d.GetChange("replica")
 	if o == nil {
@@ -154,7 +157,7 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
 	_, err := conn.UpdateGlobalTableWithContext(ctx, &dynamodb.UpdateGlobalTableInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -79,7 +82,7 @@ func ResourceInstanceFleet() *schema.Resource {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ForceNew: true,
-										Elem:     schema.TypeString,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -220,7 +223,7 @@ func ResourceInstanceFleet() *schema.Resource {
 
 func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	taskFleet := map[string]interface{}{
 		"name":                      d.Get("name"),
@@ -247,7 +250,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	fleet, err := FindInstanceFleetByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
@@ -278,7 +281,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	modifyConfig := &emr.InstanceFleetModifyConfig{
 		InstanceFleetId:        aws.String(d.Id()),
@@ -316,7 +319,7 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	// AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state.
 	log.Printf("[DEBUG] Deleting EMR Instance Fleet: %s", d.Id())
@@ -329,7 +332,11 @@ func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, me
 		},
 	})
 
+	// Ignore certain errors that indicate the fleet is already (being) deleted
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "instance fleet may only be modified when the cluster is running or waiting") {
+		return diags
+	}
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "A job flow that is shutting down, terminated, or finished may not be modified") {
 		return diags
 	}
 

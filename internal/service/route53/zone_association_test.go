@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -161,13 +164,43 @@ func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneAssociationConfig_region(domainName),
+				Config: testAccZoneAssociationConfig_crossRegion(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config:            testAccZoneAssociationConfig_region(domainName),
+				Config:            testAccZoneAssociationConfig_crossRegion(domainName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ZoneAssociation_crossAccountAndRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_route53_zone_association.test"
+	domainName := acctest.RandomFQDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneAssociationConfig_crossAccountAndRegion(domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneAssociationExists(ctx, resourceName),
+				),
+			},
+			{
+				Config:            testAccZoneAssociationConfig_crossAccountAndRegion(domainName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -178,7 +211,7 @@ func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 
 func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_zone_association" {
 				continue
@@ -225,7 +258,7 @@ func testAccCheckZoneAssociationExists(ctx context.Context, resourceName string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
 
@@ -328,7 +361,7 @@ resource "aws_route53_zone_association" "test" {
 `, domainName))
 }
 
-func testAccZoneAssociationConfig_region(domainName string) string {
+func testAccZoneAssociationConfig_crossRegion(domainName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -377,6 +410,55 @@ resource "aws_route53_zone_association" "test" {
   vpc_id     = aws_vpc.alternate.id
   vpc_region = data.aws_region.alternate.name
   zone_id    = aws_route53_zone.test.id
+}
+`, domainName))
+}
+
+func testAccZoneAssociationConfig_crossAccountAndRegion(domainName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		fmt.Sprintf(`
+resource "aws_route53_zone_association" "test" {
+  vpc_id  = aws_route53_vpc_association_authorization.test.vpc_id
+  zone_id = aws_route53_vpc_association_authorization.test.zone_id
+}
+
+resource "aws_route53_vpc_association_authorization" "test" {
+  provider = "awsalternate"
+
+  vpc_id     = aws_vpc.test.id
+  zone_id    = aws_route53_zone.test.id
+  vpc_region = data.aws_region.current.name
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.6.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_vpc" "alternate" {
+  provider = "awsalternate"
+
+  cidr_block           = "10.7.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_route53_zone" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+
+  vpc {
+    vpc_id = aws_vpc.alternate.id
+  }
+
+  lifecycle {
+    ignore_changes = [vpc]
+  }
 }
 `, domainName))
 }

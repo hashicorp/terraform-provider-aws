@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -229,7 +232,7 @@ func waitSSEUpdated(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 }
 
 func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
-	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn().Config, region, client.TerraformVersion)
+	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn(ctx).Config, region, client.TerraformVersion)
 	if err != nil {
 		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
 	}

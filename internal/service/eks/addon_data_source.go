@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,7 +60,7 @@ func DataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
@@ -68,7 +70,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", id, err))
+		return diag.Errorf("reading EKS Add-On (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -80,7 +82,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	if err := d.Set("tags", KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

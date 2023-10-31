@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -146,7 +149,7 @@ func testAccCheckSMSChannelExists(ctx context.Context, n string, channel *pinpoi
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the app exists
 		params := &pinpoint.GetSmsChannelInput{
@@ -187,7 +190,7 @@ resource "aws_pinpoint_sms_channel" "test" {
 
 func testAccCheckSMSChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_sms_channel" {

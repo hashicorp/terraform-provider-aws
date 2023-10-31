@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -41,7 +44,7 @@ func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[\w\.-]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[\w\.-]+`), ""),
 				),
 			},
 		},
@@ -50,7 +53,7 @@ func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 
 func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName := d.Get("approval_rule_template_name").(string)
 	repositoryName := d.Get("repository_name").(string)
@@ -73,7 +76,7 @@ func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schem
 
 func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
@@ -101,7 +104,7 @@ func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.
 
 func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 

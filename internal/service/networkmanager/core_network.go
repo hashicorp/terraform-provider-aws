@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -61,13 +65,27 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"base_policy_document": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 10000000),
+					validation.StringIsJSON,
+				),
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+				ConflictsWith: []string{"base_policy_region", "base_policy_regions"},
+			},
 			"base_policy_region": {
 				Deprecated: "Use the base_policy_regions argument instead. " +
 					"This argument will be removed in the next major version of the provider.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  verify.ValidRegionName,
-				ConflictsWith: []string{"base_policy_regions"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_regions"},
 			},
 			"base_policy_regions": {
 				Type:     schema.TypeSet,
@@ -76,7 +94,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidRegionName,
 				},
-				ConflictsWith: []string{"base_policy_region"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_region"},
 			},
 			"create_base_policy": {
 				Type:     schema.TypeBool,
@@ -152,13 +170,13 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -169,19 +187,25 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	// this creates the core network with a starting policy document set to LIVE
 	// this is required for the first terraform apply if there attachments to the core network
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
-		regions := []interface{}{meta.(*conns.AWSClient).Region}
-		if v, ok := d.GetOk("base_policy_region"); ok {
-			regions = []interface{}{v.(string)}
-		} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
-			regions = v.(*schema.Set).List()
-		}
+		// if user supplies a full base_policy_document for maximum flexibility, use it. Otherwise, use regions list
+		// var policyDocumentTarget string
+		if v, ok := d.GetOk("base_policy_document"); ok {
+			input.PolicyDocument = aws.String(v.(string))
+		} else {
+			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+			regions := []interface{}{meta.(*conns.AWSClient).Region}
+			if v, ok := d.GetOk("base_policy_region"); ok {
+				regions = []interface{}{v.(string)}
+			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+				regions = v.(*schema.Set).List()
+			}
 
-		policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
-		if err != nil {
-			return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
+			if err != nil {
+				return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+			}
+			input.PolicyDocument = aws.String(policyDocumentTarget)
 		}
-		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
 	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
@@ -200,7 +224,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
 
@@ -230,13 +254,13 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("state", coreNetwork.State)
 
-	SetTagsOut(ctx, coreNetwork.Tags)
+	setTagsOut(ctx, coreNetwork.Tags)
 
 	return nil
 }
 
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChange("description") {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
@@ -285,7 +309,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
 	_, err := conn.DeleteCoreNetworkWithContext(ctx, &networkmanager.DeleteCoreNetworkInput{

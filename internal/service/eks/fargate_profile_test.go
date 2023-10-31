@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +38,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "fargate_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "pod_execution_role_arn", iamRoleResourceName, "arn"),
@@ -192,7 +195,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.Farg
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
@@ -208,7 +211,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.Farg
 
 func testAccCheckFargateProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_fargate_profile" {
@@ -378,7 +381,7 @@ resource "aws_eip" "private" {
   count      = 2
   depends_on = [aws_internet_gateway.test]
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

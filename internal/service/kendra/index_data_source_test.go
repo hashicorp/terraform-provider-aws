@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -24,10 +26,6 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccIndexDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`error getting Kendra Index`),
-			},
 			{
 				Config: testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
@@ -65,12 +63,6 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccIndexDataSourceConfig_nonExistent = `
-data "aws_kendra_index" "test" {
-  id = "tf-acc-test-does-not-exist-kendra-id"
-}
-`
 
 func testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(

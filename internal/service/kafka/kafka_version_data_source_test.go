@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -55,7 +58,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 }
 
 func testAccVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 	input := &kafka.ListKafkaVersionsInput{}
 

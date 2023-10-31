@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -42,7 +45,7 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
-					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexp.MustCompile(`cluster-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 				),
 			},
@@ -314,7 +317,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 			return fmt.Errorf("no DocumentDB Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		cluster, err := tfdocdb.FindGlobalClusterById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -337,7 +340,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 
 func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_global_cluster" {
@@ -367,7 +370,7 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *docdb.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		input := &docdb.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
@@ -404,7 +407,7 @@ func testAccCheckGlobalClusterRecreated(i, j *docdb.GlobalCluster) resource.Test
 }
 
 func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.DescribeGlobalClustersInput{}
 

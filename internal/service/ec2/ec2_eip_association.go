@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -68,7 +71,7 @@ func ResourceEIPAssociation() *schema.Resource {
 
 func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.AssociateAddressInput{}
 
@@ -104,7 +107,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return FindEIPByAssociationID(ctx, conn, d.Id())
 		},
@@ -131,7 +134,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
@@ -160,7 +163,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)

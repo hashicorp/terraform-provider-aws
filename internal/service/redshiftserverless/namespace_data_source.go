@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -63,7 +66,7 @@ func DataSourceNamespace() *schema.Resource {
 
 func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	namespaceName := d.Get("namespace_name").(string)
 

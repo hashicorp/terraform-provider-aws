@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -52,7 +55,7 @@ func resourceDestinationPolicy() *schema.Resource {
 }
 
 func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("destination_name").(string)
 	input := &cloudwatchlogs.PutDestinationPolicyInput{
@@ -78,7 +81,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 

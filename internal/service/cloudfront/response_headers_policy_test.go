@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -385,7 +388,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 
 func testAccCheckResponseHeadersPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_response_headers_policy" {
@@ -420,7 +423,7 @@ func testAccCheckResponseHeadersPolicyExists(ctx context.Context, n string) reso
 			return fmt.Errorf("No CloudFront Response Headers Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		_, err := tfcloudfront.FindResponseHeadersPolicyByID(ctx, conn, rs.Primary.ID)
 

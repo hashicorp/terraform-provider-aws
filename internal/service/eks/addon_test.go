@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +39,7 @@ func TestAccEKSAddon_basic(t *testing.T) {
 					testAccCheckAddonExists(ctx, addonResourceName, &addon),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
-					acctest.MatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
+					acctest.MatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, "name"),
 					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
@@ -340,7 +343,7 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 			},
 			{
 				Config:      testAccAddonConfig_configurationValues(rName, addonName, addonVersion, invalidConfigurationValues, eks.ResolveConflictsOverwrite),
-				ExpectError: regexp.MustCompile(`InvalidParameterException: ConfigurationValue provided in request is not supported`),
+				ExpectError: regexache.MustCompile(`InvalidParameterException: ConfigurationValue provided in request is not supported`),
 			},
 		},
 	})
@@ -410,7 +413,7 @@ func testAccCheckAddonExists(ctx context.Context, n string, v *eks.Addon) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
@@ -426,7 +429,7 @@ func testAccCheckAddonExists(ctx context.Context, n string, v *eks.Addon) resour
 
 func testAccCheckAddonDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_addon" {
@@ -457,7 +460,7 @@ func testAccCheckAddonDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAddon(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 	input := &eks.DescribeAddonVersionsInput{}
 

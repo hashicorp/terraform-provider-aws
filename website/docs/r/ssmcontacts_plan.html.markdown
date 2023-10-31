@@ -87,14 +87,23 @@ The following arguments are required:
 * `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 * `stage` - (Required) List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Import SSM Contact Plan using the Contact ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact Plan using the Contact ARN. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_plan.example
+  id = "{ARNValue}"
+}
 ```
-$ terraform import aws_ssmcontacts_plan.example {ARNValue}
+
+Using `terraform import`, import SSM Contact Plan using the Contact ARN. For example:
+
+```console
+% terraform import aws_ssmcontacts_plan.example {ARNValue}
 ```

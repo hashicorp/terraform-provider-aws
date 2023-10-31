@@ -40,9 +40,9 @@ resource "aws_quicksight_refresh_schedule" "example" {
     refresh_type = "INCREMENTAL_REFRESH"
 
     schedule_frequency {
-      interval    = "WEEKLY"
-      time_of_day = "01:00"
-      timezone    = "Europe/London"
+      interval        = "WEEKLY"
+      time_of_the_day = "01:00"
+      timezone        = "Europe/London"
       refresh_on_day {
         day_of_week = "MONDAY"
       }
@@ -62,9 +62,9 @@ resource "aws_quicksight_refresh_schedule" "example" {
     refresh_type = "INCREMENTAL_REFRESH"
 
     schedule_frequency {
-      interval    = "MONTHLY"
-      time_of_day = "01:00"
-      timezone    = "Europe/London"
+      interval        = "MONTHLY"
+      time_of_the_day = "01:00"
+      timezone        = "Europe/London"
       refresh_on_day {
         day_of_month = "1"
       }
@@ -94,7 +94,7 @@ The following arguments are optional:
 ### schedule_frequency
 
 * `interval` - (Required) The interval between scheduled refreshes. Valid values are `MINUTE15`, `MINUTE30`, `HOURLY`, `DAILY`, `WEEKLY` and `MONTHLY`.
-* `time_of_day` - (Optional) The time of day that you want the dataset to refresh. This value is expressed in `HH:MM` format. This field is not required for schedules that refresh hourly.
+* `time_of_the_day` - (Optional) The time of day that you want the dataset to refresh. This value is expressed in `HH:MM` format. This field is not required for schedules that refresh hourly.
 * `timezone` - (Optional) The timezone that you want the refresh schedule to use.
 * `refresh_on_day` - (Optional) The [refresh on entity](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScheduleRefreshOnEntity.html) configuration for weekly or monthly schedules. See [refresh_on_day](#refresh_on_day).
 
@@ -103,17 +103,26 @@ The following arguments are optional:
 * `day_of_month` - (Optional) The day of the month that you want to schedule refresh on.
 * `day_of_week` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` and `SATURDAY`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the refresh schedule.
 * `id` - A comma-delimited string joining AWS account ID, data set ID & refresh schedule ID.
 
 ## Import
 
-A QuickSight Refresh Schedule can be imported using the AWS account ID, data set ID and schedule ID separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_refresh_schedule.example
+  id = "123456789012,dataset-id,schedule-id"
+}
 ```
-$ terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
+
+Using `terraform import`, import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
 ```

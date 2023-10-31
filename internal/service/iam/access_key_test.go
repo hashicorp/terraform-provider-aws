@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -134,7 +137,7 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 
 func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_access_key" {
@@ -166,7 +169,7 @@ func testAccCheckAccessKeyExists(ctx context.Context, n string, res *iam.AccessK
 			return fmt.Errorf("No Access Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		accessKey, err := tfiam.FindAccessKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {

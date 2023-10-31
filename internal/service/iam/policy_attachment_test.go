@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -198,7 +201,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string, c int64, 
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		arn := rs.Primary.Attributes["policy_arn"]
 
 		resp, err := conn.GetPolicyWithContext(ctx, &iam.GetPolicyInput{

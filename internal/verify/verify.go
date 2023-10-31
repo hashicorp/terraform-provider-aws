@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -6,7 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const UUIDRegexPattern = `[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}`
+const UUIDRegexPattern = `[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[ab89][0-9a-f]{3}-[0-9a-f]{12}`
 
 func SliceContainsString(slice []interface{}, s string) (int, bool) {
 	for idx, value := range slice {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -94,7 +97,7 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 
 func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_partner" {
@@ -128,7 +131,7 @@ func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("No Redshift Partner ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
 

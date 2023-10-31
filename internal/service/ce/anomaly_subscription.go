@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -59,7 +62,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
+					validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
 			},
 			"subscriber": {
 				Type:     schema.TypeSet,
@@ -94,7 +97,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -103,7 +106,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_id"); ok {
@@ -130,7 +133,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
@@ -159,7 +162,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_All") {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
@@ -193,7 +196,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 

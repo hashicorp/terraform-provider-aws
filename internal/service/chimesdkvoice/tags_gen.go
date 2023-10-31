@@ -8,16 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice/chimesdkvoiceiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists chimesdkvoice service tags.
+// listTags lists chimesdkvoice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &chimesdkvoice.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, ide
 // ListTags lists chimesdkvoice service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ChimeSDKVoiceConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +78,9 @@ func KeyValueTags(ctx context.Context, tags []*chimesdkvoice.Tag) tftags.KeyValu
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns chimesdkvoice service tags from Context.
+// getTagsIn returns chimesdkvoice service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*chimesdkvoice.Tag {
+func getTagsIn(ctx context.Context) []*chimesdkvoice.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,19 +90,21 @@ func GetTagsIn(ctx context.Context) []*chimesdkvoice.Tag {
 	return nil
 }
 
-// SetTagsOut sets chimesdkvoice service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*chimesdkvoice.Tag) {
+// setTagsOut sets chimesdkvoice service tags in Context.
+func setTagsOut(ctx context.Context, tags []*chimesdkvoice.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates chimesdkvoice service tags.
+// updateTags updates chimesdkvoice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ChimeSDKVoice)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, i
 // UpdateTags updates chimesdkvoice service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ChimeSDKVoiceConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx), identifier, oldTags, newTags)
 }

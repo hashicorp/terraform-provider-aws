@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
@@ -153,7 +156,7 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 
 func testAccCheckRouteCalculatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_route_calculator" {
@@ -190,7 +193,7 @@ func testAccCheckRouteCalculatorExists(ctx context.Context, name string) resourc
 			return fmt.Errorf("No Location Service Route Calculator is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 		_, err := conn.DescribeRouteCalculatorWithContext(ctx, &locationservice.DescribeRouteCalculatorInput{
 			CalculatorName: aws.String(rs.Primary.ID),
 		})

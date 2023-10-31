@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -380,7 +383,7 @@ func testAccCheckConfigurationSetExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("SES configuration set ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		response, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
 			ConfigurationSetName: aws.String(rs.Primary.ID),
@@ -399,7 +402,7 @@ func testAccCheckConfigurationSetExists(ctx context.Context, n string) resource.
 
 func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_configuration_set" {

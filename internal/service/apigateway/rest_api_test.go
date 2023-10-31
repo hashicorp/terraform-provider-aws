@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -35,17 +38,17 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`[a-z0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexp.MustCompile(`[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -75,7 +78,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -91,7 +94,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -102,7 +105,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -179,7 +182,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -229,7 +232,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -1200,7 +1203,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 			// Verify invalid body fails creation, when fail_on_warnings is true
 			{
 				Config:      testAccRestAPIConfig_failOnWarnings(rName, "original", "fail_on_warnings = true"),
-				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
+				ExpectError: regexache.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds creation, when fail_on_warnings is not set
 			{
@@ -1208,7 +1211,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/users"}),
-					resource.TestMatchResourceAttr(resourceName, "description", regexp.MustCompile(`original`)),
+					resource.TestMatchResourceAttr(resourceName, "description", regexache.MustCompile(`original`)),
 				),
 			},
 			{
@@ -1220,12 +1223,12 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 			// Verify invalid body fails update, when fail_on_warnings is true
 			{
 				Config:      testAccRestAPIConfig_failOnWarnings(rName, "update", "fail_on_warnings = true"),
-				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
+				ExpectError: regexache.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds update, when fail_on_warnings is not set
 			{
 				Config: testAccRestAPIConfig_failOnWarnings(rName, "update", ""),
-				Check:  resource.TestMatchResourceAttr(resourceName, "description", regexp.MustCompile(`update`)),
+				Check:  resource.TestMatchResourceAttr(resourceName, "description", regexache.MustCompile(`update`)),
 			},
 		},
 	})
@@ -1345,7 +1348,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			{
@@ -1360,7 +1363,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			// Verify updated policy still overrides body
@@ -1369,7 +1372,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Deny"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Deny"`)),
 				),
 			},
 		},
@@ -1392,7 +1395,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				Config: testAccRestAPIConfig_policySetByBody(rName, "Allow"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			{
@@ -1407,7 +1410,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 
 func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetResourcesWithContext(ctx, &apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
@@ -1438,7 +1441,7 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, ro
 
 func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.RestApi, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
@@ -1471,7 +1474,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
 
@@ -1487,7 +1490,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 
 func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api" {

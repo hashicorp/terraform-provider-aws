@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe_test
 
 import (
@@ -138,7 +141,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 
 func testAccCheckLanguageModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_language_model" {
@@ -171,7 +174,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 			return fmt.Errorf("No Transcribe LanguageModel is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -185,7 +188,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 }
 
 func testAccLanguageModelsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 	input := &transcribe.ListLanguageModelsInput{}
 

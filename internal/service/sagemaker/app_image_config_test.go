@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -210,7 +213,7 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 
 func testAccCheckAppImageDestroyConfig(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_app_image_config" {
@@ -247,7 +250,7 @@ func testAccCheckAppImageExistsConfig(ctx context.Context, n string, config *sag
 			return fmt.Errorf("No sagmaker App Image Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindAppImageConfigByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -73,7 +76,7 @@ func resourcePrimaryContact() *schema.Resource {
 			"phone_number": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\s0-9()+-]+$`), "must be a valid phone number"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
 			},
 			"postal_code": {
 				Type:     schema.TypeString,
@@ -92,7 +95,7 @@ func resourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
 	input := &account.PutContactInformationInput{
@@ -149,7 +152,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
 

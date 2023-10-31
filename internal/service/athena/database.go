@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena
 
 import (
@@ -5,10 +8,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -92,7 +95,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
 			"properties": {
 				Type:     schema.TypeMap,
@@ -106,7 +109,7 @@ func ResourceDatabase() *schema.Resource {
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	var queryString bytes.Buffer
@@ -154,7 +157,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -183,7 +186,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {

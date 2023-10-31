@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -64,7 +67,7 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 
 func testAccCheckPolicyAttchmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_policy_attachment" {
 				continue
@@ -117,7 +120,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
@@ -137,7 +140,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 
 func testAccCheckPolicyAttachmentCertStatus(ctx context.Context, n string, policies []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 

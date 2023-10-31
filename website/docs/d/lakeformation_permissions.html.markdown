@@ -150,7 +150,7 @@ The following arguments are optional:
 * `column_names` - (Optional) Set of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
 * `excluded_column_names` - (Optional) Set of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the above arguments, the following attribute is exported:
 

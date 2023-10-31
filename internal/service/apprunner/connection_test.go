@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -31,7 +34,7 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", apprunner.ProviderTypeGithub),
 					resource.TestCheckResourceAttr(resourceName, "status", apprunner.ConnectionStatusPendingHandshake),
@@ -129,7 +132,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
 
@@ -161,7 +164,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
 

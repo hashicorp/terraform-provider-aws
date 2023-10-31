@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
@@ -191,7 +194,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 
 func testAccCheckPlaceIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_place_index" {
@@ -229,7 +232,7 @@ func testAccCheckPlaceIndexExists(ctx context.Context, resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		input := &locationservice.DescribePlaceIndexInput{
 			IndexName: aws.String(rs.Primary.ID),

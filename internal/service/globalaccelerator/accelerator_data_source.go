@@ -1,17 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -101,7 +103,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.Meta().GlobalAcceleratorConn()
+	conn := d.Meta().GlobalAcceleratorConn(ctx)
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
@@ -115,7 +117,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 				continue
 			}
 
-			if !data.ARN.IsNull() && data.ARN.ValueARN().String() != aws.StringValue(accelerator.AcceleratorArn) {
+			if !data.ARN.IsNull() && data.ARN.ValueString() != aws.StringValue(accelerator.AcceleratorArn) {
 				continue
 			}
 
@@ -147,11 +149,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	accelerator := results[0]
 	acceleratorARN := aws.StringValue(accelerator.AcceleratorArn)
-	if v, err := arn.Parse(acceleratorARN); err != nil {
-		response.Diagnostics.AddError("parsing ARN", err.Error())
-	} else {
-		data.ARN = fwtypes.ARNValue(v)
-	}
+	data.ARN = flex.StringToFrameworkARN(ctx, accelerator.AcceleratorArn)
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
@@ -171,7 +169,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTags(ctx, conn, acceleratorARN)
+	tags, err := listTags(ctx, conn, acceleratorARN)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())

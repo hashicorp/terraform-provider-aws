@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -79,7 +82,7 @@ func ResourceSchema() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 170000),
-					validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
+					validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""),
 				),
 			},
 			"schema_name": {
@@ -88,7 +91,7 @@ func ResourceSchema() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#-]+$`), ""),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -99,13 +102,13 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
@@ -137,7 +140,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	output, err := FindSchemaByID(ctx, conn, d.Id())
 	if err != nil {
@@ -179,7 +182,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
@@ -234,7 +237,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{

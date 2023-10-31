@@ -37,7 +37,7 @@ resource "aws_ami_copy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
 * `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
@@ -52,9 +52,9 @@ The following arguments are supported:
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AMI.
 * `id` - ID of the created AMI.

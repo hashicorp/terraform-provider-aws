@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive_test
 
 import (
@@ -183,7 +186,7 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 
 func testAccCheckInputSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_input_security_group" {
@@ -216,7 +219,7 @@ func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inpu
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInputSecurityGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -231,7 +234,7 @@ func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inpu
 }
 
 func testAccInputSecurityGroupsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 	input := &medialive.ListInputSecurityGroupsInput{}
 	_, err := conn.ListInputSecurityGroups(ctx, input)

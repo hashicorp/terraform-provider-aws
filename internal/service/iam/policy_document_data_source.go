@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -306,7 +309,7 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading values: %w", err)
+			return nil, fmt.Errorf("reading values: %w", err)
 		}
 		itemValues := out[i].Values.([]string)
 		if len(itemValues) == 1 {
@@ -330,7 +333,7 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 			), version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading identifiers: %w", err)
+			return nil, fmt.Errorf("reading identifiers: %w", err)
 		}
 	}
 	return IAMPolicyStatementPrincipalSet(out), nil

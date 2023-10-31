@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -41,7 +44,7 @@ func ResourceAppImageConfig() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"kernel_gateway_image_config": {
@@ -74,7 +77,7 @@ func ResourceAppImageConfig() *schema.Resource {
 										Default:  "/home/sagemaker-user",
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^\/.*`), "Must start with `/`."),
+											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
 										),
 									},
 								},
@@ -111,12 +114,12 @@ func ResourceAppImageConfig() *schema.Resource {
 
 func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
 		AppImageConfigName: aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
@@ -135,7 +138,7 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindAppImageConfigByName(ctx, conn, d.Id())
 	if err != nil {
@@ -160,7 +163,7 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("kernel_gateway_image_config") {
 		input := &sagemaker.UpdateAppImageConfigInput{
@@ -183,7 +186,7 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteAppImageConfigInput{
 		AppImageConfigName: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediastore_test
 
 import (
@@ -89,7 +92,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 
 func testAccCheckContainerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_store_container" {
@@ -123,7 +126,7 @@ func testAccCheckContainerExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
 
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(rs.Primary.ID),
@@ -136,7 +139,7 @@ func testAccCheckContainerExists(ctx context.Context, name string) resource.Test
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.ListContainersInput{}
 

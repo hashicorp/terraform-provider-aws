@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -92,7 +95,7 @@ func testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx context.Context,
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		_, err = tfec2.FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
 
@@ -102,7 +105,7 @@ func testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx context.Context,
 
 func testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_network_performance_metric_subscription" {

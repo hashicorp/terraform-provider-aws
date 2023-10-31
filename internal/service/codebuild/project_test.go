@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -176,7 +179,7 @@ func TestAccCodeBuildProject_badgeEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "badge_url", regexp.MustCompile(`\b(https?).*\b`)),
+					resource.TestMatchResourceAttr(resourceName, "badge_url", regexache.MustCompile(`\b(https?).*\b`)),
 				),
 			},
 			{
@@ -274,7 +277,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccProjectConfig_cache(rName, "", "S3"),
-				ExpectError: regexp.MustCompile(`cache location is required when cache type is "S3"`),
+				ExpectError: regexache.MustCompile(`cache location is required when cache type is "S3"`),
 			},
 			{
 				Config: testAccProjectConfig_cache(rName, "", codebuild.CacheTypeNoCache),
@@ -403,7 +406,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", codebuild.EnvironmentTypeLinuxContainer),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
-					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
@@ -420,7 +423,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
-					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount2"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
@@ -1523,11 +1526,11 @@ phases:
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "", ""),
-				ExpectError: regexp.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
+				ExpectError: regexache.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
 				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "location", rBuildspec),
-				ExpectError: regexp.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
+				ExpectError: regexache.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
 			},
 		},
 	})
@@ -1591,7 +1594,7 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
 			{
@@ -1606,7 +1609,7 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
 			{
@@ -2630,7 +2633,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, project *codebuild
 			return fmt.Errorf("No CodeBuild Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		output, err := tfcodebuild.FindProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -2649,7 +2652,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, project *codebuild
 
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codebuild_project" {
@@ -2683,7 +2686,7 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := tfcodebuild.FindProjectByARN(ctx, conn, "tf-acc-test-precheck")
 
@@ -5182,7 +5185,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
