@@ -1055,10 +1055,9 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 func TestAccS3Object_ignoreDefaultTags_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResource := "aws_s3_bucket.test"
-	objectResource := "aws_s3_object.object"
-	objectKey := "test-ignore-default-tags-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.object"
+	key := "test-ignore-default-tags-key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1068,45 +1067,50 @@ func TestAccS3Object_ignoreDefaultTags_create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "stuff", true, 9, 2),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "stuff", true, "X", 8, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj1),
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 0, 2, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 9, 2, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomX1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomX2"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "stuff", false, 3, 2),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "stuff", false, "X", 3, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj2),
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 3, 2, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 3, 2, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey1", "DefaultX1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey2", "DefaultX2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey3", "DefaultX3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomX1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomX2"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "changed stuff", true, 7, 7),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "changed stuff", true, "X", 10, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj3),
+					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 0, 7, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 7, 7, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomX1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomX2"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "changed stuff", false, 0, 0),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "changed stuff", false, "X", 0, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj4),
+					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdEquals(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 0, 0, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 0, 0, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 		},
@@ -1116,10 +1120,9 @@ func TestAccS3Object_ignoreDefaultTags_create(t *testing.T) {
 func TestAccS3Object_ignoreDefaultTags_existing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResource := "aws_s3_bucket.test"
-	objectResource := "aws_s3_object.object"
-	objectKey := "test-ignore-default-tags-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.object"
+	key := "test-ignore-default-tags-key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1129,45 +1132,53 @@ func TestAccS3Object_ignoreDefaultTags_existing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "stuff", false, 2, 2),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "stuff", false, "Y", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj1),
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 2, 2, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 2, 2, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey1", "DefaultY1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey2", "DefaultY2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomY1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomY2"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "stuff", true, 10, 10),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "stuff", true, "Y", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj2),
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 0, 10, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 10, 10, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomY1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomY2"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "changed stuff", false, 3, 3),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "changed stuff", false, "Y", 3, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj3),
+					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 3, 3, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 3, 3, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey1", "DefaultY1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey2", "DefaultY2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.DefaultKey3", "DefaultY3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey1", "CustomY1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey2", "CustomY2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.CustomKey3", "CustomY3"),
 				),
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccObjectConfig_withIgnoreDefaultTags(t, bucketName, objectKey, "changed stuff", true, 2, 0),
+				Config:    testAccObjectConfig_withIgnoreDefaultTags(rName, key, "changed stuff", true, "Y", 2, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, objectResource, &obj4),
+					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdEquals(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, objectResource, 0, 0, false),
-					testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t, bucketResource, 2, 0, true),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 		},
@@ -2083,55 +2094,17 @@ resource "aws_s3_object" "object" {
 `, rName, key, content)
 }
 
-func testAccObjectConfig_withIgnoreDefaultTags_checkFunc(t *testing.T, name string, defaultCount int, customCount int, isBucket bool) resource.TestCheckFunc {
-	start := []resource.TestCheckFunc{}
-	tags := map[string]string{}
-
-	customPrefix := "CustomObjectKey"
-	if isBucket {
-		customPrefix = "CustomBucketKey"
-	}
-
-	for i := 1; i <= customCount; i++ {
-		tags[fmt.Sprintf("%s%d", customPrefix, i)] = fmt.Sprintf("Custom_%s_%d", t.Name(), i)
-	}
-
-	for i := 1; i <= defaultCount; i++ {
-		tags[fmt.Sprintf("DefaultKey%d", i)] = fmt.Sprintf("Default_%s_%d", t.Name(), i)
-	}
-
-	for k, v := range tags {
-		start = append(start, resource.TestCheckResourceAttr(name, fmt.Sprintf("tags_all.%s", k), v))
-	}
-
-	if isBucket {
-		start = append(start, testAccCheckBucketCheckTags(acctest.Context(t), name, tags))
-	} else {
-		start = append(start, testAccCheckObjectCheckTags(acctest.Context(t), name, tags))
-	}
-
-	start = append(start, resource.TestCheckResourceAttr(name, "tags_all.%", fmt.Sprintf("%d", customCount+defaultCount)))
-
-	return resource.ComposeAggregateTestCheckFunc(start...)
-}
-
-func testAccObjectConfig_withIgnoreDefaultTags(t *testing.T, rName, key, content string, ignore bool, defaultCount, customCount int) string {
+func testAccObjectConfig_withIgnoreDefaultTags(rName, key, content string, ignore bool, label string, numDefault, numCustom int) string {
 	var defaultTags string
-	for i := 1; i <= defaultCount; i++ {
+	for i := 1; i <= numDefault; i++ {
 		defaultTags += fmt.Sprintf(`
-		DefaultKey%d = "Default_%s_%d"`, i, t.Name(), i)
+		DefaultKey%d = "Default%s%d"`, i, label, i)
 	}
 
-	var customObjectTags string
-	for i := 1; i <= customCount; i++ {
-		customObjectTags += fmt.Sprintf(`
-		CustomObjectKey%d = "Custom_%s_%d"`, i, t.Name(), i)
-	}
-
-	var customBucketTags string
-	for i := 1; i <= customCount; i++ {
-		customBucketTags += fmt.Sprintf(`
-		CustomBucketKey%d = "Custom_%s_%d"`, i, t.Name(), i)
+	var customTags string
+	for i := 1; i <= numCustom; i++ {
+		customTags += fmt.Sprintf(`
+		CustomKey%d = "Custom%s%d"`, i, label, i)
 	}
 
 	return fmt.Sprintf(`
@@ -2148,10 +2121,6 @@ resource "aws_s3_bucket" "test" {
   provider = aws.ignore_default_tags
   bucket        = %[1]q
   force_destroy = true
-
-  tags = {
-	%[6]s
-  }
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -2164,17 +2133,18 @@ resource "aws_s3_bucket_versioning" "test" {
 
 resource "aws_s3_object" "object" {
   provider = aws.ignore_default_tags
+  # Must have bucket versioning enabled first
   bucket  = aws_s3_bucket_versioning.test.bucket
   key     = %[2]q
   content = %[3]q
 
   tags = {
-	%[7]s
+	%[6]s
   }
 
   ignore_default_tags = %[4]t
 }
-`, rName, key, content, ignore, defaultTags, customBucketTags, customObjectTags)
+`, rName, key, content, ignore, defaultTags, customTags)
 }
 
 func testAccObjectConfig_metadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
