@@ -8,6 +8,7 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -81,7 +82,6 @@ import (
 	apprunner_sdkv1 "github.com/aws/aws-sdk-go/service/apprunner"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	athena_sdkv1 "github.com/aws/aws-sdk-go/service/athena"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
@@ -295,8 +295,8 @@ func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationins
 	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
 }
 
-func (c *AWSClient) AthenaConn(ctx context.Context) *athena_sdkv1.Athena {
-	return errs.Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
+func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
+	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
