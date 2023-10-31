@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VerifiedAccessEndpoint_basic(t *testing.T) {
+func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -67,7 +67,7 @@ func TestAccEC2VerifiedAccessEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessEndpoint_networkInterface(t *testing.T) {
+func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -113,7 +113,7 @@ func TestAccEC2VerifiedAccessEndpoint_networkInterface(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessEndpoint_tags(t *testing.T) {
+func TestAccVerifiedAccessEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -167,7 +167,7 @@ func TestAccEC2VerifiedAccessEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessEndpoint_disappears(t *testing.T) {
+func TestAccVerifiedAccessEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -244,101 +244,100 @@ func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *
 
 func testAccVerifiedAccessEndpointConfig_base(rName, key, certificate string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+	resource "aws_security_group" "test" {
+		name   = %[1]q
+		vpc_id = aws_vpc.test.id
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
+	  
+	  resource "aws_acm_certificate" "test" {
+		private_key      = "%[2]s"
+		certificate_body = "%[3]s"
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
+	  
+	  resource "aws_network_interface" "test" {
+		subnet_id = aws_subnet.test[0].id
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
+	  
+	  resource "aws_lb" "test" {
+		name               = %[1]q
+		internal           = true
+		load_balancer_type = "network"
+		subnets            = aws_subnet.test[*].id
+	  }
 
-  tags = {
-    Name = %[1]q
-  }
-}
+	  resource "aws_lb_target_group" "test" {
+		name     = %[1]q
+		port     = 443
+		protocol = "TLS"
+		vpc_id   = aws_vpc.test.id
+	  }
 
-resource "aws_acm_certificate" "test" {
-  private_key      = "%[2]s"
-  certificate_body = "%[3]s"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test[0].id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb" "test" {
-  name               = %[1]q
-  internal           = true
-  load_balancer_type = "network"
-  subnets            = aws_subnet.test[*].id
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 443
-  protocol = "TLS"
-  vpc_id   = aws_vpc.test.id
-}
-
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
-  port              = "443"
-  protocol          = "TLS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = aws_acm_certificate.test.arn
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.arn
-    type             = "forward"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_verifiedaccess_instance" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_verifiedaccess_trust_provider" "test" {
-  policy_reference_name    = "test"
-  trust_provider_type      = "user"
-  user_trust_provider_type = "oidc"
-
-  oidc_options {
-    authorization_endpoint = "https://example.com/authorization_endpoint"
-    client_id              = "s6BhdRkqt3"
-    client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
-    issuer                 = "https://example.com"
-    scope                  = "test"
-    token_endpoint         = "https://example.com/token_endpoint"
-    user_info_endpoint     = "https://example.com/user_info_endpoint"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
-  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
-  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
-}
-
-resource "aws_verifiedaccess_group" "test" {
-  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
-
-  tags = {
-    Name = %[1]q
-  }
-}
+	  resource "aws_lb_listener" "test" {
+		load_balancer_arn = aws_lb.test.arn
+		port              = "443"
+		protocol          = "TLS"
+		ssl_policy        = "ELBSecurityPolicy-2016-08"
+		certificate_arn   = aws_acm_certificate.test.arn
+	  
+		default_action {
+		  target_group_arn = aws_lb_target_group.test.arn
+		  type             = "forward"
+		}
+		tags = {
+			Name = %[1]q
+		  }
+	  }
+	  
+	  resource "aws_verifiedaccess_instance" "test" {
+		tags = {
+		  Name = %[1]q
+		}
+	  }
+	  
+	  resource "aws_verifiedaccess_trust_provider" "test" {
+		policy_reference_name    = "test"
+		trust_provider_type      = "user"
+		user_trust_provider_type = "oidc"
+	  
+		oidc_options {
+		  authorization_endpoint = "https://example.com/authorization_endpoint"
+		  client_id              = "s6BhdRkqt3"
+		  client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+		  issuer                 = "https://example.com"
+		  scope                  = "test"
+		  token_endpoint         = "https://example.com/token_endpoint"
+		  user_info_endpoint     = "https://example.com/user_info_endpoint"
+		}
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
+	  
+	  resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+		verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+		verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+	  }
+	  
+	  resource "aws_verifiedaccess_group" "test" {
+		verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
 `, rName, key, certificate))
 }
 
