@@ -1703,14 +1703,14 @@ resource "aws_redshift_cluster_snapshot" "test" {
 }
 
 resource "aws_redshift_cluster" "test2" {
-  cluster_identifier        = "%[1]s-2"
-  snapshot_identifier       = aws_redshift_cluster_snapshot.test.id
-  availability_zone         = data.aws_availability_zones.available.names[0]
-  database_name             = "mydb"
-  master_username           = "foo_test"
-  master_password           = "Mustbe8characters"
-  node_type                 = "dc2.large"
-  skip_final_snapshot       = true
+  cluster_identifier  = "%[1]s-2"
+  snapshot_identifier = aws_redshift_cluster_snapshot.test.id
+  availability_zone   = data.aws_availability_zones.available.names[0]
+  database_name       = "mydb"
+  master_username     = "foo_test"
+  master_password     = "Mustbe8characters"
+  node_type           = "dc2.large"
+  skip_final_snapshot = true
 }
 `, rName))
 }
