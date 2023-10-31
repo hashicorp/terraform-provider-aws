@@ -2343,7 +2343,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket             = aws_s3_bucket.test.bucket
   key                = "test-key"
-  content            = %q
+  content            = %[2]q
   kms_key_id         = aws_kms_key.test.arn
   bucket_key_enabled = true
 }
@@ -2379,7 +2379,7 @@ resource "aws_s3_object" "object" {
 
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
-  content = %q
+  content = %[2]q
 }
 `, rName, content)
 }
