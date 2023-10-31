@@ -726,8 +726,13 @@ func expandOverrideProviderModel(ctx context.Context, tfMap map[string]interface
 
 	data := &overrideProviderModel{}
 
-	if v, ok := tfMap["default_tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]interface{}))
+	if v, ok := tfMap["default_tags"].([]interface{}); ok && len(v) > 0 {
+		if v[0] != nil {
+			data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]interface{}))
+		} else {
+			// Ensure that DefaultTagsConfig is not nil as it's checked in ignoreProviderDefaultTags.
+			data.DefaultTagsConfig = expandDefaultTags(ctx, map[string]interface{}{})
+		}
 	}
 
 	return data
