@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -55,6 +56,15 @@ type resourceJobQueue struct {
 	framework.WithTimeouts
 }
 
+func (r *resourceJobQueue) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.Conflicting(
+			path.MatchRoot("compute_environments"),
+			path.MatchRoot("compute_environment_order"),
+		),
+	}
+}
+
 func (r *resourceJobQueue) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_batch_job_queue"
 }
@@ -65,8 +75,27 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
-				ElementType: fwtypes.ARNType,
-				Required:    true,
+				ElementType:        fwtypes.ARNType,
+				Required:           true,
+				DeprecationMessage: "This parameter will be replaced by `compute_environments_order`.",
+			},
+			"compute_environment_order": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"order": schema.Int64Attribute{
+							Required: true,
+						},
+						"compute_environment": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+						},
+					},
+				},
+				// Validators: []validator.List{
+				// 	listvalidator.ConflictsWith(
+				// 		path.MatchRelative().AtParent().AtName("compute_environments"),
+				// 	),
+				// },
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
@@ -339,8 +368,9 @@ func (r *resourceJobQueue) UpgradeState(ctx context.Context) map[int64]resource.
 }
 
 type resourceJobQueueData struct {
-	ARN                 types.String   `tfsdk:"arn"`
-	ComputeEnvironments types.List     `tfsdk:"compute_environments"`
+	ARN                 types.String `tfsdk:"arn"`
+	ComputeEnvironments types.List   `tfsdk:"compute_environments"`
+	// ComputeEnvironmentOrder []computeEnvironmentOrderData{}     `tfsdk:"compute_environment_order"`
 	ID                  types.String   `tfsdk:"id"`
 	Name                types.String   `tfsdk:"name"`
 	Priority            types.Int64    `tfsdk:"priority"`
@@ -349,6 +379,10 @@ type resourceJobQueueData struct {
 	Tags                types.Map      `tfsdk:"tags"`
 	TagsAll             types.Map      `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
+}
+
+type jobQueueComputeEnvironmentOrderData struct {
+	ComputeEnvironmentOrder types.String
 }
 
 func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam
