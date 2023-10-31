@@ -53,7 +53,7 @@ func ResourceObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
-			resourceObjectCustomizeTagDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -115,11 +115,6 @@ func ResourceObject() *schema.Resource {
 				ConflictsWith: []string{"kms_key_id"},
 			},
 			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ignore_default_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -406,14 +401,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
-
-	if d.Get("ignore_default_tags").(bool) {
-		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
-	} else {
-		tags = defaultTagsConfig.MergeTags(tags)
-	}
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -577,15 +565,6 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	}
 
 	return nil
-}
-
-func resourceObjectCustomizeTagDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-
-	if d.Get("ignore_default_tags").(bool) {
-		return d.SetNew("tags_all", d.Get("tags"))
-	}
-
-	return verify.SetTagsDiff(ctx, d, meta)
 }
 
 func hasObjectContentChanges(d verify.ResourceDiffer) bool {
