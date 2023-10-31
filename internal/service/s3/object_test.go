@@ -1197,6 +1197,59 @@ func TestAccS3Object_DefaultTags_providerAndResource(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_DefaultTags_providerAndResourceWithOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccObjectConfig_tagsWithOverride(rName, key, "stuff"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "CCC"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccObjectConfig_updatedTagsWithOverride(rName, key, "stuff"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key5", "E:/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -2125,6 +2178,75 @@ resource "aws_s3_object" "object" {
   bucket  = aws_s3_bucket_versioning.test.bucket
   key     = %[2]q
   content = %[3]q
+}
+`, rName, key, content)
+}
+
+func testAccObjectConfig_tagsWithOverride(rName, key, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
+  key     = %[2]q
+  content = %[3]q
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+`, rName, key, content)
+}
+
+func testAccObjectConfig_updatedTagsWithOverride(rName, key, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
+  key     = %[2]q
+  content = %[3]q
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
 }
 `, rName, key, content)
 }
