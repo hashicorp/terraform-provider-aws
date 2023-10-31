@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -61,7 +60,7 @@ func ResourceDataCatalog() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: allDiagFunc(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 255),
 					validation.MapValueLenBetween(0, 51200),
 				),
@@ -201,14 +200,4 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
-}
-
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
 }
