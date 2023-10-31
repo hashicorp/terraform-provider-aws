@@ -285,7 +285,7 @@ func expandResultConfigurationACLConfig(config []interface{}) *types.AclConfigur
 }
 
 func executeAndExpectNoRows(ctx context.Context, conn *athena.Client, qeid string) error {
-	rs, err := QueryExecutionResult(ctx, conn, qeid)
+	rs, err := queryExecutionResult(ctx, conn, qeid)
 	if err != nil {
 		return err
 	}
@@ -295,7 +295,7 @@ func executeAndExpectNoRows(ctx context.Context, conn *athena.Client, qeid strin
 	return nil
 }
 
-func QueryExecutionResult(ctx context.Context, conn *athena.Client, qeid string) (*types.ResultSet, error) {
+func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string) (*types.ResultSet, error) {
 	executionStateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.QueryExecutionStateQueued, types.QueryExecutionStateRunning),
 		Target:     enum.Slice(types.QueryExecutionStateSucceeded),
