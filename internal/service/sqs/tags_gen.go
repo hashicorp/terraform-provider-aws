@@ -5,9 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +18,12 @@ import (
 // listTags lists sqs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *sqs.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &sqs.ListQueueTagsInput{
 		QueueUrl: aws.String(identifier),
 	}
 
-	output, err := conn.ListQueueTagsWithContext(ctx, input)
+	output, err := conn.ListQueueTags(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +35,7 @@ func listTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string) (tft
 // ListTags lists sqs service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SQSConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SQSClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -81,7 +80,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 }
 
 // createTags creates sqs service tags for new resources.
-func createTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, tags map[string]*string) error {
+func createTags(ctx context.Context, conn *sqs.Client, identifier string, tags map[string]*string) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -92,7 +91,7 @@ func createTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ta
 // updateTags updates sqs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -103,10 +102,10 @@ func updateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 	if len(removedTags) > 0 {
 		input := &sqs.UntagQueueInput{
 			QueueUrl: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagQueueWithContext(ctx, input)
+		_, err := conn.UntagQueue(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -121,7 +120,7 @@ func updateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 			Tags:     Tags(updatedTags),
 		}
 
-		_, err := conn.TagQueueWithContext(ctx, input)
+		_, err := conn.TagQueue(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -134,5 +133,5 @@ func updateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 // UpdateTags updates sqs service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).SQSConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SQSClient(ctx), identifier, oldTags, newTags)
 }
