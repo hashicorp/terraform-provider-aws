@@ -385,7 +385,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d interface{ Get(string) any }) string {
+func queueName(d verify.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
