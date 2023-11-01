@@ -154,7 +154,7 @@ The example below shows how a check block can be used to assert that your EC2 in
 ```hcl
 check "aws_instances_stopped" {
   data "aws_instances" "example" {
-    instance_state_names = “stopped”
+    instance_state_names = "stopped"
   }
 
   assert {
