@@ -48,6 +48,8 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.kms_key_arn", ""),
 				),
 			},
 			{
@@ -64,6 +66,8 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+	description := sdkacctest.RandString(100)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -75,12 +79,71 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_kms(rName),
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.cmk_enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessGroup_updateKms(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+	description := sdkacctest.RandString(100)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
 				),
 			},
@@ -294,19 +357,35 @@ resource "aws_verifiedaccess_group" "test" {
 `)
 }
 
-func testAccVerifiedAccessGroupConfig_kms(rName string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), `
+func testAccVerifiedAccessGroupConfig_kms(rName, policyDoc string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test_key" {
   description = "KMS key for Verified Access Group test"
 }
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+  policy_document            = %[1]q 
   server_side_encryption_configuration {
 	kms_key_arn = aws_kms_key.test_key.arn
-	cmk_enabled = true
+	customer_managed_key_enabled = true
   }
 }
-`)
+`, policyDoc))
+}
+
+func testAccVerifiedAccessGroupConfig_disableKms(rName, policyDoc string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test_key" {
+  description = "KMS key for Verified Access Group test"
+}
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+  policy_document            = %[1]q
+  server_side_encryption_configuration {
+	customer_managed_key_enabled = false
+  }
+}
+`, policyDoc))
 }
 
 func testAccVerifiedAccessGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
