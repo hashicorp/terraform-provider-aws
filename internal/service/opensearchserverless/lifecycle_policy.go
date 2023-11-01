@@ -101,26 +101,26 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 
 	in := &opensearchserverless.CreateLifecyclePolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(plan.Name.ValueString()),
-		Policy:      aws.String(plan.Policy.ValueString()),
+		Name:        flex.StringFromFramework(ctx, plan.Name),
+		Policy:      flex.StringFromFramework(ctx, plan.Policy),
 		Type:        awstypes.LifecyclePolicyType(plan.Type.ValueString()),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = flex.StringFromFramework(ctx, plan.Description)
 	}
 
 	out, err := conn.CreateLifecyclePolicy(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.LifecyclePolicyDetail == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.ValueString(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -150,7 +150,7 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionSetting, ResNameLifecyclePolicy, state.ID.String(), err),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameLifecyclePolicy, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -179,24 +179,24 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		}
 
 		if !plan.Policy.Equal(state.Policy) {
-			in.Policy = aws.String(plan.Policy.ValueString())
+			in.Policy = flex.StringFromFramework(ctx, plan.Policy)
 		}
 
 		if !plan.Description.Equal(state.Description) {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = flex.StringFromFramework(ctx, plan.Description)
 		}
 
 		out, err := conn.UpdateLifecyclePolicy(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.ValueString(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.LifecyclePolicyDetail == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.ValueString(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -219,7 +219,7 @@ func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.Delet
 
 	in := &opensearchserverless.DeleteLifecyclePolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(state.Name.ValueString()),
+		Name:        flex.StringFromFramework(ctx, state.Name),
 		Type:        awstypes.LifecyclePolicyType(state.Type.ValueString()),
 	}
 
