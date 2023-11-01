@@ -573,18 +573,6 @@ func ResourceTopicRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"partition": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"topic": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"header": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -600,6 +588,18 @@ func ResourceTopicRule() *schema.Resource {
 												},
 											},
 										},
+									},
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"partition": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"topic": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
@@ -945,18 +945,6 @@ func ResourceTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"partition": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"header": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -972,6 +960,18 @@ func ResourceTopicRule() *schema.Resource {
 									},
 								},
 							},
+						},
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"partition": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"topic": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -1724,6 +1724,10 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 		apiObject.DestinationArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Headers = expandKafkaHeader(v)
+	}
+
 	if v, ok := tfMap["key"].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
@@ -1734,10 +1738,6 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
-	}
-
-	if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Headers = expandKafkaHeader(v)
 	}
 
 	if reflect.DeepEqual(&iot.KafkaAction{}, apiObject) {
@@ -2908,6 +2908,10 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 		tfMap["destination_arn"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Headers; v != nil {
+		tfMap["header"] = flattenKafkaHeaders(v)
+	}
+
 	if v := apiObject.Key; v != nil {
 		tfMap["key"] = aws.StringValue(v)
 	}
@@ -2918,10 +2922,6 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 
 	if v := apiObject.Topic; v != nil {
 		tfMap["topic"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Headers; v != nil {
-		tfMap["header"] = flattenKafkaHeaders(v)
 	}
 
 	return []interface{}{tfMap}
