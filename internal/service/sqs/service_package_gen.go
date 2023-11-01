@@ -50,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sqs_queue_policy",
 		},
 		{
-			Factory:  ResourceQueueRedriveAllowPolicy,
+			Factory:  resourceQueueRedriveAllowPolicy,
 			TypeName: "aws_sqs_queue_redrive_allow_policy",
 		},
 		{
