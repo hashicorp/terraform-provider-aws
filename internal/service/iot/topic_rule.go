@@ -585,6 +585,22 @@ func ResourceTopicRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"header": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
@@ -940,6 +956,22 @@ func ResourceTopicRule() *schema.Resource {
 						"topic": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"header": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1704,11 +1736,35 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 		apiObject.Topic = aws.String(v)
 	}
 
+	if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Headers = expandKafkaHeader(v)
+	}
+
 	if reflect.DeepEqual(&iot.KafkaAction{}, apiObject) {
 		return nil
 	}
 
 	return apiObject
+}
+
+func expandKafkaHeader(tfList []interface{}) []*iot.KafkaActionHeader {
+	var apiObjects []*iot.KafkaActionHeader
+	for _, elem := range tfList {
+		tfMap := elem.(map[string]interface{})
+
+		apiObject := &iot.KafkaActionHeader{}
+		if v, ok := tfMap["key"].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
+		}
+
+		if v, ok := tfMap["value"].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandKinesisAction(tfList []interface{}) *iot.KinesisAction {
@@ -2864,7 +2920,33 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 		tfMap["topic"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Headers; v != nil {
+		tfMap["header"] = flattenKafkaHeaders(v)
+	}
+
 	return []interface{}{tfMap}
+}
+
+func flattenKafkaHeaders(apiObjects []*iot.KafkaActionHeader) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if apiObject != nil {
+			tfMap := make(map[string]interface{})
+
+			if v := apiObject.Key; v != nil {
+				tfMap["key"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.Value; v != nil {
+				tfMap["value"] = aws.StringValue(v)
+			}
+
+			results = append(results, tfMap)
+		}
+	}
+
+	return results
 }
 
 // Legacy root attribute handling
