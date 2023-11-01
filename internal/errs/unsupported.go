@@ -106,7 +106,7 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 }
 
 func errCodeContains(err error, code string) bool {
-	return tfawserr.ErrCodeContains(err, code) /*|| tfawserr_sdkv2.ErrCodeContains(err, code)*/
+	return tfawserr.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code)
 }
 
 func errMessageContains(err error, code, message string) bool {
