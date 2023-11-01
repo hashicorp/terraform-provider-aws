@@ -145,7 +145,7 @@ check "aws_eks_cluster_default" {
 }
 ```
 
-## Example - Check for EC2 Stopped Instances (aws_instances)
+## Example - Check for EC2 Stopped Instances (`aws_instances`)
 
 Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides secure, resizable compute capacity in the cloud. Access reliable, scalable infrastructure on demand. Scale capacity within minutes with SLA commitment of 99.99% availability.
 
