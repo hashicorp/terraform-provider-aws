@@ -4,16 +4,16 @@
 package sqs
 
 import (
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // @SDKResource("aws_sqs_queue_redrive_policy")
-func ResourceQueueRedrivePolicy() *schema.Resource {
+func resourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
-		AttributeName: sqs.QueueAttributeNameRedrivePolicy,
+		AttributeName: types.QueueAttributeNameRedrivePolicy,
 		SchemaKey:     "redrive_policy",
 		ToSet: func(old, new string) (string, error) {
 			if BytesEqual([]byte(old), []byte(new)) {
