@@ -46,7 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceQueuePolicy,
+			Factory:  resourceQueuePolicy,
 			TypeName: "aws_sqs_queue_policy",
 		},
 		{
