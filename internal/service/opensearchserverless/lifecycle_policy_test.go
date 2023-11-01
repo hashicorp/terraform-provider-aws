@@ -44,6 +44,8 @@ func TestAccOpenSearchServerlessLifecyclePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
 					resource.TestCheckResourceAttr(resourceName, "type", "retention"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_version"),
 				),
 			},
 			{

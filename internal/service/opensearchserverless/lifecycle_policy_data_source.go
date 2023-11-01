@@ -85,7 +85,7 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 	out, err := findLifecyclePolicyByNameAndType(ctx, conn, data.Name.ValueString(), data.Type.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.String(), err),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -107,7 +107,7 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.String(), err),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.ValueString(), err),
 			err.Error(),
 		)
 	}
