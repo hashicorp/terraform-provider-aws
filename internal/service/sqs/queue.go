@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -278,7 +280,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	name, err := QueueNameFromURL(d.Id())
+	name, err := queueNameFromURL(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -388,6 +390,24 @@ func queueName(d interface{ Get(string) any }) string {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
 	return create.NewNameGenerator(optFns...).Generate()
+}
+
+// queueNameFromURL returns the SQS queue name from the specified URL.
+func queueNameFromURL(u string) (string, error) {
+	v, err := url.Parse(u)
+
+	if err != nil {
+		return "", err
+	}
+
+	// http://sqs.us-west-2.amazonaws.com/123456789012/queueName
+	parts := strings.Split(v.Path, "/")
+
+	if len(parts) != 3 {
+		return "", fmt.Errorf("SQS Queue URL (%s) is in the incorrect format", u)
+	}
+
+	return parts[2], nil
 }
 
 func findQueueAttributesByURL(ctx context.Context, conn *sqs.Client, url string) (map[types.QueueAttributeName]string, error) {

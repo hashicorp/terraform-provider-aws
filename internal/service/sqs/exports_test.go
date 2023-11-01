@@ -13,4 +13,5 @@ var (
 	DefaultQueueVisibilityTimeout             = defaultQueueVisibilityTimeout
 	FIFOQueueNameSuffix                       = fifoQueueNameSuffix
 	QueueDeletedTimeout                       = queueDeletedTimeout
+	QueueNameFromURL                          = queueNameFromURL
 )
