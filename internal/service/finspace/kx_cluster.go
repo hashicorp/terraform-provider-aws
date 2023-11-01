@@ -509,12 +509,6 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
-	if d.IsNewResource() {
-		if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
-		}
-	}
-
 	if err := d.Set("command_line_arguments", flattenCommandLineArguments(out.CommandLineArguments)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
