@@ -9,7 +9,7 @@ name: Preferred Library Version Check
 # contributor documentation.
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -21,11 +21,11 @@ jobs:
     steps:
       # checkout base ref
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
 
       # checkout pull request head ref
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Check diff for AWS SDK Go V1
         id: diff
