@@ -49,12 +49,12 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(DeduplicationScope_Values(), false),
+			ValidateFunc: validation.StringInSlice(deduplicationScope_Values(), false),
 		},
 		"delay_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      DefaultQueueDelaySeconds,
+			Default:      defaultQueueDelaySeconds,
 			ValidateFunc: validation.IntBetween(0, 900),
 		},
 		"fifo_queue": {
@@ -67,7 +67,7 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(FIFOThroughputLimit_Values(), false),
+			ValidateFunc: validation.StringInSlice(fifoThroughputLimit_Values(), false),
 		},
 		"kms_data_key_reuse_period_seconds": {
 			Type:         schema.TypeInt,
@@ -83,13 +83,13 @@ var (
 		"max_message_size": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      DefaultQueueMaximumMessageSize,
+			Default:      defaultQueueMaximumMessageSize,
 			ValidateFunc: validation.IntBetween(1024, 262_144),
 		},
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      DefaultQueueMessageRetentionPeriod,
+			Default:      defaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
 		"name": {
@@ -121,7 +121,7 @@ var (
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Default:  DefaultQueueReceiveMessageWaitTimeSeconds,
+			Default:  defaultQueueReceiveMessageWaitTimeSeconds,
 		},
 		"redrive_allow_policy": {
 			Type:         schema.TypeString,
@@ -158,7 +158,7 @@ var (
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      DefaultQueueVisibilityTimeout,
+			Default:      defaultQueueVisibilityTimeout,
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
 	}
@@ -290,12 +290,12 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 	if d.Get("kms_data_key_reuse_period_seconds").(int) == 0 {
-		d.Set("kms_data_key_reuse_period_seconds", DefaultQueueKMSDataKeyReusePeriodSeconds)
+		d.Set("kms_data_key_reuse_period_seconds", defaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
 	d.Set("name", name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOQueueNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -385,7 +385,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 func queueName(d interface{ Get(string) any }) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_queue").(bool) {
-		optFns = append(optFns, create.WithSuffix(FIFOQueueNameSuffix))
+		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
 	return create.NewNameGenerator(optFns...).Generate()
 }
@@ -499,7 +499,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 					}
 
 					// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
-					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(DefaultQueueKMSDataKeyReusePeriodSeconds) {
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(defaultQueueKMSDataKeyReusePeriodSeconds) {
 						continue
 					}
 

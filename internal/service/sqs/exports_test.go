@@ -5,5 +5,12 @@ package sqs
 
 // Exports for use in tests only.
 var (
-	QueueDeletedTimeout = queueDeletedTimeout
+	DefaultQueueDelaySeconds                  = defaultQueueDelaySeconds
+	DefaultQueueKMSDataKeyReusePeriodSeconds  = defaultQueueKMSDataKeyReusePeriodSeconds
+	DefaultQueueMaximumMessageSize            = defaultQueueMaximumMessageSize
+	DefaultQueueMessageRetentionPeriod        = defaultQueueMessageRetentionPeriod
+	DefaultQueueReceiveMessageWaitTimeSeconds = defaultQueueReceiveMessageWaitTimeSeconds
+	DefaultQueueVisibilityTimeout             = defaultQueueVisibilityTimeout
+	FIFOQueueNameSuffix                       = fifoQueueNameSuffix
+	QueueDeletedTimeout                       = queueDeletedTimeout
 )
