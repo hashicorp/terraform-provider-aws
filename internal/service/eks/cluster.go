@@ -820,6 +820,8 @@ func expandVPCConfigRequestForUpdate(l []interface{}) *eks.VpcConfigRequest {
 	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
+		SecurityGroupIds:      flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:             flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
