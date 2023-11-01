@@ -21,18 +21,19 @@ func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
+
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkDataSourceConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "Arn", resourceName, "Arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "Id", resourceName, "Id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "Name", resourceName, "Name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "SecurityGroupIds", resourceName, "SecurityGroupIds"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "SubnetIds", resourceName, "SubnetIds"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "2"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Key1", resourceName, "Value1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Key2", resourceName, "Value2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids", resourceName, "security_group_ids"),
+					resource.TestCheckResourceAttr(dataSourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids", resourceName, "subnet_ids"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "0"),
 				),
 			},
 		},
@@ -41,56 +42,56 @@ func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
 
 func testAccVPCLinkDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test" {
-		cidr_block = "10.0.0.0/16"
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
-	  
-	  data "aws_availability_zones" "available" {
-		state = "available"
-	  
-		filter {
-		  name   = "opt-in-status"
-		  values = ["opt-in-not-required"]
-		}
-	  }
-	  
-	  resource "aws_subnet" "test" {
-		count = 2
-	  
-		vpc_id            = aws_vpc.test.id
-		cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-		availability_zone = data.aws_availability_zones.available.names[count.index]
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
-	  resource "aws_security_group" "test" {
-		vpc_id = aws_vpc.test.id
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
+  tags = {
+    Name = %[1]q
+  }
+}
 
-	  resource "aws_apigatewayv2_vpc_link" "test" {
-		name               = %[1]q
-		security_group_ids = [aws_security_group.test.id]
-		subnet_ids         = aws_subnet.test[*].id
-		
-		tags = {
-			Key1 = "Value1"
-			Key2 = "Value2"
-		  }
-	  }
+data "aws_availability_zones" "available" {
+  state = "available"
 
-	  data "aws_apigatewayv2_vpc_link" "test" {
-		id = aws_apigatewayv2_vpc_link.test.id
-	  }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_apigatewayv2_vpc_link" "test" {
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+  }
+}
+
+data "aws_apigatewayv2_vpc_link" "test" {
+  id = aws_apigatewayv2_vpc_link.test.id
+}
 `, rName)
 }
