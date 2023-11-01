@@ -162,4 +162,5 @@ check "aws_instances_stopped" {
     error_message = format("Found Instances have stopped! Instance ID\’s: %s", data.aws_instances.example.ids)
   }
 }
+```
 
