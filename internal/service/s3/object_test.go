@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -1692,6 +1691,10 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, "source"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
@@ -1705,7 +1708,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "override_provider"},
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					rs, ok := s.RootModule().Resources[resourceName]
 					if !ok {
@@ -1721,8 +1724,8 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 
 func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	// var obj s3.GetObjectOutput
-	// resourceName := "aws_s3_object.object"
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1736,14 +1739,9 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccObjectConfig_directoryBucket(rName),
 				),
-				ExpectError: regexache.MustCompile(`NotImplemented`),
-				// TODO
-				// Check: resource.ComposeTestCheckFunc(
-				// 	testAccCheckObjectExists(ctx, resourceName, &obj),
-				// 	resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				// 	resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-				// 	resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
-				// ),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+				),
 			},
 		},
 	})
@@ -2636,6 +2634,12 @@ resource "aws_s3_directory_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket = aws_s3_directory_bucket.test.bucket
   key    = "test-key"
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
 }
 `)
 }
