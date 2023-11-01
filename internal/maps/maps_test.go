@@ -45,7 +45,7 @@ func TestApplyToAll(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := ApplyToAll(test.input, strings.ToUpper)
+			got := ApplyToAllValues(test.input, strings.ToUpper)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
