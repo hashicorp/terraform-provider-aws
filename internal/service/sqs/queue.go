@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -223,17 +224,17 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
-	outputRaw, err := tfresource.RetryWhenIsA[*types.QueueDeletedRecently](ctx, queueCreatedTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateQueue(ctx, input)
-	})
+	}, errCodeQueueDeletedRecently)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenIsA[*types.QueueDeletedRecently](ctx, queueCreatedTimeout, func() (interface{}, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
 			return conn.CreateQueue(ctx, input)
-		})
+		}, errCodeQueueDeletedRecently)
 	}
 
 	if err != nil {
@@ -342,7 +343,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		QueueUrl: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.QueueDoesNotExist](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
 		return nil
 	}
 
@@ -447,7 +448,7 @@ func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url s
 func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[types.QueueAttributeName]string, error) {
 	output, err := conn.GetQueueAttributes(ctx, input)
 
-	if errs.IsA[*types.QueueDoesNotExist](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -39,3 +39,8 @@ func fifoThroughputLimit_Values() []string {
 		fifoThroughputLimitPerQueue,
 	}
 }
+
+const (
+	errCodeQueueDoesNotExist    = "AWS.SimpleQueueService.NonExistentQueue"
+	errCodeQueueDeletedRecently = "AWS.SimpleQueueService.QueueDeletedRecently"
+)
