@@ -75,7 +75,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("reading SQS Queue (%s) attribute (%s): %s", d.Id(), h.AttributeName, err)
 	}
 
-	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), outputRaw.(string))
+	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), aws.ToString(outputRaw.(*string)))
 	if err != nil {
 		return diag.FromErr(err)
 	}
