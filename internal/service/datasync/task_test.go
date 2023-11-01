@@ -804,6 +804,19 @@ func TestAccDataSyncTask_report_config(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
+	// map[string]string{
+	//     -       "task_report_config.#":                                         "1",
+	//     -       "task_report_config.0.%":                                       "5",
+	//     -       "task_report_config.0.output_type":                             "STANDARD",
+	//     -       "task_report_config.0.report_level":                            "SUCCESSES_AND_ERRORS",
+	//     -       "task_report_config.0.s3_destination.#":                        "1",
+	//     -       "task_report_config.0.s3_destination.0.%":                      "3",
+	//     -       "task_report_config.0.s3_destination.0.bucket_access_role_arn": "arn:aws:iam::717153992618:role/tf-acc-test-7948130487504757185-report-test",
+	//     -       "task_report_config.0.s3_destination.0.s3_bucket_arn":          "arn:aws:s3:::tf-acc-test-7948130487504757185-report-test",
+	//     -       "task_report_config.0.s3_destination.0.subdirectory":           "/test",
+	//     -       "task_report_config.0.s3_object_versioning":                    "INCLUDE",
+	//       }
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
@@ -1518,7 +1531,7 @@ resource "aws_iam_role" "report_test" {
 }
 POLICY
 }
-  
+
 resource "aws_iam_role_policy" "report_test" {
   role   = aws_iam_role.report_test.id
   policy = <<POLICY
@@ -1531,7 +1544,7 @@ resource "aws_iam_role_policy" "report_test" {
 	"Effect": "Allow",
 	"Resource": [
 	  "${aws_s3_bucket.report_test.arn}",
-	  "${aws_s3_bucket.test.arn}/*"
+	  "${aws_s3_bucket.report_test.arn}/*"
 	]
   }]
 }
@@ -1542,6 +1555,17 @@ resource "aws_datasync_task" "test" {
   destination_location_arn = aws_datasync_location_s3.test.arn
   name                     = %[1]q
   source_location_arn      = aws_datasync_location_nfs.test.arn
+  
+  task_report_config {
+	s3_destination {
+		bucket_access_role_arn = aws_iam_role.report_test.arn
+		s3_bucket_arn          = aws_s3_bucket.report_test.arn
+		subdirectory           = "/test"
+	}
+	s3_object_versioning = "INCLUDE"
+	output_type          = "STANDARD"
+	report_level         = "SUCCESSES_AND_ERRORS"
+  }
 }
 `, rName))
 }

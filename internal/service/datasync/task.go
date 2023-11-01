@@ -252,12 +252,14 @@ func ResourceTask() *schema.Resource {
 							},
 						},
 						"s3_object_versioning": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectVersionIds_Values(), false),
 						},
 						"output_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ReportOutputType_Values(), false),
 						},
 						"report_overrides": {
 							Type:     schema.TypeList,
@@ -266,27 +268,32 @@ func ResourceTask() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"deleted_override": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
 									},
 									"skipped_override": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
 									},
 									"transferred_override": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
 									},
 									"verified_override": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
 									},
 								},
 							},
 						},
 						"report_level": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
 						},
 					},
 				},
