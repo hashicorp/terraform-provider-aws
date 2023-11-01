@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -218,9 +219,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	input.Attributes = tfmaps.ApplyToAllKeys(attributes, func(v types.QueueAttributeName) string {
-		return string(v)
-	})
+	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
 	outputRaw, err := tfresource.RetryWhenIsA[*types.QueueDeletedRecently](ctx, queueCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateQueue(ctx, input)
@@ -315,12 +314,9 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		input := &sqs.SetQueueAttributesInput{
-			QueueUrl: aws.String(d.Id()),
+			Attributes: flex.ExpandStringyValueMap(attributes),
+			QueueUrl:   aws.String(d.Id()),
 		}
-
-		input.Attributes = tfmaps.ApplyToAllKeys(attributes, func(v types.QueueAttributeName) string {
-			return string(v)
-		})
 
 		_, err = conn.SetQueueAttributes(ctx, input)
 

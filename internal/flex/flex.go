@@ -129,6 +129,16 @@ func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	})
 }
 
+func ExpandStringyValueMap[M ~map[K]V, K ~string, V ~string](m M) map[string]string {
+	return tfmaps.ApplyToAllKeys(tfmaps.ApplyToAllValues(m,
+		func(v V) string {
+			return string(v)
+		}),
+		func(k K) string {
+			return string(k)
+		})
+}
+
 // ExpandStringValueMap expands a string map of interfaces to a string map of strings
 func ExpandStringValueMap(m map[string]interface{}) map[string]string {
 	return tfmaps.ApplyToAllValues(m, func(v any) string {
@@ -207,6 +217,7 @@ func FlattenFloat64List(list []*float64) []interface{} {
 	})
 }
 
+// TODO -> FlattenStringMap
 func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
 	list := make(map[string]interface{}, len(pointers))
 	for i, v := range pointers {
