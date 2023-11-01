@@ -826,37 +826,6 @@ resource "aws_batch_job_definition" "test" {
 `, rName, sp, pt, rsa, timeout)
 }
 
-func testAccJobDefinitionConfig_capabilitiesEC2(rName string, sp int, pt bool, cpu int, rsa int, timeout int) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "container"
-
-  platform_capabilities = [
-    "EC2",
-  ]
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = %[4]d
-  })
-
-  scheduling_priority = %[2]d
-  propagate_tags      = %[3]t
-
-  retry_strategy {
-	attempts = %[5]d
-  }
-
-  timeout {
-	attempt_duration_seconds = %[6]d
-  }
-}
-`, rName, sp, pt, cpu, rsa, timeout)
-}
-
 func testAccJobDefinitionConfig_capabilitiesFargateContainerPropertiesDefaults(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}

@@ -219,7 +219,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer, batch.JobDefinitionTypeMultinode}, true),
+				ValidateFunc: validation.StringInSlice(batch.JobDefinitionType_Values(), true),
 			},
 		},
 
