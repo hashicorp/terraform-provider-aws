@@ -208,6 +208,7 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -245,6 +246,7 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
