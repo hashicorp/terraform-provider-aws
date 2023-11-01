@@ -518,7 +518,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 						return queueAttributeStateNotEqual
 					}
 				case types.QueueAttributeNameRedriveAllowPolicy, types.QueueAttributeNameRedrivePolicy:
-					if !StringsEquivalent(g, e) {
+					if !verify.JSONStringsEqual(g, e) {
 						return queueAttributeStateNotEqual
 					}
 				default:
