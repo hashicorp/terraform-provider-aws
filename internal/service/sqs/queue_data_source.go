@@ -83,46 +83,6 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url string, attributeName types.QueueAttributeName) (*string, error) {
-	input := &sqs.GetQueueAttributesInput{
-		AttributeNames: []types.QueueAttributeName{attributeName},
-		QueueUrl:       aws.String(url),
-	}
-
-	output, err := findQueueAttributes(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if v, ok := output[string(attributeName)]; ok && v != "" {
-		return &v, nil
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
-}
-
-func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[string]string, error) {
-	output, err := conn.GetQueueAttributes(ctx, input)
-
-	if errs.IsA[*types.QueueDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Attributes, nil
-}
-
 func findQueueURLByName(ctx context.Context, conn *sqs.Client, name string) (*string, error) {
 	input := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
