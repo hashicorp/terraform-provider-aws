@@ -30,6 +30,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	jobDefinitionStatusInactive = "INACTIVE"
+	jobDefinitionStatusActive   = "ACTIVE"
+)
+
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
 func ResourceJobDefinition() *schema.Resource {
@@ -47,10 +52,12 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"arn_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"container_properties": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,6 +72,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -90,6 +98,8 @@ func ResourceJobDefinition() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
+			// If the job runs on Amazon EKS resources, then you must not specify platformCapabilities.
 			"platform_capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -98,11 +108,14 @@ func ResourceJobDefinition() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
 			},
+
+			// If the job runs on Amazon EKS resources, then you must not specify propagateTags.
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
+
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -116,6 +129,7 @@ func ResourceJobDefinition() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
+
 						"evaluate_on_exit": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -133,6 +147,7 @@ func ResourceJobDefinition() *schema.Resource {
 										},
 										ValidateFunc: validation.StringInSlice(batch.RetryAction_Values(), true),
 									},
+
 									"on_exit_code": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -142,6 +157,7 @@ func ResourceJobDefinition() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
 										),
 									},
+
 									"on_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -151,6 +167,7 @@ func ResourceJobDefinition() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
 										),
 									},
+
 									"on_status_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -166,12 +183,21 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"revision": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+
+			"scheduling_priority": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 9999),
+			},
+
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -188,6 +214,7 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -265,6 +292,10 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("scheduling_priority"); ok {
+		input.SchedulingPriority = aws.Int64(int64(v.(int)))
+	}
+
 	output, err := conn.RegisterJobDefinitionWithContext(ctx, input)
 
 	if err != nil {
@@ -340,12 +371,75 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("revision", jobDefinition.Revision)
 	d.Set("type", jobDefinition.Type)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 
 	return diags
 }
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		name := d.Get("name").(string)
+		input := &batch.RegisterJobDefinitionInput{
+			JobDefinitionName: aws.String(name),
+			Type:              aws.String(d.Get("type").(string)),
+		}
+
+		if v, ok := d.GetOk("container_properties"); ok {
+			props, err := expandJobContainerProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+			}
+
+			for _, env := range props.Environment {
+				if aws.StringValue(env.Value) == "" {
+					diags = append(diags, errs.NewAttributeWarningDiagnostic(
+						cty.GetAttrPath("container_properties"),
+						"Ignoring environment variable",
+						fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
+					)
+				}
+			}
+
+			input.ContainerProperties = props
+		}
+
+		if v, ok := d.GetOk("propagate_tags"); ok {
+			input.PropagateTags = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("parameters"); ok {
+			input.Parameters = expandJobDefinitionParameters(v.(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
+			input.PlatformCapabilities = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("scheduling_priority"); ok {
+			input.SchedulingPriority = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		jd, err := conn.RegisterJobDefinitionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
+		}
+
+		// arn contains revision which is used in the Read call
+		d.SetId(aws.StringValue(jd.JobDefinitionArn))
+		d.Set("revision", jd.Revision)
+	}
 
 	// Tags only.
 
@@ -356,22 +450,30 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
-	_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
-		JobDefinition: aws.String(d.Id()),
-	})
+	name := d.Get("name").(string)
+	jds, err := ListActiveJobDefinitionByName(ctx, conn, name)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definitions (%s): %s", name, err)
+	}
+
+	for i := range jds {
+		arn := aws.StringValue(jds[i].JobDefinitionArn)
+		log.Printf("[DEBUG] Deleting Batch Job Definition: %s", arn)
+		_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
+			JobDefinition: aws.String(arn),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", arn, err)
+		}
 	}
 
 	return diags
 }
 
 func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
-	const (
-		jobDefinitionStatusInactive = "INACTIVE"
-	)
+
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
@@ -408,6 +510,22 @@ func findJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.Desc
 	}
 
 	return output.JobDefinitions[0], nil
+}
+
+func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Batch, name string) ([]*batch.JobDefinition, error) {
+
+	input := &batch.DescribeJobDefinitionsInput{
+		JobDefinitionName: aws.String(name),
+		Status:            aws.String(jobDefinitionStatusActive),
+	}
+
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.JobDefinitions, nil
 }
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
