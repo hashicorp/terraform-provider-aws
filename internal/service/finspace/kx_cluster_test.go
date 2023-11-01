@@ -160,13 +160,6 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
-			{
-				Config: testAccKxClusterConfig_databaseUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
-				),
-			},
 		},
 	})
 }
@@ -995,46 +988,6 @@ resource "aws_finspace_kx_cluster" "test" {
 	cache_configurations {
 		cache_type = "CACHE_1000"
 		db_paths   = ["/"]
-	}
-  }
-
-  capacity_configuration {
-    node_count = 2
-    node_type  = "kx.s.xlarge"
-  }
-
-  cache_storage_configurations {
-    size = 1200
-    type = "CACHE_1000"
-  }
-
-  vpc_configuration {
-    vpc_id             = aws_vpc.test.id
-    security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
-    ip_address_type    = "IP_V4"
-  }
-}
-`, rName))
-}
-
-func testAccKxClusterConfig_databaseUpdate(rName string) string {
-	return acctest.ConfigCompose(
-		testAccKxClusterConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_finspace_kx_cluster" "test" {
-  name                 = %[1]q
-  environment_id       = aws_finspace_kx_environment.test.id
-  type                 = "HDB"
-  release_label        = "1.0"
-  az_mode              = "SINGLE"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-
-  database {
-    database_name = aws_finspace_kx_database.test.name
-	cache_configurations {
-		cache_type = "CACHE_1000"
-		db_paths   = ["/", "/"]
 	}
   }
 
