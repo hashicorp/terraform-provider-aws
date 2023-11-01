@@ -378,6 +378,44 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_VPC_securityGroupIDs_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_vpcSecurityGroupIDs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_vpcSecurityGroupIDs_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2, cluster3 eks.Cluster
@@ -999,6 +1037,39 @@ resource "aws_eks_cluster" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName))
+}
+
+func testAccClusterConfig_vpcSecurityGroupIDs_update(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+	vpc_id = aws_vpc.test.id
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
+  
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
     subnet_ids         = aws_subnet.test[*].id
   }
 

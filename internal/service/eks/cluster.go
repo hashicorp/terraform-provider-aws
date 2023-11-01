@@ -485,7 +485,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
+	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs", "vpc_config.0.subnet_ids", "vpc_config.0.security_group_ids") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:               aws.String(d.Id()),
 			ResourcesVpcConfig: expandVPCConfigRequestForUpdate(d.Get("vpc_config").([]interface{})),
