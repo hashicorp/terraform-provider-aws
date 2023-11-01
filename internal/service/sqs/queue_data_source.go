@@ -20,7 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_sqs_queue")
-func DataSourceQueue() *schema.Resource {
+func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 

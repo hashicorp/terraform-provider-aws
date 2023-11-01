@@ -25,11 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceQueue,
+			Factory:  dataSourceQueue,
 			TypeName: "aws_sqs_queue",
 		},
 		{
-			Factory:  DataSourceQueues,
+			Factory:  dataSourceQueues,
 			TypeName: "aws_sqs_queues",
 		},
 	}
