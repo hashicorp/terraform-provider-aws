@@ -43,7 +43,7 @@ This data source supports the following arguments:
 
 * `associationId` - (Required) The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
-* `resourceType` - (Required) A valid resource type. Valid Values: `chatTranscripts` | `callRecordings` | `scheduledReports` | `mediaStreams` | `contactTraceRecords` | `agentEvents` | `realTimeContactAnalysisSegments`.
+* `resourceType` - (Required) A valid resource type. Valid Values: `agentEvents` | `attachments` | `callRecordings` | `chatTranscripts` | `contactEvaluations` | `contactTraceRecords` | `mediaStreams` | `realTimeContactAnalysisSegments` | `scheduledReports` |  `screenRecordings`.
 
 ## Attribute Reference
 
@@ -97,4 +97,4 @@ The `encryptionConfig` configuration block supports the following arguments:
 * `encryptionType` - The type of encryption. Valid Values: `kms`.
 * `keyId` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.18.0 input-0f608b193238ceb1b6e0bf2852057db8f68fd12a2c759036caed46067b3d3943 -->
+<!-- cache-key: cdktf-0.18.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package configservice
 
 import (
@@ -17,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_config_aggregate_authorization", &resource.Sweeper{
 		Name: "aws_config_aggregate_authorization",
 		F:    sweepAggregateAuthorizations,
@@ -54,7 +52,7 @@ func sweepAggregateAuthorizations(region string) error {
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
 			return nil
 		}
@@ -92,7 +90,7 @@ func sweepConfigurationAggregators(region string) error {
 
 	resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
 			return nil
 		}
@@ -132,7 +130,7 @@ func sweepConfigurationRecorder(region string) error {
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecordersWithContext(ctx, req)
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
 			return nil
 		}
@@ -188,7 +186,7 @@ func sweepDeliveryChannels(region string) error {
 		return nil
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Delivery Channels sweep for %s: %s", region, err)
 			return nil
 		}

@@ -126,7 +126,7 @@ class MyConvertedCode extends TerraformStack {
       artifacts: {
         type: "NO_ARTIFACTS",
       },
-      buildTimeout: Token.asNumber("5"),
+      buildTimeout: 5,
       cache: {
         location: example.bucket,
         type: "S3",
@@ -188,7 +188,7 @@ class MyConvertedCode extends TerraformStack {
       artifacts: {
         type: "NO_ARTIFACTS",
       },
-      buildTimeout: Token.asNumber("5"),
+      buildTimeout: 5,
       cache: {
         modes: ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"],
         type: "LOCAL",
@@ -207,7 +207,7 @@ class MyConvertedCode extends TerraformStack {
         type: "LINUX_CONTAINER",
       },
       name: "test-project-cache",
-      queuedTimeout: Token.asNumber("5"),
+      queuedTimeout: 5,
       serviceRole: Token.asString(awsIamRoleExample.arn),
       source: {
         gitCloneDepth: 1,
@@ -438,4 +438,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-93fcff04ca55f8527caaa8b92bc95852d6bfbb189d4beea468056693839e1422 -->
+<!-- cache-key: cdktf-0.18.0 input-1231db4e8811d1c6f118d55d81d8dd0ad67e7fea5670ef0ab686100249f240fc -->

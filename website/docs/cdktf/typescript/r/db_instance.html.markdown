@@ -107,9 +107,9 @@ class MyConvertedCode extends TerraformStack {
         engineVersion: "19.c.ee.002",
         licenseModel: "bring-your-own-license",
         preferredInstanceClasses: [
-          "db.r5.24xlarge",
-          "db.r5.16xlarge",
-          "db.r5.12xlarge",
+          "db.r5.xlarge",
+          "db.r5.2xlarge",
+          "db.r5.4xlarge",
         ],
         storageType: "gp3",
       }
@@ -187,11 +187,11 @@ class MyConvertedCode extends TerraformStack {
       "custom-sqlserver",
       {
         engine: "custom-sqlserver-se",
-        engineVersion: "115.00.4249.2.cev1",
+        engineVersion: "15.00.4249.2.v1",
         preferredInstanceClasses: [
-          "db.r5.24xlarge",
-          "db.r5.16xlarge",
-          "db.r5.12xlarge",
+          "db.r5.xlarge",
+          "db.r5.2xlarge",
+          "db.r5.4xlarge",
         ],
         storageType: "gp3",
       }
@@ -209,6 +209,7 @@ class MyConvertedCode extends TerraformStack {
       kmsKeyId: Token.asString(byId.arn),
       multiAz: false,
       password: "avoid-plaintext-passwords",
+      storageEncrypted: true,
       timeouts: [
         {
           create: "3h",
@@ -352,7 +353,7 @@ Defaults to true.
 * `backupWindow` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenanceWindow`.
 * `blueGreenUpdate` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
-  See [blue_green_update](#blue_green_update) below
+  See [`blueGreenUpdate`](#blue_green_update) below.
 * `caCertIdentifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `characterSetName` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -367,7 +368,7 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `deleteAutomatedBackups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletionProtection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
@@ -389,8 +390,12 @@ Cannot be specified for gp3 storage if the `allocatedStorage` value is below a p
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `licenseModel` - (Optional, but required for some DB engines, i.e., Oracle
-SE1) License model information for this DB instance.
+* `licenseModel` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
+    * RDS for MariaDB: `generalPublicLicense`
+    * RDS for Microsoft SQL Server: `licenseIncluded`
+    * RDS for MySQL: `generalPublicLicense`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresqlLicense`
 * `maintenanceWindow` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
@@ -527,7 +532,7 @@ class MyConvertedCode extends TerraformStack {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-## blue_green_update
+### `blueGreenUpdate`
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
@@ -621,4 +626,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5348e10ce76b94ea3543c947af183b44e90cbde641979d6904c70aafffcd18ce -->
+<!-- cache-key: cdktf-0.18.0 input-b21700814161e25f711326174480a6752fc0080770ea5836b639fbad92ed7c1e -->

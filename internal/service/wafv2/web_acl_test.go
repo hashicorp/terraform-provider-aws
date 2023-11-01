@@ -708,6 +708,98 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_acfpRuleSet(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                                                                "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#": "1",
+						// "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                             "false",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                    "/creation",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                           "/registration",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                             "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":               "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":    "/email",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier": "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier": "/username",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesACFPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_acfpRuleSetUpdate(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                                                                                                                 "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#":                                                  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                             "true",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                    "/creation",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                           "/registration",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                             "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":               "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":    "/email",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier": "/pass",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier": "/user",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesACFPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.WebACL
@@ -1051,6 +1143,54 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 						"statement.0.byte_match_statement.0.text_transformation.#":                  "1",
 						"statement.0.byte_match_statement.0.text_transformation.0.priority":         "0",
 						"statement.0.byte_match_statement.0.text_transformation.0.type":             "NONE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, wafv2.FallbackBehaviorMatch),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.0.fallback_behavior": "MATCH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, wafv2.FallbackBehaviorNoMatch),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.0.fallback_behavior": "NO_MATCH",
 					}),
 				),
 			},
@@ -2998,6 +3138,57 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName, positionalConstraint, searchString)
 }
 
+func testAccWebACLConfig_byteMatchStatementJA3Fingerprint(rName, fallbackBehavior string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          ja3_fingerprint {
+            fallback_behavior = %[2]q
+          }
+        }
+        positional_constraint = "EXACTLY"
+        search_string         = "abcdef1234567890abcdef1234567890"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, fallbackBehavior)
+}
+
 func testAccWebACLConfig_byteMatchStatementJSONBody(rName, matchScope, invalidFallbackBehavior, oversizeHandling, matchPattern string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -3913,6 +4104,72 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_acfpRuleSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesACFPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_acfp_rule_set {
+            creation_path          = "/creation"
+            registration_page_path = "/registration"
+            request_inspection {
+              email_field {
+                identifier = "/email"
+              }
+              password_field {
+                identifier = "/password"
+              }
+              payload_type = "JSON"
+              username_field {
+                identifier = "/username"
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
 func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_atpRuleSet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -3947,6 +4204,74 @@ resource "aws_wafv2_web_acl" "test" {
               payload_type = "JSON"
               username_field {
                 identifier = "/username"
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_acfpRuleSetUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesACFPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_acfp_rule_set {
+            enable_regex_in_path   = true
+            creation_path          = "/creation"
+            registration_page_path = "/registration"
+
+            request_inspection {
+              email_field {
+                identifier = "/email"
+              }
+              password_field {
+                identifier = "/pass"
+              }
+              payload_type = "JSON"
+              username_field {
+                identifier = "/user"
               }
             }
           }

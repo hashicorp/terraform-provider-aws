@@ -238,16 +238,14 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  db_name              = "test"
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t3.micro"
-  username             = "foo"
-  password             = "foobarbaz"
-  parameter_group_name = "default.mysql5.7"
-  skip_final_snapshot  = true
+  identifier          = %[1]q
+  allocated_storage   = 10
+  db_name             = "test"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
+  username            = "foo"
+  password            = "foobarbaz"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {
