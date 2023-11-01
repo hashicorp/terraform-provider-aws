@@ -5,6 +5,13 @@ package sqs
 
 // Exports for use in tests only.
 var (
+	ResourceQueue                   = resourceQueue
+	ResourceQueuePolicy             = resourceQueuePolicy
+	ResourceQueueRedriveAllowPolicy = resourceQueueRedriveAllowPolicy
+	ResourceQueueRedrivePolicy      = resourceQueueRedrivePolicy
+
+	FindQueueAttributesByURL = findQueueAttributesByURL
+
 	DefaultQueueDelaySeconds                  = defaultQueueDelaySeconds
 	DefaultQueueKMSDataKeyReusePeriodSeconds  = defaultQueueKMSDataKeyReusePeriodSeconds
 	DefaultQueueMaximumMessageSize            = defaultQueueMaximumMessageSize
