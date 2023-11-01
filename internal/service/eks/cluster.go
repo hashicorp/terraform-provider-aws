@@ -270,13 +270,11 @@ func ResourceCluster() *schema.Resource {
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
