@@ -162,4 +162,3 @@ check "aws_instances_stopped" {
   }
 }
 ```
-
