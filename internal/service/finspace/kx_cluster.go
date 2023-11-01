@@ -197,19 +197,19 @@ func ResourceKxCluster() *schema.Resource {
 			"database": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
+							ForceNew: false,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cache_type": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
+										ForceNew: false,
 									},
 									"db_paths": {
 										Type: schema.TypeSet,
@@ -217,7 +217,7 @@ func ResourceKxCluster() *schema.Resource {
 											Type: schema.TypeString,
 										},
 										Optional: true,
-										ForceNew: true,
+										ForceNew: false,
 									},
 								},
 							},
@@ -225,7 +225,7 @@ func ResourceKxCluster() *schema.Resource {
 						"changeset_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
+							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(1, 26),
 						},
 						"database_name": {
@@ -539,44 +539,64 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	update := false
+	updateDb := false
+	updateCode := false
 
-	in := &finspace.UpdateKxClusterCodeConfigurationInput{
+	CodeConfigIn := &finspace.UpdateKxClusterCodeConfigurationInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		ClusterName:   aws.String(d.Get("name").(string)),
 	}
 
+	DatabaseConfigIn := &finspace.UpdateKxClusterDatabasesInput{
+		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && d.HasChanges("database") {
+		DatabaseConfigIn.Databases = expandDatabases(d.Get("database").([]interface{}))
+		updateDb = true
+	}
+
 	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && d.HasChanges("code") {
-		in.Code = expandCode(v.([]interface{}))
-		update = true
+		CodeConfigIn.Code = expandCode(v.([]interface{}))
+		updateCode = true
 	}
 
 	if v, ok := d.GetOk("initialization_script"); ok && d.HasChanges("initialization_script") {
-		in.Code = expandCode(d.Get("code").([]interface{}))
-		in.InitializationScript = aws.String(v.(string))
-		update = true
+		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+		CodeConfigIn.InitializationScript = aws.String(v.(string))
+		updateCode = true
 	}
 
 	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
-		in.Code = expandCode(d.Get("code").([]interface{}))
-		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
-		update = true
+		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+		CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+		updateCode = true
 	}
 
-	log.Printf("[DEBUG] Updating FinSpace KxClusterCodeConfiguration (%s): %#v", d.Id(), in)
-
-	if _, err := conn.UpdateKxClusterCodeConfiguration(ctx, in); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+	if updateDb {
+		log.Printf("[DEBUG] Updating FinSpace KxClusterDatabases (%s): %#v", d.Id(), DatabaseConfigIn)
+		if _, err := conn.UpdateKxClusterDatabases(ctx, DatabaseConfigIn); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
 	}
 
-	if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+	if updateCode {
+		log.Printf("[DEBUG] Updating FinSpace KxClusterCodeConfiguration (%s): %#v", d.Id(), CodeConfigIn)
+		if _, err := conn.UpdateKxClusterCodeConfiguration(ctx, CodeConfigIn); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
 	}
 
-	if !update {
+	if !updateCode && !updateDb {
 		return diags
 	}
-	// Tags only.
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 

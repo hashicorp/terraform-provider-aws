@@ -138,6 +138,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
+
 	var kxcluster finspace.GetKxClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
@@ -154,6 +155,13 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_database(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+			{
+				Config: testAccKxClusterConfig_databaseUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
@@ -277,6 +285,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	var kxcluster finspace.GetKxClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
+	s3Bucket := "test-fixtures"
 	codePath := "test-fixtures/code.zip"
 	updatedCodePath := "test-fixtures/updated_code.zip"
 
@@ -294,7 +303,8 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "code", codePath),
+					resource.TestCheckResourceAttr(resourceName, "code.s3_bucket", s3Bucket),
+					resource.TestCheckResourceAttr(resourceName, "code.s3_key", codePath),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -302,7 +312,8 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, updatedCodePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "code", updatedCodePath),
+					resource.TestCheckResourceAttr(resourceName, "code.s3_bucket", s3Bucket),
+					resource.TestCheckResourceAttr(resourceName, "code.s3_key", updatedCodePath),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -981,11 +992,60 @@ resource "aws_finspace_kx_cluster" "test" {
 
   database {
     database_name = aws_finspace_kx_database.test.name
+	cache_configurations {
+		cache_type = "CACHE_1000"
+		db_paths   = ["/"]
+	}
   }
 
   capacity_configuration {
     node_count = 2
     node_type  = "kx.s.xlarge"
+  }
+
+  cache_storage_configurations {
+    size = 1200
+    type = "CACHE_1000"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName))
+}
+
+func testAccKxClusterConfig_databaseUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  database {
+    database_name = aws_finspace_kx_database.test.name
+	cache_configurations {
+		cache_type = "CACHE_1000"
+		db_paths   = ["/", "/"]
+	}
+  }
+
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  cache_storage_configurations {
+    size = 1200
+    type = "CACHE_1000"
   }
 
   vpc_configuration {
