@@ -799,7 +799,30 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 }
 
 func TestAccDataSyncTask_report_config(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_reportConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccDataSyncTask_tags(t *testing.T) {
@@ -1466,4 +1489,59 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, key1, value1, key2, value2))
+}
+
+func testAccTaskConfig_reportConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationNFS(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "report_test" {
+  bucket        = "%[1]s-report-test"
+  force_destroy = true
+}
+
+resource "aws_iam_role" "report_test" {
+  name               = "%[1]s-report-test"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "datasync.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+  
+resource "aws_iam_role_policy" "report_test" {
+  role   = aws_iam_role.report_test.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+	"Action": [
+	  "s3:*"
+	],
+	"Effect": "Allow",
+	"Resource": [
+	  "${aws_s3_bucket.report_test.arn}",
+	  "${aws_s3_bucket.test.arn}/*"
+	]
+  }]
+}
+POLICY
+}
+
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.test.arn
+}
+`, rName))
 }
