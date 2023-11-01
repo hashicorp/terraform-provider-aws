@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource(name="Lifecycle Policy")
 func newDataSourceLifecyclePolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceLifecyclePolicy{}, nil
@@ -35,11 +34,11 @@ type dataSourceLifecyclePolicy struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
 }
 
-func (d *dataSourceLifecyclePolicy) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"created_date": schema.StringAttribute{

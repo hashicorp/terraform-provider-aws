@@ -74,7 +74,7 @@ func TestAccOpenSearchServerlessLifecyclePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_disappears(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceLifecyclePolicy, resourceName),
@@ -206,35 +206,12 @@ resource "aws_opensearchserverless_lifecycle_policy" "test" {
     "Rules" : [
       {
         "ResourceType" : "index",
-        "Resource" : ["index/autoparts-inventory/*"],
+        "Resource" : ["index/%[1]s/*"],
         "MinIndexRetention" : "81d"
       },
       {
         "ResourceType" : "index",
-        "Resource" : ["index/sales/orders*"],
-        "NoMinIndexRetention" : true
-      }
-    ]
-  })
-}
-`, rName)
-}
-
-func testAccLifecyclePolicyConfig_disappears(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_opensearchserverless_lifecycle_policy" "test" {
-  name = %[1]q
-  type = "retention"
-  policy = jsonencode({
-    "Rules" : [
-      {
-        "ResourceType" : "index",
-        "Resource" : ["index/computer-inventory/*"],
-        "MinIndexRetention" : "81d"
-      },
-      {
-        "ResourceType" : "index",
-        "Resource" : ["index/national-sales/orders*"],
+        "Resource" : ["index/sales/%[1]s*"],
         "NoMinIndexRetention" : true
       }
     ]
@@ -253,12 +230,12 @@ resource "aws_opensearchserverless_lifecycle_policy" "test" {
     "Rules" : [
       {
         "ResourceType" : "index",
-        "Resource" : ["index/toy-inventory/*"],
+        "Resource" : ["index/%[1]s/*"],
         "MinIndexRetention" : "81d"
       },
       {
         "ResourceType" : "index",
-        "Resource" : ["index/holiday-sales/orders*"],
+        "Resource" : ["index/holiday-sales/%[1]s*"],
         "NoMinIndexRetention" : true
       }
     ]

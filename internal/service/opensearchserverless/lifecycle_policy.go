@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Lifecycle Policy")
 func newResourceLifecyclePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLifecyclePolicy{}, nil
@@ -45,11 +44,11 @@ type resourceLifecyclePolicy struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceLifecyclePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
 }
 
-func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceLifecyclePolicy) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"description": schema.StringAttribute{
@@ -76,6 +75,9 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"type": schema.StringAttribute{
 				Required: true,

@@ -58,12 +58,12 @@ resource "aws_opensearchserverless_lifecycle_policy" "test" {
     "Rules" : [
       {
         "ResourceType" : "index",
-        "Resource" : ["index/autoparts-inventory/*"],
+        "Resource" : ["index/%[1]sy/*"],
         "MinIndexRetention" : "81d"
       },
       {
         "ResourceType" : "index",
-        "Resource" : ["index/sales/orders*"],
+        "Resource" : ["index/local-sales/%[1]s*"],
         "NoMinIndexRetention" : true
       }
     ]
