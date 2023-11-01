@@ -143,7 +143,6 @@ check "aws_eks_cluster_default" {
     error_message = "EKS cluster ${aws_eks_cluster.default.id} status is ${aws_eks_cluster.default.status}"
   }
 }
-
 ```
 
 ## Example - Check for EC2 Stopped Instances (aws_instances)
