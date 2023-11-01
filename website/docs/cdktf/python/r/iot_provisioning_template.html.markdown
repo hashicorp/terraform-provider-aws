@@ -107,6 +107,7 @@ This resource supports the following arguments:
 * `provisioning_role_arn` - (Required) The role ARN for the role associated with the fleet provisioning template. This IoT role grants permission to provision a device.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_body` - (Required) The JSON formatted contents of the fleet provisioning template.
+* `type` - (Optional) The type you define in a provisioning template.
 
 ### pre_provisioning_hook
 
@@ -142,4 +143,4 @@ Using `terraform import`, import IoT fleet provisioning templates using the `nam
 % terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c0fefe4e33dd930777b9688f3ebe24a5338e567f5874edf869781d9ab532a26a -->
+<!-- cache-key: cdktf-0.18.0 input-0caa47853f782deb3ce1c0adf39db30dd119e9251e987dbe84f960ceed581db6 -->

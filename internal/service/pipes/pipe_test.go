@@ -2264,7 +2264,7 @@ resource "aws_security_group" "source" {
 resource "aws_mq_broker" "source" {
   broker_name             = "%[1]s-source"
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   host_instance_type      = "mq.t2.micro"
   security_groups         = [aws_security_group.source.id]
   authentication_strategy = "simple"

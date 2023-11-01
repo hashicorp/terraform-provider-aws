@@ -202,8 +202,10 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.#", resourceName, "vpc_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.security_group_ids.#", resourceName, "vpc_config.0.security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.subnet_ids.#", resourceName, "vpc_config.0.subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.vpc_id", resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
 		},

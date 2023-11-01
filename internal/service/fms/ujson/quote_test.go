@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
 )
 
 type quoteTest struct {
@@ -32,7 +32,7 @@ func TestQuote(t *testing.T) {
 	t.Parallel()
 
 	for _, tt := range quotetests {
-		if out := AppendQuote([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.out {
+		if out := ujson.AppendQuote([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.out {
 			t.Errorf("AppendQuote(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.out)
 		}
 	}
@@ -42,7 +42,7 @@ func TestQuoteToASCII(t *testing.T) {
 	t.Parallel()
 
 	for _, tt := range quotetests {
-		if out := AppendQuoteToASCII([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.ascii {
+		if out := ujson.AppendQuoteToASCII([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.ascii {
 			t.Errorf("AppendQuoteToASCII(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.ascii)
 		}
 	}
@@ -52,7 +52,7 @@ func TestQuoteToGraphic(t *testing.T) {
 	t.Parallel()
 
 	for _, tt := range quotetests {
-		if out := AppendQuoteToGraphic([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.graphic {
+		if out := ujson.AppendQuoteToGraphic([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.graphic {
 			t.Errorf("AppendQuoteToGraphic(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.graphic)
 		}
 	}
@@ -110,21 +110,21 @@ func TestUnquote(t *testing.T) {
 	t.Parallel()
 
 	for _, tt := range unquotetests {
-		if out, err := Unquote([]byte(tt.in)); err != nil || string(out) != tt.out {
+		if out, err := ujson.Unquote([]byte(tt.in)); err != nil || string(out) != tt.out {
 			t.Errorf("Unquote(%#q) = %q, %v want %q, nil", tt.in, out, err, tt.out)
 		}
 	}
 
 	// run the quote tests too, backward
 	for _, tt := range quotetests {
-		if in, err := Unquote([]byte(tt.out)); string(in) != tt.in {
+		if in, err := ujson.Unquote([]byte(tt.out)); string(in) != tt.in {
 			t.Errorf("Unquote(%#q) = %q, %v, want %q, nil", tt.out, in, err, tt.in)
 		}
 	}
 
 	for _, s := range misquoted {
-		if out, err := Unquote([]byte(s)); out != nil || !errors.Is(err, ErrSyntax) {
-			t.Errorf("Unquote(%#q) = %q, %v want %q, %v", s, out, err, "", ErrSyntax)
+		if out, err := ujson.Unquote([]byte(s)); out != nil || !errors.Is(err, ujson.ErrSyntax) {
+			t.Errorf("Unquote(%#q) = %q, %v want %q, %v", s, out, err, "", ujson.ErrSyntax)
 		}
 	}
 }
@@ -147,7 +147,7 @@ func TestUnquoteInvalidUTF8(t *testing.T) {
 		{in: `"\t` + "\xc0" + `"`, want: "\t\xef\xbf\xbd"},
 	}
 	for i, tt := range tests {
-		got, err := Unquote([]byte(tt.in))
+		got, err := ujson.Unquote([]byte(tt.in))
 		var gotErr string
 		if err != nil {
 			gotErr = err.Error()

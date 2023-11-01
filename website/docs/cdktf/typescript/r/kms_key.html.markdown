@@ -73,6 +73,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `keyId` - The globally unique identifier for the key.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+~> **Note:** There are a variety of default timeouts set internally. If you set a shorter custom timeout than one of the defaults, the custom timeout will not be respected as the longer of the custom or internal default will be used.
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2M`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Keys using the `id`. For example:
@@ -95,4 +103,4 @@ Using `terraform import`, import KMS Keys using the `id`. For example:
 % terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d984c6c777a268470f88944f6a6ef11066baf874fa826d0ffb123ffb31671323 -->
+<!-- cache-key: cdktf-0.18.0 input-cadf26a57c86ad443716e9d493f3661a0240fbfa81abe024e3813fe0ac63a3dd -->
