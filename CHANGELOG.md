@@ -29,7 +29,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_vpc_ipam_pools: Add `id` attribute for individual IPAM pools ([#32133](https://github.com/hashicorp/terraform-provider-aws/issues/32133))
+* resource/aws_alb_listener_rule: Fixed the `action.forward.target_group` argument minimum item requirement. Previously this was set to 2, but the AWS API allows specifying a single target group. ([#33727](https://github.com/hashicorp/terraform-provider-aws/issues/33727))
 * resource/aws_amplify_branch: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `enable_performance_mode` ([#34141](https://github.com/hashicorp/terraform-provider-aws/issues/34141))
+* resource/aws_lb_listener_rule: Fixed the `action.forward.target_group` argument minimum item requirement. Previously this was set to 2, but the AWS API allows specifying a single target group. ([#33727](https://github.com/hashicorp/terraform-provider-aws/issues/33727))
 * resource/aws_rds_cluster: Avoid an error on delete related to `unexpected state 'scaling-compute'` ([#34187](https://github.com/hashicorp/terraform-provider-aws/issues/34187))
 
 ## 5.23.1 (October 27, 2023)
