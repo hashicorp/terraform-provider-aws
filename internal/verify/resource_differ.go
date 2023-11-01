@@ -9,5 +9,6 @@ package verify
 // * schema.ResourceDiff
 // FIXME: can be removed if https://github.com/hashicorp/terraform-plugin-sdk/pull/626/files is merged
 type ResourceDiffer interface {
+	GetOk(string) (interface{}, bool)
 	HasChange(string) bool
 }

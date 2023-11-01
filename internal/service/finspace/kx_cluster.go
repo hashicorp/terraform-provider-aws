@@ -787,7 +787,7 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 	}
 
 	if v, ok := tfMap["size"].(int); ok && v != 0 {
-		a.Size = int32(v)
+		a.Size = aws.Int32(int32(v))
 	}
 
 	return a
@@ -1076,7 +1076,7 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 		m["type"] = v
 	}
 
-	if v := apiObject.Size; v >= 10 && v <= 16000 {
+	if v := aws.ToInt32(apiObject.Size); v >= 10 && v <= 16000 {
 		m["size"] = v
 	}
 
