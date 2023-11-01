@@ -380,10 +380,9 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 
 func TestAccEKSCluster_VPC_securityGroupIDs_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -1056,13 +1055,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_security_group" "test2" {
-	vpc_id = aws_vpc.test.id
-  
-	tags = {
-	  Name = %[1]q
-	}
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
-  
+}
+
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
