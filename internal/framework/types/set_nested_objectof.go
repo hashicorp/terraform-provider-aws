@@ -153,10 +153,20 @@ func (v SetNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 }
 
 func (v SetNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectValueObjectPtr[T](ctx, v.SetValue)
+	return v.ToPtr(ctx)
 }
 
 func (v SetNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
+	return v.ToSlice(ctx)
+}
+
+// ToPtr returns a pointer to the single element of a SetNestedObject.
+func (v SetNestedObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
+	return nestedObjectValueObjectPtr[T](ctx, v.SetValue)
+}
+
+// ToSlice returns a slice of pointers to the elements of a SetNestedObject.
+func (v SetNestedObjectValueOf[T]) ToSlice(ctx context.Context) ([]*T, diag.Diagnostics) {
 	return nestedObjectValueObjectSlice[T](ctx, v.SetValue)
 }
 

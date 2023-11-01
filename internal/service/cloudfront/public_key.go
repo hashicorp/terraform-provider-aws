@@ -5,7 +5,6 @@ package cloudfront
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,11 +12,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_cloudfront_public_key")
@@ -73,63 +73,62 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	if v, ok := d.GetOk("name"); ok {
-		d.Set("name", v.(string))
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", id.PrefixedUniqueId(v.(string)))
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+	input := &cloudfront.CreatePublicKeyInput{
+		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			Name:       aws.String(name),
+		},
+	}
+
+	if v, ok := d.GetOk("caller_reference"); ok {
+		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		d.Set("name", id.PrefixedUniqueId("tf-"))
+		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	request := &cloudfront.CreatePublicKeyInput{
-		PublicKeyConfig: expandPublicKeyConfig(d),
+	if v, ok := d.GetOk("comment"); ok {
+		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 
-	log.Println("[DEBUG] Create CloudFront PublicKey:", request)
+	output, err := conn.CreatePublicKeyWithContext(ctx, input)
 
-	output, err := conn.CreatePublicKeyWithContext(ctx, request)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront PublicKey: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Public Key (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.PublicKey.Id))
+
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
 func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
-	request := &cloudfront.GetPublicKeyInput{
-		Id: aws.String(d.Id()),
-	}
 
-	output, err := conn.GetPublicKeyWithContext(ctx, request)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
+	output, err := findPublicKeyByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudFront Public Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
-	}
-
-	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Public Key (%s): %s", d.Id(), err)
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
-	d.Set("encoded_key", publicKeyConfig.EncodedKey)
-	d.Set("name", publicKeyConfig.Name)
-	d.Set("comment", publicKeyConfig.Comment)
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
+	d.Set("comment", publicKeyConfig.Comment)
+	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
+	d.Set("name", publicKeyConfig.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(publicKeyConfig.Name)))
 
 	return diags
 }
@@ -138,15 +137,29 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	request := &cloudfront.UpdatePublicKeyInput{
-		Id:              aws.String(d.Id()),
-		PublicKeyConfig: expandPublicKeyConfig(d),
-		IfMatch:         aws.String(d.Get("etag").(string)),
+	input := &cloudfront.UpdatePublicKeyInput{
+		Id:      aws.String(d.Id()),
+		IfMatch: aws.String(d.Get("etag").(string)),
+		PublicKeyConfig: &cloudfront.PublicKeyConfig{
+			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			Name:       aws.String(d.Get("name").(string)),
+		},
 	}
 
-	_, err := conn.UpdatePublicKeyWithContext(ctx, request)
+	if v, ok := d.GetOk("caller_reference"); ok {
+		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
+	} else {
+		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		input.PublicKeyConfig.Comment = aws.String(v.(string))
+	}
+
+	_, err := conn.UpdatePublicKeyWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CloudFront PublicKey (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Public Key (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
@@ -156,37 +169,44 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	request := &cloudfront.DeletePublicKeyInput{
+	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
+	_, err := conn.DeletePublicKeyWithContext(ctx, &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+		return diags
 	}
 
-	_, err := conn.DeletePublicKeyWithContext(ctx, request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFront PublicKey (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Public Key (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
-	publicKeyConfig := &cloudfront.PublicKeyConfig{
-		EncodedKey: aws.String(d.Get("encoded_key").(string)),
-		Name:       aws.String(d.Get("name").(string)),
+func findPublicKeyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetPublicKeyOutput, error) {
+	input := &cloudfront.GetPublicKeyInput{
+		Id: aws.String(id),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
-		publicKeyConfig.Comment = aws.String(v.(string))
+	output, err := conn.GetPublicKeyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	if v, ok := d.GetOk("caller_reference"); ok {
-		publicKeyConfig.CallerReference = aws.String(v.(string))
-	} else {
-		publicKeyConfig.CallerReference = aws.String(id.UniqueId())
+	if err != nil {
+		return nil, err
 	}
 
-	return publicKeyConfig
+	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

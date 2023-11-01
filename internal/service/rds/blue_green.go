@@ -99,7 +99,7 @@ func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
 func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceData) error {
 	needsPreConditions := false
 	input := &rds_sdkv2.ModifyDBInstanceInput{
-		ApplyImmediately:     true,
+		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
 	}
 
@@ -142,7 +142,7 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv
 
 func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
 	modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
-		ApplyImmediately:     true,
+		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 

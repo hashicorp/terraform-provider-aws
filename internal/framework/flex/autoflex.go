@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
+	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -114,6 +116,10 @@ func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Val
 	return valFrom, valTo, diags
 }
 
+var (
+	plural = pluralize.NewClient()
+)
+
 // autoFlexConvertStruct traverses struct `from` calling `flexer` for each exported field.
 func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -133,7 +139,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		toFieldVal := valTo.FieldByName(fieldName)
+		toFieldVal := findFieldFuzzy(fieldName, valTo)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
@@ -148,6 +154,45 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	}
 
 	return diags
+}
+
+func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
+	// first precedence is exact match (case sensitive)
+	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
+		return v
+	}
+
+	// second precedence is exact match (case insensitive)
+	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
+		field := typTo.Field(i)
+		if field.PkgPath != "" {
+			continue // Skip unexported fields.
+		}
+		fieldNameTo := field.Name
+		if fieldNameTo == "Tags" {
+			continue // Resource tags are handled separately.
+		}
+		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) {
+			// probably could assume validity here since reflect gave the field name
+			return v
+		}
+	}
+
+	// third precedence is singular/plural
+	if plural.IsSingular(fieldNameFrom) {
+		if v := valTo.FieldByName(plural.Plural(fieldNameFrom)); v.IsValid() {
+			return v
+		}
+	}
+
+	if plural.IsPlural(fieldNameFrom) {
+		if v := valTo.FieldByName(plural.Singular(fieldNameFrom)); v.IsValid() {
+			return v
+		}
+	}
+
+	// no finds, fuzzy or otherwise - return invalid
+	return valTo.FieldByName(fieldNameFrom)
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.

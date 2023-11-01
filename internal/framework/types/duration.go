@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = DurationType
+	_ xattr.TypeWithValidate   = DurationType
+	_ basetypes.StringValuable = Duration{}
 )
 
 func (d durationType) TerraformType(_ context.Context) tftypes.Type {
@@ -107,8 +108,7 @@ func (d durationType) Validate(ctx context.Context, in tftypes.Value, path path.
 		diags.AddAttributeError(
 			path,
 			"Duration Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
+			fmt.Sprintf("%sExpected String value, received %T with value: %v", ProviderErrorDetailPrefix, in, in),
 		)
 		return diags
 	}
@@ -123,8 +123,7 @@ func (d durationType) Validate(ctx context.Context, in tftypes.Value, path path.
 		diags.AddAttributeError(
 			path,
 			"Duration Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to time.Duration: %s", err),
+			fmt.Sprintf("%sCannot convert value to time.Duration: %s", ProviderErrorDetailPrefix, err),
 		)
 		return diags
 	}

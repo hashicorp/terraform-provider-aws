@@ -6,7 +6,6 @@ package globalaccelerator
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -150,11 +149,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	accelerator := results[0]
 	acceleratorARN := aws.StringValue(accelerator.AcceleratorArn)
-	if v, err := arn.Parse(acceleratorARN); err != nil {
-		response.Diagnostics.AddError("parsing ARN", err.Error())
-	} else {
-		data.ARN = fwtypes.ARNValue(v)
-	}
+	data.ARN = flex.StringToFrameworkARN(ctx, accelerator.AcceleratorArn, nil)
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)

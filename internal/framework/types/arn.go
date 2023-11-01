@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+// ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
+const ProviderErrorDetailPrefix = "An unexpected error was encountered trying to validate an attribute value. " +
+	"This is always an error in the provider. Please report the following to the provider developer:\n\n"
+
 type arnType uint8
 
 const (
@@ -24,7 +28,8 @@ const (
 )
 
 var (
-	_ xattr.TypeWithValidate = ARNType
+	_ xattr.TypeWithValidate   = ARNType
+	_ basetypes.StringValuable = ARN{}
 )
 
 func (t arnType) TerraformType(_ context.Context) tftypes.Type {
@@ -106,8 +111,7 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 		diags.AddAttributeError(
 			path,
 			"ARN Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
+			fmt.Sprintf("%sExpected String value, received %T with value: %v", ProviderErrorDetailPrefix, in, in),
 		)
 		return diags
 	}
@@ -122,8 +126,7 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 		diags.AddAttributeError(
 			path,
 			"ARN Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to arn.ARN: %s", err),
+			fmt.Sprintf("%sCannot convert value to arn.ARN: %s", ProviderErrorDetailPrefix, err),
 		)
 		return diags
 	}

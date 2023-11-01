@@ -132,7 +132,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	if !data.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, data.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
 	}
 
 	output, err := conn.CreateJobQueueWithContext(ctx, &input)
@@ -229,13 +229,13 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !state.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, state.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, state.SchedulingPolicyARN)
 		update = true
 	}
 
 	if !plan.SchedulingPolicyARN.Equal(state.SchedulingPolicyARN) {
 		if !plan.SchedulingPolicyARN.IsNull() || !plan.SchedulingPolicyARN.IsUnknown() {
-			input.SchedulingPolicyArn = flex.ARNStringFromFramework(ctx, plan.SchedulingPolicyARN)
+			input.SchedulingPolicyArn = flex.StringFromFramework(ctx, plan.SchedulingPolicyARN)
 
 			update = true
 		} else {
