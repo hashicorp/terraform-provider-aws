@@ -155,26 +155,22 @@ func ResourceKxCluster() *schema.Resource {
 			"code": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: false,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 255),
 						},
 						"s3_key": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
 					},
@@ -184,7 +180,6 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: false,
 				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 50),
 					validation.MapValueLenBetween(1, 50),
@@ -197,13 +192,11 @@ func ResourceKxCluster() *schema.Resource {
 			"database": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: false,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cache_type": {
@@ -217,7 +210,6 @@ func ResourceKxCluster() *schema.Resource {
 											Type: schema.TypeString,
 										},
 										Optional: true,
-										ForceNew: false,
 									},
 								},
 							},
@@ -225,7 +217,6 @@ func ResourceKxCluster() *schema.Resource {
 						"changeset_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     false,
 							ValidateFunc: validation.StringLenBetween(1, 26),
 						},
 						"database_name": {
@@ -258,7 +249,6 @@ func ResourceKxCluster() *schema.Resource {
 			"initialization_script": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"last_modified_timestamp": {
