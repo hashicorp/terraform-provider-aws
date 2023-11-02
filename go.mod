@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/athena v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/athena v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.13.0
