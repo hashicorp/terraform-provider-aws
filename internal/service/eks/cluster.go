@@ -5,6 +5,7 @@ package eks
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -484,28 +485,37 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
-
-	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs", "vpc_config.0.subnet_ids", "vpc_config.0.security_group_ids") {
-		input := &eks.UpdateClusterConfigInput{
-			Name:               aws.String(d.Id()),
-			ResourcesVpcConfig: expandVPCConfigRequestForUpdate(d.Get("vpc_config").([]interface{})),
+	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
+		input := &eks.VpcConfigRequest{
+			EndpointPrivateAccess: aws.Bool(d.Get("vpc_config.0.endpoint_private_access").(bool)),
+			EndpointPublicAccess:  aws.Bool(d.Get("vpc_config.0.endpoint_public_access").(bool)),
 		}
-
-		output, err := conn.UpdateClusterConfigWithContext(ctx, input)
-
-		if err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) VPC config: %s", d.Id(), err)
+		if v, ok := d.GetOk("vpc_config.0.public_access_cidrs"); ok && v.(*schema.Set).Len() > 0 {
+			input.PublicAccessCidrs = flex.ExpandStringSet(v.(*schema.Set))
 		}
-
-		updateID := aws.StringValue(output.Update.Id)
-
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
+		err := updateVPCConfig(ctx, conn, d, input, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", d.Id(), updateID, err)
+			return diag.FromErr(err)
+		}
+	}
+	// API only allows one type of update at at time.
+	if d.HasChange("vpc_config.0.subnet_ids") {
+		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
+			SubnetIds: flex.ExpandStringSet(d.Get("vpc_config.0.subnet_ids").(*schema.Set)),
+		}, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
+	if d.HasChange("vpc_config.0.security_group_ids") {
+		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
+			SecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_config.0.security_group_ids").(*schema.Set)),
+		}, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return resourceClusterRead(ctx, d, meta)
 }
 
@@ -810,25 +820,32 @@ func expandVPCConfigRequestForCreate(l []interface{}) *eks.VpcConfigRequest {
 	return vpcConfigRequest
 }
 
-func expandVPCConfigRequestForUpdate(l []interface{}) *eks.VpcConfigRequest {
-	if len(l) == 0 {
-		return nil
+func updateVPCConfig(
+	ctx context.Context,
+	conn *eks.EKS,
+	d *schema.ResourceData,
+	config *eks.VpcConfigRequest,
+	timeout time.Duration,
+) error {
+	input := &eks.UpdateClusterConfigInput{
+		Name:               aws.String(d.Id()),
+		ResourcesVpcConfig: config,
 	}
 
-	m := l[0].(map[string]interface{})
+	output, err := conn.UpdateClusterConfigWithContext(ctx, input)
 
-	vpcConfigRequest := &eks.VpcConfigRequest{
-		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
-		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
-		SecurityGroupIds:      flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:             flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
+	if err != nil {
+		return fmt.Errorf("updating EKS Cluster (%s) VPC config: %s", d.Id(), err)
 	}
 
-	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
-	}
+	updateID := aws.StringValue(output.Update.Id)
 
-	return vpcConfigRequest
+	_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+
+	if err != nil {
+		return fmt.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", d.Id(), updateID, err)
+	}
+	return nil
 }
 
 func expandKubernetesNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
