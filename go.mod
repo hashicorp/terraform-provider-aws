@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.22.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.5.0
