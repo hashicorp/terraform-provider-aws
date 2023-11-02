@@ -59,8 +59,8 @@ github.com/aws/aws-sdk-go-v2/service/athena v1.34.0 h1:wZaywaONfHerySRsAFWhA1Myo
 github.com/aws/aws-sdk-go-v2/service/athena v1.34.0/go.mod h1:WSRHaccpHc65b4OP63dElo5nLuMUoGhoDDzYr5tP5/k=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.0 h1:CIG6h8XkwGaS9/k4z+B72Rzh9KdlyrD/HzbidUD/C9U=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.0/go.mod h1:xXtiggqGVD59WdBNclsih1qfeeXPOasMzpBKfj7k+wE=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.5.0 h1:6gHJBaPeZcAEbprX+1sGaBd4qXJ2QK5RedRkF4u8uNA=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.5.0/go.mod h1:GZUDl13Gh1RxQ3Id7zGZRbaruI+d5s29hVS4g2XqPl8=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.6.0 h1:CVezvdO+/Aa1S+lQpNqe1nHnn4a9QPxr5LVKMGYUDmo=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.6.0/go.mod h1:Zi1s46alfbcte2MyRLdlxuv5+Z6YKJ+ODPggBnSZWhc=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.13.0 h1:/GppYyDIhFwWIBNBe/eDnj5TUTvWrYuhFoPeRp2rMdc=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.13.0/go.mod h1:tY8x+Ca/xSEMtlw8uKO9cFz+8LCdHS85CmnxOeo/YFU=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.25.0 h1:NxVlXbd2XJb+WGlINWgHjZHLhWllqQwemi0oGAaiOTM=
