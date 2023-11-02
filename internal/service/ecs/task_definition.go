@@ -570,7 +570,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
