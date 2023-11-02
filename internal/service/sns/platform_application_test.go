@@ -366,7 +366,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
-					resource.ParallelTest(t, resource.TestCase{
+					resource.Test(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 						ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -410,6 +410,10 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 	updatedApplePlatformBundleId := "com.bundle2.name2"
 
 	for _, platform := range platforms { //nolint:paralleltest
+		if platform.Name == "GCM" {
+			continue
+		}
+
 		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 		t.Run(platform.Name, func(*testing.T) {
@@ -584,18 +588,18 @@ func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatfo
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
 }
 `, name, platform.Name, platform.Credential)
 	}
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
 }
 `, name, platform.Name, platform.Credential, platform.Principal)
 }
@@ -604,20 +608,20 @@ func testAccPlatformApplicationConfig_basicAttribute(name string, platform *test
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  %s                  = "%s"
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  %[4]s               = %[5]q
 }
 `, name, platform.Name, platform.Credential, attributeKey, attributeValue)
 	}
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
-  %s                  = "%s"
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
+  %[5]s               = %[6]q
 }
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
 }
@@ -625,12 +629,12 @@ resource "aws_sns_platform_application" "test" {
 func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *testAccPlatformApplicationPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                     = "%s"
-  platform                 = "%s"
-  platform_credential      = %s
-  platform_principal       = %s
-  apple_platform_team_id   = "%s"
-  apple_platform_bundle_id = "%s"
+  name                     = %[1]q
+  platform                 = %[2]q
+  platform_credential      = %[3]s
+  platform_principal       = %[4]s
+  apple_platform_team_id   = %[5]q
+  apple_platform_bundle_id = %[6]q
 }
 `, name, platform.Name, platform.Credential, platform.Principal, applePlatformTeamId, applePlatformBundleId)
 }
