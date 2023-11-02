@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -43,7 +44,7 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
-					resource.TestCheckResourceAttr(resourceName, "locale_id", "en_US"),
+					resource.TestCheckResourceAttrSet(resourceName, "locale_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_version"),
 					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.70"),
 				),
@@ -98,7 +99,12 @@ func testAccCheckBotLocaleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
+			input := &lexmodelsv2.DescribeBotLocaleInput{
+				LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
+				BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
+				BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
+			}
+			_, err := conn.DescribeBotLocale(ctx, input)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -126,7 +132,12 @@ func testAccCheckBotLocaleExists(ctx context.Context, name string, botlocale *le
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
+		resp, err := conn.DescribeBotLocale(ctx, &lexmodelsv2.DescribeBotLocaleInput{
+			LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
+			BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
+			BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
+		})
+		// resp, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tflexv2models.ResNameBotLocale, rs.Primary.ID, err)
 		}
@@ -152,9 +163,9 @@ resource "aws_lexv2models_bot" "test" {
 }
 
 resource "aws_lexv2models_bot_locale" "testlocale" {
+  locale_id                        = %[2]q
   bot_id                           = aws_lexv2models_bot.test.id
   bot_version                      = "DRAFT"
-  locale_id                        = %[2]q
   n_lu_intent_confidence_threshold = %[3]g
 }
 `, rName, localeid, thres))

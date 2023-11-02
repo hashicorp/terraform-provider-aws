@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -79,6 +80,12 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
@@ -120,6 +127,10 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 		},
 	}
 }
+
+const (
+	botLocaleIDPartCount = 3
+)
 
 func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -167,10 +178,19 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
+	idParts := []string{
+		aws.ToString(out.LocaleId),
+		aws.ToString(out.BotId),
+		aws.ToString(out.BotVersion),
+	}
+	id, err := fwflex.FlattenResourceId(idParts, botLocaleIDPartCount, false)
+
 	plan.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
+	plan.Id = types.StringValue(id)
 	state := plan
 	state.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
 	state.BotID = flex.StringToFramework(ctx, out.BotId)
+	state.Id = types.StringValue(id)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 
 	vs, _ := flattenVoiceSettings(ctx, out.VoiceSettings)
@@ -203,7 +223,7 @@ func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	out, err := FindBotLocaleByID(ctx, conn, state.LocaleID.ValueString())
+	out, err := FindBotLocaleByID(ctx, conn, state.Id.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -309,7 +329,9 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	in := &lexmodelsv2.DeleteBotLocaleInput{
-		LocaleId: aws.String(state.LocaleID.ValueString()),
+		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		BotId:      aws.String(state.BotID.ValueString()),
+		BotVersion: aws.String(state.BotVersion.ValueString()),
 	}
 
 	_, err := conn.DeleteBotLocale(ctx, in)
@@ -408,8 +430,14 @@ func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) r
 }
 
 func FindBotLocaleByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
+	parts, err := fwflex.ExpandResourceId(id, botLocaleIDPartCount, false)
+	if err != nil {
+		return nil, err
+	}
 	in := &lexmodelsv2.DescribeBotLocaleInput{
-		LocaleId: aws.String(id),
+		LocaleId:   aws.String(parts[0]),
+		BotId:      aws.String(parts[1]),
+		BotVersion: aws.String(parts[2]),
 	}
 
 	out, err := conn.DescribeBotLocale(ctx, in)
@@ -473,6 +501,7 @@ type resourceBotLocaleData struct {
 	VoiceSettings                types.List     `tfsdk:"voice_settings"`
 	Description                  types.String   `tfsdk:"description"`
 	NluIntentCOnfidenceThreshold types.Float64  `tfsdk:"n_lu_intent_confidence_threshold"`
+	Id                           types.String   `tfsdk:"id"`
 	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
 }
 
