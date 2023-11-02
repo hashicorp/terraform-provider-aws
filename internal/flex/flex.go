@@ -174,6 +174,12 @@ func FlattenStringValueSet(list []string) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
+func FlattenStringMap(m map[string]*string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v *string) any {
+		return aws.StringValue(v)
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*int64
 func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
@@ -215,15 +221,6 @@ func FlattenFloat64List(list []*float64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *float64) any {
 		return int(aws.Float64Value(v))
 	})
-}
-
-// TODO -> FlattenStringMap
-func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
-	list := make(map[string]interface{}, len(pointers))
-	for i, v := range pointers {
-		list[i] = *v
-	}
-	return list
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
