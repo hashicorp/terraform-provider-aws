@@ -33,6 +33,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceBrokerInstanceTypeOfferings,
 			TypeName: "aws_mq_broker_instance_type_offerings",
 		},
+		{
+			Factory:  DataSourceEngineVersions,
+			TypeName: "aws_mq_engine_versions",
+			Name:     "Engine Versions",
+		},
 	}
 }
 
