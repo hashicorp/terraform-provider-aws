@@ -214,7 +214,7 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -515,8 +515,8 @@ type voiceSettingsData struct {
 }
 
 var voiceSettingsAttrTypes = map[string]attr.Type{
-	"voice_setting": types.StringType,
-	"enngine":       types.StringType,
+	"voice_id": types.StringType,
+	"engine":   types.StringType,
 }
 
 // refreshFromOutput writes state data from an AWS response object
