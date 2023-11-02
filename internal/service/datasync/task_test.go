@@ -1555,22 +1555,22 @@ resource "aws_datasync_task" "test" {
   destination_location_arn = aws_datasync_location_s3.test.arn
   name                     = %[1]q
   source_location_arn      = aws_datasync_location_nfs.test.arn
-  
+
   task_report_config {
-	s3_destination {
-		bucket_access_role_arn = aws_iam_role.report_test.arn
-		s3_bucket_arn          = aws_s3_bucket.report_test.arn
-		subdirectory           = "test/"
-	}
-	report_overrides {
-		deleted_override     = "ERRORS_ONLY"
-		skipped_override     = "ERRORS_ONLY"
-		transferred_override = "ERRORS_ONLY"
-		verified_override    = "ERRORS_ONLY"
-	}
-	s3_object_versioning = "INCLUDE"
-	output_type          = "STANDARD"
-	report_level         = "SUCCESSES_AND_ERRORS"
+    s3_destination {
+      bucket_access_role_arn = aws_iam_role.report_test.arn
+      s3_bucket_arn          = aws_s3_bucket.report_test.arn
+      subdirectory           = "test/"
+    }
+    report_overrides {
+      deleted_override     = "ERRORS_ONLY"
+      skipped_override     = "ERRORS_ONLY"
+      transferred_override = "ERRORS_ONLY"
+      verified_override    = "ERRORS_ONLY"
+    }
+    s3_object_versioning = "INCLUDE"
+    output_type          = "STANDARD"
+    report_level         = "SUCCESSES_AND_ERRORS"
   }
 }
 `, rName))
