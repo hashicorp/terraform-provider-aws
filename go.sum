@@ -73,8 +73,8 @@ github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.0 h1:tXhzQ6uoQp
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.0/go.mod h1:Jt/GjUYn1dxY29OaQiP7w+Sp803nBU1foVaB2+GJk70=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.27.0 h1:Kauj768gQYo/8yCahnP6RmkEVWW4cFcHT2H16hd8GS4=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.27.0/go.mod h1:9kKYKSd6XEXOIsI5gdaol7V8GPPQhuh6eN25BWeH+ZE=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.28.0 h1:wkRGrKNoqZLLEVtgt1fvdET9+hj2VbBUl6RvfQlyeuI=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.28.0/go.mod h1:caJgznPrRktmNtdz4iji5ZegC9nF6bBqQqvRw80SYZM=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.29.0 h1:dclYP4ePpjT9pHNzypwF8ANNFCKhqRZIYXafNxAklOU=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.29.0/go.mod h1:Af+yZrMOuY2mQVKYo3KFq0Bii02mlCdligAstXvwooM=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.20.0 h1:2H+so3Q6ohyr6aSXWscumI33wqkbU/EVsxnQ4mDrbfA=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.20.0/go.mod h1:lZOXgR9idHbGKtflEyFRY0oj7F6FCALt/U37dFCdWa4=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.4.0 h1:8Wf+6TQksaIAFeisljZFExClRGFJ1PebtQVEChbOY4A=
