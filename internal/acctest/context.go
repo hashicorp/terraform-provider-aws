@@ -42,7 +42,7 @@ func testNameContext(ctx context.Context, testName string) context.Context {
 	return ctx
 }
 
-func awsSDKLogger(ctx context.Context) context.Context {
+func awsSDKLogger(ctx context.Context) context.Context { // nosemgrep:ci.aws-in-func-name
 	ctx, logger := baselogging.NewTfLogger(ctx)
 	ctx = baselogging.RegisterLogger(ctx, logger)
 
