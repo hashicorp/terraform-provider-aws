@@ -86,7 +86,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	var policy string
 
 	if err == nil {
-		policy = attributes[TopicAttributeNamePolicy]
+		policy = attributes[topicAttributeNamePolicy]
 
 		if policy == "" {
 			err = tfresource.NewEmptyResultError(d.Id())
@@ -103,8 +103,8 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", attributes[TopicAttributeNameTopicARN])
-	d.Set("owner", attributes[TopicAttributeNameOwner])
+	d.Set("arn", attributes[topicAttributeNameTopicARN])
+	d.Set("owner", attributes[topicAttributeNameOwner])
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
@@ -160,5 +160,5 @@ func defaultTopicPolicy(topicARN, accountID string) string {
 }
 
 func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
-	return putTopicAttribute(ctx, conn, arn, TopicAttributeNamePolicy, policy)
+	return putTopicAttribute(ctx, conn, arn, topicAttributeNamePolicy, policy)
 }

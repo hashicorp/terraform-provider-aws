@@ -16,5 +16,8 @@ var (
 	FindTopicAttributesByARN                       = findTopicAttributesByARN
 	FindTopicAttributesWithValidAWSPrincipalsByARN = findTopicAttributesWithValidAWSPrincipalsByARN
 
+	FIFOTopicNameSuffix                = fifoTopicNameSuffix
 	ParsePlatformApplicationResourceID = parsePlatformApplicationResourceID
+	TopicAttributeNameDeliveryPolicy   = topicAttributeNameDeliveryPolicy
+	TopicAttributeNamePolicy           = topicAttributeNamePolicy
 )

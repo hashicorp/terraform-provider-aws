@@ -88,17 +88,17 @@ var (
 	}
 
 	platformApplicationAttributeMap = attrmap.New(map[string]string{
-		"apple_platform_bundle_id":         PlatformApplicationAttributeNameApplePlatformBundleID,
-		"apple_platform_team_id":           PlatformApplicationAttributeNameApplePlatformTeamID,
-		"event_delivery_failure_topic_arn": PlatformApplicationAttributeNameEventDeliveryFailure,
-		"event_endpoint_created_topic_arn": PlatformApplicationAttributeNameEventEndpointCreated,
-		"event_endpoint_deleted_topic_arn": PlatformApplicationAttributeNameEventEndpointDeleted,
-		"event_endpoint_updated_topic_arn": PlatformApplicationAttributeNameEventEndpointUpdated,
-		"failure_feedback_role_arn":        PlatformApplicationAttributeNameFailureFeedbackRoleARN,
-		"platform_credential":              PlatformApplicationAttributeNamePlatformCredential,
-		"platform_principal":               PlatformApplicationAttributeNamePlatformPrincipal,
-		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleARN,
-		"success_feedback_sample_rate":     PlatformApplicationAttributeNameSuccessFeedbackSampleRate,
+		"apple_platform_bundle_id":         platformApplicationAttributeNameApplePlatformBundleID,
+		"apple_platform_team_id":           platformApplicationAttributeNameApplePlatformTeamID,
+		"event_delivery_failure_topic_arn": platformApplicationAttributeNameEventDeliveryFailure,
+		"event_endpoint_created_topic_arn": platformApplicationAttributeNameEventEndpointCreated,
+		"event_endpoint_deleted_topic_arn": platformApplicationAttributeNameEventEndpointDeleted,
+		"event_endpoint_updated_topic_arn": platformApplicationAttributeNameEventEndpointUpdated,
+		"failure_feedback_role_arn":        platformApplicationAttributeNameFailureFeedbackRoleARN,
+		"platform_credential":              platformApplicationAttributeNamePlatformCredential,
+		"platform_principal":               platformApplicationAttributeNamePlatformPrincipal,
+		"success_feedback_role_arn":        platformApplicationAttributeNameSuccessFeedbackRoleARN,
+		"success_feedback_sample_rate":     platformApplicationAttributeNameSuccessFeedbackSampleRate,
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
@@ -194,8 +194,8 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		// If APNS platform was configured with token-based authentication then the only way to update them
 		// is to update all 4 attributes as they must be specified together in the request.
 		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
-			attributes[PlatformApplicationAttributeNameApplePlatformTeamID] = d.Get("apple_platform_team_id").(string)
-			attributes[PlatformApplicationAttributeNameApplePlatformBundleID] = d.Get("apple_platform_bundle_id").(string)
+			attributes[platformApplicationAttributeNameApplePlatformTeamID] = d.Get("apple_platform_team_id").(string)
+			attributes[platformApplicationAttributeNameApplePlatformBundleID] = d.Get("apple_platform_bundle_id").(string)
 		}
 
 		// Prior to version 3.0.0 of the Terraform AWS Provider, the platform_credential and platform_principal
@@ -208,12 +208,12 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 			return nil
 		}
 
-		attributes[PlatformApplicationAttributeNamePlatformCredential] = d.Get("platform_credential").(string)
+		attributes[platformApplicationAttributeNamePlatformCredential] = d.Get("platform_credential").(string)
 		// If the platform requires a principal it must also be specified, even if it didn't change
 		// since credential is stored as a hash, the only way to update principal is to update both
 		// as they must be specified together in the request.
 		if v, ok := d.GetOk("platform_principal"); ok {
-			attributes[PlatformApplicationAttributeNamePlatformPrincipal] = v.(string)
+			attributes[platformApplicationAttributeNamePlatformPrincipal] = v.(string)
 		}
 	}
 

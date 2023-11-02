@@ -186,36 +186,36 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+			ValidateFunc: validation.StringInSlice(topicTracingConfig_Values(), false),
 		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
-		"application_failure_feedback_role_arn":    TopicAttributeNameApplicationFailureFeedbackRoleARN,
-		"application_success_feedback_role_arn":    TopicAttributeNameApplicationSuccessFeedbackRoleARN,
-		"application_success_feedback_sample_rate": TopicAttributeNameApplicationSuccessFeedbackSampleRate,
-		"arn":                                   TopicAttributeNameTopicARN,
-		"content_based_deduplication":           TopicAttributeNameContentBasedDeduplication,
-		"delivery_policy":                       TopicAttributeNameDeliveryPolicy,
-		"display_name":                          TopicAttributeNameDisplayName,
-		"fifo_topic":                            TopicAttributeNameFIFOTopic,
-		"firehose_failure_feedback_role_arn":    TopicAttributeNameFirehoseFailureFeedbackRoleARN,
-		"firehose_success_feedback_role_arn":    TopicAttributeNameFirehoseSuccessFeedbackRoleARN,
-		"firehose_success_feedback_sample_rate": TopicAttributeNameFirehoseSuccessFeedbackSampleRate,
-		"http_failure_feedback_role_arn":        TopicAttributeNameHTTPFailureFeedbackRoleARN,
-		"http_success_feedback_role_arn":        TopicAttributeNameHTTPSuccessFeedbackRoleARN,
-		"http_success_feedback_sample_rate":     TopicAttributeNameHTTPSuccessFeedbackSampleRate,
-		"kms_master_key_id":                     TopicAttributeNameKMSMasterKeyId,
-		"lambda_failure_feedback_role_arn":      TopicAttributeNameLambdaFailureFeedbackRoleARN,
-		"lambda_success_feedback_role_arn":      TopicAttributeNameLambdaSuccessFeedbackRoleARN,
-		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                 TopicAttributeNameOwner,
+		"application_failure_feedback_role_arn":    topicAttributeNameApplicationFailureFeedbackRoleARN,
+		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
+		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
+		"arn":                                   topicAttributeNameTopicARN,
+		"content_based_deduplication":           topicAttributeNameContentBasedDeduplication,
+		"delivery_policy":                       topicAttributeNameDeliveryPolicy,
+		"display_name":                          topicAttributeNameDisplayName,
+		"fifo_topic":                            topicAttributeNameFIFOTopic,
+		"firehose_failure_feedback_role_arn":    topicAttributeNameFirehoseFailureFeedbackRoleARN,
+		"firehose_success_feedback_role_arn":    topicAttributeNameFirehoseSuccessFeedbackRoleARN,
+		"firehose_success_feedback_sample_rate": topicAttributeNameFirehoseSuccessFeedbackSampleRate,
+		"http_failure_feedback_role_arn":        topicAttributeNameHTTPFailureFeedbackRoleARN,
+		"http_success_feedback_role_arn":        topicAttributeNameHTTPSuccessFeedbackRoleARN,
+		"http_success_feedback_sample_rate":     topicAttributeNameHTTPSuccessFeedbackSampleRate,
+		"kms_master_key_id":                     topicAttributeNameKMSMasterKeyId,
+		"lambda_failure_feedback_role_arn":      topicAttributeNameLambdaFailureFeedbackRoleARN,
+		"lambda_success_feedback_role_arn":      topicAttributeNameLambdaSuccessFeedbackRoleARN,
+		"lambda_success_feedback_sample_rate":   topicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"owner":                                 topicAttributeNameOwner,
 		"policy":                                TopicAttributeNamePolicy,
-		"signature_version":                     TopicAttributeNameSignatureVersion,
-		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
-		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
-		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
-		"tracing_config":                        TopicAttributeNameTracingConfig,
+		"signature_version":                     topicAttributeNameSignatureVersion,
+		"sqs_failure_feedback_role_arn":         topicAttributeNameSQSFailureFeedbackRoleARN,
+		"sqs_success_feedback_role_arn":         topicAttributeNameSQSSuccessFeedbackRoleARN,
+		"sqs_success_feedback_sample_rate":      topicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        topicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
@@ -257,12 +257,12 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// The FifoTopic attribute must be passed in the call to CreateTopic.
-	if v, ok := attributes[TopicAttributeNameFIFOTopic]; ok {
+	if v, ok := attributes[topicAttributeNameFIFOTopic]; ok {
 		input.Attributes = map[string]string{
-			TopicAttributeNameFIFOTopic: v,
+			topicAttributeNameFIFOTopic: v,
 		}
 
-		delete(attributes, TopicAttributeNameFIFOTopic)
+		delete(attributes, topicAttributeNameFIFOTopic)
 	}
 
 	output, err := conn.CreateTopic(ctx, input)
@@ -336,7 +336,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	name := arn.Resource
 	d.Set("name", name)
 	if d.Get("fifo_topic").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -449,7 +449,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 func topicName(d verify.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_topic").(bool) {
-		optFns = append(optFns, create.WithSuffix(FIFOTopicNameSuffix))
+		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}
 	return create.NewNameGenerator(optFns...).Generate()
 }

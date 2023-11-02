@@ -74,7 +74,7 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true, // When filter_policy is set, this defaults to MessageAttributes.
-			ValidateFunc: validation.StringInSlice(SubscriptionFilterPolicyScope_Values(), false),
+			ValidateFunc: validation.StringInSlice(subscriptionFilterPolicyScope_Values(), false),
 		},
 		"owner_id": {
 			Type:     schema.TypeString,
@@ -88,7 +88,7 @@ var (
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: validation.StringInSlice(SubscriptionProtocol_Values(), false),
+			ValidateFunc: validation.StringInSlice(subscriptionProtocol_Values(), false),
 		},
 		"raw_message_delivery": {
 			Type:     schema.TypeBool,
@@ -115,19 +115,19 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            SubscriptionAttributeNameSubscriptionARN,
-		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
-		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       SubscriptionAttributeNameEndpoint,
-		"filter_policy":                  SubscriptionAttributeNameFilterPolicy,
-		"filter_policy_scope":            SubscriptionAttributeNameFilterPolicyScope,
-		"owner_id":                       SubscriptionAttributeNameOwner,
-		"pending_confirmation":           SubscriptionAttributeNamePendingConfirmation,
-		"protocol":                       SubscriptionAttributeNameProtocol,
-		"raw_message_delivery":           SubscriptionAttributeNameRawMessageDelivery,
-		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
-		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
-		"topic_arn":                      SubscriptionAttributeNameTopicARN,
+		"arn":                            subscriptionAttributeNameSubscriptionARN,
+		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
+		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
+		"endpoint":                       subscriptionAttributeNameEndpoint,
+		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
+		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
+		"owner_id":                       subscriptionAttributeNameOwner,
+		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
+		"protocol":                       subscriptionAttributeNameProtocol,
+		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
+		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
+		"subscription_role_arn":          subscriptionAttributeNameSubscriptionRoleARN,
+		"topic_arn":                      subscriptionAttributeNameTopicARN,
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
@@ -158,9 +158,9 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
-	delete(attributes, SubscriptionAttributeNameEndpoint)
-	delete(attributes, SubscriptionAttributeNameProtocol)
-	delete(attributes, SubscriptionAttributeNameTopicARN)
+	delete(attributes, subscriptionAttributeNameEndpoint)
+	delete(attributes, subscriptionAttributeNameProtocol)
+	delete(attributes, subscriptionAttributeNameTopicARN)
 
 	protocol := d.Get("protocol").(string)
 	input := &sns.SubscribeInput{
@@ -267,15 +267,15 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 
 func putSubscriptionAttributes(ctx context.Context, conn *sns.Client, arn string, attributes map[string]string) error {
 	// Filter policy order matters
-	filterPolicyScope, ok := attributes[SubscriptionAttributeNameFilterPolicyScope]
+	filterPolicyScope, ok := attributes[subscriptionAttributeNameFilterPolicyScope]
 
 	if ok {
-		delete(attributes, SubscriptionAttributeNameFilterPolicyScope)
+		delete(attributes, subscriptionAttributeNameFilterPolicyScope)
 	}
 
 	// MessageBody is backwards-compatible so it should always be applied first
-	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageBody {
-		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+	if filterPolicyScope == subscriptionFilterPolicyScopeMessageBody {
+		err := putSubscriptionAttribute(ctx, conn, arn, subscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
 		if err != nil {
 			return err
 		}
@@ -291,8 +291,8 @@ func putSubscriptionAttributes(ctx context.Context, conn *sns.Client, arn string
 
 	// MessageAttributes isn't compatible with nested policies, so it should always be last
 	// in case the update also includes a change from a nested policy to a flat policy
-	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageAttributes {
-		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+	if filterPolicyScope == subscriptionFilterPolicyScopeMessageAttributes {
+		err := putSubscriptionAttribute(ctx, conn, arn, subscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
 
 		if err != nil {
 			return err
@@ -304,7 +304,7 @@ func putSubscriptionAttributes(ctx context.Context, conn *sns.Client, arn string
 
 func putSubscriptionAttribute(ctx context.Context, conn *sns.Client, arn string, name, value string) error {
 	// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
-	if name == SubscriptionAttributeNameFilterPolicy && value == "" {
+	if name == subscriptionAttributeNameFilterPolicy && value == "" {
 		value = "{}"
 	}
 
@@ -316,7 +316,7 @@ func putSubscriptionAttribute(ctx context.Context, conn *sns.Client, arn string,
 
 	// The AWS API requires a non-empty string value or nil for the RedrivePolicy attribute,
 	// else throws an InvalidParameter error.
-	if name == SubscriptionAttributeNameRedrivePolicy && value == "" {
+	if name == subscriptionAttributeNameRedrivePolicy && value == "" {
 		input.AttributeValue = nil
 	}
 
@@ -366,7 +366,7 @@ func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client
 			return nil, "", err
 		}
 
-		return output, output[SubscriptionAttributeNamePendingConfirmation], nil
+		return output, output[subscriptionAttributeNamePendingConfirmation], nil
 	}
 }
 
@@ -531,7 +531,7 @@ func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.Reso
 		// continue reading back the last value so long as the policy
 		// itself still exists. The expected result would be to revert
 		// to the default value of the attribute (MessageAttributes).
-		return diff.SetNew("filter_policy_scope", SubscriptionFilterPolicyScopeMessageAttributes)
+		return diff.SetNew("filter_policy_scope", subscriptionFilterPolicyScopeMessageAttributes)
 	}
 
 	if !hasPolicy && !hasScope {
