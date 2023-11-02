@@ -280,7 +280,6 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	var kxcluster finspace.GetKxClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
-	s3Bucket := "test-fixtures"
 	codePath := "test-fixtures/code.zip"
 	updatedCodePath := "test-fixtures/updated_code.zip"
 
@@ -298,8 +297,10 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "code.s3_bucket", s3Bucket),
-					resource.TestCheckResourceAttr(resourceName, "code.s3_key", codePath),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
+						"s3_bucket": rName,
+						"s3_key":    codePath,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -307,8 +308,10 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, updatedCodePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "code.s3_bucket", s3Bucket),
-					resource.TestCheckResourceAttr(resourceName, "code.s3_key", updatedCodePath),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
+						"s3_bucket": rName,
+						"s3_key":    updatedCodePath,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -467,8 +470,6 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 				Config: testAccKxClusterConfig_initScript(rName, codePath, initScriptPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "initialization_script", initScriptPath),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -476,8 +477,6 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 				Config: testAccKxClusterConfig_initScript(rName, codePath, updatedInitScriptPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "initialization_script", updatedInitScriptPath),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},

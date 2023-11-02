@@ -209,7 +209,7 @@ func ResourceKxCluster() *schema.Resource {
 									"cache_type": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: false,
+										ForceNew: true,
 									},
 									"db_paths": {
 										Type: schema.TypeSet,
@@ -506,6 +506,10 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set("cache_storage_configurations", flattenCacheStorageConfigurations(
 		out.CacheStorageConfigurations)); err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+	}
+
+	if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
