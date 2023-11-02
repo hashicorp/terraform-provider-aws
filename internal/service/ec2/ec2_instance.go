@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1313,10 +1314,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
-		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}
