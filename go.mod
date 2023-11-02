@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.1
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/account v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/account v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.33.0
