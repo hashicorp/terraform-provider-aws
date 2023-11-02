@@ -434,7 +434,6 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
 		if _, err := conn.UpdateTaskWithContext(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s): %s", d.Id(), err)
-
 		}
 	}
 
