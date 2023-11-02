@@ -804,19 +804,6 @@ func TestAccDataSyncTask_report_config(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
 
-	// map[string]string{
-	//     -       "task_report_config.#":                                         "1",
-	//     -       "task_report_config.0.%":                                       "5",
-	//     -       "task_report_config.0.output_type":                             "STANDARD",
-	//     -       "task_report_config.0.report_level":                            "SUCCESSES_AND_ERRORS",
-	//     -       "task_report_config.0.s3_destination.#":                        "1",
-	//     -       "task_report_config.0.s3_destination.0.%":                      "3",
-	//     -       "task_report_config.0.s3_destination.0.bucket_access_role_arn": "arn:aws:iam::717153992618:role/tf-acc-test-7948130487504757185-report-test",
-	//     -       "task_report_config.0.s3_destination.0.s3_bucket_arn":          "arn:aws:s3:::tf-acc-test-7948130487504757185-report-test",
-	//     -       "task_report_config.0.s3_destination.0.subdirectory":           "/test",
-	//     -       "task_report_config.0.s3_object_versioning":                    "INCLUDE",
-	//       }
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
@@ -827,6 +814,19 @@ func TestAccDataSyncTask_report_config(t *testing.T) {
 				Config: testAccTaskConfig_reportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.output_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_level", "SUCCESSES_AND_ERRORS"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_object_versioning", "INCLUDE"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.0.subdirectory", "test/"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.deleted_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.skipped_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.transferred_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.verified_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.bucket_access_role_arn", "aws_iam_role.report_test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.s3_bucket_arn", "aws_s3_bucket.report_test", "arn"),
 				),
 			},
 			{
@@ -1560,7 +1560,13 @@ resource "aws_datasync_task" "test" {
 	s3_destination {
 		bucket_access_role_arn = aws_iam_role.report_test.arn
 		s3_bucket_arn          = aws_s3_bucket.report_test.arn
-		subdirectory           = "/test"
+		subdirectory           = "test/"
+	}
+	report_overrides {
+		deleted_override     = "ERRORS_ONLY"
+		skipped_override     = "ERRORS_ONLY"
+		transferred_override = "ERRORS_ONLY"
+		verified_override    = "ERRORS_ONLY"
 	}
 	s3_object_versioning = "INCLUDE"
 	output_type          = "STANDARD"

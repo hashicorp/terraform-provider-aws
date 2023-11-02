@@ -386,6 +386,9 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
+	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting task_report_config: %s", err)
+	}
 	d.Set("source_location_arn", output.SourceLocationArn)
 
 	return diags
@@ -541,6 +544,51 @@ func flattenOptions(options *datasync.Options) []interface{} {
 		"transfer_mode":                  aws.StringValue(options.TransferMode),
 		"uid":                            aws.StringValue(options.Uid),
 		"verify_mode":                    aws.StringValue(options.VerifyMode),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfig(options *datasync.TaskReportConfig) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_object_versioning": aws.StringValue(options.ObjectVersionIds),
+		"output_type":          aws.StringValue(options.OutputType),
+		"report_level":         aws.StringValue(options.ReportLevel),
+		"s3_destination":       flattenTaskReportConfigS3Destination(options.Destination.S3),
+		"report_overrides":     flattenTaskReportConfigReportOverrides(options.Overrides),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfigReportOverrides(options *datasync.ReportOverrides) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"deleted_override":     aws.StringValue(options.Deleted.ReportLevel),
+		"skipped_override":     aws.StringValue(options.Skipped.ReportLevel),
+		"transferred_override": aws.StringValue(options.Transferred.ReportLevel),
+		"verified_override":    aws.StringValue(options.Verified.ReportLevel),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfigS3Destination(options *datasync.ReportDestinationS3) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bucket_access_role_arn": aws.StringValue(options.BucketAccessRoleArn),
+		"s3_bucket_arn":          aws.StringValue(options.S3BucketArn),
+		"subdirectory":           aws.StringValue(options.Subdirectory),
 	}
 
 	return []interface{}{m}
