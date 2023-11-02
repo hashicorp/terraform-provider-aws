@@ -642,7 +642,7 @@ func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, id string,
 	return nil, err
 }
 
-func waitKxClusterUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
+func waitKxClusterUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusUpdating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
