@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -76,26 +77,8 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
 				ElementType:        fwtypes.ARNType,
-				Required:           true,
+				Optional:           true,
 				DeprecationMessage: "This parameter will be replaced by `compute_environments_order`.",
-			},
-			"compute_environment_order": schema.ListNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"order": schema.Int64Attribute{
-							Required: true,
-						},
-						"compute_environment": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Required:   true,
-						},
-					},
-				},
-				// Validators: []validator.List{
-				// 	listvalidator.ConflictsWith(
-				// 		path.MatchRelative().AtParent().AtName("compute_environments"),
-				// 	),
-				// },
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
@@ -135,6 +118,19 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 			Update: true,
 			Delete: true,
 		}),
+		"compute_environment_order": schema.ListNestedBlock{
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"order": schema.Int64Attribute{
+						Required: true,
+					},
+					"compute_environment": schema.StringAttribute{
+						// CustomType: fwtypes.ARNType,
+						Required: true,
+					},
+				},
+			},
+		},
 	}
 
 	response.Schema = s
@@ -150,15 +146,15 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	ceo := flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments)
+	// PR Note: After we get the new parameter working (compute_environment_order), we will have to include logic
+	// so either parameter can work until the next major version
+	// ceo := flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments)
 
 	input := batch.CreateJobQueueInput{
-		ComputeEnvironmentOrder: expandComputeEnvironmentOrder(ceo),
-		JobQueueName:            flex.StringFromFramework(ctx, data.Name),
-		Priority:                flex.Int64FromFramework(ctx, data.Priority),
-		State:                   flex.StringFromFramework(ctx, data.State),
-		Tags:                    getTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
+
+	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
 
 	if !data.SchedulingPolicyARN.IsNull() {
 		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
@@ -368,21 +364,22 @@ func (r *resourceJobQueue) UpgradeState(ctx context.Context) map[int64]resource.
 }
 
 type resourceJobQueueData struct {
-	ARN                 types.String `tfsdk:"arn"`
-	ComputeEnvironments types.List   `tfsdk:"compute_environments"`
-	// ComputeEnvironmentOrder []computeEnvironmentOrderData{}     `tfsdk:"compute_environment_order"`
-	ID                  types.String   `tfsdk:"id"`
-	Name                types.String   `tfsdk:"name"`
-	Priority            types.Int64    `tfsdk:"priority"`
-	SchedulingPolicyARN fwtypes.ARN    `tfsdk:"scheduling_policy_arn"`
-	State               types.String   `tfsdk:"state"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
+	ARN                     types.String                                             `tfsdk:"arn"`
+	ComputeEnvironments     types.List                                               `tfsdk:"compute_environments"`
+	ComputeEnvironmentOrder fwtypes.ListNestedObjectValueOf[computeEnvironmentOrder] `tfsdk:"compute_environment_order"`
+	ID                      types.String                                             `tfsdk:"id"`
+	Name                    types.String                                             `tfsdk:"name"`
+	Priority                types.Int64                                              `tfsdk:"priority"`
+	SchedulingPolicyARN     fwtypes.ARN                                              `tfsdk:"scheduling_policy_arn"`
+	State                   types.String                                             `tfsdk:"state"`
+	Tags                    types.Map                                                `tfsdk:"tags"`
+	TagsAll                 types.Map                                                `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
-type jobQueueComputeEnvironmentOrderData struct {
-	ComputeEnvironmentOrder types.String
+type computeEnvironmentOrder struct {
+	ComputeEnvironment types.String `tfsdk:"compute_environment"`
+	Order              types.Int64  `tfsdk:"order"`
 }
 
 func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam
