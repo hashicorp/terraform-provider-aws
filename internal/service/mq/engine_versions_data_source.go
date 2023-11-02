@@ -87,7 +87,7 @@ func dataSourceEngineVersionsRead(ctx context.Context, d *schema.ResourceData, m
 
 	var types []*mq.BrokerEngineType
 	for {
-		out, err := conn.DescribeBrokerEngineTypes(input)
+		out, err := conn.DescribeBrokerEngineTypesWithContext(ctx, input)
 		if err != nil {
 			return append(diags, create.DiagError(names.MQ, create.ErrActionReading, DSNameEngineVersions, "", err)...)
 		}
