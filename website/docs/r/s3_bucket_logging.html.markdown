@@ -14,6 +14,8 @@ in the AWS S3 User Guide.
 ~> **Note:** Amazon S3 supports server access logging, AWS CloudTrail, or a combination of both. Refer to the [Logging options for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html)
 to decide which method meets your requirements.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform
