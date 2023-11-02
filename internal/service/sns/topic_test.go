@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sns"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,10 +18,11 @@ import (
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.SNSEndpointID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -39,7 +39,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +146,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +176,7 @@ func TestAccSNSTopic_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +223,7 @@ func TestAccSNSTopic_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,7 +251,7 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,7 +277,7 @@ func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -298,7 +298,7 @@ func TestAccSNSTopic_withDeliveryPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -327,7 +327,7 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -369,7 +369,7 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -399,7 +399,7 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -428,7 +428,7 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -458,7 +458,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -493,7 +493,7 @@ func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -513,7 +513,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -552,9 +552,9 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+		attributes, err := tfsns.FindTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -592,9 +592,9 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+		attributes, err := tfsns.FindTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -619,14 +619,14 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 
 func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic" {
 				continue
 			}
 
-			_, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -654,9 +654,9 @@ func testAccCheckTopicExists(ctx context.Context, n string, v *map[string]string
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-		output, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

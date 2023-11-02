@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 /**
@@ -99,7 +99,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 	return platforms
 }
 
-func TestDecodePlatformApplicationID(t *testing.T) {
+func TestParsePlatformApplicationResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -154,7 +154,7 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		arn, name, platform, err := tfsns.DecodePlatformApplicationID(tc.Input)
+		arn, name, platform, err := tfsns.ParsePlatformApplicationResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -186,7 +186,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -231,7 +231,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,7 +264,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -329,7 +329,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -383,7 +383,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -430,7 +430,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -473,11 +473,7 @@ func testAccCheckPlatformApplicationExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SNS Platform Application ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
 		_, err := tfsns.FindPlatformApplicationAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -487,7 +483,7 @@ func testAccCheckPlatformApplicationExists(ctx context.Context, n string) resour
 
 func testAccCheckPlatformApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_platform_application" {
