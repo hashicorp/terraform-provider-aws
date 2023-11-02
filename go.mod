@@ -70,7 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.3.0
@@ -132,7 +132,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.22.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.0 // indirect
