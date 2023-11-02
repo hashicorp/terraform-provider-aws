@@ -10,14 +10,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -101,7 +103,7 @@ var (
 )
 
 // @SDKResource("aws_sns_platform_application")
-func ResourcePlatformApplication() *schema.Resource {
+func resourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlatformApplicationCreate,
 		ReadWithoutTimeout:   resourcePlatformApplicationRead,
@@ -117,48 +119,46 @@ func ResourcePlatformApplication() *schema.Resource {
 }
 
 func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesCreate(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
 	input := &sns.CreatePlatformApplicationInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: attributes,
 		Name:       aws.String(name),
 		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreatePlatformApplicationWithContext(ctx, input)
-	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreatePlatformApplication(ctx, input)
+	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
 	if err != nil {
 		return diag.Errorf("creating SNS Platform Application (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*sns.CreatePlatformApplicationOutput).PlatformApplicationArn))
+	d.SetId(aws.ToString(outputRaw.(*sns.CreatePlatformApplicationOutput).PlatformApplicationArn))
 
 	return resourcePlatformApplicationRead(ctx, d, meta)
 }
 
 func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
 	// We will use the ID, which should be a platform application ARN, to:
 	//  * Validate its an appropriate ARN on import
 	//  * Parse out the name and platform
-	arn, name, platform, err := DecodePlatformApplicationID(d.Id())
-
+	arn, name, platform, err := parsePlatformApplicationResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	attributes, err := FindPlatformApplicationAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findPlatformApplicationAttributesByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
@@ -175,7 +175,6 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("platform", platform)
 
 	err = platformApplicationAttributeMap.APIAttributesToResourceData(attributes, d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -184,10 +183,9 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesUpdate(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -221,13 +219,13 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 
 	// Make API call to update attributes
 	input := &sns.SetPlatformApplicationAttributesInput{
-		Attributes:             aws.StringMap(attributes),
+		Attributes:             attributes,
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.SetPlatformApplicationAttributesWithContext(ctx, input)
-	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetPlatformApplicationAttributes(ctx, input)
+	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
 	if err != nil {
 		return diag.Errorf("updating SNS Platform Application (%s): %s", d.Id(), err)
@@ -237,14 +235,14 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Platform Application: %s", d.Id())
-	_, err := conn.DeletePlatformApplicationWithContext(ctx, &sns.DeletePlatformApplicationInput{
+	_, err := conn.DeletePlatformApplication(ctx, &sns.DeletePlatformApplicationInput{
 		PlatformApplicationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil
 	}
 
@@ -255,7 +253,32 @@ func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func DecodePlatformApplicationID(input string) (arnS, name, platform string, err error) {
+func findPlatformApplicationAttributesByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
+	input := &sns.GetPlatformApplicationAttributesInput{
+		PlatformApplicationArn: aws.String(arn),
+	}
+
+	output, err := conn.GetPlatformApplicationAttributes(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attributes, nil
+}
+
+func parsePlatformApplicationResourceID(input string) (arnS, name, platform string, err error) {
 	platformApplicationArn, err := arn.Parse(input)
 	if err != nil {
 		err = fmt.Errorf(
@@ -282,13 +305,11 @@ func DecodePlatformApplicationID(input string) (arnS, name, platform string, err
 
 func isChangeSha256Removal(oldRaw, newRaw interface{}) bool {
 	old, ok := oldRaw.(string)
-
 	if !ok {
 		return false
 	}
 
 	new, ok := newRaw.(string)
-
 	if !ok {
 		return false
 	}
