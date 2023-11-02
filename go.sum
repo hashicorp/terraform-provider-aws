@@ -91,8 +91,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.19.0 h1:t4VeupBbkllYNqHy1hFfNfklkAjN
 github.com/aws/aws-sdk-go-v2/service/fis v1.19.0/go.mod h1:xnd2QzI+HtcHoWFVIrHv3NcheEfZaOm7NgSHfmGMJ2E=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.18.0 h1:0H5luPEAxH6yTBYfXp5OkLeBf0Q95/Pp3UhiL+GIGRE=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.18.0/go.mod h1:Vj8AdxwJpgnnxIa+P5SLWfnBTHk9vOIG8Gb6HJFUc5U=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.18.0 h1:kzqnl+yhxPxhnVSm6bb44IG9gK4gEzFJCHHVLY+Hvd0=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.18.0/go.mod h1:CJrNgB1iaSJEgTANA2fCask7ndy5UKJu31lMOJJ3AIY=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.19.0 h1:3XoTWx3VCcaOTKv93+8K+xCGO+RMyDCc0JdtLFO5+Ug=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.19.0/go.mod h1:wg+/yWskCS48i+6HcLCbsDPKxcqFqXqSGtxe9/d/60s=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.7 h1:hitc48qIZgl38TU33Gxi3V0blniZBDRbdExINJDZ9f8=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.7/go.mod h1:d4c7P+mola/qBIgxgtVHK/w77vn+BlCsC/tbJ3m8m4Y=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.19.0 h1:5jLdtXXcqTSQmoKcoE4Kix4woueoAfxHlbXN/e4Cr1I=
