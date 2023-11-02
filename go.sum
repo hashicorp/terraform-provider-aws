@@ -63,8 +63,8 @@ github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.6.0 h1:CVezvdO+/Aa1S+lQpNqe1n
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.6.0/go.mod h1:Zi1s46alfbcte2MyRLdlxuv5+Z6YKJ+ODPggBnSZWhc=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.0 h1:OkgbfNtZKs8cqCOA8cZrw1GLYR9/ghlRDnKkdzADo+E=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.0/go.mod h1:RQ0HTOSA63My2cZ2LGb7YLKMmTyOhJKmq+u2v0MoYOA=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.25.0 h1:NxVlXbd2XJb+WGlINWgHjZHLhWllqQwemi0oGAaiOTM=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.25.0/go.mod h1:xIamll8zx0UTlefVO/PgTJYTRurrASulQqWz/Xmz2OI=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.26.0 h1:Vdh1365tJuj64BGW4+o04F2URR5JkH3MyRyOkMGH/F0=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.26.0/go.mod h1:b+BEEfK7ncwheUZ/IhtuH1tcguGPZkI2TbGT2T/sOZ4=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.6.0 h1:C2cCaGtKia5QJhI22g0aTzMX97Vnw3TXTPLLGr9XFqA=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.6.0/go.mod h1:iHjlXvBtEsj49UvRtbwrVWR4/jPjGLXlM3BCT2COTp4=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.16.0 h1:JYUAM1e+Q3qIXPK3JqgnByx/l3vE5pV1H+DoQ2OWtJ0=
