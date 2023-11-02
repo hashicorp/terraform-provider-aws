@@ -58,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sns_topic_policy",
 		},
 		{
-			Factory:  ResourceTopicSubscription,
+			Factory:  resourceTopicSubscription,
 			TypeName: "aws_sns_topic_subscription",
 		},
 	}
