@@ -493,7 +493,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := d.GetOk("vpc_config.0.public_access_cidrs"); ok && v.(*schema.Set).Len() > 0 {
 			input.PublicAccessCidrs = flex.ExpandStringSet(v.(*schema.Set))
 		}
-		err := updateVPCConfig(ctx, conn, d, input, d.Timeout(schema.TimeoutUpdate))
+		err := updateVPCConfig(ctx, conn, d, input)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -502,7 +502,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("vpc_config.0.subnet_ids") {
 		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
 			SubnetIds: flex.ExpandStringSet(d.Get("vpc_config.0.subnet_ids").(*schema.Set)),
-		}, d.Timeout(schema.TimeoutUpdate))
+		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -511,7 +511,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("vpc_config.0.security_group_ids") {
 		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
 			SecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_config.0.security_group_ids").(*schema.Set)),
-		}, d.Timeout(schema.TimeoutUpdate))
+		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -825,7 +825,6 @@ func updateVPCConfig(
 	conn *eks.EKS,
 	d *schema.ResourceData,
 	config *eks.VpcConfigRequest,
-	timeout time.Duration,
 ) error {
 	input := &eks.UpdateClusterConfigInput{
 		Name:               aws.String(d.Id()),
