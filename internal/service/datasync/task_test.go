@@ -798,7 +798,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncTask_report_config(t *testing.T) {
+func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -811,7 +811,7 @@ func TestAccDataSyncTask_report_config(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_reportConfig(rName),
+				Config: testAccTaskConfig_taskReportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", "1"),
@@ -1504,7 +1504,7 @@ resource "aws_datasync_task" "test" {
 `, rName, key1, value1, key2, value2))
 }
 
-func testAccTaskConfig_reportConfig(rName string) string {
+func testAccTaskConfig_taskReportConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTaskConfig_baseLocationS3(rName),
 		testAccTaskConfig_baseLocationNFS(rName),
