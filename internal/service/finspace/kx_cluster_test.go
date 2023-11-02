@@ -986,10 +986,10 @@ resource "aws_finspace_kx_cluster" "test" {
 
   database {
     database_name = aws_finspace_kx_database.test.name
-	cache_configurations {
-		cache_type = "CACHE_1000"
-		db_paths   = ["/"]
-	}
+    cache_configurations {
+      cache_type = "CACHE_1000"
+      db_paths   = ["/"]
+    }
   }
 
   capacity_configuration {
