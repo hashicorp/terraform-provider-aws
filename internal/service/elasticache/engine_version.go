@@ -23,7 +23,7 @@ const (
 
 var versionStringRegexp = regexache.MustCompile(versionStringRegexpPattern)
 
-func validMemcachedVersionString(v interface{}, k string) (ws []string, errors []error) {
+func validMemcachedVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if !versionStringRegexp.MatchString(value) {
@@ -45,7 +45,7 @@ var (
 	redisVersionPostV6Regexp = regexache.MustCompile(redisVersionPostV6RegexpPattern)
 )
 
-func validRedisVersionString(v interface{}, k string) (ws []string, errors []error) {
+func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if !redisVersionRegexp.MatchString(value) {
@@ -56,7 +56,7 @@ func validRedisVersionString(v interface{}, k string) (ws []string, errors []err
 }
 
 // CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	engineVersion, ok := diff.GetOk("engine_version")
 	if !ok {
 		return nil
@@ -84,16 +84,37 @@ func validateClusterEngineVersion(engine, engineVersion string) error {
 }
 
 // customizeDiffEngineVersionForceNewOnDowngrade causes re-creation of the resource if the version is being downgraded
-func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	return engineVersionForceNewOnDowngrade(diff)
 }
 
 type getChangeDiffer interface {
-	GetChange(key string) (interface{}, interface{})
+	Get(key string) any
+	GetChange(key string) (any, any)
 }
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	o, n := diff.GetChange("engine_version")
+	if o == "6.x" {
+		actual := diff.Get("engine_version_actual")
+		aVersion, err := gversion.NewVersion(actual.(string))
+		if err != nil {
+			return false, fmt.Errorf("parsing current engine_version: %w", err)
+		}
+		nVersion, err := normalizeEngineVersion(n.(string))
+		if err != nil {
+			return false, fmt.Errorf("parsing new engine_version: %w", err)
+		}
+
+		aSegments := aVersion.Segments()
+		nSegments := nVersion.Segments()
+
+		if nSegments[0] != aSegments[0] {
+			return nSegments[0] < aSegments[0], nil
+		}
+		return nSegments[1] < aSegments[1], nil
+	}
+
 	oVersion, err := normalizeEngineVersion(o.(string))
 	if err != nil {
 		return false, fmt.Errorf("parsing old engine_version: %w", err)
@@ -108,7 +129,8 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 
 type forceNewDiffer interface {
 	Id() string
-	GetChange(key string) (interface{}, interface{})
+	Get(key string) any
+	GetChange(key string) (any, any)
 	HasChange(key string) bool
 	ForceNew(key string) error
 }

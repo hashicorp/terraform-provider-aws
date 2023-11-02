@@ -5,33 +5,40 @@
 ## Overview workflow steps
 
 1. Figure out what you're trying to do:
-    * Create a resource or a data source?
-    * [AWS Go SDK v2 or v1](aws-go-sdk-versions.md) code?\*
-    * [Terraform Plugin Framework or Plugin SDKv2](terraform-plugin-versions.md) based?\*
-    * [Name](naming.md) of the new resource or data source?
-2. Use `skaff` to generate provider code
-3. Go through the generated code completing code and customizing for the AWS Go SDK API
-4. Run, test, refine
-5. Remove "TIP" comments
-6. Submit code in pull request
-
-> \*Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework. See [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+    * Resource or data source?
+    * [Name it](naming.md)
+    !!! tip
+        Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework (e.g. the default `skaff` settings).
+        See [AWS Go SDK Versions](aws-go-sdk-versions.md), [Terraform Plugin Development Packages](terraform-plugin-development-packages.md), and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+1. Use `skaff` to generate provider code
+1. Go through the generated code completing code and customizing for the AWS Go SDK API
+1. Run, test, refine
+1. Remove "TIP" comments
+1. Submit code in pull request
 
 ## Running `skaff`
 
-1. Use Git to clone the GitHub [https://github.com/hashicorp/terraform-provider-aws](https://github.com/hashicorp/terraform-provider-aws) repository.
-2. `cd skaff`
-3. `go install .`
-4. Change directories to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
-5. To get help, enter `skaff` without arguments.
-6. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
+1. Clone the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws) repository.
+1. Install skaff
+
+    ```sh
+    make skaff
+    ```
+
+1. Change directories to the service where your new resource will reside. _E.g._, `cd internal/service/mq`.
+1. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
+
+To get help, enter `skaff` without arguments.
 
 ## Usage
 
 ### Help
 
 ```console
-$ skaff --help
+skaff --help
+```
+
+```
 Usage:
   skaff [command]
 
@@ -50,7 +57,10 @@ Flags:
 Generate the autocompletion script for skaff for the specified shell
 
 ```console
-$ skaff completion --help
+skaff completion --help
+```
+
+```
 Usage:
   skaff completion [command]
 
@@ -71,7 +81,10 @@ Use "skaff completion [command] --help" for more information about a command
 Create scaffolding for a data source
 
 ```console
-$ skaff datasource --help
+skaff datasource --help
+```
+
+```
 Create scaffolding for a data source
 
 Usage:
@@ -93,7 +106,10 @@ Flags:
 Create scaffolding for a resource
 
 ```console
-$ skaff resource --help
+skaff resource --help
+```
+
+```
 Create scaffolding for a resource
 
 Usage:

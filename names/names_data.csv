@@ -26,7 +26,7 @@ mgn,mgn,mgn,mgn,,mgn,,,Mgn,Mgn,,1,,,aws_mgn_,,mgn_,Application Migration (Mgn),A
 appstream,appstream,appstream,appstream,,appstream,,,AppStream,AppStream,,1,,,aws_appstream_,,appstream_,AppStream 2.0,Amazon,,,,,,
 appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,appsync_,AppSync,AWS,,,,,,
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,,No SDK support
-athena,athena,athena,athena,,athena,,,Athena,Athena,,1,,,aws_athena_,,athena_,Athena,Amazon,,,,,,
+athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,
 auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,,
 autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,
 autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,1,,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,
@@ -333,7 +333,7 @@ sms,sms,sms,sms,,sms,,,SMS,SMS,,1,,,aws_sms_,,sms_,SMS (Server Migration),AWS,,x
 snow-device-management,snowdevicemanagement,snowdevicemanagement,snowdevicemanagement,,snowdevicemanagement,,,SnowDeviceManagement,SnowDeviceManagement,,1,,,aws_snowdevicemanagement_,,snowdevicemanagement_,Snow Device Management,AWS,,x,,,,
 snowball,snowball,snowball,snowball,,snowball,,,Snowball,Snowball,,1,,,aws_snowball_,,snowball_,Snow Family,AWS,,x,,,,
 sns,sns,sns,sns,,sns,,,SNS,SNS,,1,,,aws_sns_,,sns_,SNS (Simple Notification),Amazon,,,,,,
-sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,1,,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,,,
+sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,,2,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,,,
 ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,1,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,,
 ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,,2,,aws_ssmcontacts_,,ssmcontacts_,SSM Contacts,AWS,,,,,,
 ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,,2,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,,

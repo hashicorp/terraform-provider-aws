@@ -368,22 +368,28 @@ the AWS official documentation :
 
 This argument supports the following arguments:
 
-* `allocatedStorage` - (Optional) (Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
+* `allocatedStorage` - (Optional, Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
 * `allowMajorVersionUpgrade` - (Optional) Enable to allow major engine version upgrades when changing engine versions. Defaults to `false`.
 * `applyImmediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
-* `availabilityZones` - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply. We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignoreChanges` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary. A maximum of 3 AZs can be configured.
+* `availabilityZones` - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created.
+  RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
+  We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignoreChanges` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
+  A maximum of 3 AZs can be configured.
 * `backtrackWindow` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `auroraMysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backupRetentionPeriod` - (Optional) Days to retain backups for. Default `1`
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
 * `databaseName` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
-* `dbClusterInstanceClass` - (Optional) (Required for Multi-AZ DB cluster) The compute and memory capacity of each DB instance in the Multi-AZ DB cluster, for example db.m6g.xlarge. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes and availability for your engine, see [DB instance class](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide.
+* `dbClusterInstanceClass` - (Optional, Required for Multi-AZ DB cluster) The compute and memory capacity of each DB instance in the Multi-AZ DB cluster, for example `dbM6GXlarge`. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes and availability for your engine, see [DB instance class](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide.
 * `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
 * `dbInstanceParameterGroupName` - (Optional) Instance parameter group to associate with all instances of the DB cluster. The `dbInstanceParameterGroupName` parameter is only valid in combination with the `allowMajorVersionUpgrade` parameter.
-* `dbSubnetGroupName` - (Optional) DB subnet group to associate with this DB instance. **NOTE:** This must match the `dbSubnetGroupName` specified on every [`awsRdsClusterInstance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
+* `dbSubnetGroupName` - (Optional) DB subnet group to associate with this DB cluster.
+  **NOTE:** This must match the `dbSubnetGroupName` specified on every [`awsRdsClusterInstance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `dbSystemId` - (Optional) For use with RDS Custom.
-* `deletionProtection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
+* `deletionProtection` - (Optional) If the DB cluster should have deletion protection enabled.
+  The database can't be deleted when this value is set to `true`.
+  The default is `false`.
 * `enableGlobalWriteForwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`awsRdsGlobalCluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [Aurora Userguide documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
 * `enableHttpEndpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engineMode` is set to `serverless`.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
@@ -412,7 +418,7 @@ This argument supports the following arguments:
 * `snapshotIdentifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Conflicts with `globalClusterIdentifier`. Clusters cannot be restored from snapshot **and** joined to an existing global cluster in a single operation. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-getting-started.html#aurora-global-database.use-snapshot) or the [Global Cluster Restored From Snapshot example](#global-cluster-restored-from-snapshot) for instructions on building a global cluster starting with a snapshot.
 * `sourceRegion` - (Optional) The source region for an encrypted replica DB cluster.
 * `storageEncrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` for `provisioned` `engineMode` and `true` for `serverless` `engineMode`. When restoring an unencrypted `snapshotIdentifier`, the `kmsKeyId` argument must be provided to encrypt the restored cluster. Terraform will only perform drift detection if a configuration value is provided.
-* `storageType` - (Optional) (Required for Multi-AZ DB clusters) (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, `storageType` modifications can be done in-place. For Multi-AZ DB Clusters, the `iops` argument must also be set. Valid values are: `""`, `auroraIopt1` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters). Default: `""` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters).
+* `storageType` - (Optional, Required for Multi-AZ DB cluster) (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, `storageType` modifications can be done in-place. For Multi-AZ DB Clusters, the `iops` argument must also be set. Valid values are: `""`, `auroraIopt1` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters). Default: `""` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters).
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Cluster
 
@@ -649,4 +655,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0425a7b5583c1d65909da41b44fe0067f2ee9b71510d010d915386842c1f02ad -->
+<!-- cache-key: cdktf-0.18.0 input-a76812360c43b35e98c5b13afa036fb8cb63cbbf7dbd975d84293aab1f4fed49 -->

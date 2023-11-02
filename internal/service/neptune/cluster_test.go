@@ -464,8 +464,9 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_cloudWatchLogsExports(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
@@ -1204,7 +1205,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier             = %[1]q
   availability_zones             = local.availability_zone_names
   skip_final_snapshot            = true
-  enable_cloudwatch_logs_exports = ["audit"]
+  enable_cloudwatch_logs_exports = ["audit", "slowquery"]
 
   neptune_cluster_parameter_group_name = "default.neptune1.2"
 }

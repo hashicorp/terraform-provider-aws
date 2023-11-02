@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "example_source" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_source",
-      "arn:aws:s3:::example_source/*",
+      "arn:aws:s3:::example-source",
+      "arn:aws:s3:::example-source/*",
     ]
   }
 }
@@ -74,8 +74,8 @@ data "aws_iam_policy_document" "example_destination" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_destination",
-      "arn:aws:s3:::example_destination/*",
+      "arn:aws:s3:::example-destination",
+      "arn:aws:s3:::example-destination/*",
     ]
   }
 }

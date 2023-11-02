@@ -261,7 +261,7 @@ The following arguments are optional:
   When the version is 6, the major and minor version can be set, e.g., `62`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6X`.
   Otherwise, specify the full version desired, e.g., `506`.
-  The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below.
+  The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. Cannot be provided with `replicationGroupId`
 * `finalSnapshotIdentifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `ipDiscovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
 * `logDeliveryConfiguration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
@@ -275,12 +275,12 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00Sun:09:
 * `preferredAvailabilityZones` - (Optional, Memcached only) List of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `numCacheNodes`. If you want all the nodes in the same Availability Zone, use `availabilityZone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
 * `preferredOutpostArn` - (Optional, Required if `outpostMode` is specified) The outpost ARN in which the cache cluster will be created.
 * `replicationGroupId` - (Optional, Required if `engine` is not specified) ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
-* `securityGroupIds` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster
+* `securityGroupIds` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster. Cannot be provided with `replicationGroupId`
 * `snapshotArns` – (Optional, Redis only) Single-element string list containing an Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3. The object name cannot contain any commas. Changing `snapshotArns` forces a new resource.
 * `snapshotName` - (Optional, Redis only) Name of a snapshot from which to restore data into the new node group. Changing `snapshotName` forces a new resource.
 * `snapshotRetentionLimit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a `snapshotRetentionLimit` is not supported on cache.t1.micro cache nodes
 * `snapshotWindow` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
-* `subnetGroupName` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource.
+* `subnetGroupName` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource. Cannot be provided with `replicationGroupId`
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitEncryptionEnabled` - (Optional) Enable encryption in-transit. Supported only with Memcached versions `1612` and later, running in a VPC. See the [ElastiCache in-transit encryption](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) documentation for more details.
 
@@ -334,4 +334,4 @@ Using `terraform import`, import ElastiCache Clusters using the `clusterId`. For
 % terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e428d2872588cde7553e6c9d9a4922fa80f9f9c6c271f3cb7b9948c5c3f5d87d -->
+<!-- cache-key: cdktf-0.18.0 input-407a7f00eaf445bba1164068f7df66d3af3f6600a762abdab44b9baeff7de833 -->

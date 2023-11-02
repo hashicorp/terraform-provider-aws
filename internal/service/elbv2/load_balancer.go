@@ -118,6 +118,17 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dns_record_client_routing_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "any_availability_zone",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+				ValidateFunc: validation.StringInSlice([]string{
+					"availability_zone_affinity",
+					"partial_availability_zone_affinity",
+					"any_availability_zone",
+				}, false),
+			},
 			"drop_invalid_header_fields": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -523,7 +534,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			})
 		}
 
-	case elbv2.LoadBalancerTypeEnumGateway, elbv2.LoadBalancerTypeEnumNetwork:
+	case elbv2.LoadBalancerTypeEnumGateway:
+		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
+			})
+		}
+
+	case elbv2.LoadBalancerTypeEnumNetwork:
+		if d.HasChange("dns_record_client_routing_policy") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("dns_record.client_routing_policy"),
+				Value: aws.String(d.Get("dns_record_client_routing_policy").(string)),
+			})
+		}
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -952,6 +977,10 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
 			accessLogMap["prefix"] = aws.StringValue(attr.Value)
+		case "dns_record.client_routing_policy":
+			dnsClientRoutingPolicy := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting NLB DNS Record Client Routing Policy: %s", dnsClientRoutingPolicy)
+			d.Set("dns_record_client_routing_policy", dnsClientRoutingPolicy)
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {

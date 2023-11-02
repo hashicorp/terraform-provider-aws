@@ -54,10 +54,19 @@ func sweepTables(region string) error {
 		}
 
 		for _, tableName := range page.TableNames {
+			id := aws.StringValue(tableName)
+
+			_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+				DeletionProtectionEnabled: aws.Bool(false),
+				TableName:                 aws.String(id),
+			})
+
+			if err != nil {
+				log.Printf("[WARN] DynamoDB Table (%s): %s", id, err)
+			}
+
 			r := ResourceTable()
 			d := r.Data(nil)
-
-			id := aws.StringValue(tableName)
 			d.SetId(id)
 
 			// read concurrently and gather errors

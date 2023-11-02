@@ -8,6 +8,7 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -58,6 +59,7 @@ import (
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
+	sqs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sqs"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -81,7 +83,6 @@ import (
 	apprunner_sdkv1 "github.com/aws/aws-sdk-go/service/apprunner"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	athena_sdkv1 "github.com/aws/aws-sdk-go/service/athena"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
@@ -208,7 +209,6 @@ import (
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
-	sqs_sdkv1 "github.com/aws/aws-sdk-go/service/sqs"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
@@ -295,8 +295,8 @@ func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationins
 	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
 }
 
-func (c *AWSClient) AthenaConn(ctx context.Context) *athena_sdkv1.Athena {
-	return errs.Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
+func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
+	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
@@ -947,8 +947,8 @@ func (c *AWSClient) SNSConn(ctx context.Context) *sns_sdkv1.SNS {
 	return errs.Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
 }
 
-func (c *AWSClient) SQSConn(ctx context.Context) *sqs_sdkv1.SQS {
-	return errs.Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
+func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
+	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS))
 }
 
 func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {

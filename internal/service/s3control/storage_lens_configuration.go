@@ -846,11 +846,11 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCrite
 	}
 
 	if v, ok := tfMap["max_depth"].(int); ok && v != 0 {
-		apiObject.MaxDepth = int32(v)
+		apiObject.MaxDepth = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["min_storage_bytes_percentage"].(float64); ok && v != 0.0 {
-		apiObject.MinStorageBytesPercentage = v
+		apiObject.MinStorageBytesPercentage = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1185,8 +1185,8 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 		tfMap["delimiter"] = aws.ToString(v)
 	}
 
-	tfMap["max_depth"] = apiObject.MaxDepth
-	tfMap["min_storage_bytes_percentage"] = apiObject.MinStorageBytesPercentage
+	tfMap["max_depth"] = aws.ToInt32(apiObject.MaxDepth)
+	tfMap["min_storage_bytes_percentage"] = aws.ToFloat64(apiObject.MinStorageBytesPercentage)
 
 	return tfMap
 }

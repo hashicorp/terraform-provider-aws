@@ -87,7 +87,7 @@ func ResourceCluster() *schema.Resource {
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1,
+				Computed:     true,
 				ValidateFunc: validation.IntAtMost(35),
 			},
 			"backtrack_window": {
@@ -1739,6 +1739,8 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusBackingUp,
 			ClusterStatusDeleting,
 			ClusterStatusModifying,
+			ClusterStatusPromoting,
+			ClusterStatusScalingCompute,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),

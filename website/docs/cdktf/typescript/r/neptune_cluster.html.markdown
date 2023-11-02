@@ -62,7 +62,7 @@ This resource supports the following arguments:
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
 * `copyTagsToSnapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
-* `enableCloudwatchLogsExports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit`.
+* `enableCloudwatchLogsExports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
 * `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engineVersion` - (Optional) The database engine version.
 * `finalSnapshotIdentifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
@@ -176,4 +176,4 @@ Using `terraform import`, import `awsNeptuneCluster` using the cluster identifie
 % terraform import aws_neptune_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-05504d9b26c94ad96d9b0bc68ce4a6a28a6672986ff157a96f9afb46fccd9318 -->
+<!-- cache-key: cdktf-0.18.0 input-b833b76b4e488cf6764ff463cd042f6a681a719ec523ce181193b508df5cc588 -->
