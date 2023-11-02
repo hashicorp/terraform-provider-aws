@@ -175,12 +175,7 @@ func TestParsePlatformApplicationResourceID(t *testing.T) {
 
 func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -220,12 +215,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 
 func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -249,12 +239,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 
 func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	topic0ResourceName := "aws_sns_topic.test.0"
 	topic1ResourceName := "aws_sns_topic.test.1"
