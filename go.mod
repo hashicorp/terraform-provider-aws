@@ -65,6 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/signer v1.17.0
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.24.0
@@ -134,7 +135,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.24.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.18.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.24.0 // indirect
