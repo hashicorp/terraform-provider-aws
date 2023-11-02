@@ -218,7 +218,7 @@ func FlattenFloat64List(list []*float64) []interface{} {
 }
 
 // TODO -> FlattenStringMap
-func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
+func FlattenStringMap(pointers map[string]*string) map[string]interface{} {
 	list := make(map[string]interface{}, len(pointers))
 	for i, v := range pointers {
 		list[i] = *v
