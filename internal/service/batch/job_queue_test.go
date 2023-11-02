@@ -589,7 +589,12 @@ func testAccJobQueueConfig_state(rName string, state string) string {
 		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
+//   compute_environments = [aws_batch_compute_environment.test.arn]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+	order = 1
+  }
+
   name                 = %[1]q
   priority             = 1
   state                = %[2]q
