@@ -203,7 +203,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	out, err := FindDashboardByID(ctx, conn, d.Id())
+	out, err := FindDashboardByID(ctx, conn, d.Id(), -1)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Dashboard (%s) not found, removing from state", d.Id())
@@ -297,14 +297,15 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameDashboard, d.Id(), err)
 		}
 
-		if _, err := waitDashboardUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		updatedVersionNumber := extractVersionFromARN(aws.StringValue(out.VersionArn))
+		if _, err := waitDashboardUpdated(ctx, conn, d.Id(), *updatedVersionNumber, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameDashboard, d.Id(), err)
 		}
 
 		publishVersion := &quicksight.UpdateDashboardPublishedVersionInput{
 			AwsAccountId:  aws.String(awsAccountId),
 			DashboardId:   aws.String(dashboardId),
-			VersionNumber: extractVersionFromARN(aws.StringValue(out.VersionArn)),
+			VersionNumber: updatedVersionNumber,
 		}
 		_, err = conn.UpdateDashboardPublishedVersionWithContext(ctx, publishVersion)
 		if err != nil {
@@ -367,15 +368,26 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func FindDashboardByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Dashboard, error) {
+// Pass version as -1 for latest published version, or specify a specific version if required
+func FindDashboardByID(ctx context.Context, conn *quicksight.QuickSight, id string, version int64) (*quicksight.Dashboard, error) {
 	awsAccountId, dashboardId, err := ParseDashboardId(id)
 	if err != nil {
 		return nil, err
 	}
 
-	descOpts := &quicksight.DescribeDashboardInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DashboardId:  aws.String(dashboardId),
+	var descOpts *quicksight.DescribeDashboardInput
+
+	if version == -1 {
+		descOpts = &quicksight.DescribeDashboardInput{
+			AwsAccountId: aws.String(awsAccountId),
+			DashboardId:  aws.String(dashboardId),
+		}
+	} else {
+		descOpts = &quicksight.DescribeDashboardInput{
+			AwsAccountId:  aws.String(awsAccountId),
+			DashboardId:   aws.String(dashboardId),
+			VersionNumber: &version,
+		}
 	}
 
 	out, err := conn.DescribeDashboardWithContext(ctx, descOpts)

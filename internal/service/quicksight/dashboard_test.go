@@ -206,7 +206,7 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
+			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, -1)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
@@ -235,7 +235,7 @@ func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *qu
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
+		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, -1)
 
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, rs.Primary.ID, err)
