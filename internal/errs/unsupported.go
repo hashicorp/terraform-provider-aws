@@ -31,7 +31,7 @@ const (
 // to make an educated guess about whether the problem stems from a feature not being
 // available in a non-standard partitions (e.g. ISO) that is normally available.
 // A return value of `true` means that there is an error AND it suggests a feature is not supported in ISO.
-// Be careful with a return value of `false“, which means either there is NO error
+// Be careful with a return value of `false`, which means either there is NO error
 // or there is an error but not one that suggests an unsupported feature in ISO.
 func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 	if partition == endpoints.AwsPartitionID {
