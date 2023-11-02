@@ -65,8 +65,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.0 h1:OkgbfNtZKs8cqCOA8cZ
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.0/go.mod h1:RQ0HTOSA63My2cZ2LGb7YLKMmTyOhJKmq+u2v0MoYOA=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.26.0 h1:Vdh1365tJuj64BGW4+o04F2URR5JkH3MyRyOkMGH/F0=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.26.0/go.mod h1:b+BEEfK7ncwheUZ/IhtuH1tcguGPZkI2TbGT2T/sOZ4=
-github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.6.0 h1:C2cCaGtKia5QJhI22g0aTzMX97Vnw3TXTPLLGr9XFqA=
-github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.6.0/go.mod h1:iHjlXvBtEsj49UvRtbwrVWR4/jPjGLXlM3BCT2COTp4=
+github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.7.0 h1:LckLpVP4lj8dVQi8QaJfDk8wVGIoxsWjD6HXq50C1tc=
+github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.7.0/go.mod h1:ibLM6G5sxFVHr5N3tcJyNCA0s2r+QtH41rPxLD3ZVYU=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.16.0 h1:JYUAM1e+Q3qIXPK3JqgnByx/l3vE5pV1H+DoQ2OWtJ0=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.16.0/go.mod h1:BjmY+viMdYoxAscqcsJw0d/M/q0WfodegSlY4VwaOEY=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.18.0 h1:/fbd2CFviHsUb86hwAWXSsO113pieSR1aCQeNDKUksY=
