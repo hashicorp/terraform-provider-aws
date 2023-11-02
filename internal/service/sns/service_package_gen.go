@@ -38,7 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sns_platform_application",
 		},
 		{
-			Factory:  ResourceSMSPreferences,
+			Factory:  resourceSMSPreferences,
 			TypeName: "aws_sns_sms_preferences",
 		},
 		{
