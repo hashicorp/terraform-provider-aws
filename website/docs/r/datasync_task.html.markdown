@@ -71,7 +71,7 @@ This resource supports the following arguments:
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `task_report_config` - (Optional) Configuration block containing the configuration of a DataSync Task Report.
+* `task_report_config` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`task_report_config`](#task_report_config-argument-reference) below.
 
 ### options Argument Reference
 
@@ -95,17 +95,17 @@ The `options` configuration block supports the following arguments:
 * `uid` - (Optional) User identifier of the file's owners. Valid values: `BOTH`, `INT_VALUE`, `NAME`, `NONE`. Default: `INT_VALUE` (preserve integer value of the ID).
 * `verify_mode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `NONE`, `POINT_IN_TIME_CONSISTENT`, `ONLY_FILES_TRANSFERRED`. Default: `POINT_IN_TIME_CONSISTENT`.
 
-### task_report_config Argument Reference
+### `task_report_config` Argument Reference
 
 The following arguments are supported inside the `task_report_config` configuration block:
 
-* `s3_destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report.
+* `s3_destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3_destination`](#s3_destination-argument-reference) below.
 * `s3_object_versioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `INCLUDE` and `NONE`.
 * `output_type` - (Optional) Specifies the type of task report you'd like. Valid values: `SUMMARY_ONLY` and `STANDARD`.
-* `report_overrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report.
+* `report_overrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`report_overrides`](#report_overrides-argument-reference) below.
 * `report_level` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 
-### s3_destination Argument Reference
+### `s3_destination` Argument Reference
 
 The following arguments are supported inside the `s3_destination` configuration block:
 
@@ -113,7 +113,7 @@ The following arguments are supported inside the `s3_destination` configuration 
 * `s3_bucket_arn` - (Required) Specifies the ARN of the S3 bucket where DataSync uploads your report.
 * `subdirectory` - (Optional) Specifies a bucket prefix for your report.
 
-### report_overrides Argument Reference
+### `report_overrides` Argument Reference
 
 The following arguments are supported inside the `report_overrides` configuration block:
 
