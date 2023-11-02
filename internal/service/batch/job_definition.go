@@ -59,8 +59,9 @@ func ResourceJobDefinition() *schema.Resource {
 			},
 
 			"container_properties": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"node_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -80,9 +81,9 @@ func ResourceJobDefinition() *schema.Resource {
 				ValidateFunc: validName,
 			},
 			"node_properties": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"container_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -393,17 +394,22 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 			}
 
-			for _, env := range props.Environment {
-				if aws.StringValue(env.Value) == "" {
-					diags = append(diags, errs.NewAttributeWarningDiagnostic(
-						cty.GetAttrPath("container_properties"),
-						"Ignoring environment variable",
-						fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
-					)
-				}
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
+				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
+				input.ContainerProperties = props
+			}
+		}
+
+		if v, ok := d.GetOk("node_properties"); ok {
+			props, err := expandJobNodeProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 			}
 
-			input.ContainerProperties = props
+			for _, node := range props.NodeRangeProperties {
+				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
+			}
+			input.NodeProperties = props
 		}
 
 		if v, ok := d.GetOk("propagate_tags"); ok {
