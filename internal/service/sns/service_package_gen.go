@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceTopic,
+			Factory:  dataSourceTopic,
 			TypeName: "aws_sns_topic",
 		},
 	}
@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sns_sms_preferences",
 		},
 		{
-			Factory:  ResourceTopic,
+			Factory:  resourceTopic,
 			TypeName: "aws_sns_topic",
 			Name:     "Topic",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sns_topic_data_protection_policy",
 		},
 		{
-			Factory:  ResourceTopicPolicy,
+			Factory:  resourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 		},
 		{

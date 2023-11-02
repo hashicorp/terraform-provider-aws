@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -19,7 +19,7 @@ import (
 )
 
 // @SDKResource("aws_sns_topic_policy")
-func ResourceTopicPolicy() *schema.Resource {
+func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,
 		ReadWithoutTimeout:   resourceTopicPolicyRead,
@@ -57,7 +57,7 @@ func ResourceTopicPolicy() *schema.Resource {
 }
 
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -65,7 +65,6 @@ func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := d.Get("arn").(string)
-
 	err = putTopicPolicy(ctx, conn, arn, policy)
 
 	if err != nil {
@@ -80,9 +79,9 @@ func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
 
 	var policy string
 
@@ -118,7 +117,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
@@ -126,7 +125,7 @@ func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diag.FromErr(putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string))))
 }
 
-func defaultTopicPolicy(topicArn, accountId string) string {
+func defaultTopicPolicy(topicARN, accountID string) string {
 	return fmt.Sprintf(`{
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",
@@ -157,9 +156,9 @@ func defaultTopicPolicy(topicArn, accountId string) string {
     }
   ]
 }
-`, topicArn, accountId)
+`, topicARN, accountID)
 }
 
-func putTopicPolicy(ctx context.Context, conn *sns.SNS, arn string, policy string) error {
+func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
 	return putTopicAttribute(ctx, conn, arn, TopicAttributeNamePolicy, policy)
 }
