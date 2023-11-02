@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 * resource/aws_amplify_app: Add `custom_headers` argument ([#31561](https://github.com/hashicorp/terraform-provider-aws/issues/31561))
 * resource/aws_batch_job_definition: Add `node_properties` argument ([#34153](https://github.com/hashicorp/terraform-provider-aws/issues/34153))
+* resource/aws_finspace_kx_cluster: In-place updates are now supported for the `code`, `database`, and `initialization_script` arguments. The update timeout has been increased to 30 minutes. ([#34220](https://github.com/hashicorp/terraform-provider-aws/issues/34220))
 * resource/aws_iot_topic_rule: Add `kafka.header` and `error_action.kafka.header` arguments ([#34191](https://github.com/hashicorp/terraform-provider-aws/issues/34191))
 * resource/aws_networkmanager_connect_attachment: Add `NO_ENCAP` as a valid `options.protocol` value ([#34109](https://github.com/hashicorp/terraform-provider-aws/issues/34109))
 * resource/aws_networkmanager_connect_peer: Add `subnet_arn` argument to support [Tunnel-less Connect attachments](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-connect-attachment.html#cloudwan-connect-tlc) ([#34109](https://github.com/hashicorp/terraform-provider-aws/issues/34109))
