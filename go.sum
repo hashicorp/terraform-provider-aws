@@ -89,8 +89,8 @@ github.com/aws/aws-sdk-go-v2/service/finspace v1.16.0 h1:vUaANfye60JdQ6naelwbw30
 github.com/aws/aws-sdk-go-v2/service/finspace v1.16.0/go.mod h1:rkk3KpBvj6bIzIaG52wx1UeWM0p1exuy8Ys5+4ebb+o=
 github.com/aws/aws-sdk-go-v2/service/fis v1.19.0 h1:t4VeupBbkllYNqHy1hFfNfklkAjNeU90wg2qmROc/6M=
 github.com/aws/aws-sdk-go-v2/service/fis v1.19.0/go.mod h1:xnd2QzI+HtcHoWFVIrHv3NcheEfZaOm7NgSHfmGMJ2E=
-github.com/aws/aws-sdk-go-v2/service/glacier v1.17.0 h1:HfmLltvMlVmaRUsyUobS98nmeh5wsaldBbvfAy9f5P0=
-github.com/aws/aws-sdk-go-v2/service/glacier v1.17.0/go.mod h1:wd+bbTni7o9nt8eo9oEV/T+7v9XXuk6bJ8Yypw8Y5PA=
+github.com/aws/aws-sdk-go-v2/service/glacier v1.18.0 h1:0H5luPEAxH6yTBYfXp5OkLeBf0Q95/Pp3UhiL+GIGRE=
+github.com/aws/aws-sdk-go-v2/service/glacier v1.18.0/go.mod h1:Vj8AdxwJpgnnxIa+P5SLWfnBTHk9vOIG8Gb6HJFUc5U=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.18.0 h1:kzqnl+yhxPxhnVSm6bb44IG9gK4gEzFJCHHVLY+Hvd0=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.18.0/go.mod h1:CJrNgB1iaSJEgTANA2fCask7ndy5UKJu31lMOJJ3AIY=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.7 h1:hitc48qIZgl38TU33Gxi3V0blniZBDRbdExINJDZ9f8=
