@@ -83,16 +83,17 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
 			"name": schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -192,6 +193,7 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 	state.BotID = flex.StringToFramework(ctx, out.BotId)
 	state.Id = types.StringValue(id)
 	state.Description = flex.StringToFramework(ctx, out.Description)
+	state.Name = flex.StringToFramework(ctx, out.LocaleName)
 
 	vs, _ := flattenVoiceSettings(ctx, out.VoiceSettings)
 	if resp.Diagnostics.HasError() {
@@ -203,7 +205,7 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 	state.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
 
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitBotLocaleCreated(ctx, conn, state.LocaleID.ValueString(), createTimeout)
+	_, err = waitBotLocaleCreated(ctx, conn, state.Id.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotLocale, plan.Name.String(), err),
@@ -240,6 +242,7 @@ func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, 
 	state.BotID = flex.StringToFramework(ctx, out.BotId)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
+	state.Name = flex.StringToFramework(ctx, out.LocaleName)
 	state.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
 
 	vs, _ := flattenVoiceSettings(ctx, out.VoiceSettings)
@@ -265,6 +268,7 @@ func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateReque
 		!plan.Description.Equal(state.Description) ||
 		!plan.BotVersion.Equal(state.BotVersion) ||
 		!plan.LocaleID.Equal(state.LocaleID) ||
+		!plan.Name.Equal(state.Name) ||
 		!plan.VoiceSettings.Equal(state.VoiceSettings) ||
 		!plan.NluIntentCOnfidenceThreshold.Equal(state.NluIntentCOnfidenceThreshold) {
 
@@ -297,7 +301,7 @@ func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitBotLocaleUpdated(ctx, conn, plan.LocaleID.ValueString(), updateTimeout)
+		out, err := waitBotLocaleUpdated(ctx, conn, plan.Id.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBotLocale, plan.LocaleID.String(), err),
@@ -348,7 +352,7 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotLocaleDeleted(ctx, conn, state.LocaleID.ValueString(), deleteTimeout)
+	_, err = waitBotLocaleDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotLocale, state.LocaleID.String(), err),
@@ -365,7 +369,7 @@ func (r *resourceBotLocale) ImportState(ctx context.Context, req resource.Import
 func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotLocaleStatusCreating),
-		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt),
+		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
 		Refresh:                   statusBotLocale(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -383,7 +387,7 @@ func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id stri
 func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotLocaleStatusBuilding),
-		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt),
+		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
 		Refresh:                   statusBotLocale(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -530,6 +534,7 @@ func (rd *resourceBotLocaleData) refreshFromOutput(ctx context.Context, out *lex
 	diags.Append(d...)
 	rd.VoiceSettings = vs
 	rd.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
+	rd.Name = flex.StringToFramework(ctx, (*string)(out.LocaleName))
 	rd.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
 
 	return diags

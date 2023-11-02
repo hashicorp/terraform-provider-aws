@@ -155,7 +155,7 @@ func testAccBotLocaleConfig_basic(rName, localeid string, thres float64) string 
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = 60
-   role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test_role.arn
 
   data_privacy {
     child_directed = "true"
