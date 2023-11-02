@@ -799,7 +799,7 @@ resource "aws_finspace_kx_cluster" "test" {
 `, rName, description))
 }
 
-func testAccKxClusterConfig_commandLineArgs(rName, arg1, val1 string, codePath string) string {
+func testAccKxClusterConfig_commandLineArgs(rName, arg1, val1, codePath string) string {
 	return acctest.ConfigCompose(
 		testAccKxClusterConfigBase(rName),
 		fmt.Sprintf(`
