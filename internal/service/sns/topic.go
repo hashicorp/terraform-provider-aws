@@ -210,7 +210,7 @@ var (
 		"lambda_success_feedback_role_arn":      topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":   topicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                 topicAttributeNameOwner,
-		"policy":                                TopicAttributeNamePolicy,
+		"policy":                                topicAttributeNamePolicy,
 		"signature_version":                     topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":         topicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         topicAttributeNameSQSSuccessFeedbackRoleARN,
@@ -411,7 +411,7 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 func putTopicAttributes(ctx context.Context, conn *sns.Client, arn string, attributes map[string]string) error {
 	for name, value := range attributes {
 		// Ignore an empty policy.
-		if name == TopicAttributeNamePolicy && value == "" {
+		if name == topicAttributeNamePolicy && value == "" {
 			continue
 		}
 
@@ -465,7 +465,7 @@ func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *s
 			return retry.NonRetryableError(err)
 		}
 
-		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[TopicAttributeNamePolicy])
+		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
