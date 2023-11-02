@@ -10,9 +10,7 @@ description: |-
 
 Provides a S3 bucket resource.
 
--> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
-
--> In April 2023, [AWS introduced](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-s3-automatically-enable-block-public-access-disable-access-control-lists-buckets-april-2023/) updated security defaults for new S3 buckets. See [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/28353) for a information on how this affects the `aws_s3_bucket` resource.
+-> This resource provides functionality for managing S3 general purpose buckets in an AWS Partition. To manage Amazon S3 Express directory buckets, use the [`aws_directory_bucket`](/docs/providers/aws/r/s3_directory_bucket.html) resource. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), use the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
 ## Example Usage
 
@@ -28,51 +26,6 @@ resource "aws_s3_bucket" "example" {
   }
 }
 ```
-
-### Static Website Hosting
-
--> **NOTE:** The `website` attribute is deprecated.
-See [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) for examples with static website hosting configured.
-
-### CORS Rules
-
--> **NOTE:** The `cors_rule` attribute is deprecated.
-See [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) for examples with CORS rules configured.
-
-### Versioning
-
--> **NOTE:** The `versioning` attribute is deprecated.
-See [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) for examples with versioning configured.
-
-### Logging
-
--> **NOTE:** The `logging` attribute is deprecated.
-See [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) for examples with logging enabled.
-
-### Object Lifecycle Rules
-
--> **NOTE:** The `lifecycle_rule` attribute is deprecated.
-See [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html.markdown) for examples with object lifecycle rules.
-
-### Object Lock Configuration
-
--> **NOTE:** The `object_lock_configuration` attribute is deprecated.
-See [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html.markdown) for examples with object lock configurations on both new and existing buckets.
-
-### Replication Configuration
-
--> **NOTE:** The `replication_configuration` attribute is deprecated.
-See [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html.markdown) for examples with replication configured.
-
-### Enable SSE-KMS Server Side Encryption
-
--> **NOTE:** The `server_side_encryption_configuration` attribute is deprecated.
-See [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html.markdown) for examples with server side encryption configured.
-
-### ACL Policy Grants
-
--> **NOTE:** The `acl` and `grant` attributes are deprecated.
-See [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) for examples with ACL grants.
 
 ## Argument Reference
 
