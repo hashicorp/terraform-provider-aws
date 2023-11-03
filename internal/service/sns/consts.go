@@ -26,11 +26,13 @@ const (
 	platformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
 )
 
+/*
 const (
 	platfomAPNS        = "APNS"
 	platfomAPNSSandbox = "APNS_SANDBOX"
 	platfomGCM         = "GCM"
 )
+*/
 
 const (
 	subscriptionProtocolApplication = "application"
