@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
+func TestAccAPIGatewayV2VPCLinkDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_vpc_link.test"
 	resourceName := "aws_apigatewayv2_vpc_link.test"
@@ -24,15 +24,13 @@ func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLinkDataSourceConfig_base(rName),
+				Config: testAccVPCLinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids", resourceName, "security_group_ids"),
-					resource.TestCheckResourceAttr(dataSourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids", resourceName, "subnet_ids"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "0"),
 				),
 			},
@@ -40,7 +38,7 @@ func TestAccAPIGatewayV2VPCLinkData_source(t *testing.T) {
 	})
 }
 
-func testAccVPCLinkDataSourceConfig_base(rName string) string {
+func testAccVPCLinkDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
