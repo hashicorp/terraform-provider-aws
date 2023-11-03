@@ -26,7 +26,7 @@ data "aws_mq_engine_versions" "example" {
 
 * `filters` - Filters the results of the request. See [Filters](#filters).
 
-### filter
+### filters
 
 The following filters are optional.
 
