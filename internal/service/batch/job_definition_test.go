@@ -176,7 +176,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_containerPropertiesFargateDefaults(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_fargateDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -189,7 +189,7 @@ func TestAccBatchJobDefinition_containerPropertiesFargateDefaults(t *testing.T) 
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_capabilitiesFargateContainerPropertiesDefaults(rName),
+				Config: testAccJobDefinitionConfig_ContainerProperties_defaultsFargate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
@@ -221,7 +221,7 @@ func TestAccBatchJobDefinition_containerPropertiesFargateDefaults(t *testing.T) 
 	})
 }
 
-func TestAccBatchJobDefinition_containerPropertiesFargate(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,7 +266,7 @@ func TestAccBatchJobDefinition_containerPropertiesFargate(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_containerPropertiesEC2(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_EC2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
 	compare := batch.JobDefinition{
@@ -318,7 +318,7 @@ func TestAccBatchJobDefinition_containerPropertiesEC2(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName),
+				Config: testAccJobDefinitionConfig_ContainerProperties_advanced(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					testAccCheckJobDefinitionAttributes(&jd, &compare),
@@ -379,7 +379,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_containerPropertiesEC2EmptyField(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_EC2EmptyField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -395,7 +395,7 @@ func TestAccBatchJobDefinition_containerPropertiesEC2EmptyField(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_containerProperties_emptyField(rName),
+				Config: testAccJobDefinitionConfig_ContainerProperties_emptyField(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(environment)", "1"),
@@ -481,58 +481,58 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccBatchJobDefinition_NodePropertiesupdateForcesNewResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var before, after batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_job_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_nodePropertiesAdvanced(rName),
+				Config: testAccJobDefinitionConfig_NodeProperties_advancedUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &before),
-					testAccCheckJobDefinitionAttributes(&before, nil),
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 1,
+						"nodeRangeProperties": [
+							{
+								"container": {
+									"command": ["ls","-la"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 512,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "0:"
+							},
+							{
+								"container": {
+									"command": ["echo","test"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 128,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "1:"
+							}
+						],
+						"numNodes": 4
+					}`),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "multinode"),
 				),
-			},
-			{
-				Config: testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &after),
-					testAccCheckJobDefinitionRecreated(t, &before, &after),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchJobDefinition_createTypeContainerWithBothProperties(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccJobDefinitionConfig_createTypeContainerWithBothProperties(rName),
-				ExpectError: regexache.MustCompile("No `node_properties` can be specified when `type` is \"container\""),
 			},
 		},
 	})
@@ -549,14 +549,14 @@ func TestAccBatchJobDefinition_createTypeContainerWithNodeProperties(t *testing.
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobDefinitionConfig_createTypeContainerWithNodeProperties(rName),
+				Config:      testAccJobDefinitionConfig_NodeProperties_createTypeContainerErr(rName),
 				ExpectError: regexache.MustCompile("No `node_properties` can be specified when `type` is \"container\""),
 			},
 		},
 	})
 }
 
-func TestAccBatchJobDefinition_createTypeMultiNodeWithBothProperties(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_createTypeMultiNodeErr(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -567,25 +567,7 @@ func TestAccBatchJobDefinition_createTypeMultiNodeWithBothProperties(t *testing.
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobDefinitionConfig_createTypeMultiNodeWithBothProperties(rName),
-				ExpectError: regexache.MustCompile("No `container_properties` can be specified when `type` is \"multinode\""),
-			},
-		},
-	})
-}
-
-func TestAccBatchJobDefinition_createTypeMultiNodeWithContainerProperties(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccJobDefinitionConfig_createTypeMultiNodeWithContainerProperties(rName),
+				Config:      testAccJobDefinitionConfig_ContainerProperties_createTypeMultiNodeErr(rName),
 				ExpectError: regexache.MustCompile("No `container_properties` can be specified when `type` is \"multinode\""),
 			},
 		},
@@ -613,6 +595,34 @@ func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.Jo
 
 		*jd = *jobDefinition
 
+		return nil
+	}
+}
+
+func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_batch_job_definition" {
+				continue
+			}
+
+			re := regexp.MustCompile(`job-definition/(.*?):`)
+			name := re.FindStringSubmatch(rs.Primary.ID)[1]
+
+			jds, err := tfbatch.ListActiveJobDefinitionByName(ctx, conn, name)
+
+			if count := len(jds); count == 0 {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Batch Job Definition %s has revisions that still exist", name)
+		}
 		return nil
 	}
 }
@@ -648,35 +658,7 @@ func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch
 	}
 }
 
-func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_batch_job_definition" {
-				continue
-			}
-
-			re := regexp.MustCompile(`job-definition/(.*?):`)
-			name := re.FindStringSubmatch(rs.Primary.ID)[1]
-
-			jds, err := tfbatch.ListActiveJobDefinitionByName(ctx, conn, name)
-
-			if count := len(jds); count == 0 {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Batch Job Definition %s has revisions that still exist", name)
-		}
-		return nil
-	}
-}
-
-func testAccJobDefinitionConfig_containerPropertiesAdvanced(rName string) string {
+func testAccJobDefinitionConfig_ContainerProperties_advanced(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
@@ -704,49 +686,6 @@ resource "aws_batch_job_definition" "test" {
     "command": ["ls", "-la"],
     "image": "busybox",
     "memory": 512,
-    "vcpus": 1,
-    "volumes": [
-      {
-        "host": {
-          "sourcePath": "/tmp"
-        },
-        "name": "tmp"
-      }
-    ],
-    "environment": [
-        {"name": "VARNAME", "value": "VARVAL"}
-    ],
-    "mountPoints": [
-        {
-          "sourceVolume": "tmp",
-          "containerPath": "/tmp",
-          "readOnly": false
-        }
-    ],
-    "ulimits": [
-      {
-        "hardLimit": 1024,
-        "name": "nofile",
-        "softLimit": 1024
-      }
-    ]
-}
-CONTAINER_PROPERTIES
-
-}
-`, rName)
-}
-
-func testAccJobDefinitionConfig_containerPropertiesAdvancedUpdate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  name                 = %[1]q
-  type                 = "container"
-  container_properties = <<CONTAINER_PROPERTIES
-{
-    "command": ["ls", "-la"],
-    "image": "busybox",
-    "memory": 1024,
     "vcpus": 1,
     "volumes": [
       {
@@ -826,7 +765,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName, sp, pt, rsa, timeout)
 }
 
-func testAccJobDefinitionConfig_capabilitiesFargateContainerPropertiesDefaults(rName string) string {
+func testAccJobDefinitionConfig_ContainerProperties_defaultsFargate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -966,24 +905,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccJobDefinitionConfig_propagateTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-  name = %[1]q
-  type = "container"
-
-  propagate_tags = true
-}
-`, rName)
-}
-
-func testAccJobDefinitionConfig_containerProperties_emptyField(rName string) string {
+func testAccJobDefinitionConfig_ContainerProperties_emptyField(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({
@@ -1042,10 +964,8 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_nodePropertiesAdvanced(rName string) string {
+func testAccJobDefinitionConfig_NodeProperties_advanced(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "multinode"
@@ -1116,10 +1036,8 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName string) string {
+func testAccJobDefinitionConfig_NodeProperties_advancedUpdate(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "multinode"
@@ -1160,68 +1078,11 @@ resource "aws_batch_job_definition" "test" {
     numNodes = 4
   })
 }
-	`, rName)
+`, rName)
 }
 
-func testAccJobDefinitionConfig_createTypeContainerWithBothProperties(rName string) string {
+func testAccJobDefinitionConfig_NodeProperties_createTypeContainerErr(rName string) string {
 	return fmt.Sprintf(`
-
-
-resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "container"
-  parameters = {
-    param1 = "val1"
-    param2 = "val2"
-  }
-  timeout {
-    attempt_duration_seconds = 60
-  }
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-
-  node_properties = jsonencode({
-    mainNode = 1
-    nodeRangeProperties = [
-      {
-        container = {
-          "command" : ["ls", "-la"],
-          "image" : "busybox",
-          "memory" : 512,
-          "vcpus" : 1
-        }
-        targetNodes = "0:"
-      },
-      {
-        container = {
-          command     = ["echo", "test"]
-          environment = []
-          image       = "busybox"
-          memory      = 128
-          mountPoints = []
-          ulimits     = []
-          vcpus       = 1
-          volumes     = []
-        }
-        targetNodes = "1:"
-      }
-    ]
-    numNodes = 4
-  })
-
-}
-	`, rName)
-}
-
-func testAccJobDefinitionConfig_createTypeContainerWithNodeProperties(rName string) string {
-	return fmt.Sprintf(`
-
-
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "container"
@@ -1261,70 +1122,12 @@ resource "aws_batch_job_definition" "test" {
     ]
     numNodes = 4
   })
-
 }
-	`, rName)
+`, rName)
 }
 
-func testAccJobDefinitionConfig_createTypeMultiNodeWithBothProperties(rName string) string {
+func testAccJobDefinitionConfig_ContainerProperties_createTypeMultiNodeErr(rName string) string {
 	return fmt.Sprintf(`
-
-
-resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "multinode"
-  parameters = {
-    param1 = "val1"
-    param2 = "val2"
-  }
-  timeout {
-    attempt_duration_seconds = 60
-  }
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-
-  node_properties = jsonencode({
-    mainNode = 1
-    nodeRangeProperties = [
-      {
-        container = {
-          "command" : ["ls", "-la"],
-          "image" : "busybox",
-          "memory" : 512,
-          "vcpus" : 1
-        }
-        targetNodes = "0:"
-      },
-      {
-        container = {
-          command     = ["echo", "test"]
-          environment = []
-          image       = "busybox"
-          memory      = 128
-          mountPoints = []
-          ulimits     = []
-          vcpus       = 1
-          volumes     = []
-        }
-        targetNodes = "1:"
-      }
-    ]
-    numNodes = 4
-  })
-
-}
-	`, rName)
-}
-
-func testAccJobDefinitionConfig_createTypeMultiNodeWithContainerProperties(rName string) string {
-	return fmt.Sprintf(`
-
-
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "multinode"
@@ -1344,5 +1147,5 @@ resource "aws_batch_job_definition" "test" {
   })
 
 }
-	`, rName)
+`, rName)
 }
