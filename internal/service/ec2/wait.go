@@ -3334,3 +3334,64 @@ func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client
 
 	return err
 }
+
+func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
+		Target:  []string{},
+		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}

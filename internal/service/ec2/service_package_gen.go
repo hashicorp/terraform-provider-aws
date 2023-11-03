@@ -949,6 +949,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceVerifiedAccessEndpoint,
+			TypeName: "aws_verifiedaccess_endpoint",
+			Name:     "Verified Access Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVerifiedAccessGroup,
 			TypeName: "aws_verifiedaccess_group",
 			Name:     "Verified Access Group",
