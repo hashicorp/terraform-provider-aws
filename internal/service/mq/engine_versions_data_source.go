@@ -6,8 +6,9 @@ package mq
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,7 +72,7 @@ const (
 
 func dataSourceEngineVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MQConn(ctx)
+	client := meta.(*conns.AWSClient).MQClient(ctx)
 
 	input := &mq.DescribeBrokerEngineTypesInput{}
 	if v, ok := d.GetOk("filters"); ok {
@@ -85,27 +86,28 @@ func dataSourceEngineVersionsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.SetId(id.UniqueId())
 
-	var types []*mq.BrokerEngineType
+	var engineTypes []types.BrokerEngineType
 	for {
-		out, err := conn.DescribeBrokerEngineTypesWithContext(ctx, input)
+		out, err := client.DescribeBrokerEngineTypes(ctx, input)
 		if err != nil {
 			return append(diags, create.DiagError(names.MQ, create.ErrActionReading, DSNameEngineVersions, "", err)...)
 		}
 
-		types = append(types, out.BrokerEngineTypes...)
+		engineTypes = append(engineTypes, out.BrokerEngineTypes...)
 		if out.NextToken == nil {
 			break
 		}
 		input.NextToken = out.NextToken
 	}
-	if err := d.Set("broker_engine_types", flattenBrokerList(types)); err != nil {
+
+	if err := d.Set("broker_engine_types", flattenBrokerList(engineTypes)); err != nil {
 		return append(diags, create.DiagError(names.MQ, create.ErrActionSetting, DSNameEngineVersions, d.Id(), err)...)
 	}
 
 	return diags
 }
 
-func flattenBrokerList(types []*mq.BrokerEngineType) (brokers []map[string]interface{}) {
+func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]interface{}) {
 	for _, broker := range types {
 		brokers = append(brokers, map[string]interface{}{
 			"engine_type":     broker.EngineType,
@@ -115,10 +117,10 @@ func flattenBrokerList(types []*mq.BrokerEngineType) (brokers []map[string]inter
 	return
 }
 
-func flattenEngineVersions(engines []*mq.EngineVersion) (versions []map[string]string) {
+func flattenEngineVersions(engines []types.EngineVersion) (versions []map[string]string) {
 	for _, engine := range engines {
 		versions = append(versions, map[string]string{
-			"name": aws.StringValue(engine.Name),
+			"name": aws.ToString(engine.Name),
 		})
 	}
 	return

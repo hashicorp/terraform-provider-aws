@@ -39,6 +39,7 @@ import (
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
+	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
@@ -753,6 +754,10 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
 	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ))
+}
+
+func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
+	return errs.Must(client[*mq_sdkv2.Client](ctx, c, names.MQ))
 }
 
 func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
