@@ -2442,6 +2442,16 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 	})
 }
 
+// SkipIfEnvVarNotSet skips the current test if the specified environment variable is not set.
+// The variable's value is returned.
+func SkipIfEnvVarNotSet(t *testing.T, key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
 	t.Helper()
