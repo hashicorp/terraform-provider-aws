@@ -787,14 +787,13 @@ resource "aws_sagemaker_model" "test" {
 
   primary_container {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-
-	model_data_source {
-		s3_data_source {
-			s3_data_type = "S3Prefix"
-			s3_uri       = "s3://bucket/prefix"
-			compression_type = "None"
-		}	
-	}
+    model_data_source {
+      s3_data_source {
+        s3_data_type     = "S3Prefix"
+        s3_uri           = "s3://bucket/prefix"
+        compression_type = "None"
+      }
+    }
   }
 }
 `, rName))
