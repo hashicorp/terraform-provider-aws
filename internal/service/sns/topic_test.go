@@ -50,7 +50,9 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
+					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(`terraform-.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
@@ -407,8 +409,10 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 				Config: testAccTopicConfig_nameFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -500,6 +504,81 @@ func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
 			{
 				Config:      testAccTopicConfig_expectContentBasedDeduplicationError(rName),
 				ExpectError: regexache.MustCompile(`content-based deduplication can only be set for FIFO topics`),
+			},
+		},
+	})
+}
+
+func TestAccSNSTopic_fifoWithArchivePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policy1 := `
+{
+  "MessageRetentionPeriod": "30"
+}
+`
+	policy2 := `
+{
+  "MessageRetentionPeriod": "45"
+}
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_fifoArchivePolicy(rName, policy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestMatchResourceAttr(resourceName, "archive_policy", regexache.MustCompile(`"MessageRetentionPeriod":\s*"30"`)),
+					resource.TestCheckResourceAttrSet(resourceName, "beginning_archive_time"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicConfig_fifoArchivePolicy(rName, policy2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestMatchResourceAttr(resourceName, "archive_policy", regexache.MustCompile(`"MessageRetentionPeriod":\s*"45"`)),
+					resource.TestCheckResourceAttrSet(resourceName, "beginning_archive_time"),
+				),
+			},
+			// "Invalid state: Cannot delete a topic with an ArchivePolicy".
+			{
+				Config: testAccTopicConfig_fifoArchivePolicy(rName, "{}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSNSTopic_fifoExpectArchivePolicyError(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTopicConfig_expectArchivePolicyError(rName),
+				ExpectError: regexache.MustCompile(`message archive policy can only be set for FIFO topics`),
 			},
 		},
 	})
@@ -951,6 +1030,29 @@ func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) strin
 resource "aws_sns_topic" "test" {
   name                        = %[1]q
   content_based_deduplication = true
+}
+`, rName)
+}
+
+func testAccTopicConfig_fifoArchivePolicy(rName, policy string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name           = "%[1]s.fifo"
+  fifo_topic     = true
+  archive_policy = %[2]q
+}
+`, rName, policy)
+}
+
+func testAccTopicConfig_expectArchivePolicyError(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name           = %[1]q
+  archive_policy = <<EOF
+{
+  "MessageRetentionPeriod": "30"
+}
+EOF
 }
 `, rName)
 }
