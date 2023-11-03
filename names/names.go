@@ -243,6 +243,25 @@ func Endpoints() []Endpoint {
 	return endpoints
 }
 
+type ServiceNameUpper struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+}
+
+func ServiceNamesUpper() []ServiceNameUpper {
+	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		sn := ServiceNameUpper{
+			ProviderPackage:   k,
+			ProviderNameUpper: v.ProviderNameUpper,
+		}
+		serviceNames = append(serviceNames, sn)
+	}
+
+	return serviceNames
+}
+
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
 		return v.ProviderNameUpper, nil
