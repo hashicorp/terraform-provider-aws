@@ -262,3 +262,43 @@ func TestAppendUnique(t *testing.T) {
 		})
 	}
 }
+
+func TestIndexOf(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []any
+		element  string
+		expected int
+	}
+	tests := map[string]testCase{
+		"index 0": {
+			input:    []any{"one", 2.0, 3, "four"},
+			element:  "one",
+			expected: 0,
+		},
+		"index 3": {
+			input:    []any{"one", 2.0, 3, "four"},
+			element:  "four",
+			expected: 3,
+		},
+		"index -1": {
+			input:    []any{"one", 2.0, 3, "four"},
+			element:  "3",
+			expected: -1,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := IndexOf(test.input, test.element)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

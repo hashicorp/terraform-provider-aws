@@ -113,3 +113,13 @@ func AppendUnique[S ~[]E, E comparable](s S, vs ...E) S {
 
 	return s
 }
+
+// IndexOf returns the index of the first occurrence of `v` in `s`, or -1 if not present.
+func IndexOf[S ~[]any, E comparable](s S, v E) int {
+	for i := range s {
+		if e, ok := s[i].(E); ok && v == e {
+			return i
+		}
+	}
+	return -1
+}
