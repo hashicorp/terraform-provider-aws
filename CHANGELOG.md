@@ -1,4 +1,10 @@
 ## 5.25.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_datasync_task: Add `task_report_config` argument ([#33861](https://github.com/hashicorp/terraform-provider-aws/issues/33861))
+* resource/aws_route53_record: Allow import of records with an empty record name. ([#34212](https://github.com/hashicorp/terraform-provider-aws/issues/34212))
+
 ## 5.24.0 (November  2, 2023)
 
 NOTES:
