@@ -71,6 +71,7 @@ const (
 	subscriptionAttributeNameProtocol                     = "Protocol"
 	subscriptionAttributeNameRawMessageDelivery           = "RawMessageDelivery"
 	subscriptionAttributeNameRedrivePolicy                = "RedrivePolicy"
+	subscriptionAttributeNameReplayPolicy                 = "ReplayPolicy"
 	subscriptionAttributeNameSubscriptionARN              = "SubscriptionArn"
 	subscriptionAttributeNameSubscriptionRoleARN          = "SubscriptionRoleArn"
 	subscriptionAttributeNameTopicARN                     = "TopicArn"

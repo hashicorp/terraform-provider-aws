@@ -45,10 +45,15 @@ var (
 			Computed: true,
 		},
 		"delivery_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      SuppressEquivalentTopicSubscriptionDeliveryPolicy,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
 		},
 		"endpoint": {
 			Type:     schema.TypeString,
@@ -61,10 +66,11 @@ var (
 			Default:  false,
 		},
 		"filter_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
@@ -96,10 +102,26 @@ var (
 			Default:  false,
 		},
 		"redrive_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"replay_policy": {
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
 		},
 		"subscription_role_arn": {
 			Type:         schema.TypeString,
@@ -126,6 +148,7 @@ var (
 		"protocol":                       subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
+		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
 		"subscription_role_arn":          subscriptionAttributeNameSubscriptionRoleARN,
 		"topic_arn":                      subscriptionAttributeNameTopicARN,
 	}, subscriptionSchema).WithMissingSetToNil("*")
