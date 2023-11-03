@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -109,7 +109,7 @@ func ResourceDataSource() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(3, 63),
 											validation.StringMatch(
-												regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+												regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 												"Must be a valid bucket name",
 											),
 										),
@@ -290,7 +290,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -317,7 +317,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -366,7 +366,7 @@ func ResourceDataSource() *schema.Resource {
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 200),
 														validation.StringMatch(
-															regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+															regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 														),
 													),
@@ -423,7 +423,7 @@ func ResourceDataSource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -434,7 +434,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 10),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z-]*`),
+						regexache.MustCompile(`[A-Za-z-]*`),
 						"Must have alphanumeric characters or hyphens.",
 					),
 				),
@@ -445,7 +445,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -502,7 +502,7 @@ func hookConfigurationSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 63),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+							regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 							"Must be a valid bucket name",
 						),
 					),
@@ -525,7 +525,7 @@ func documentAttributeConditionSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+							regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 						),
 					),

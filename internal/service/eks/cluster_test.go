@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -43,29 +43,29 @@ func TestAccEKSCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity.0.oidc.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "identity.0.oidc.0.issuer", regexp.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, "identity.0.oidc.0.issuer", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
-					resource.TestMatchResourceAttr(resourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "platform_version", regexache.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", eks.ClusterStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^\d+\.\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "version", regexache.MustCompile(`^\d+\.\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "false"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "true"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-.+`)),
 				),
 			},
 			{
@@ -523,23 +523,23 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_networkServiceIPv4CIDR(rName, `"10.0.0.0/11"`),
-				ExpectError: regexp.MustCompile(`expected .* to contain a network Value with between`),
+				ExpectError: regexache.MustCompile(`expected .* to contain a network Value with between`),
 			},
 			{
 				Config:      testAccClusterConfig_networkServiceIPv4CIDR(rName, `"10.0.0.0/25"`),
-				ExpectError: regexp.MustCompile(`expected .* to contain a network Value with between`),
+				ExpectError: regexache.MustCompile(`expected .* to contain a network Value with between`),
 			},
 			{
 				Config:      testAccClusterConfig_networkServiceIPv4CIDR(rName, `"9.0.0.0/16"`),
-				ExpectError: regexp.MustCompile(`must be within`),
+				ExpectError: regexache.MustCompile(`must be within`),
 			},
 			{
 				Config:      testAccClusterConfig_networkServiceIPv4CIDR(rName, `"172.14.0.0/24"`),
-				ExpectError: regexp.MustCompile(`must be within`),
+				ExpectError: regexache.MustCompile(`must be within`),
 			},
 			{
 				Config:      testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.167.0.0/24"`),
-				ExpectError: regexp.MustCompile(`must be within`),
+				ExpectError: regexache.MustCompile(`must be within`),
 			},
 			{
 				Config: testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.0.0/24"`),
@@ -586,11 +586,11 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_networkIPFamily(rName, `"v6"`),
-				ExpectError: regexp.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
+				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
 			},
 			{
 				Config:      testAccClusterConfig_networkIPFamily(rName, `"IPv4"`),
-				ExpectError: regexp.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
+				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
 			},
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
@@ -640,7 +640,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
@@ -672,7 +672,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				Config: testAccClusterConfig_outpostPlacement(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),

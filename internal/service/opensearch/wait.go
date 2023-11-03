@@ -86,7 +86,7 @@ func waitForDomainUpdate(ctx context.Context, conn *opensearchservice.OpenSearch
 
 		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
-	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
+	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(ctx, conn, domainName)

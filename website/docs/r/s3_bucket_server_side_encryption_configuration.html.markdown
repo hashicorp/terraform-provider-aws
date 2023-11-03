@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket server-side encryption configuration resource.
 
+~> **NOTE:** Destroying an `aws_s3_bucket_server_side_encryption_configuration` resource resets the bucket to [Amazon S3 bucket default encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html).
+
 ## Example Usage
 
 ```terraform
@@ -53,7 +55,7 @@ The `rule` configuration block supports the following arguments:
 
 The `apply_server_side_encryption_by_default` configuration block supports the following arguments:
 
-* `sse_algorithm` - (Required) Server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
+* `sse_algorithm` - (Required) Server-side encryption algorithm to use. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse`
 * `kms_master_key_id` - (Optional) AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
 
 ## Attribute Reference

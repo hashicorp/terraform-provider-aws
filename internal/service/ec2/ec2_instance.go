@@ -12,11 +12,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -545,6 +546,12 @@ func ResourceInstance() *schema.Resource {
 							Optional:     true,
 							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
+						},
+						"http_protocol_ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataProtocolStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataProtocolState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
@@ -1307,10 +1314,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
-		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}
@@ -1813,6 +1820,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if tfMap["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
+					input.HttpProtocolIpv6 = aws.String(tfMap["http_protocol_ipv6"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(tfMap["http_put_response_hop_limit"].(int)))
 					input.HttpTokens = aws.String(tfMap["http_tokens"].(string))
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
@@ -2888,10 +2896,13 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
+	_, assocPubIPA := d.GetOkExists("associate_public_ip_address")
+	_, privIP := d.GetOk("private_ip")
+	_, secPrivIP := d.GetOk("secondary_private_ips")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet || interfacesOk {
+	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {
@@ -3100,6 +3111,9 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 
 	if m["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 		// These parameters are not allowed unless HttpEndpoint is enabled
+		if v, ok := m["http_protocol_ipv6"].(string); ok && v != "" {
+			opts.HttpProtocolIpv6 = aws.String(v)
+		}
 
 		if v, ok := m["http_tokens"].(string); ok && v != "" {
 			opts.HttpTokens = aws.String(v)
@@ -3176,6 +3190,7 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 
 	m := map[string]interface{}{
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
@@ -3678,7 +3693,7 @@ type InstanceType struct {
 }
 
 func ParseInstanceType(s string) (*InstanceType, error) {
-	matches := regexp.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
+	matches := regexache.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
 
 	if matches == nil {
 		return nil, fmt.Errorf("invalid EC2 Instance Type name: %s", s)

@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_transfer_certificate", name="Certificate")
-// @Tags(identifierAttribute="certificate_id")
+// @Tags(identifierAttribute="arn")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -37,6 +37,10 @@ func ResourceCertificate() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"active_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,6 +143,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
+	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
 	d.Set("certificate_chain", output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)

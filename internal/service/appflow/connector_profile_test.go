@@ -6,9 +6,9 @@ package appflow_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -41,7 +41,7 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexache.MustCompile(`connectorprofile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),

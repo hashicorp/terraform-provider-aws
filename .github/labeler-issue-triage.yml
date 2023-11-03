@@ -87,6 +87,8 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bedrock:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -133,6 +135,8 @@ service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codebuild_'
+service/codecatalyst:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
 service/codeguruprofiler:
@@ -375,12 +379,12 @@ service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
-service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexmodelsv2_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntimev2_'
+service/lexv2models:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/licensemanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_licensemanager_'
 service/lightsail:

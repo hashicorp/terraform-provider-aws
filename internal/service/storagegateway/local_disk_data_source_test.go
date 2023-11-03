@@ -5,9 +5,9 @@ package storagegateway_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,15 +28,15 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no results found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_node(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -56,15 +56,15 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no results found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_path(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},

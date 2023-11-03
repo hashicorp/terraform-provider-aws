@@ -57,7 +57,7 @@ The following arguments are required:
 
 - `delivery_address` - (Required) Block that contains contact engagement details. See details below.
 
-- `name` - (Required) Name of the contact channel.
+- `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `type` - (Required) Type of the contact channel. One of `SMS`, `VOICE` or `EMAIL`.
 

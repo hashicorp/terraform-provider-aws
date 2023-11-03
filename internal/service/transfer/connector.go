@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_transfer_connector", name="Connector")
-// @Tags(identifierAttribute="connector_id")
+// @Tags(identifierAttribute="arn")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
@@ -39,9 +40,13 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"as2_config": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -93,6 +98,30 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sftp_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"trusted_host_keys": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 10,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 2028),
+							},
+						},
+						"user_secret_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2028),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
@@ -111,13 +140,20 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
-		As2Config:  expandAs2Config(d.Get("as2_config").([]interface{})[0].(map[string]interface{})),
 		Tags:       getTagsIn(ctx),
 		Url:        aws.String(d.Get("url").(string)),
 	}
 
+	if v, ok := d.GetOk("as2_config"); ok {
+		input.As2Config = expandAs2Config(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sftp_config"); ok {
+		input.SftpConfig = expandSftpConfig(v.([]interface{}))
 	}
 
 	output, err := conn.CreateConnectorWithContext(ctx, input)
@@ -148,11 +184,15 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
+	d.Set("arn", output.Arn)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
+	if err := d.Set("sftp_config", flattenSftpConfig(output.SftpConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sftp_config: %s", err)
+	}
 	d.Set("url", output.Url)
 	setTagsOut(ctx, output.Tags)
 
@@ -173,13 +213,15 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("as2_config") {
-			if v, ok := d.GetOk("as2_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.As2Config = expandAs2Config(v.([]interface{})[0].(map[string]interface{}))
-			}
+			input.As2Config = expandAs2Config(d.Get("as2_config").([]interface{}))
 		}
 
 		if d.HasChange("logging_role") {
 			input.LoggingRole = aws.String(d.Get("logging_role").(string))
+		}
+
+		if d.HasChange("sftp_config") {
+			input.SftpConfig = expandSftpConfig(d.Get("sftp_config").([]interface{}))
 		}
 
 		if d.HasChange("url") {
@@ -216,46 +258,43 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandAs2Config(tfMap map[string]interface{}) *transfer.As2ConnectorConfig {
-	if tfMap == nil {
+func expandAs2Config(pUser []interface{}) *transfer.As2ConnectorConfig {
+	if len(pUser) < 1 || pUser[0] == nil {
 		return nil
 	}
 
-	apiObject := &transfer.As2ConnectorConfig{}
+	m := pUser[0].(map[string]interface{})
 
-	if v, ok := tfMap["compression"].(string); ok && v != "" {
-		apiObject.Compression = aws.String(v)
+	as2Config := &transfer.As2ConnectorConfig{
+		Compression:         aws.String(m["compression"].(string)),
+		EncryptionAlgorithm: aws.String(m["encryption_algorithm"].(string)),
+		LocalProfileId:      aws.String(m["local_profile_id"].(string)),
+		MdnResponse:         aws.String(m["mdn_response"].(string)),
+		MdnSigningAlgorithm: aws.String(m["mdn_signing_algorithm"].(string)),
+		MessageSubject:      aws.String(m["message_subject"].(string)),
+		PartnerProfileId:    aws.String(m["partner_profile_id"].(string)),
+		SigningAlgorithm:    aws.String(m["signing_algorithm"].(string)),
 	}
 
-	if v, ok := tfMap["encryption_algorithm"].(string); ok && v != "" {
-		apiObject.EncryptionAlgorithm = aws.String(v)
+	return as2Config
+}
+
+func expandSftpConfig(pUser []interface{}) *transfer.SftpConnectorConfig {
+	if len(pUser) < 1 || pUser[0] == nil {
+		return nil
 	}
 
-	if v, ok := tfMap["local_profile_id"].(string); ok && v != "" {
-		apiObject.LocalProfileId = aws.String(v)
+	m := pUser[0].(map[string]interface{})
+
+	sftpConfig := &transfer.SftpConnectorConfig{
+		UserSecretId: aws.String(m["user_secret_id"].(string)),
 	}
 
-	if v, ok := tfMap["mdn_response"].(string); ok && v != "" {
-		apiObject.MdnResponse = aws.String(v)
+	if v, ok := m["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
+		sftpConfig.TrustedHostKeys = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["mdn_signing_algorithm"].(string); ok && v != "" {
-		apiObject.MdnSigningAlgorithm = aws.String(v)
-	}
-
-	if v, ok := tfMap["message_subject"].(string); ok && v != "" {
-		apiObject.MessageSubject = aws.String(v)
-	}
-
-	if v, ok := tfMap["partner_profile_id"].(string); ok && v != "" {
-		apiObject.PartnerProfileId = aws.String(v)
-	}
-
-	if v, ok := tfMap["signing_algorithm"].(string); ok && v != "" {
-		apiObject.SigningAlgorithm = aws.String(v)
-	}
-
-	return apiObject
+	return sftpConfig
 }
 
 func flattenAs2Config(apiObject *transfer.As2ConnectorConfig) []interface{} {
@@ -298,4 +337,17 @@ func flattenAs2Config(apiObject *transfer.As2ConnectorConfig) []interface{} {
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenSftpConfig(posixUser *transfer.SftpConnectorConfig) []interface{} {
+	if posixUser == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"trusted_host_keys": aws.StringValueSlice(posixUser.TrustedHostKeys),
+		"user_secret_id":    aws.StringValue(posixUser.UserSecretId),
+	}
+
+	return []interface{}{m}
 }

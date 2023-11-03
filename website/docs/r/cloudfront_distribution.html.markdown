@@ -16,7 +16,9 @@ For information about CloudFront distributions, see the [Amazon CloudFront Devel
 
 ## Example Usage
 
-The following example below creates a CloudFront distribution with an S3 origin.
+### S3 Origin
+
+The example below creates a CloudFront distribution with an S3 origin.
 
 ```terraform
 resource "aws_s3_bucket" "b" {
@@ -139,7 +141,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The example below creates a CloudFront distribution with an origin group for failover routing:
+### With Failover Routing
+
+The example below creates a CloudFront distribution with an origin group for failover routing.
 
 ```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -186,7 +190,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-CloudFront distribution using [managed policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html) (ex: CachingDisabled):
+### With Managed Caching Policy
+
+The example below creates a CloudFront distribution with an [AWS managed caching policy](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html).
 
 ```terraform
 locals {
@@ -212,7 +218,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     # Using the CachingDisabled managed policy ID:
     cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    path_pattern     = "/content/*"
     target_origin_id = local.s3_origin_id
   }
 
@@ -226,6 +231,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
   # ... other configuration ...
 }
 ```
@@ -238,6 +244,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
+* `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `default_root_object` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
@@ -250,6 +257,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
 * `price_class` (Optional) - Price class for this distribution. One of `PriceClass_All`, `PriceClass_200`, `PriceClass_100`.
 * `restrictions` (Required) - The [restriction configuration](#restrictions-arguments) for this distribution (maximum one).
+* `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `viewer_certificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
 * `web_acl_id` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
@@ -378,8 +386,8 @@ argument should not be specified.
 * `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
-* `origin_shield` - The [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
-* `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
+* `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
 
 ##### Custom Origin Config Arguments
 
@@ -393,7 +401,7 @@ argument should not be specified.
 ##### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
-* `origin_shield_region` (Required) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
+* `origin_shield_region` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
 ##### S3 Origin Config Arguments
 

@@ -6,10 +6,10 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -76,7 +76,7 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`invalid value for domain \(cannot end with a period\)`),
+				ExpectError: regexache.MustCompile(`invalid value for domain \(cannot end with a period\)`),
 			},
 		},
 	})

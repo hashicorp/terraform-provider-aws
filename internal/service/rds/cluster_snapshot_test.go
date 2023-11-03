@@ -6,9 +6,9 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +37,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexache.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -47,7 +47,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_db_cluster_snapshot_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexache.MustCompile(`^vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -165,27 +165,30 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *rds.DBC
 }
 
 func testAccClusterSnapshotConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  database_name                   = "test"
-  engine                          = "aurora-mysql"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  skip_final_snapshot             = true
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  database_name        = "test"
+  engine               = "aurora-mysql"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
 }
 `, rName))
 }
 
 func testAccClusterSnapshotConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
@@ -194,7 +197,9 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 func testAccClusterSnapshotConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
@@ -207,7 +212,9 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 func testAccClusterSnapshotConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q

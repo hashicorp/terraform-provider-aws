@@ -31,6 +31,8 @@ the separate resource.
 
 ## Example Usage
 
+### Basic example
+
 ```terraform
 resource "aws_route_table" "example" {
   vpc_id = aws_vpc.example.id
@@ -65,6 +67,56 @@ resource "aws_route_table" "example" {
 }
 ```
 
+### Adopting an existing local route
+
+AWS creates certain routes that the AWS provider mostly ignores. You can manage them by importing or adopting them. See [Import](#import) below for information on importing. This example shows adopting a route and then updating its target.
+
+First, adopt an existing AWS-created route:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  # since this is exactly the route AWS will create, the route will be adopted
+  route {
+    cidr_block = "10.1.0.0/16"
+    gateway_id = "local"
+  }
+}
+```
+
+Next, update the target of the route:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block           = aws_vpc.test.cidr_block
+    network_interface_id = aws_network_interface.test.id
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+}
+```
+
+The target could then be updated again back to `local`.
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -90,7 +142,7 @@ One of the following target arguments must be supplied:
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
-* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
+* `gateway_id` - (Optional) Identifier of a VPC internet gateway, virtual private gateway, or `local`. `local` routes cannot be created but can be adopted or imported. See the [example](#adopting-an-existing-local-route) above.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.

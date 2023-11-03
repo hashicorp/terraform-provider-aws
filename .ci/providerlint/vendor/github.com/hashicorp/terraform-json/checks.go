@@ -92,7 +92,7 @@ type CheckDynamicAddress struct {
 	//
 	// InstanceKey will be empty if there was no foreach or count argument
 	// defined on the containing object.
-	InstanceKey string `json:"instance_key,omitempty"`
+	InstanceKey interface{} `json:"instance_key,omitempty"`
 }
 
 // CheckResultStatic is the container for a "checkable object".

@@ -19,7 +19,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/24"
+  cidr         = "172.20.0.0/24"
   depends_on = [
     aws_vpc_ipam_pool_cidr.example
   ]
@@ -27,7 +27,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "example" {
@@ -53,7 +53,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
   netmask_length = 28
 
   disallowed_cidrs = [
-    "172.2.0.0/28"
+    "172.20.0.0/28"
   ]
 
   depends_on = [
@@ -63,7 +63,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "example" {

@@ -51,6 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the resource share.
 * `id` - ARN of the resource share.
-* `status` - Status of the RAM share.
 * `owning_account_id` - ID of the AWS account that owns the resource share.
-* `tags` - Tags attached to the RAM share
+* `resource_arns` - A list of resource ARNs associated with the resource share.
+* `status` - Status of the resource share.
+* `tags` - Tags attached to the resource share.

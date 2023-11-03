@@ -12,6 +12,8 @@ Provides a Batch Job Definition resource.
 
 ## Example Usage
 
+### Job definition of type container
+
 ```terraform
 resource "aws_batch_job_definition" "test" {
   name = "tf_test_batch_job_definition"
@@ -62,6 +64,40 @@ resource "aws_batch_job_definition" "test" {
         softLimit = 1024
       }
     ]
+  })
+}
+```
+
+### Job definition of type multinode
+
+```terraform
+resource "aws_batch_job_definition" "test" {
+  name = "tf_test_batch_job_definition_multinode"
+  type = "multinode"
+
+  node_properties = jsonencode({
+    mainNode = 0
+    nodeRangeProperties = [
+      {
+        container = {
+          command = ["ls", "-la"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "0:"
+      },
+      {
+        container = {
+          command = ["echo", "test"]
+          image   = "busybox"
+          memory  = 128
+          vcpus   = 1
+        }
+        targetNodes = "1:"
+      }
+    ]
+    numNodes = 2
   })
 }
 ```
@@ -128,12 +164,14 @@ resource "aws_batch_job_definition" "test" {
 The following arguments are required:
 
 * `name` - (Required) Specifies the name of the job definition.
-* `type` - (Required) The type of job definition. Must be `container`.
+* `type` - (Required) The type of job definition. Must be `container` or `multinode`.
 
 The following arguments are optional:
 
 * `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
+* `node_properties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
+    provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `platform_capabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
@@ -153,7 +191,7 @@ The following arguments are optional:
 * `on_exit_code` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `on_reason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `on_status_reason` - (Optional) A glob pattern to match against the status reason returned for a job.
-  
+
 ### timeout
 
 * `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.

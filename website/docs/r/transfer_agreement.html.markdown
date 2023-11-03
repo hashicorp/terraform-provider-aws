@@ -41,7 +41,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `agreement_id`  - The unique identifier for the AS2 agreement
+* `agreement_id`  - The unique identifier for the AS2 agreement.
+* `arn` - The ARN of the agreement.
 * `staus`  - The staus of the agreement which is either ACTIVE or INACTIVE.
 
 ## Import

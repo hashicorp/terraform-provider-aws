@@ -4,7 +4,6 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -54,75 +53,17 @@ func testAccTransitGatewayRouteTablePropagationsDataSource_filter(t *testing.T) 
 }
 
 func testAccTransitGatewayRouteTablePropagationsDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = aws_subnet.test[*].id
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
-}
-
+	return acctest.ConfigCompose(testAccTransitGatewayRouteTablePropagationConfig_basic(rName), `
 data "aws_ec2_transit_gateway_route_table_propagations" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 
   depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
 }
-`, rName))
+`)
 }
 
 func testAccTransitGatewayRouteTablePropagationsDataSourceConfig_filter(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = aws_subnet.test[*].id
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
-}
-
+	return acctest.ConfigCompose(testAccTransitGatewayRouteTablePropagationConfig_basic(rName), `
 data "aws_ec2_transit_gateway_route_table_propagations" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 
@@ -133,5 +74,5 @@ data "aws_ec2_transit_gateway_route_table_propagations" "test" {
 
   depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
 }
-`, rName))
+`)
 }

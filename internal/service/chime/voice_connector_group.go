@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,9 +58,9 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 }
 
 func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.CreateVoiceConnectorGroupInput{
+	input := &chimesdkvoice.CreateVoiceConnectorGroupInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
@@ -79,14 +79,14 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	getInput := &chime.GetVoiceConnectorGroupInput{
+	getInput := &chimesdkvoice.GetVoiceConnectorGroupInput{
 		VoiceConnectorGroupId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -104,9 +104,9 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.UpdateVoiceConnectorGroupInput{
+	input := &chimesdkvoice.UpdateVoiceConnectorGroupInput{
 		Name:                  aws.String(d.Get("name").(string)),
 		VoiceConnectorGroupId: aws.String(d.Id()),
 	}
@@ -116,7 +116,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 			input.VoiceConnectorItems = expandVoiceConnectorItems(v.(*schema.Set).List())
 		}
 	} else if !d.IsNewResource() {
-		input.VoiceConnectorItems = make([]*chime.VoiceConnectorItem, 0)
+		input.VoiceConnectorItems = make([]*chimesdkvoice.VoiceConnectorItem, 0)
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
@@ -127,7 +127,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if v, ok := d.GetOk("connector"); ok && v.(*schema.Set).Len() > 0 {
 		if err := resourceVoiceConnectorGroupUpdate(ctx, d, meta); err != nil {
@@ -135,12 +135,12 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	input := &chime.DeleteVoiceConnectorGroupInput{
+	input := &chimesdkvoice.DeleteVoiceConnectorGroupInput{
 		VoiceConnectorGroupId: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			return nil
 		}
@@ -150,12 +150,12 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func expandVoiceConnectorItems(data []interface{}) []*chime.VoiceConnectorItem {
-	var connectorsItems []*chime.VoiceConnectorItem
+func expandVoiceConnectorItems(data []interface{}) []*chimesdkvoice.VoiceConnectorItem {
+	var connectorsItems []*chimesdkvoice.VoiceConnectorItem
 
 	for _, rItem := range data {
 		item := rItem.(map[string]interface{})
-		connectorsItems = append(connectorsItems, &chime.VoiceConnectorItem{
+		connectorsItems = append(connectorsItems, &chimesdkvoice.VoiceConnectorItem{
 			VoiceConnectorId: aws.String(item["voice_connector_id"].(string)),
 			Priority:         aws.Int64(int64(item["priority"].(int))),
 		})
@@ -164,7 +164,7 @@ func expandVoiceConnectorItems(data []interface{}) []*chime.VoiceConnectorItem {
 	return connectorsItems
 }
 
-func flattenVoiceConnectorItems(connectors []*chime.VoiceConnectorItem) []interface{} {
+func flattenVoiceConnectorItems(connectors []*chimesdkvoice.VoiceConnectorItem) []interface{} {
 	var rawConnectors []interface{}
 
 	for _, c := range connectors {

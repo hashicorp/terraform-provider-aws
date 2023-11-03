@@ -14,7 +14,7 @@ Accepts a License Manager grant. This allows for sharing licenses with other aws
 
 ```terraform
 resource "aws_licensemanager_grant_accepter" "test" {
-  name = "arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329"
+  grant_arn = "arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329"
 }
 ```
 

@@ -33,6 +33,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "database_name", resourceName, "database_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_system_id", resourceName, "db_system_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_mode", resourceName, "engine_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
@@ -92,14 +93,13 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "test"
-  engine                          = "aurora-mysql"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  skip_final_snapshot             = true
-  db_subnet_group_name            = aws_db_subnet_group.test.name
+  cluster_identifier   = %[1]q
+  database_name        = "test"
+  engine               = "aurora-mysql"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
 
   tags = {
     Name = %[1]q
@@ -120,13 +120,13 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "test"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  manage_master_user_password     = true
-  master_username                 = "tfacctest"
-  skip_final_snapshot             = true
+  cluster_identifier          = %[1]q
+  database_name               = "test"
+  engine                      = "aurora-mysql"
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+  manage_master_user_password = true
+  master_username             = "tfacctest"
+  skip_final_snapshot         = true
 
   tags = {
     Name = %[1]q

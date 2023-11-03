@@ -5,9 +5,9 @@ package wafregional_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +27,7 @@ func TestAccWAFRegionalWebACLDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWebACLDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`web ACLs not found`),
+				ExpectError: regexache.MustCompile(`web ACLs not found`),
 			},
 			{
 				Config: testAccWebACLDataSourceConfig_name(name),

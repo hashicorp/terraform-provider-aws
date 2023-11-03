@@ -45,14 +45,14 @@ resource "aws_ssmcontacts_contact" "example" {
 
 The following arguments are required:
 
-- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan.
+- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), and hyphens (`-`).
 
 - `type` - (Required) The type of contact engaged. A single contact is type PERSONAL and an escalation
   plan is type ESCALATION.
 
 The following arguments are optional:
 
-- `display_name` - (Optional) Full friendly name of the contact or escalation plan.
+- `display_name` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `tags` - (Optional) Map of tags to assign to the resource.
 

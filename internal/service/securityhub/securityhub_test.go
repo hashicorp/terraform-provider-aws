@@ -18,7 +18,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"disappears":                  testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
-			"full":                        testAccAccount_full,
+			"Full":                        testAccAccount_full,
+			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
 		},
 		"Member": {
 			"basic":  testAccMember_basic,

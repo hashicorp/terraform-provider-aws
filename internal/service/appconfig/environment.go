@@ -6,9 +6,9 @@ package appconfig
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
@@ -63,7 +63,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[a-z0-9]{4,7}$`),
+						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
 						"value must contain 4-7 lowercase letters or numbers",
 					),
 				},
@@ -442,7 +442,7 @@ func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *
 
 	values := make([]attr.Value, len(apiObjects))
 	for i, o := range apiObjects {
-		values[i] = flattenMonitorData(ctx, o, diags).value(ctx, diags)
+		values[i] = flattenMonitorData(ctx, o).value(ctx, diags)
 	}
 
 	result, d := types.SetValueFrom(ctx, elemType, values)
@@ -458,20 +458,20 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueARN().String()),
+		AlarmArn: aws.String(m.AlarmARN.ValueString()),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueARN().String())
+		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
 	}
 
 	return result
 }
 
-func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *diag.Diagnostics) monitorData {
+func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) monitorData {
 	return monitorData{
-		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn, diags),
-		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn, diags),
+		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn),
+		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn),
 	}
 }
 

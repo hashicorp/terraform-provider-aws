@@ -6,10 +6,10 @@ package securityhub_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -510,7 +510,7 @@ func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, "arn", regexache.MustCompile(expectedArn))(s)
 	}
 }
 

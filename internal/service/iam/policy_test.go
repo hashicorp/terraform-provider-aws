@@ -6,9 +6,9 @@ package iam_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -167,14 +167,13 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -224,7 +223,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyConfig_basic(rName, "not-json"),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy1),
@@ -333,6 +332,24 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyConfig_policyDuplicateKeys(rName),
+				ExpectError: regexache.MustCompile(`"policy" contains duplicate JSON keys: duplicate key "Statement.0.Condition.StringEquals"`),
 			},
 		},
 	})
@@ -615,4 +632,33 @@ resource "aws_iam_policy" "test" {
   %[2]s
 }
 `, rName, tags)
+}
+
+func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": ["one/", "two/"]
+        },
+        "StringEquals": {
+          "s3:versionid": "abc123"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+`, rName)
 }

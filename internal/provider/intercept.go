@@ -195,14 +195,14 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 
 type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-// tagsInterceptor implements transparent tagging.
-type tagsInterceptor struct {
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
 	tags       *types.ServicePackageResourceTags
 	updateFunc tagsCRUDFunc
 	readFunc   tagsCRUDFunc
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -365,6 +365,77 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 			if r.tags.IdentifierAttribute != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+			}
+		}
+	}
+
+	return ctx, diags
+}
+
+// tagsResourceInterceptor implements transparent tagging for data sources.
+type tagsDataSourceInterceptor struct {
+	tags *types.ServicePackageResourceTags
+}
+
+func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	// sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
+	// if !ok {
+	// 	return ctx, diags
+	// }
+
+	// serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	// if err != nil {
+	// 	serviceName = "<service>"
+	// }
+
+	// resourceName := inContext.ResourceName
+	// if resourceName == "" {
+	// 	resourceName = "<thing>"
+	// }
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		switch why {
+		case Read:
+			// Get the data source's configured tags.
+			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+			tagsInContext.TagsIn = types.Some(tags)
+		}
+	case After:
+		// Set tags and tags_all in state after CRU.
+		// C & U handlers are assumed to tail call the R handler.
+		switch why {
+		case Read:
+			// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
+			if d.Id() == "" {
+				return ctx, diags
+			}
+
+			fallthrough
+		case Create, Update:
+			// If the R handler didn't set tags, try and read them from the service API.
+			// TODO.
+			// if tagsInContext.TagsOut.IsNone() {
+			// }
+
+			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
+			if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 		}
 	}

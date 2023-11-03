@@ -39,6 +39,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the certificate
 * `certificate_id` - The unique identifier for the AS2 certificate
 * `active_date` - An date when the certificate becomes active
 * `inactive_date` - An date when the certificate becomes inactive

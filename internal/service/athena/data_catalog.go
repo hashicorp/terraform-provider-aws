@@ -7,26 +7,29 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/athena"
+	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_data_catalog", name="Data Catalog")
 // @Tags(identifierAttribute="arn")
-func ResourceDataCatalog() *schema.Resource {
+func resourceDataCatalog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogCreate,
 		ReadWithoutTimeout:   resourceDataCatalogRead,
@@ -54,14 +57,14 @@ func ResourceDataCatalog() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 129),
-					validation.StringMatch(regexp.MustCompile(`[\w@-]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[\w@-]*`), ""),
 				),
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: allDiagFunc(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 255),
 					validation.MapValueLenBetween(0, 51200),
 				),
@@ -69,31 +72,30 @@ func ResourceDataCatalog() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(athena.DataCatalogType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.DataCatalogType](),
 			},
 		},
 	}
 }
 
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
 		Description: aws.String(d.Get("description").(string)),
 		Tags:        getTagsIn(ctx),
-		Type:        aws.String(d.Get("type").(string)),
+		Type:        types.DataCatalogType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Athena Data Catalog: %s", input)
-	_, err := conn.CreateDataCatalogWithContext(ctx, input)
+	_, err := conn.CreateDataCatalog(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Athena Data Catalog (%s): %s", name, err)
@@ -105,16 +107,11 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	input := &athena.GetDataCatalogInput{
-		Name: aws.String(d.Id()),
-	}
+	dataCatalog, err := findDataCatalogByName(ctx, conn, d.Id())
 
-	dataCatalog, err := conn.GetDataCatalogWithContext(ctx, input)
-
-	// If the resource doesn't exist, the API returns a `ErrCodeInvalidRequestException` error.
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Athena Data Catalog (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -132,9 +129,9 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("description", dataCatalog.DataCatalog.Description)
-	d.Set("name", dataCatalog.DataCatalog.Name)
-	d.Set("type", dataCatalog.DataCatalog.Type)
+	d.Set("description", dataCatalog.Description)
+	d.Set("name", dataCatalog.Name)
+	d.Set("type", dataCatalog.Type)
 
 	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
 	// Because the API sets default values, what's returned by the API is different than what's set by the user.
@@ -142,8 +139,8 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		parameters := make(map[string]string, 0)
 
 		for key, val := range v.(map[string]interface{}) {
-			if v, ok := dataCatalog.DataCatalog.Parameters[key]; ok {
-				parameters[key] = aws.StringValue(v)
+			if v, ok := dataCatalog.Parameters[key]; ok {
+				parameters[key] = v
 			} else {
 				parameters[key] = val.(string)
 			}
@@ -158,23 +155,22 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateDataCatalogInput{
 			Name:        aws.String(d.Id()),
-			Type:        aws.String(d.Get("type").(string)),
+			Type:        types.DataCatalogType(d.Get("type").(string)),
 			Description: aws.String(d.Get("description").(string)),
 		}
 
 		if d.HasChange("parameters") {
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-				input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+				input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 			}
 		}
 
-		log.Printf("[DEBUG] Updating Athena Data Catalog: %s", input)
-		_, err := conn.UpdateDataCatalogWithContext(ctx, input)
+		_, err := conn.UpdateDataCatalog(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Athena Data Catalog (%s): %s", d.Id(), err)
@@ -185,14 +181,14 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
-	_, err := conn.DeleteDataCatalogWithContext(ctx, &athena.DeleteDataCatalogInput{
+	_, err := conn.DeleteDataCatalog(ctx, &athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, athena.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -203,12 +199,27 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
+func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string) (*types.DataCatalog, error) {
+	input := &athena.GetDataCatalogInput{
+		Name: aws.String(name),
 	}
+
+	output, err := conn.GetDataCatalog(ctx, input)
+
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DataCatalog == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DataCatalog, nil
 }

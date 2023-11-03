@@ -23,17 +23,21 @@ import (
 	"strings"
 )
 
-// This "should" be defined by the AWS Go SDK v2, but currently isn't.
+// These "should" be defined by the AWS Go SDK v2, but currently aren't.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
+	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeStarConnectionsEndpointID        = "codestar-connections"
+	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
+	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
@@ -42,17 +46,25 @@ const (
 	KendraEndpointID                     = "kendra"
 	KeyspacesEndpointID                  = "keyspaces"
 	LambdaEndpointID                     = "lambda"
+	LexV2ModelsEndpointID                = "models-v2-lex"
 	MediaLiveEndpointID                  = "medialive"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
+	RedshiftDataEndpointID               = "redshift-data"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
+	ResourceGroupsEndpointID             = "resource-groups"
+	ResourceGroupsTaggingAPIEndpointID   = "tagging"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
+	ServiceQuotasEndpointID              = "servicequotas"
+	S3EndpointID                         = "s3"
+	S3ControlEndpointID                  = "s3-control"
 	SESV2EndpointID                      = "sesv2"
+	SQSEndpointID                        = "sqs"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
@@ -61,6 +73,22 @@ const (
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"
+)
+
+// These should move to aws-sdk-go-base.
+// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
+const (
+	StandardPartitionID   = "aws"        // AWS Standard partition.
+	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
+)
+
+const (
+	USEast1RegionID = "us-east-1" // US East (N. Virginia).
+	USWest1RegionID = "us-west-1" // US West (N. California).
+	USWest2RegionID = "us-west-2" // US West (Oregon).
+
+	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
+	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

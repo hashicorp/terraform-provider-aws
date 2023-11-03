@@ -36,6 +36,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `TagInCustomVal` |  | Tag input custom value | `-TagInCustomVal=aws.StringMap(updatedTags.IgnoreAWS().Map())` |
 | `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInIDElem=ResourceARN` |
 | `TagInIDNeedSlice` |  | Tag input identifier needs a slice | `-TagInIDNeedSlice=yes` |
+| `TagInIDNeedValueSlice` |  | Tag input identifier needs a slice of values, rather than a slice of pointers | `-TagInIDNeedValueSlice=yes` |
 | `TagInTagsElem` | Tags | Tag input tags element | `-TagInTagsElem=TagsList` |
 | `TagKeyType` |  | Tag key type | `-TagKeyType=TagKeyOnly` |
 | `TagOp` | `TagResource` | Tag operation | `-TagOp=AddTags` |

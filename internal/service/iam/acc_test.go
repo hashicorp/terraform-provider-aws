@@ -11,7 +11,11 @@ import (
 	"encoding/pem"
 	"fmt"
 	"strings"
+	"testing"
 
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -55,4 +59,14 @@ func pemEncode(b []byte, block string) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(iam.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"no identity-based policy allows the iam:SetSecurityTokenServicePreferences action",
+	)
 }

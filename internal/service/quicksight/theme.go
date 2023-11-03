@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -82,13 +82,13 @@ func ResourceTheme() *schema.Resource {
 											MaxItems: 20,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 											},
 										},
 										"empty_fill_color": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"min_max_gradient": {
 											Type:     schema.TypeList,
@@ -97,7 +97,7 @@ func ResourceTheme() *schema.Resource {
 											MaxItems: 2,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 											},
 										},
 									},
@@ -200,82 +200,82 @@ func ResourceTheme() *schema.Resource {
 										"accent": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"accent_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"danger": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"danger_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"dimension": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"dimension_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"measure": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"measure_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"primary_background": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"primary_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"secondary_background": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"secondary_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"success": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"success_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"warning": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"warning_foreground": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 									},
 								},
