@@ -560,6 +560,16 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"jwt_token": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 8000),
+												},
+												"oauth2_grant_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appflow.OAuth2GrantType_Values(), false),
+												},
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -1719,6 +1729,12 @@ func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *appf
 	}
 	if v, ok := m["client_credentials_arn"].(string); ok && v != "" {
 		credentials.ClientCredentialsArn = aws.String(v)
+	}
+	if v, ok := m["jwt_token"].(string); ok && v != "" {
+		credentials.JwtToken = aws.String(v)
+	}
+	if v, ok := m["oauth2_grant_type"].(string); ok && v != "" {
+		credentials.OAuth2GrantType = aws.String(v)
 	}
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
