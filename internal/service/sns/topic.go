@@ -52,10 +52,11 @@ var (
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
 		"archive_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
@@ -75,10 +76,11 @@ var (
 			Default:  false,
 		},
 		"delivery_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
