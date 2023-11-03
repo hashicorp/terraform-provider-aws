@@ -153,6 +153,7 @@ func ResourceGroup() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"notification_metadata": {
 							Type:     schema.TypeString,
