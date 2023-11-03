@@ -16,7 +16,7 @@ Terraform data source for managing an AWS API Gateway V2 VPC Link.
 
 ```terraform
 data "aws_apigatewayv2_vpc_link" "example" {
-  id = "abc123"
+  id = "example"
 }
 ```
 
