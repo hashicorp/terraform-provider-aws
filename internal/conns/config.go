@@ -85,6 +85,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,

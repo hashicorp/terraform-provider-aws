@@ -208,3 +208,5 @@ exclude ( // Contains INI parsing regression
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.0
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.1
 )
+
+replace github.com/hashicorp/aws-sdk-go-base/v2 => github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.38.0.20231103062846-b877e512ee57
