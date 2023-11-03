@@ -51,7 +51,21 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
+		"archive_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"beginning_archive_time": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -194,28 +208,30 @@ var (
 		"application_failure_feedback_role_arn":    topicAttributeNameApplicationFailureFeedbackRoleARN,
 		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
 		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
-		"arn":                                   topicAttributeNameTopicARN,
-		"content_based_deduplication":           topicAttributeNameContentBasedDeduplication,
-		"delivery_policy":                       topicAttributeNameDeliveryPolicy,
-		"display_name":                          topicAttributeNameDisplayName,
-		"fifo_topic":                            topicAttributeNameFIFOTopic,
-		"firehose_failure_feedback_role_arn":    topicAttributeNameFirehoseFailureFeedbackRoleARN,
-		"firehose_success_feedback_role_arn":    topicAttributeNameFirehoseSuccessFeedbackRoleARN,
-		"firehose_success_feedback_sample_rate": topicAttributeNameFirehoseSuccessFeedbackSampleRate,
-		"http_failure_feedback_role_arn":        topicAttributeNameHTTPFailureFeedbackRoleARN,
-		"http_success_feedback_role_arn":        topicAttributeNameHTTPSuccessFeedbackRoleARN,
-		"http_success_feedback_sample_rate":     topicAttributeNameHTTPSuccessFeedbackSampleRate,
-		"kms_master_key_id":                     topicAttributeNameKMSMasterKeyId,
-		"lambda_failure_feedback_role_arn":      topicAttributeNameLambdaFailureFeedbackRoleARN,
-		"lambda_success_feedback_role_arn":      topicAttributeNameLambdaSuccessFeedbackRoleARN,
-		"lambda_success_feedback_sample_rate":   topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                 topicAttributeNameOwner,
-		"policy":                                topicAttributeNamePolicy,
-		"signature_version":                     topicAttributeNameSignatureVersion,
-		"sqs_failure_feedback_role_arn":         topicAttributeNameSQSFailureFeedbackRoleARN,
-		"sqs_success_feedback_role_arn":         topicAttributeNameSQSSuccessFeedbackRoleARN,
-		"sqs_success_feedback_sample_rate":      topicAttributeNameSQSSuccessFeedbackSampleRate,
-		"tracing_config":                        topicAttributeNameTracingConfig,
+		"archive_policy":                           topicAttributeNameArchivePolicy,
+		"arn":                                      topicAttributeNameTopicARN,
+		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
+		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
+		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
+		"display_name":                             topicAttributeNameDisplayName,
+		"fifo_topic":                               topicAttributeNameFIFOTopic,
+		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
+		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
+		"firehose_success_feedback_sample_rate":    topicAttributeNameFirehoseSuccessFeedbackSampleRate,
+		"http_failure_feedback_role_arn":           topicAttributeNameHTTPFailureFeedbackRoleARN,
+		"http_success_feedback_role_arn":           topicAttributeNameHTTPSuccessFeedbackRoleARN,
+		"http_success_feedback_sample_rate":        topicAttributeNameHTTPSuccessFeedbackSampleRate,
+		"kms_master_key_id":                        topicAttributeNameKMSMasterKeyId,
+		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
+		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
+		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"owner":                                    topicAttributeNameOwner,
+		"policy":                                   topicAttributeNamePolicy,
+		"signature_version":                        topicAttributeNameSignatureVersion,
+		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
+		"sqs_success_feedback_role_arn":            topicAttributeNameSQSSuccessFeedbackRoleARN,
+		"sqs_success_feedback_sample_rate":         topicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                           topicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
@@ -383,6 +399,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
+	archivePolicy := diff.Get("archive_policy").(string)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 
 	if diff.Id() == "" {
@@ -401,8 +418,13 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		}
 	}
 
-	if !fifoTopic && contentBasedDeduplication {
-		return fmt.Errorf("content-based deduplication can only be set for FIFO topics")
+	if !fifoTopic {
+		if archivePolicy != "" {
+			return errors.New("message archive policy can only be set for FIFO topics")
+		}
+		if contentBasedDeduplication {
+			return errors.New("content-based deduplication can only be set for FIFO topics")
+		}
 	}
 
 	return nil

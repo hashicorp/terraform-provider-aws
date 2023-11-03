@@ -80,6 +80,8 @@ const (
 	topicAttributeNameApplicationFailureFeedbackRoleARN    = "ApplicationFailureFeedbackRoleArn"
 	topicAttributeNameApplicationSuccessFeedbackRoleARN    = "ApplicationSuccessFeedbackRoleArn"
 	topicAttributeNameApplicationSuccessFeedbackSampleRate = "ApplicationSuccessFeedbackSampleRate"
+	topicAttributeNameArchivePolicy                        = "ArchivePolicy"
+	topicAttributeNameBeginningArchiveTime                 = "BeginningArchiveTime"
 	topicAttributeNameContentBasedDeduplication            = "ContentBasedDeduplication"
 	topicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
 	topicAttributeNameDisplayName                          = "DisplayName"
