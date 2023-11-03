@@ -480,6 +480,7 @@ func topicName(d verify.ResourceDiffer) string {
 
 // findTopicAttributesWithValidAWSPrincipalsByARN returns topic attributes, ensuring that any Policy field
 // is populated with valid AWS principals, i.e. the principal is either an AWS Account ID or an ARN.
+// nosemgrep:ci.aws-in-func-name
 func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
 	var attributes map[string]string
 	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {

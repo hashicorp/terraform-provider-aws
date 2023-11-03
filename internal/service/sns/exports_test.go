@@ -14,7 +14,7 @@ var (
 	FindPlatformApplicationAttributesByARN         = findPlatformApplicationAttributesByARN
 	FindSubscriptionAttributesByARN                = findSubscriptionAttributesByARN
 	FindTopicAttributesByARN                       = findTopicAttributesByARN
-	FindTopicAttributesWithValidAWSPrincipalsByARN = findTopicAttributesWithValidAWSPrincipalsByARN
+	FindTopicAttributesWithValidAWSPrincipalsByARN = findTopicAttributesWithValidAWSPrincipalsByARN // nosemgrep:ci.aws-in-var-name
 
 	FIFOTopicNameSuffix                = fifoTopicNameSuffix
 	ParsePlatformApplicationResourceID = parsePlatformApplicationResourceID
