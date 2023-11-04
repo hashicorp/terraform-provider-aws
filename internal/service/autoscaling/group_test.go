@@ -4814,7 +4814,7 @@ resource "aws_autoscaling_group" "test" {
   initial_lifecycle_hook {
     name                 = "launching"
     default_result       = "CONTINUE"
-    heartbeat_timeout    = %[2]d # minimum value
+    heartbeat_timeout    = %[2]d
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
   }
 
