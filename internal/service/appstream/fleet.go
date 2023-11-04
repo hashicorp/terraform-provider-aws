@@ -61,7 +61,17 @@ func ResourceFleet() *schema.Resource {
 						},
 						"desired_instances": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"compute_capacity.0.desired_sessions",
+							},
+						},
+						"desired_sessions": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"compute_capacity.0.desired_instances",
+							},
 						},
 						"in_use": {
 							Type:     schema.TypeInt,
@@ -153,6 +163,10 @@ func ResourceFleet() *schema.Resource {
 			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"max_sessions_per_instance": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"max_user_duration_in_seconds": {
 				Type:         schema.TypeInt,
@@ -250,6 +264,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.IamRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_sessions_per_instance"); ok {
+		input.MaxSessionsPerInstance = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_user_duration_in_seconds"); ok {
@@ -367,6 +385,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_name", fleet.ImageName)
 	d.Set("image_arn", fleet.ImageArn)
 	d.Set("instance_type", fleet.InstanceType)
+	d.Set("max_sessions_per_instance", fleet.MaxSessionsPerInstance)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
 	d.Set("name", fleet.Name)
 	d.Set("state", fleet.State)
@@ -455,6 +474,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.InstanceType = aws.String(d.Get("instance_type").(string))
 	}
 
+	if d.HasChange("max_sessions_per_instance") {
+		input.MaxSessionsPerInstance = aws.Int64(int64(d.Get("max_sessions_per_instance").(int)))
+	}
+
 	if d.HasChange("max_user_duration_in_seconds") {
 		input.MaxUserDurationInSeconds = aws.Int64(int64(d.Get("max_user_duration_in_seconds").(int)))
 	}
@@ -536,8 +559,12 @@ func expandComputeCapacity(tfList []interface{}) *appstream.ComputeCapacity {
 	apiObject := &appstream.ComputeCapacity{}
 
 	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["desired_instances"]; ok {
+	if v, ok := attr["desired_instances"]; ok && v != 0 {
 		apiObject.DesiredInstances = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := attr["desired_sessions"]; ok && v != 0 {
+		apiObject.DesiredSessions = aws.Int64(int64(v.(int)))
 	}
 
 	if reflect.DeepEqual(&appstream.ComputeCapacity{}, apiObject) {
@@ -554,7 +581,12 @@ func flattenComputeCapacity(apiObject *appstream.ComputeCapacityStatus) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Desired; v != nil {
+	if v := apiObject.DesiredUserSessions; v != nil {
+		tfMap["desired_sessions"] = aws.Int64Value(v)
+	}
+
+	// desiredInstances is always returned by the API but cannot be used in conjunction with desiredSessions
+	if v := apiObject.Desired; v != nil && tfMap["desired_sessions"] == nil {
 		tfMap["desired_instances"] = aws.Int64Value(v)
 	}
 
