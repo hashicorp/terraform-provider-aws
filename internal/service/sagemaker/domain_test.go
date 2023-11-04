@@ -375,7 +375,7 @@ func testAccDomain_directDeploySettings(t *testing.T) {
 	})
 }
 
-func testAccDomain_identityProviderOauthSettings(t *testing.T) {
+func testAccDomain_identityProviderOAuthSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -388,7 +388,7 @@ func testAccDomain_identityProviderOauthSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_identityProviderOauthSettings(rName),
+				Config: testAccDomainConfig_identityProviderOAuthSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -1306,7 +1306,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_identityProviderOauthSettings(rName string) string {
+func testAccDomainConfig_identityProviderOAuthSettings(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
