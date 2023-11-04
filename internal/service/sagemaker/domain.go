@@ -240,7 +240,7 @@ func ResourceDomain() *schema.Resource {
 										},
 									},
 									"identity_provider_oauth_settings": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 20,
 										Elem: &schema.Resource{
@@ -1206,7 +1206,7 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CanvasAppSettings{
-		IdentityProviderOAuthSettings: expandIdentityProviderOAuthSettings(m["identit_provider_oauth_settings"].([]interface{})),
+		IdentityProviderOAuthSettings: expandIdentityProviderOAuthSettings(m["identity_provider_oauth_settings"].([]interface{})),
 		DirectDeploySettings:          expandDirectDeploySettings(m["direct_deploy_settings"].([]interface{})),
 		KendraSettings:                expandKendraSettings(m["kendra_settings"].([]interface{})),
 		ModelRegisterSettings:         expandModelRegisterSettings(m["model_register_settings"].([]interface{})),
