@@ -550,7 +550,7 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_rStudioServerProAppSettings(rName),
+				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -564,6 +564,26 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.access_status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.user_group", "R_STUDIO_ADMIN"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.access_status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.user_group", "R_STUDIO_ADMIN"),
+				),
 			},
 		},
 	})
@@ -1509,7 +1529,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_rStudioServerProAppSettings(rName string) string {
+func testAccDomainConfig_rStudioServerProAppSettings(rName, state string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -1521,7 +1541,7 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     r_studio_server_pro_app_settings {
-      access_status = "ENABLED"
+      access_status = %[2]q
       user_group    = "R_STUDIO_ADMIN"
     }
   }
@@ -1530,7 +1550,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName))
+`, rName, state))
 }
 
 func testAccDomainConfig_kernelGatewayAppSettings(rName string) string {

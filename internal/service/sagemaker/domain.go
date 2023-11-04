@@ -1055,10 +1055,12 @@ func expandRStudioServerProAppSettings(l []interface{}) *sagemaker.RStudioServer
 
 	if v, ok := m["access_status"].(string); ok && v != "" {
 		config.AccessStatus = aws.String(v)
-	}
 
-	if v, ok := m["user_group"].(string); ok && v != "" {
-		config.UserGroup = aws.String(v)
+		if v == sagemaker.RStudioServerProAccessStatusEnabled {
+			if g, ok := m["user_group"].(string); ok && g != "" {
+				config.UserGroup = aws.String(g)
+			}
+		}
 	}
 
 	return config
