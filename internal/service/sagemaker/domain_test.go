@@ -395,6 +395,7 @@ func testAccDomain_identityProviderOAuthSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.status", "DISABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
 				),
 			},
 			{
@@ -1337,6 +1338,8 @@ resource "aws_sagemaker_domain" "test" {
   retention_policy {
     home_efs_file_system = "Delete"
   }
+
+  depends_on = [aws_secretsmanager_secret_version.test]
 }
 `, rName))
 }

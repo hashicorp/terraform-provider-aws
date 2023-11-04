@@ -1549,7 +1549,7 @@ func flattenCanvasAppSettings(config *sagemaker.CanvasAppSettings) []map[string]
 
 	m := map[string]interface{}{
 		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
-		"identity_provider_oauth_Settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
+		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
 		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
 		"time_series_forecasting_settings": flattenTimeSeriesForecastingSettings(config.TimeSeriesForecastingSettings),
 		"model_register_settings":          flattenModelRegisterSettings(config.ModelRegisterSettings),
