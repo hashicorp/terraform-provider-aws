@@ -1328,7 +1328,7 @@ resource "aws_sagemaker_domain" "test" {
 
     canvas_app_settings {
       identity_provider_oauth_settings {
-		secret_arn = aws_secretsmanager_secret.test.arn
+        secret_arn = aws_secretsmanager_secret.test.arn
         status     = "DISABLED"
       }
     }
