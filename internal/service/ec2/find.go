@@ -7046,6 +7046,30 @@ func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2_sdkv2.Clie
 	return output, nil
 }
 
+func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessEndpointPolicyOutput, error) {
+	input := &ec2_sdkv2.GetVerifiedAccessEndpointPolicyInput{
+		VerifiedAccessEndpointId: &id,
+	}
+	output, err := conn.GetVerifiedAccessEndpointPolicy(ctx, input)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindVerifiedAccessGroup(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
 	output, err := FindVerifiedAccessGroups(ctx, conn, input)
 

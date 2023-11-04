@@ -196,6 +196,49 @@ func TestAccVerifiedAccessEndpoint_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessEndpoint_policyDocument(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policyBase(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policyUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), policyDoc),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -449,4 +492,45 @@ resource "aws_verifiedaccess_endpoint" "test" {
 }
 
 `, rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVerifiedAccessEndpointConfig_policyBase(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), `
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  attachment_type        = "vpc"
+  description            = "example"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  endpoint_type          = "network-interface"
+  network_interface_options {
+    network_interface_id = aws_network_interface.test.id
+    port                 = 443
+    protocol             = "https"
+  }
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`)
+}
+
+func testAccVerifiedAccessEndpointConfig_policyUpdate(rName, key, certificate, policyDocument string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  attachment_type        = "vpc"
+  description            = "example"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  endpoint_type          = "network-interface"
+  network_interface_options {
+    network_interface_id = aws_network_interface.test.id
+    port                 = 443
+    protocol             = "https"
+  }
+  policy_document          = %[4]q
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName, key, certificate, policyDocument))
 }

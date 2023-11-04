@@ -138,6 +138,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"policy_document": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -206,6 +210,10 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("policy_document"); ok {
+		input.PolicyDocument = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -266,6 +274,14 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
+	output, err := FindVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)
+	}
+
+	d.Set("policy_document", output.PolicyDocument)
+
 	return diags
 }
 
@@ -306,6 +322,20 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 		if _, err := WaitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("policy_document") {
+		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
+			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
+			VerifiedAccessEndpointId: aws.String(d.Id()),
+			PolicyEnabled:            aws.Bool(true),
+		}
+
+		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s) policy: %s", d.Id(), err)
 		}
 	}
 
