@@ -470,85 +470,89 @@ func resourceCloudTrailUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
-		input := cloudtrail.UpdateTrailInput{
+		input := &cloudtrail.UpdateTrailInput{
 			Name: aws.String(d.Id()),
+		}
+
+		if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
+			// Both of these need to be provided together in the update call otherwise API complains.
+			input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
+			input.CloudWatchLogsLogGroupArn = aws.String(d.Get("cloud_watch_logs_group_arn").(string))
+		}
+
+		if d.HasChange("enable_log_file_validation") {
+			input.EnableLogFileValidation = aws.Bool(d.Get("enable_log_file_validation").(bool))
+		}
+
+		if d.HasChange("include_global_service_events") {
+			input.IncludeGlobalServiceEvents = aws.Bool(d.Get("include_global_service_events").(bool))
+		}
+
+		if d.HasChange("is_multi_region_trail") {
+			input.IsMultiRegionTrail = aws.Bool(d.Get("is_multi_region_trail").(bool))
+		}
+
+		if d.HasChange("is_organization_trail") {
+			input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
+		}
+
+		if d.HasChange("kms_key_id") {
+			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
 		}
 
 		if d.HasChange("s3_bucket_name") {
 			input.S3BucketName = aws.String(d.Get("s3_bucket_name").(string))
 		}
+
 		if d.HasChange("s3_key_prefix") {
 			input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
 		}
-		if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
-			// Both of these need to be provided together
-			// in the update call otherwise API complains
-			input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
-			input.CloudWatchLogsLogGroupArn = aws.String(d.Get("cloud_watch_logs_group_arn").(string))
-		}
-		if d.HasChange("include_global_service_events") {
-			input.IncludeGlobalServiceEvents = aws.Bool(d.Get("include_global_service_events").(bool))
-		}
-		if d.HasChange("is_multi_region_trail") {
-			input.IsMultiRegionTrail = aws.Bool(d.Get("is_multi_region_trail").(bool))
-		}
-		if d.HasChange("is_organization_trail") {
-			input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
-		}
-		if d.HasChange("enable_log_file_validation") {
-			input.EnableLogFileValidation = aws.Bool(d.Get("enable_log_file_validation").(bool))
-		}
-		if d.HasChange("kms_key_id") {
-			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
-		}
+
 		if d.HasChange("sns_topic_name") {
 			input.SnsTopicName = aws.String(d.Get("sns_topic_name").(string))
 		}
 
-		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			var err error
-			_, err = conn.UpdateTrailWithContext(ctx, &input)
-			if err != nil {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateTrailWithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
-					return retry.RetryableError(err)
+					return true, err
 				}
+
 				if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
-					return retry.RetryableError(err)
+					return true, err
 				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTrailWithContext(ctx, &input)
-		}
+
+				return false, err
+			},
+		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_logging") {
-		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", d.Id())
-		err := setLogging(ctx, conn, d.Id(), d.Get("enable_logging").(bool))
-		if err != nil {
+		if err := setLogging(ctx, conn, d.Id(), d.Get("enable_logging").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if !d.IsNewResource() && d.HasChange("event_selector") {
+	if d.HasChange("event_selector") {
 		if err := setEventSelectors(ctx, conn, d); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
+	if d.HasChange("advanced_event_selector") {
 		if err := setAdvancedEventSelectors(ctx, conn, d); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if !d.IsNewResource() && d.HasChange("insight_selector") {
+	if d.HasChange("insight_selector") {
 		if err := setInsightSelectors(ctx, conn, d); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
