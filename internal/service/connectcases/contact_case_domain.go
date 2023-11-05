@@ -20,8 +20,8 @@ import (
 func ResourceContactCaseDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCaseDomainCreate,
-		ReadWithoutTimeout:   resourceContactCaseRead,
-		DeleteWithoutTimeout: resourceContactCaseDelete,
+		ReadWithoutTimeout:   resourceContactCaseDomainRead,
+		DeleteWithoutTimeout: resourceContactCaseDomainDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -70,7 +70,7 @@ func resourceContactCaseDomainCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceContactCaseRead(ctx, d, meta)...)
 }
 
-func resourceContactCaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactCaseDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceContactCaseRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceContactCaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactCaseDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Case Domain: %s", d.Id())
