@@ -53,6 +53,7 @@ val services = mapOf(
     "computeoptimizer" to ServiceSpec("Compute Optimizer"),
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
+    "connectcases" to ServiceSpec("Connect Cases"),
     "controltower" to ServiceSpec("Control Tower"),
     "cur" to ServiceSpec("Cost and Usage Report", regionOverride = "us-east-1"),
     "dataexchange" to ServiceSpec("Data Exchange"),
