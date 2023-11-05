@@ -98,7 +98,7 @@ func resourceContactCaseCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.CaseId))
 
-	// The below fields are only returned by the Create API, so we need to set it here.
+	// The below fields are only returned by the Create Case API, so we need to set it here.
 	d.Set("case_id", output.CaseId)
 	d.Set("case_arn", output.CaseArn)
 

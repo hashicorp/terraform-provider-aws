@@ -35,3 +35,37 @@ func findConnectCasesDomainById(ctx context.Context, conn *connectcases.Client, 
 
 	return output, nil
 }
+
+func findFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, domainId, id string) (*types.FieldSummary, error) {
+	input := &connectcases.ListFieldsInput{
+		DomainId: aws.String(domainId),
+	}
+
+	output, err := conn.ListFields(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, field := range output.Fields {
+		if field.FieldId == nil {
+			continue
+		}
+		if aws.ToString(field.FieldId) == id {
+			return &field, nil
+		}
+	}
+
+	return nil, nil
+}
