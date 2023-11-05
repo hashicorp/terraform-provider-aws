@@ -24,6 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.29.0
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.130.0

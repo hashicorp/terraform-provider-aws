@@ -91,6 +91,7 @@ comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,compreh
 compute-optimizer,computeoptimizer,computeoptimizer,computeoptimizer,,computeoptimizer,,,ComputeOptimizer,ComputeOptimizer,,,2,,aws_computeoptimizer_,,computeoptimizer_,Compute Optimizer,AWS,,,,,,
 configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,1,,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,
 connect,connect,connect,connect,,connect,,,Connect,Connect,,1,,,aws_connect_,,connect_,Connect,Amazon,,,,,,
+connectcases,connectcases,connectcases,connectcases,,connectcases,,,ConnectCases,ConnectCases,,,2,,aws_connectcases_,,connectcases_,Connect Cases,Amazon,,,,,,
 connect-contact-lens,connectcontactlens,connectcontactlens,connectcontactlens,,connectcontactlens,,,ConnectContactLens,ConnectContactLens,,1,,,aws_connectcontactlens_,,connectcontactlens_,Connect Contact Lens,Amazon,,x,,,,
 customer-profiles,customerprofiles,customerprofiles,customerprofiles,,customerprofiles,,,CustomerProfiles,CustomerProfiles,,1,,,aws_customerprofiles_,,customerprofiles_,Connect Customer Profiles,Amazon,,x,,,,
 connectparticipant,connectparticipant,connectparticipant,connectparticipant,,connectparticipant,,,ConnectParticipant,ConnectParticipant,,1,,,aws_connectparticipant_,,connectparticipant_,Connect Participant,Amazon,,x,,,,

@@ -55,6 +55,7 @@ const (
 	ComputeOptimizer             = "computeoptimizer"
 	ConfigService                = "configservice"
 	Connect                      = "connect"
+	ConnectCases                 = "connectcases"
 	ControlTower                 = "controltower"
 	DAX                          = "dax"
 	DLM                          = "dlm"

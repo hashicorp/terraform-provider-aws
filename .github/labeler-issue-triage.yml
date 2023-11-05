@@ -167,6 +167,8 @@ service/configservice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_config_'
 service/connect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connect_'
+service/connectcases:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcases_'
 service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
