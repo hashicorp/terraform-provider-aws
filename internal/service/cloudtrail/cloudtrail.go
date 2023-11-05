@@ -5,7 +5,6 @@ package cloudtrail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 
@@ -13,13 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -355,110 +353,77 @@ func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
-	input := cloudtrail.DescribeTrailsInput{
-		TrailNameList: []*string{
-			aws.String(d.Id()),
-		},
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findTrailByARN(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
-	// CloudTrail does not return a NotFound error in the event that the Trail
-	// you're looking for is not found. Instead, it's simply not in the list.
-	var resp *cloudtrail.DescribeTrailsOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		resp, err = conn.DescribeTrailsWithContext(ctx, &input)
-		if err != nil {
-			return retry.NonRetryableError(err)
-		} else if d.IsNewResource() && len(resp.TrailList) == 0 {
-			err := errors.New("not found after creation")
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeTrailsWithContext(ctx, &input)
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting CloudTrail (%s): %s", d.Id(), err)
-	}
-
-	var trail *cloudtrail.Trail
-	for _, c := range resp.TrailList {
-		if d.Id() == aws.StringValue(c.TrailARN) || d.Id() == aws.StringValue(c.Name) {
-			trail = c
-		}
-	}
-
-	if !d.IsNewResource() && trail == nil {
-		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudTrail Trail (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if d.IsNewResource() && trail == nil {
-		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] CloudTrail received: %s", trail)
-
-	d.Set("name", trail.Name)
-	d.Set("s3_bucket_name", trail.S3BucketName)
-	d.Set("s3_key_prefix", trail.S3KeyPrefix)
-	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
+	trail := outputRaw.(*cloudtrail.Trail)
+	arn := aws.StringValue(trail.TrailARN)
+	d.Set("arn", arn)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
+	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
+	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
+	d.Set("home_region", trail.HomeRegion)
 	d.Set("include_global_service_events", trail.IncludeGlobalServiceEvents)
 	d.Set("is_multi_region_trail", trail.IsMultiRegionTrail)
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
-	d.Set("sns_topic_name", trail.SnsTopicName)
-	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
-
-	// TODO: Make it possible to use KMS Key names, not just ARNs
-	// In order to test it properly this PR needs to be merged 1st:
-	// https://github.com/hashicorp/terraform/pull/3928
 	d.Set("kms_key_id", trail.KmsKeyId)
+	d.Set("name", trail.Name)
+	d.Set("s3_bucket_name", trail.S3BucketName)
+	d.Set("s3_key_prefix", trail.S3KeyPrefix)
+	d.Set("sns_topic_name", trail.SnsTopicName)
 
-	arn := aws.StringValue(trail.TrailARN)
-	d.Set("arn", arn)
-	d.Set("home_region", trail.HomeRegion)
-
-	logstatus, err := getLoggingStatus(ctx, conn, trail.TrailARN)
-	if err != nil {
-		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
-	}
-	d.Set("enable_logging", logstatus)
-
-	// Get EventSelectors
-	eventSelectorsOut, err := conn.GetEventSelectorsWithContext(ctx, &cloudtrail.GetEventSelectorsInput{
-		TrailName: aws.String(d.Id()),
-	})
-	if err != nil {
-		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+	if output, err := conn.GetTrailStatusWithContext(ctx, &cloudtrail.GetTrailStatusInput{
+		Name: aws.String(d.Id()),
+	}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) status: %s", d.Id(), err)
+	} else {
+		d.Set("enable_logging", output.IsLogging)
 	}
 
 	if aws.BoolValue(trail.HasCustomEventSelectors) {
-		if err := d.Set("event_selector", flattenEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
-			return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+		input := &cloudtrail.GetEventSelectorsInput{
+			TrailName: aws.String(d.Id()),
 		}
 
-		if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
-			return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+		output, err := conn.GetEventSelectorsWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		}
+
+		if err := d.Set("event_selector", flattenEventSelector(output.EventSelectors)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting event_selector")
+		}
+
+		if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(output.AdvancedEventSelectors)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting advanced_event_selector")
 		}
 	}
 
 	if aws.BoolValue(trail.HasInsightSelectors) {
-		// Get InsightSelectors
-		insightSelectors, err := conn.GetInsightSelectorsWithContext(ctx, &cloudtrail.GetInsightSelectorsInput{
+		input := &cloudtrail.GetInsightSelectorsInput{
 			TrailName: aws.String(d.Id()),
-		})
+		}
+
+		output, err := conn.GetInsightSelectorsWithContext(ctx, input)
+
 		if err != nil {
 			if !tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeInsightNotEnabledException) {
-				return sdkdiag.AppendErrorf(diags, "getting Cloud Trail (%s) Insight Selectors: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) insight selectors: %s", d.Id(), err)
 			}
-		}
-		if insightSelectors != nil {
-			if err := d.Set("insight_selector", flattenInsightSelector(insightSelectors.InsightSelectors)); err != nil {
-				return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
-			}
+		} else if err := d.Set("insight_selector", flattenInsightSelector(output.InsightSelectors)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting insight_selector")
 		}
 	}
 
@@ -581,16 +546,46 @@ func resourceCloudTrailDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func getLoggingStatus(ctx context.Context, conn *cloudtrail.CloudTrail, id *string) (bool, error) {
-	input := &cloudtrail.GetTrailStatusInput{
-		Name: id,
-	}
-	resp, err := conn.GetTrailStatusWithContext(ctx, input)
-	if err != nil {
-		return false, fmt.Errorf("retrieving logging status: %w", err)
+func findTrailByARN(ctx context.Context, conn *cloudtrail.CloudTrail, arn string) (*cloudtrail.Trail, error) {
+	input := &cloudtrail.DescribeTrailsInput{
+		TrailNameList: aws.StringSlice([]string{arn}),
 	}
 
-	return aws.BoolValue(resp.IsLogging), err
+	return findTrail(ctx, conn, input, func(v *cloudtrail.Trail) bool {
+		return aws.StringValue(v.TrailARN) == arn
+	})
+}
+
+func findTrail(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput, filter tfslices.Predicate[*cloudtrail.Trail]) (*cloudtrail.Trail, error) {
+	output, err := findTrails(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findTrails(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput, filter tfslices.Predicate[*cloudtrail.Trail]) ([]*cloudtrail.Trail, error) {
+	var trails []*cloudtrail.Trail
+
+	output, err := conn.DescribeTrailsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output.TrailList {
+		if v != nil && filter(v) {
+			trails = append(trails, v)
+		}
+	}
+
+	return trails, nil
 }
 
 func setLogging(ctx context.Context, conn *cloudtrail.CloudTrail, name string, enabled bool) error {
