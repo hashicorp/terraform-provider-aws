@@ -55,8 +55,33 @@ func ResourceContactCaseLayout() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"sections": {
 													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"value": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"fields": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"id": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						Elem:     &schema.Schema{Type: schema.TypeString},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -69,8 +94,33 @@ func ResourceContactCaseLayout() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"sections": {
 													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"value": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"fields": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"id": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						Elem:     &schema.Schema{Type: schema.TypeString},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
