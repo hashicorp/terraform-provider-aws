@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_connectcases_contact_case_domain", name="Connect Cases Contact Case Domain")
@@ -46,7 +45,6 @@ func ResourceContactCaseDomain() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -67,7 +65,7 @@ func resourceContactCaseDomainCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.DomainId))
 
-	return append(diags, resourceContactCaseRead(ctx, d, meta)...)
+	return append(diags, resourceContactCaseDomainRead(ctx, d, meta)...)
 }
 
 func resourceContactCaseDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -58,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
@@ -269,6 +270,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		computeoptimizer.ServicePackage(ctx),
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
+		connectcases.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),

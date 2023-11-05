@@ -40,7 +40,7 @@ func TestAccContactCaseDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccMemberAssociation_disappears(t *testing.T) {
+func TestAccContactCaseDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_connectcases_contact_case_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -35,7 +35,7 @@ func ResourceRelatedItem() *schema.Resource {
 			},
 			"content": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -95,7 +95,6 @@ func ResourceRelatedItem() *schema.Resource {
 				Computed: true,
 			},
 		},
-
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -109,7 +108,7 @@ func resourceRelatedItemCreate(ctx context.Context, d *schema.ResourceData, meta
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Type:     types.RelatedItemType(*aws.String(d.Get("type").(string))),
 		//TODO: fix this
-		Content: expandContent(d.Get("content").([]interface{})),
+		//	Content: expandContent(d.Get("content").([]interface{})),
 	}
 
 	output, err := conn.CreateRelatedItem(ctx, input)
@@ -147,26 +146,26 @@ func resourceRelatedItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandContent(l []interface{}) *types.RelatedItemContent {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
+// func expandContent(l []interface{}) *types.RelatedItemContent {
+// 	if len(l) == 0 || l[0] == nil {
+// 		return nil
+// 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+// 	tfMap, ok := l[0].(map[string]interface{})
 
-	if !ok {
-		return nil
-	}
+// 	if !ok {
+// 		return nil
+// 	}
 
-	result := &types.RelatedItemContent{}
+// 	result := &types.RelatedItemContent{}
 
-	if v, ok := tfMap["comment"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Comment = expandComment(v)
-	}
+// 	if v, ok := tfMap["comment"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+// 		result.Comment = expandComment(v)
+// 	}
 
-	if v, ok := tfMap["contact"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Contact = expandContact(v)
-	}
+// 	if v, ok := tfMap["contact"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+// 		result.Contact = expandContact(v)
+// 	}
 
-	return result
-}
+// 	return result
+// }
