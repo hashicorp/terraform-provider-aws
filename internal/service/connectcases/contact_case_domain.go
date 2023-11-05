@@ -74,7 +74,7 @@ func resourceContactCaseDomainRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := findConnectCasesDomainById(ctx, conn, d.Id())
+	output, err := FindConnectCasesDomainById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Case Domain %s not found, removing from state", d.Id())

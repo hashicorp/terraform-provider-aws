@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findConnectCasesDomainById(ctx context.Context, conn *connectcases.Client, id string) (*connectcases.GetDomainOutput, error) {
+func FindConnectCasesDomainById(ctx context.Context, conn *connectcases.Client, id string) (*connectcases.GetDomainOutput, error) {
 	input := &connectcases.GetDomainInput{
 		DomainId: aws.String(id),
 	}
