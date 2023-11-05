@@ -30,10 +30,6 @@ func ResourceContactCase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"client_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			//TODO: Implement fields
 			// "fields": {
 			// 	Type:     schema.TypeSet,
@@ -85,10 +81,6 @@ func resourceContactCaseCreate(ctx context.Context, d *schema.ResourceData, meta
 	// if v, ok := d.GetOk("fields"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 	// 	input.Fields = expandFields(v.([]interface{})[0].(map[string]interface{}))
 	// }
-
-	if v, ok := d.GetOk("client_token"); ok {
-		input.ClientToken = aws.String(v.(string))
-	}
 
 	output, err := conn.CreateCase(ctx, input)
 

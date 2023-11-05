@@ -69,3 +69,38 @@ func findFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, doma
 
 	return nil, nil
 }
+
+func findRelatedItemByID(ctx context.Context, conn *connectcases.Client, caseID, domainID, id string) (*types.SearchRelatedItemsResponseItem, error) {
+	input := &connectcases.SearchRelatedItemsInput{
+		CaseId:   aws.String(caseID),
+		DomainId: aws.String(domainID),
+	}
+
+	output, err := conn.SearchRelatedItems(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, relatedItem := range output.RelatedItems {
+		if relatedItem.RelatedItemId == nil {
+			continue
+		}
+		if aws.ToString(relatedItem.RelatedItemId) == id {
+			return relatedItem, nil
+		}
+	}
+
+	return nil, nil
+}
