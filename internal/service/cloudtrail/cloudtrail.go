@@ -561,7 +561,7 @@ func resourceCloudTrailDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
+	log.Printf("[DEBUG] Deleting CloudTrail Trail: %s", d.Id())
 	_, err := conn.DeleteTrailWithContext(ctx, &cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
 	})
@@ -571,7 +571,7 @@ func resourceCloudTrailDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudTrail (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudTrail Trail (%s): %s", d.Id(), err)
 	}
 
 	return diags
