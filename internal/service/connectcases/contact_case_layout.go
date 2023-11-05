@@ -32,9 +32,13 @@ func ResourceContactCaseLayout() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_id": {
+			"layout_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"domain_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"content": {
 				Type:     schema.TypeList,
@@ -152,6 +156,7 @@ func resourceContactCaseLayoutCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(aws.ToString(output.LayoutId))
+	d.Set("layout_arn", aws.ToString(output.LayoutArn))
 
 	return append(diags, resourceContactCaseLayoutRead(ctx, d, meta)...)
 }
@@ -160,22 +165,20 @@ func resourceContactCaseLayoutRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := FindConnectCasesDomainById(ctx, conn, d.Id())
+	domainId := d.Get("domain_id").(string)
+	output, err := FindConnectCasesLayoutById(ctx, conn, d.Id(), domainId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Connect Case Domain %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Connect Case Layout %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Connect Case Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Case Layout (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", output.Name)
-	d.Set("domain_arn", output.DomainArn)
-	d.Set("domain_id", output.DomainId)
-	d.Set("domain_status", output.DomainStatus)
 
 	return diags
 }

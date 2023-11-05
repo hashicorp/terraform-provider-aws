@@ -45,7 +45,7 @@ func TestAccContactCaseDomain_disappears(t *testing.T) {
 	resourceName := "aws_connectcases_contact_case_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccContactCaseDomainDestroy(ctx),
