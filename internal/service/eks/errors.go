@@ -13,32 +13,6 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 )
 
-func AddonIssueError(apiObject *eks.AddonIssue) error {
-	if apiObject == nil {
-		return nil
-	}
-
-	return awserr.New(aws.StringValue(apiObject.Code), aws.StringValue(apiObject.Message), nil)
-}
-
-func AddonIssuesError(apiObjects []*eks.AddonIssue) error {
-	var errors *multierror.Error
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		err := AddonIssueError(apiObject)
-
-		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", strings.Join(aws.StringValueSlice(apiObject.ResourceIds), ", "), err))
-		}
-	}
-
-	return errors.ErrorOrNil()
-}
-
 func ErrorDetailError(apiObject *eks.ErrorDetail) error {
 	if apiObject == nil {
 		return nil

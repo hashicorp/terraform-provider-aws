@@ -17,69 +17,6 @@ const (
 	clusterDeleteRetryTimeout = 60 * time.Minute
 )
 
-func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
-	stateConf := retry.StateChangeConf{
-		Pending: []string{eks.AddonStatusCreating, eks.AddonStatusDegraded},
-		Target:  []string{eks.AddonStatusActive},
-		Refresh: statusAddon(ctx, conn, clusterName, addonName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Addon); ok {
-		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, AddonIssuesError(health.Issues))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.AddonStatusActive, eks.AddonStatusDeleting},
-		Target:  []string{},
-		Refresh: statusAddon(ctx, conn, clusterName, addonName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Addon); ok {
-		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, AddonIssuesError(health.Issues))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string, timeout time.Duration) (*eks.Update, error) {
-	stateConf := retry.StateChangeConf{
-		Pending: []string{eks.UpdateStatusInProgress},
-		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: statusAddonUpdate(ctx, conn, clusterName, addonName, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Update); ok {
-		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitFargateProfileCreated(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusCreating},

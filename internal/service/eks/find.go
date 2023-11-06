@@ -12,65 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
-	input := &eks.DescribeAddonInput{
-		AddonName:   aws.String(addonName),
-		ClusterName: aws.String(clusterName),
-	}
-
-	output, err := conn.DescribeAddonWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Addon == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.Addon, nil
-}
-
-func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
-	input := &eks.DescribeUpdateInput{
-		AddonName: aws.String(addonName),
-		Name:      aws.String(clusterName),
-		UpdateId:  aws.String(id),
-	}
-
-	output, err := conn.DescribeUpdateWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.Update, nil
-}
-
 func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
