@@ -378,9 +378,9 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_VPC_securityGroupIDs_update(t *testing.T) {
+func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -393,17 +393,20 @@ func TestAccEKSCluster_VPC_securityGroupIDs_update(t *testing.T) {
 			{
 				Config: testAccClusterConfig_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_vpcSecurityGroupIDs_update(rName),
+				Config: testAccClusterConfig_vpcSecurityGroupIDsAndSubnetIDsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "3"),
 				),
 			},
 			{
@@ -811,17 +814,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterConfig_Base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccClusterConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -874,11 +868,11 @@ resource "aws_subnet" "test" {
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_required(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -893,7 +887,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_version(rName, version string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -909,7 +903,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_logging(rName string, logTypes []string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name                      = %[1]q
   role_arn                  = aws_iam_role.test.arn
@@ -925,7 +919,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -944,7 +938,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -964,7 +958,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_encryption(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -992,7 +986,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_encryptionVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -1021,7 +1015,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcSecurityGroupIDs(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -1044,8 +1038,8 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_vpcSecurityGroupIDs_update(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+func testAccClusterConfig_vpcSecurityGroupIDsAndSubnetIDsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -1062,6 +1056,21 @@ resource "aws_security_group" "test2" {
   }
 }
 
+resource "aws_subnet" "new" {
+  count = 3
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1069,7 +1078,7 @@ resource "aws_eks_cluster" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
-    subnet_ids         = aws_subnet.test[*].id
+    subnet_ids         = aws_subnet.new[*].id
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
@@ -1078,7 +1087,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcEndpointPrivateAccess(rName string, endpointPrivateAccess bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1095,7 +1104,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcEndpointPublicAccess(rName string, endpointPublicAccess bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1112,7 +1121,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcPublicAccessCIDRs(rName string, publicAccessCidr string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1130,7 +1139,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_networkServiceIPv4CIDR(rName string, serviceIpv4Cidr string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1149,7 +1158,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_networkIPFamily(rName string, ipFamily string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1168,7 +1177,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_outpost(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
@@ -1203,7 +1212,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_outpostPlacement(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
