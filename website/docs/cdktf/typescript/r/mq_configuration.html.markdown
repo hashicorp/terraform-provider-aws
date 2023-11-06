@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
       data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<broker xmlns="http://activemq.apache.org/schema/core">\n  <plugins>\n    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>\n    <statisticsBrokerPlugin/>\n    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>\n  </plugins>\n</broker>\n\n',
       description: "Example Configuration",
       engineType: "ActiveMQ",
-      engineVersion: "5.15.0",
+      engineVersion: "5.17.6",
       name: "example",
     });
   }
@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
       data: "# Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds\nconsumer_timeout = 1800000\n\n",
       description: "Example Configuration",
       engineType: "RabbitMQ",
-      engineVersion: "3.11.16",
+      engineVersion: "3.11.20",
       name: "example",
     });
   }
@@ -114,4 +114,4 @@ Using `terraform import`, import MQ Configurations using the configuration ID. F
 % terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-04eb0aa6dff9d0a504fd0ee6b546bf9faa3350cf68b6f6ead258a17890bff141 -->
+<!-- cache-key: cdktf-0.18.0 input-692d3129e9e66fb877e1b432563a265729c8bf6b5c33e77ade50073e2ac04eba -->

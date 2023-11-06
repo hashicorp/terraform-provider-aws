@@ -110,7 +110,8 @@ This resource supports the following arguments:
 * `name` - (Optional) Name of the DataSync Task.
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `taskReportConfig` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`taskReportConfig`](#task_report_config-argument-reference) below.
 
 ### options Argument Reference
 
@@ -133,6 +134,33 @@ The `options` configuration block supports the following arguments:
 * `transferMode` - (Optional) Determines whether DataSync transfers only the data and metadata that differ between the source and the destination location, or whether DataSync transfers all the content from the source, without comparing to the destination location. Valid values: `changed`, `all`. Default: `changed`
 * `uid` - (Optional) User identifier of the file's owners. Valid values: `both`, `intValue`, `name`, `none`. Default: `intValue` (preserve integer value of the ID).
 * `verifyMode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `none`, `pointInTimeConsistent`, `onlyFilesTransferred`. Default: `pointInTimeConsistent`.
+
+### `taskReportConfig` Argument Reference
+
+The following arguments are supported inside the `taskReportConfig` configuration block:
+
+* `s3Destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3Destination`](#s3_destination-argument-reference) below.
+* `s3ObjectVersioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `include` and `none`.
+* `outputType` - (Optional) Specifies the type of task report you'd like. Valid values: `summaryOnly` and `standard`.
+* `reportOverrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`reportOverrides`](#report_overrides-argument-reference) below.
+* `reportLevel` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `errorsOnly` and `successesAndErrors`.
+
+### `s3Destination` Argument Reference
+
+The following arguments are supported inside the `s3Destination` configuration block:
+
+* `bucketAccessRoleArn` - (Required) Specifies the Amazon Resource Name (ARN) of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
+* `s3BucketArn` - (Required) Specifies the ARN of the S3 bucket where DataSync uploads your report.
+* `subdirectory` - (Optional) Specifies a bucket prefix for your report.
+
+### `reportOverrides` Argument Reference
+
+The following arguments are supported inside the `reportOverrides` configuration block:
+
+* `deletedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to delete in your destination location. This only applies if you configure your task to delete data in the destination that isn't in the source. Valid values: `errorsOnly` and `successesAndErrors`.
+* `skippedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to skip during your transfer. Valid values: `errorsOnly` and `successesAndErrors`.
+* `transferredOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `errorsOnly` and `successesAndErrors`.
+* `verifiedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `errorsOnly` and `successesAndErrors`.
 
 ### Schedule
 
@@ -184,4 +212,4 @@ Using `terraform import`, import `awsDatasyncTask` using the DataSync Task Amazo
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cdd40a57bab5272f6d1ab360a92d6775feeadf4450ae0350087abd170b623ea3 -->
+<!-- cache-key: cdktf-0.18.0 input-a9b1e645629a52a15aec012195e559eac62da9c511b83c6c57412c96d99cca4a -->
