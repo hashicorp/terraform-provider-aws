@@ -9,14 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,14 +41,14 @@ func ResourceApp() *schema.Resource {
 				}
 
 				applicationName := d.Id()
-				conn := meta.(*conns.AWSClient).DeployConn(ctx)
+				conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 				input := &codedeploy.GetApplicationInput{
 					ApplicationName: aws.String(applicationName),
 				}
 
-				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
-				output, err := conn.GetApplicationWithContext(ctx, input)
+				log.Printf("[DEBUG] Reading CodeDeploy Application: %v", input)
+				output, err := conn.GetApplication(ctx, input)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
@@ -57,7 +58,7 @@ func ResourceApp() *schema.Resource {
 					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", applicationName)
 				}
 
-				d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Application.ApplicationId), applicationName))
+				d.SetId(fmt.Sprintf("%s:%s", aws.ToString(output.Application.ApplicationId), applicationName))
 				d.Set("name", applicationName)
 
 				return []*schema.ResourceData{d}, nil
@@ -83,8 +84,8 @@ func ResourceApp() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(codedeploy.ComputePlatform_Values(), false),
-				Default:      codedeploy.ComputePlatformServer,
+				ValidateFunc: validation.StringInSlice(flattenComputePlatformValues(types.ComputePlatform("").Values()), false),
+				Default:      types.ComputePlatformServer,
 			},
 			"github_account_name": {
 				Type:     schema.TypeString,
@@ -104,13 +105,13 @@ func ResourceApp() *schema.Resource {
 
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)
-	resp, err := conn.CreateApplicationWithContext(ctx, &codedeploy.CreateApplicationInput{
+	resp, err := conn.CreateApplication(ctx, &codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
-		ComputePlatform: aws.String(computePlatform),
+		ComputePlatform: types.ComputePlatform(computePlatform),
 		Tags:            getTagsIn(ctx),
 	})
 	if err != nil {
@@ -122,14 +123,14 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// the state file. This allows us to reliably detect both when the TF
 	// config file changes and when the user deletes the app without removing
 	// it first from the TF config.
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(resp.ApplicationId), application))
+	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(resp.ApplicationId), application))
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	application := resourceAppParseID(d.Id())
 	name := d.Get("name").(string)
@@ -137,11 +138,11 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		application = name
 	}
 	log.Printf("[DEBUG] Reading CodeDeploy application %s", application)
-	resp, err := conn.GetApplicationWithContext(ctx, &codedeploy.GetApplicationInput{
+	resp, err := conn.GetApplication(ctx, &codedeploy.GetApplicationInput{
 		ApplicationName: aws.String(application),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
+	if !d.IsNewResource() && errs.IsA[*types.ApplicationDoesNotExistException](err) {
 		log.Printf("[WARN] CodeDeploy Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -152,10 +153,10 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	app := resp.Application
-	appName := aws.StringValue(app.ApplicationName)
+	appName := aws.ToString(app.ApplicationName)
 
 	if !strings.Contains(d.Id(), appName) {
-		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(app.ApplicationId), appName))
+		d.SetId(fmt.Sprintf("%s:%s", aws.ToString(app.ApplicationId), appName))
 	}
 
 	appArn := arn.ARN{
@@ -178,12 +179,12 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	if d.HasChange("name") {
 		o, n := d.GetChange("name")
 
-		_, err := conn.UpdateApplicationWithContext(ctx, &codedeploy.UpdateApplicationInput{
+		_, err := conn.UpdateApplication(ctx, &codedeploy.UpdateApplicationInput{
 			ApplicationName:    aws.String(o.(string)),
 			NewApplicationName: aws.String(n.(string)),
 		})
@@ -198,13 +199,13 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	_, err := conn.DeleteApplicationWithContext(ctx, &codedeploy.DeleteApplicationInput{
+	_, err := conn.DeleteApplication(ctx, &codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
+		if errs.IsA[*types.ApplicationDoesNotExistException](err) {
 			return diags
 		}
 
@@ -218,4 +219,14 @@ func resourceAppParseID(id string) string {
 	parts := strings.SplitN(id, ":", 2)
 	// We currently omit the application ID as it is not currently used anywhere
 	return parts[1]
+}
+
+func flattenComputePlatformValues(t []types.ComputePlatform) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }
