@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
@@ -31,45 +29,35 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9\-_\/]+`),
-						`must satisfy regular expression pattern: [A-Za-z0-9\-_\/]+`),
-				),
 			},
 			"autoscaling_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1600),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"default_result": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"CONTINUE", "ABANDON"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"heartbeat_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"lifecycle_transition": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"autoscaling:EC2_INSTANCE_LAUNCHING", "autoscaling:EC2_INSTANCE_TERMINATING"}, false),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"notification_metadata": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"notification_target_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
