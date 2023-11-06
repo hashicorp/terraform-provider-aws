@@ -23,13 +23,10 @@ type dataSourceFoundationModel struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
 func (d *dataSourceFoundationModel) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_foundation_model"
 }
 
-// Schema returns the schema for this data source.
 func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -71,8 +68,6 @@ func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.S
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceFoundationModel) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data foundationModel
 
