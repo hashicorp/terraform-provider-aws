@@ -373,30 +373,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
-* `id` - Name of the trail.
+* `id` - ARN of the trail.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `name` or `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 
 ```terraform
 import {
   to = aws_cloudtrail.sample
-  id = "my-sample-trail"
+  id = "arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail"
 }
 ```
 
-Using `terraform import`, import Cloudtrails using the `name`. For example:
+Using `terraform import`, import Cloudtrails using the `arn`. For example:
 
 ```console
-% terraform import aws_cloudtrail.sample my-sample-trail
+% terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
-
-or
-
-```
-$ terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
-```
-
-If importing an organization trail from a delegated account, the `arn` must be used.
