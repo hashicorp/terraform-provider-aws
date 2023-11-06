@@ -7,19 +7,23 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const DSNameFoundationModels = "Foundation Models Data Source"
 
 // @FrameworkDataSource(name="Foundation Models")
 func newDataSourceFoundationModels(context.Context) (datasource.DataSourceWithConfigure, error) {
@@ -106,6 +110,7 @@ func (d *dataSourceFoundationModels) Read(ctx context.Context, request datasourc
 	if response.Diagnostics.HasError() {
 		return
 	}
+	data.ID = types.StringValue(d.Meta().Region)
 
 	input := &bedrock.ListFoundationModelsInput{}
 	if !data.ByCustomizationType.IsNull() {
@@ -123,11 +128,13 @@ func (d *dataSourceFoundationModels) Read(ctx context.Context, request datasourc
 
 	models, err := conn.ListFoundationModels(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Foundation Models", err.Error())
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, DSNameFoundationModels, data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, &d.Meta().Region)
 	data.ModelSummaries = flattenFoundationModelSummaries(ctx, models.ModelSummaries)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

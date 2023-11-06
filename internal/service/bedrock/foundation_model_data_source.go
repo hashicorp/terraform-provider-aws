@@ -10,9 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const DSNameFoundationModel = "Foundation Model Data Source"
 
 // @FrameworkDataSource(name="Foundation Model")
 func newDataSourceFoundationModel(context.Context) (datasource.DataSourceWithConfigure, error) {
@@ -69,22 +73,23 @@ func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *dataSourceFoundationModel) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	conn := d.Meta().BedrockClient(ctx)
+
 	var data foundationModel
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	conn := d.Meta().BedrockClient(ctx)
 
 	input := &bedrock.GetFoundationModelInput{
 		ModelIdentifier: data.ModelID.ValueStringPointer(),
 	}
 	model, err := conn.GetFoundationModel(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Foundation Model", err.Error())
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, DSNameFoundationModel, data.ModelID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -115,12 +120,7 @@ func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedro
 	data.ModelID = flex.StringToFramework(ctx, model.ModelDetails.ModelId)
 	data.ModelName = flex.StringToFramework(ctx, model.ModelDetails.ModelName)
 	data.ProviderName = flex.StringToFramework(ctx, model.ModelDetails.ProviderName)
-	customizationsSupported := make([]string, 0, len(model.ModelDetails.CustomizationsSupported))
-	for _, r := range model.ModelDetails.CustomizationsSupported {
-		customizationsSupported = append(customizationsSupported, string(r))
-	}
-	data.CustomizationsSupported = flex.FlattenFrameworkStringValueSet(ctx, customizationsSupported)
-
+	data.CustomizationsSupported = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.CustomizationsSupported))
 	data.InferenceTypesSupported = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.InferenceTypesSupported))
 	data.InputModalities = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.InputModalities))
 	data.OutputModalities = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.OutputModalities))
