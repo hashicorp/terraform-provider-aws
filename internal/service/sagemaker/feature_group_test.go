@@ -33,7 +33,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
-		"onlineConfig_ttlDuration":      testAccFeatureGroup_onlineConfigTtlDuration,
+		"onlineConfig_TTLDuration":      testAccFeatureGroup_onlineConfigTTLDuration,
 		"tags":                          testAccFeatureGroup_tags,
 	}
 
@@ -251,7 +251,7 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	})
 }
 
-func testAccFeatureGroup_onlineConfigTtlDuration(t *testing.T) {
+func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -264,7 +264,7 @@ func testAccFeatureGroup_onlineConfigTtlDuration(t *testing.T) {
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFeatureGroupConfig_ttlDuration(rName, "Seconds"),
+				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Seconds"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
@@ -279,7 +279,7 @@ func testAccFeatureGroup_onlineConfigTtlDuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFeatureGroupConfig_ttlDuration(rName, "Minutes"),
+				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Minutes"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
@@ -602,7 +602,7 @@ resource "aws_sagemaker_feature_group" "test" {
 `, rName))
 }
 
-func testAccFeatureGroupConfig_ttlDuration(rName, unit string) string {
+func testAccFeatureGroupConfig_TTLDuration(rName, unit string) string {
 	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
