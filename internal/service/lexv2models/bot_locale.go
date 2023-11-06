@@ -184,7 +184,10 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 		aws.ToString(out.BotId),
 		aws.ToString(out.BotVersion),
 	}
-	id, err := fwflex.FlattenResourceId(idParts, botLocaleIDPartCount, false)
+	id, _ := fwflex.FlattenResourceId(idParts, botLocaleIDPartCount, false)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	plan.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
 	plan.Id = types.StringValue(id)
@@ -271,7 +274,6 @@ func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateReque
 		!plan.Name.Equal(state.Name) ||
 		!plan.VoiceSettings.Equal(state.VoiceSettings) ||
 		!plan.NluIntentCOnfidenceThreshold.Equal(state.NluIntentCOnfidenceThreshold) {
-
 		in := &lexmodelsv2.UpdateBotLocaleInput{
 			BotId:                        aws.String(plan.BotID.ValueString()),
 			BotVersion:                   aws.String(plan.BotVersion.ValueString()),
@@ -534,7 +536,7 @@ func (rd *resourceBotLocaleData) refreshFromOutput(ctx context.Context, out *lex
 	diags.Append(d...)
 	rd.VoiceSettings = vs
 	rd.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
-	rd.Name = flex.StringToFramework(ctx, (*string)(out.LocaleName))
+	rd.Name = flex.StringToFramework(ctx, out.LocaleName)
 	rd.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
 
 	return diags

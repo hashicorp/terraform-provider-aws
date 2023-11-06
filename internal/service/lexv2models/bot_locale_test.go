@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,13 +39,13 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotLocaleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.70),
+				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "locale_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_version"),
-					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.70"),
+					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.7"),
 				),
 			},
 			{
@@ -99,12 +98,7 @@ func testAccCheckBotLocaleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &lexmodelsv2.DescribeBotLocaleInput{
-				LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
-				BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
-				BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
-			}
-			_, err := conn.DescribeBotLocale(ctx, input)
+			_, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -132,12 +126,7 @@ func testAccCheckBotLocaleExists(ctx context.Context, name string, botlocale *le
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := conn.DescribeBotLocale(ctx, &lexmodelsv2.DescribeBotLocaleInput{
-			LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
-			BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
-			BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
-		})
-		// resp, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
+		resp, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tflexv2models.ResNameBotLocale, rs.Primary.ID, err)
 		}
@@ -162,7 +151,7 @@ resource "aws_lexv2models_bot" "test" {
   }
 }
 
-resource "aws_lexv2models_bot_locale" "testlocale" {
+resource "aws_lexv2models_bot_locale" "test" {
   locale_id                        = %[2]q
   bot_id                           = aws_lexv2models_bot.test.id
   bot_version                      = "DRAFT"
