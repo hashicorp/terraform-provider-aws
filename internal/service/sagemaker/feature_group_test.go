@@ -590,8 +590,8 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-    feature_name    = %[1]q
-    feature_type    = "String"
+    feature_name = %[1]q
+    feature_type = "String"
   }
 
   online_store_config {
@@ -620,7 +620,7 @@ resource "aws_sagemaker_feature_group" "test" {
 
     ttl_duration {
       unit  = %[2]q
-	  value = 1
+      value = 1
     }
   }
 }
