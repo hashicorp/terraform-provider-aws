@@ -34,11 +34,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Connect Cases Contact Case",
 		},
 		{
-			Factory:  ResourceLayout,
-			TypeName: "aws_connectcases_contact_case_layout",
-			Name:     "Connect Cases Layout",
-		},
-		{
 			Factory:  ResourceDomain,
 			TypeName: "aws_connectcases_domain",
 			Name:     "Connect Cases Domain",
@@ -47,6 +42,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceField,
 			TypeName: "aws_connectcases_field",
 			Name:     "Connect Cases Field",
+		},
+		{
+			Factory:  ResourceLayout,
+			TypeName: "aws_connectcases_layout",
+			Name:     "Connect Cases Layout",
 		},
 		{
 			Factory:  ResourceRelatedItem,

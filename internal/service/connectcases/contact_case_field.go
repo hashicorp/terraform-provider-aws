@@ -84,10 +84,6 @@ func resourceFieldCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.FieldId))
 
-	// The below fields are only returned by the Create Field API, so we need to set it here.
-	d.Set("field_id", output.FieldId)
-	d.Set("field_arn", output.FieldArn)
-
 	return append(diags, resourceFieldRead(ctx, d, meta)...)
 }
 

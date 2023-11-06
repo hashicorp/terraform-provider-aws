@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_connectcases_contact_case_layout", name="Connect Cases Layout")
+// @SDKResource("aws_connectcases_layout", name="Connect Cases Layout")
 func ResourceLayout() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayoutCreate,

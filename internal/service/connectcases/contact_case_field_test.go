@@ -114,8 +114,10 @@ resource "aws_connectcases_domain" "test" {
 }
 
 resource "aws_connectcases_field" "test" {
-  name      = %[1]q
-  domain_id = aws_connectcases_domain.test.domain_id
+  name        = %[1]q
+  description = "example description of field"
+  domain_id   = aws_connectcases_domain.test.domain_id
+  type        = "fieldTypeText"
 }
 `, rName)
 }
