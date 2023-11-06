@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpcs"
 description: |-
@@ -14,9 +14,9 @@ The following example retrieves a list of VPC Ids with a custom tag of `service`
 
 ## Example Usage
 
-The following shows outputing all VPC Ids.
+The following shows outputting all VPC Ids.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {
   tags = {
     service = "production"
@@ -30,7 +30,7 @@ output "foo" {
 
 An example use case would be interpolate the `aws_vpcs` output into `count` of an aws_flow_log resource.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {}
 
 data "aws_vpc" "foo" {
@@ -54,7 +54,7 @@ output "foo" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired vpcs.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -62,12 +62,21 @@ output "foo" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-* `ids` - A list of all the VPC Ids found. This data source will fail if none are found.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - AWS Region.
+* `ids` - List of all the VPC Ids found.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

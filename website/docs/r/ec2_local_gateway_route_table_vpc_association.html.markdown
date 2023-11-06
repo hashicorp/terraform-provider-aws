@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route_table_vpc_association"
 description: |-
@@ -12,7 +12,7 @@ Manages an EC2 Local Gateway Route Table VPC Association. More information can b
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_local_gateway_route_table" "example" {
   outpost_arn = "arn:aws:outposts:us-west-2:123456789012:outpost/op-1234567890abcdef"
 }
@@ -36,18 +36,28 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of EC2 Local Gateway Route Table VPC Association.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_ec2_local_gateway_route_table_vpc_association` can be imported by using the Local Gateway Route Table VPC Association identifier, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_local_gateway_route_table_vpc_association` using the Local Gateway Route Table VPC Association identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_local_gateway_route_table_vpc_association.example
+  id = "lgw-vpc-assoc-1234567890abcdef"
+}
 ```
-$ terraform import aws_ec2_local_gateway_route_table_vpc_association.example lgw-vpc-assoc-1234567890abcdef
+
+Using `terraform import`, import `aws_ec2_local_gateway_route_table_vpc_association` using the Local Gateway Route Table VPC Association identifier. For example:
+
+```console
+% terraform import aws_ec2_local_gateway_route_table_vpc_association.example lgw-vpc-assoc-1234567890abcdef
 ```

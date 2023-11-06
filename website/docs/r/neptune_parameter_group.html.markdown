@@ -12,7 +12,7 @@ Manages a Neptune Parameter Group
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_neptune_parameter_group" "example" {
   family = "neptune1"
   name   = "example"
@@ -26,13 +26,13 @@ resource "aws_neptune_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the Neptune parameter group.
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -40,18 +40,27 @@ Parameter blocks support the following:
 * `value` - (Required) The value of the Neptune parameter.
 * `apply_method` - (Optional) The apply method of the Neptune parameter. Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Neptune parameter group name.
 * `arn` - The Neptune parameter group Amazon Resource Name (ARN).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Neptune Parameter Groups can be imported using the `name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Neptune Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_neptune_parameter_group.some_pg
+  id = "some-pg"
+}
 ```
-$ terraform import aws_neptune_parameter_group.some_pg some-pg
+
+Using `terraform import`, import Neptune Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_neptune_parameter_group.some_pg some-pg
 ```

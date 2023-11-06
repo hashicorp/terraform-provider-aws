@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_storage_gateway_nfs_file_share: Add `audit_destination_arn` argument.
+```

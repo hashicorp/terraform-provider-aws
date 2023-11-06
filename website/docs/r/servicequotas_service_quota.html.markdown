@@ -10,9 +10,11 @@ description: |-
 
 Manages an individual Service Quota.
 
+~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `us-east-1` in the Commercial partition or `us-gov-west-1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_servicequotas_service_quota" "example" {
   quota_code   = "L-F678F1CE"
   service_code = "vpc"
@@ -22,7 +24,7 @@ resource "aws_servicequotas_service_quota" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `quota_code` - (Required) Code of the service quota to track. For example: `L-F678F1CE`. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html).
 * `service_code` - (Required) Code of the service to track. For example: `vpc`. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
@@ -30,7 +32,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `adjustable` - Whether the service quota can be increased.
 * `arn` - Amazon Resource Name (ARN) of the service quota.
@@ -38,13 +40,33 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Service code and quota code, separated by a front slash (`/`)
 * `quota_name` - Name of the quota.
 * `service_name` - Name of the service.
+* `usage_metric` - Information about the measurement.
+    * `metric_dimensions` - The metric dimensions.
+        * `class`
+        * `resource`
+        * `service`
+        * `type`
+    * `metric_name` - The name of the metric.
+    * `metric_namespace` - The namespace of the metric.
+    * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 
 ## Import
 
-~> *NOTE* This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicequotas_service_quota` using the service code and quota code, separated by a front slash (`/`). For example:
 
-`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.
+~> **NOTE:** This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
 
+```terraform
+import {
+  to = aws_servicequotas_service_quota.example
+  id = "vpc/L-F678F1CE"
+}
 ```
-$ terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
+
+Using `terraform import`, import `aws_servicequotas_service_quota` using the service code and quota code, separated by a front slash (`/`). For example:
+
+~> **NOTE:** This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
+
+```console
+% terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
 ```

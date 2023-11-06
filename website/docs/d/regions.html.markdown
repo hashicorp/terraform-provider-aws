@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_regions"
 description: |-
@@ -8,19 +8,19 @@ description: |-
 
 # Data Source: aws_regions
 
-Provides information about AWS Regions. Can be used to filter regions i.e. by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/region.html).
+Provides information about AWS Regions. Can be used to filter regions i.e., by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/region.html).
 
 ## Example Usage
 
 Enabled AWS Regions:
 
-```hcl
+```terraform
 data "aws_regions" "current" {}
 ```
 
 All the regions regardless of the availability
 
-```hcl
+```terraform
 data "aws_regions" "current" {
   all_regions = true
 }
@@ -28,7 +28,7 @@ data "aws_regions" "current" {
 
 To see regions that are filtered by `"not-opted-in"`, the `all_regions` argument needs to be set to `true` or no results will be returned.
 
-```hcl
+```terraform
 data "aws_regions" "current" {
   all_regions = true
 
@@ -41,7 +41,7 @@ data "aws_regions" "current" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `all_regions` - (Optional) If true the source will query all regions regardless of availability.
 
@@ -49,15 +49,16 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
+* `name` - (Required) Name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html

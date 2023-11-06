@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_identity_policy"
 description: |-
@@ -12,7 +12,7 @@ Manages a SES Identity Policy. More information about SES Sending Authorization 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }
@@ -38,16 +38,29 @@ resource "aws_ses_identity_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identity` - (Required) Name or Amazon Resource Name (ARN) of the SES Identity.
 * `name` - (Required) Name of the policy.
 * `policy` - (Required) JSON string of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
-SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Identity Policies using the identity and policy name, separated by a pipe character (`|`). For example:
 
+```terraform
+import {
+  to = aws_ses_identity_policy.example
+  id = "example.com|example"
+}
 ```
-$ terraform import aws_ses_identity_policy.example 'example.com|example'
+
+Using `terraform import`, import SES Identity Policies using the identity and policy name, separated by a pipe character (`|`). For example:
+
+```console
+% terraform import aws_ses_identity_policy.example 'example.com|example'
 ```

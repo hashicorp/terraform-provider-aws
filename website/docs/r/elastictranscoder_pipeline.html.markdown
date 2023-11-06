@@ -12,19 +12,19 @@ Provides an Elastic Transcoder pipeline resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elastictranscoder_pipeline" "bar" {
-  input_bucket = aws_s3_bucket.input_bucket.bucket
+  input_bucket = aws_s3_bucket.input_bucket.id
   name         = "aws_elastictranscoder_pipeline_tf_test_"
   role         = aws_iam_role.test_role.arn
 
   content_config {
-    bucket        = aws_s3_bucket.content_bucket.bucket
+    bucket        = aws_s3_bucket.content_bucket.id
     storage_class = "Standard"
   }
 
   thumbnail_config {
-    bucket        = aws_s3_bucket.thumb_bucket.bucket
+    bucket        = aws_s3_bucket.thumb_bucket.id
     storage_class = "Standard"
   }
 }
@@ -34,7 +34,7 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 
 See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `aws_kms_key_arn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `content_config` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
@@ -57,14 +57,13 @@ you specify values for `content_config`, you must also specify values for
 The `content_config` object supports the following:
 
 * `bucket` - The Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists.
-* `storage_class` - The Amazon S3 storage class, Standard or ReducedRedundancy, that you want Elastic Transcoder to assign to the files and playlists that it stores in your Amazon S3 bucket.
+* `storage_class` - The Amazon S3 storage class, `Standard` or `ReducedRedundancy`, that you want Elastic Transcoder to assign to the files and playlists that it stores in your Amazon S3 bucket.
 
 The `content_config_permissions` object supports the following:
 
-* `access` - The permission that you want to give to the AWS user that you specified in `content_config_permissions.grantee`
+* `access` - The permission that you want to give to the AWS user that you specified in `content_config_permissions.grantee`. Valid values are `Read`, `ReadAcp`, `WriteAcp` or `FullControl`.
 * `grantee` - The AWS user or group that you want to have access to transcoded files and playlists.
 * `grantee_type` - Specify the type of value that appears in the `content_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
-
 
 The `notifications` object supports the following:
 
@@ -90,14 +89,30 @@ The `thumbnail_config` object supports the following:
 
 The `thumbnail_config_permissions` object supports the following:
 
-* `access` - The permission that you want to give to the AWS user that you specified in `thumbnail_config_permissions.grantee`.
+* `access` - The permission that you want to give to the AWS user that you specified in `thumbnail_config_permissions.grantee`. Valid values are `Read`, `ReadAcp`, `WriteAcp` or `FullControl`.
 * `grantee` - The AWS user or group that you want to have access to thumbnail files.
-* `grantee_type` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object.
+* `grantee_type` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The ID of the Elastictranscoder pipeline.
+* `arn` - The ARN of the Elastictranscoder pipeline.
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Transcoder pipelines using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastictranscoder_pipeline.basic_pipeline
+  id = "1407981661351-cttk8b"
+}
 ```
-$ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
+
+Using `terraform import`, import Elastic Transcoder pipelines using the `id`. For example:
+
+```console
+% terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```

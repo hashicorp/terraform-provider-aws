@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection_route"
 description: |-
@@ -12,7 +12,7 @@ Provides a static route between a VPN connection and a customer gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
 }
@@ -42,14 +42,14 @@ resource "aws_vpn_connection_route" "office" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_cidr_block` - (Required) The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - (Required) The ID of the VPN connection.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `destination_cidr_block` - The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - The ID of the VPN connection.

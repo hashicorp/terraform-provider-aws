@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "STS (Security Token)"
 layout: "aws"
 page_title: "AWS: aws_caller_identity"
 description: |-
@@ -14,7 +14,7 @@ which Terraform is authorized.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 output "account_id" {
@@ -34,8 +34,11 @@ output "caller_user" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
-* `account_id` - The AWS Account ID number of the account that owns or contains the calling entity.
-* `arn` - The AWS ARN associated with the calling entity.
-* `user_id` - The unique identifier of the calling entity.
+This data source exports the following attributes in addition to the arguments above:
+
+* `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
+* `arn` - ARN associated with the calling entity.
+* `id` - Account ID number of the account that owns or contains the calling entity.
+* `user_id` - Unique identifier of the calling entity.

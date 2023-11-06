@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudsearch_domain
+```
+
+```release-note:new-resource
+aws_cloudsearch_domain_service_access_policy
+```

@@ -12,7 +12,7 @@ Provides details about multiple Outposts Sites.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_outposts_sites" "all" {}
 ```
 
@@ -22,6 +22,7 @@ There are no arguments available for this data source.
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `id` - AWS Region.
 * `ids` - Set of Outposts Site identifiers.

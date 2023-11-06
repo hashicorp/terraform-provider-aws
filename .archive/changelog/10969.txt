@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Retry when `OperationInProgress` errors are returned from the AWS API
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set: Retry when `OperationInProgress` errors are returned from the AWS API
+```

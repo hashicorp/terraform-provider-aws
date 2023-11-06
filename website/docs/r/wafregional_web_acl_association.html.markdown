@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl_association"
 description: |-
@@ -12,9 +12,11 @@ Manages an association with WAF Regional Web ACL.
 
 -> **Note:** An Application Load Balancer can only be associated with one WAF Regional WebACL.
 
-## Application Load Balancer Association Example
+## Example Usage
 
-```hcl
+### Application Load Balancer Association
+
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -82,9 +84,9 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 ```
 
-## API Gateway Association Example
+### API Gateway Association
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -123,81 +125,80 @@ resource "aws_wafregional_web_acl" "foo" {
   }
 }
 
-resource "aws_api_gateway_rest_api" "test" {
-  name = "foo"
+resource "aws_api_gateway_rest_api" "example" {
+  body = jsonencode({
+    openapi = "3.0.1"
+    info = {
+      title   = "example"
+      version = "1.0"
+    }
+    paths = {
+      "/path1" = {
+        get = {
+          x-amazon-apigateway-integration = {
+            httpMethod           = "GET"
+            payloadFormatVersion = "1.0"
+            type                 = "HTTP_PROXY"
+            uri                  = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+          }
+        }
+      }
+    }
+  })
+
+  name = "example"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
-  path_part   = "test"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_api_gateway_method" "test" {
-  authorization = "NONE"
-  http_method   = "GET"
-  resource_id   = aws_api_gateway_resource.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-}
-
-resource "aws_api_gateway_method_response" "test" {
-  http_method = aws_api_gateway_method.test.http_method
-  resource_id = aws_api_gateway_resource.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  status_code = "400"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  http_method             = aws_api_gateway_method.test.http_method
-  integration_http_method = "GET"
-  resource_id             = aws_api_gateway_resource.test.id
-  rest_api_id             = aws_api_gateway_rest_api.test.id
-  type                    = "HTTP"
-  uri                     = "http://www.example.com"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.test.status_code
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration_response.test]
-
-  rest_api_id = aws_api_gateway_rest_api.test.id
-}
-
-resource "aws_api_gateway_stage" "test" {
-  deployment_id = aws_api_gateway_deployment.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  stage_name    = "test"
+resource "aws_api_gateway_stage" "example" {
+  deployment_id = aws_api_gateway_deployment.example.id
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  stage_name    = "example"
 }
 
 resource "aws_wafregional_web_acl_association" "association" {
-  resource_arn = aws_api_gateway_stage.test.arn
+  resource_arn = aws_api_gateway_stage.example.arn
   web_acl_id   = aws_wafregional_web_acl.foo.id
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association
 
 ## Import
 
-WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_wafregional_web_acl_association.foo
+  id = "web_acl_id:resource_arn"
+}
 ```
-$ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
+
+Using `terraform import`, import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
+
+```console
+% terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```

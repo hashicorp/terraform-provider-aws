@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `aws_managed_rules_atp_rule_set` to `managed_rule_group_configs` configuration block
+```

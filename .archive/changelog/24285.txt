@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_infrastructure_configuration: Add `instance_metadata_options` argument
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_infrastructure_configuration: Add `instance_metadata_options` attribute
+```

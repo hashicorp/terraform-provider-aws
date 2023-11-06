@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_public_access_block"
 description: |-
@@ -12,7 +12,7 @@ Manages S3 bucket-level Public Access Block configuration. For more information 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -20,14 +20,16 @@ resource "aws_s3_bucket" "example" {
 resource "aws_s3_bucket_public_access_block" "example" {
   bucket = aws_s3_bucket.example.id
 
-  block_public_acls   = true
-  block_public_policy = true
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) S3 Bucket to which this Public Access Block configuration should be applied.
 * `block_public_acls` - (Optional) Whether Amazon S3 should block public ACLs for this bucket. Defaults to `false`. Enabling this setting does not affect existing policies or ACLs. When set to `true` causes the following behavior:
@@ -42,14 +44,23 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the S3 bucket the configuration is attached to
 
 ## Import
 
-`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_s3_bucket_public_access_block` using the bucket name. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_public_access_block.example
+  id = "my-bucket"
+}
 ```
-$ terraform import aws_s3_bucket_public_access_block.example my-bucket
+
+Using `terraform import`, import `aws_s3_bucket_public_access_block` using the bucket name. For example:
+
+```console
+% terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```

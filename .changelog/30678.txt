@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_synthetics_group
+```
+
+```release-note:new-resource
+aws_synthetics_group_association
+```

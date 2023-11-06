@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_iam_role: Change `name_prefix` validation to a range of 1 to 38 characters
+```
+
+```release-note:enhancement
+resource/aws_iam_role: `name_prefix` is now Computed 
+```

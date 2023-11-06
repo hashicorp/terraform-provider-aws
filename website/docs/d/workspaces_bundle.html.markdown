@@ -12,12 +12,18 @@ Retrieve information about an AWS WorkSpaces bundle.
 
 ## Example Usage
 
-```hcl
-data "aws_workspaces_bundle" "by_id" {
+### By ID
+
+```terraform
+data "aws_workspaces_bundle" "example" {
   bundle_id = "wsb-b0s22j3d7"
 }
+```
 
-data "aws_workspaces_bundle" "by_owner_and_name" {
+### By Owner & Name
+
+```terraform
+data "aws_workspaces_bundle" "example" {
   owner = "AMAZON"
   name  = "Value with Windows 10 and Office 2016"
 }
@@ -25,13 +31,15 @@ data "aws_workspaces_bundle" "by_owner_and_name" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `bundle_id` – (Optional) The ID of the bundle.
-* `owner` – (Optional) The owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
-* `name` – (Optional) The name of the bundle. You cannot combine this parameter with `bundle_id`.
+* `bundle_id` – (Optional) ID of the bundle.
+* `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
+* `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` – The description of the bundle.
 * `bundle_id` – The ID of the bundle.
@@ -43,12 +51,12 @@ The following arguments are supported:
 
 ### `compute_type`
 
-* `name` - The name of the compute type.
+* `name` - Name of the compute type.
 
 ### `root_storage`
 
-* `capacity` - The size of the root volume.
+* `capacity` - Size of the root volume.
 
 ### `user_storage`
 
-* `capacity` - The size of the user storage.
+* `capacity` - Size of the user storage.

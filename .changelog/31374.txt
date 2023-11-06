@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_wafv2_web_acl: The `statement.managed_rule_group_statement.excluded_rule` and `statement.rule_group_reference_statement.excluded_rule` attributes have been removed
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `rule_action_override` on `rule_group_reference_statement`
+```
