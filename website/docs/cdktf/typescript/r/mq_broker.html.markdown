@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
         revision: test.latestRevision,
       },
       engineType: "ActiveMQ",
-      engineVersion: "5.15.9",
+      engineVersion: "5.17.6",
       hostInstanceType: "mq.t2.micro",
       securityGroups: [Token.asString(awsSecurityGroupTest.id)],
       user: [
@@ -81,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
         revision: test.latestRevision,
       },
       engineType: "ActiveMQ",
-      engineVersion: "5.15.9",
+      engineVersion: "5.17.6",
       hostInstanceType: "mq.m5.large",
       securityGroups: [Token.asString(awsSecurityGroupTest.id)],
       storageType: "ebs",
@@ -103,7 +103,7 @@ The following arguments are required:
 
 * `brokerName` - (Required) Name of the broker.
 * `engineType` - (Required) Type of broker engine. Valid values are `activeMq` and `rabbitMq`.
-* `engineVersion` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5150`.
+* `engineVersion` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5176`.
 * `hostInstanceType` - (Required) Broker's instance type. For example, `mqT3Micro`, `mqM5Large`.
 * `user` - (Required) Configuration block for broker users. For `engineType` of `rabbitMq`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
@@ -229,4 +229,4 @@ Using `terraform import`, import MQ Brokers using their broker id. For example:
 % terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e4ac8cdba2a86a52d15d44c9fa76955d14e86f7fe0c194e7077682ba082c4e20 -->
+<!-- cache-key: cdktf-0.18.0 input-d85029fe617087d37abc0e8005a439a956c3a95b4c6454674dc44a09e08d0bcd -->
