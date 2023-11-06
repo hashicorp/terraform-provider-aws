@@ -37,6 +37,13 @@ The following arguments are optional:
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
 * `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user.
 
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - Comma-delimited string joining locale ID, bot ID, and bot version.
+* `name` - Specified locale name.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
