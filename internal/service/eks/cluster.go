@@ -433,9 +433,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
@@ -457,9 +455,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			updateID := aws.StringValue(output.Update.Id)
 
-			_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-			if err != nil {
+			if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return diag.Errorf("waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
 			}
 		}
@@ -479,43 +475,46 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
-		input := &eks.VpcConfigRequest{
+		config := &eks.VpcConfigRequest{
 			EndpointPrivateAccess: aws.Bool(d.Get("vpc_config.0.endpoint_private_access").(bool)),
 			EndpointPublicAccess:  aws.Bool(d.Get("vpc_config.0.endpoint_public_access").(bool)),
 		}
+
 		if v, ok := d.GetOk("vpc_config.0.public_access_cidrs"); ok && v.(*schema.Set).Len() > 0 {
-			input.PublicAccessCidrs = flex.ExpandStringSet(v.(*schema.Set))
+			config.PublicAccessCidrs = flex.ExpandStringSet(v.(*schema.Set))
 		}
-		err := updateVPCConfig(ctx, conn, d, input)
-		if err != nil {
+
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+
 	// API only allows one type of update at at time.
 	if d.HasChange("vpc_config.0.subnet_ids") {
-		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
+		config := &eks.VpcConfigRequest{
 			SubnetIds: flex.ExpandStringSet(d.Get("vpc_config.0.subnet_ids").(*schema.Set)),
-		})
-		if err != nil {
+		}
+
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("vpc_config.0.security_group_ids") {
-		err := updateVPCConfig(ctx, conn, d, &eks.VpcConfigRequest{
+		config := &eks.VpcConfigRequest{
 			SecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_config.0.security_group_ids").(*schema.Set)),
-		})
-		if err != nil {
+		}
+
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+
 	return resourceClusterRead(ctx, d, meta)
 }
 
@@ -564,7 +563,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
@@ -596,6 +595,27 @@ func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cl
 	}
 
 	return output.Cluster, nil
+}
+
+func updateVPCConfig(ctx context.Context, conn *eks.EKS, name string, config *eks.VpcConfigRequest, timeout time.Duration) error {
+	input := &eks.UpdateClusterConfigInput{
+		Name:               aws.String(name),
+		ResourcesVpcConfig: config,
+	}
+
+	output, err := conn.UpdateClusterConfigWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("updating EKS Cluster (%s) VPC config: %s", name, err)
+	}
+
+	updateID := aws.StringValue(output.Update.Id)
+
+	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
+		return fmt.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", name, updateID, err)
+	}
+
+	return nil
 }
 
 func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id string) (*eks.Update, error) {
@@ -818,33 +838,6 @@ func expandVPCConfigRequestForCreate(l []interface{}) *eks.VpcConfigRequest {
 	}
 
 	return vpcConfigRequest
-}
-
-func updateVPCConfig(
-	ctx context.Context,
-	conn *eks.EKS,
-	d *schema.ResourceData,
-	config *eks.VpcConfigRequest,
-) error {
-	input := &eks.UpdateClusterConfigInput{
-		Name:               aws.String(d.Id()),
-		ResourcesVpcConfig: config,
-	}
-
-	output, err := conn.UpdateClusterConfigWithContext(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("updating EKS Cluster (%s) VPC config: %s", d.Id(), err)
-	}
-
-	updateID := aws.StringValue(output.Update.Id)
-
-	_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return fmt.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", d.Id(), updateID, err)
-	}
-	return nil
 }
 
 func expandKubernetesNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
