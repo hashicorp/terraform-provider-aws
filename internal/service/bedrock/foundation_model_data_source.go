@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name="Foundation Model")
 func newDataSourceFoundationModel(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFoundationModel{}, nil
 }
