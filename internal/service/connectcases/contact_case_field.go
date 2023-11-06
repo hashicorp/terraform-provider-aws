@@ -44,7 +44,7 @@ func ResourceField() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(fieldType_Values(), false),
+				ValidateFunc: validation.StringInSlice(flattenFieldTypeValues(types.FieldType("").Values()), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -69,7 +69,7 @@ func resourceFieldCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &connectcases.CreateFieldInput{
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Name:     aws.String(d.Get("name").(string)),
-		Type:     d.Get("type").(types.FieldType),
+		Type:     types.FieldType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -91,7 +91,7 @@ func resourceFieldRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := FindFieldByDomainAndID(ctx, conn, d.Get("domain_id").(string), d.Id())
+	output, err := FindFieldByDomainAndID(ctx, conn, d.Id(), d.Get("domain_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Connect Cases Field (%s): %s", d.Id(), err)
@@ -137,4 +137,14 @@ func resourceFieldUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return append(diags, resourceFieldRead(ctx, d, meta)...)
+}
+
+func flattenFieldTypeValues(t []types.FieldType) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }

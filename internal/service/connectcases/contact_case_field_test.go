@@ -31,9 +31,10 @@ func TestAccField_basic(t *testing.T) {
 				Config: testAccField_base(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccFieldExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "namespace"),
+					resource.TestCheckResourceAttr(resourceName, "type", "Text"),
+					resource.TestCheckResourceAttrSet(resourceName, "field_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "field_id"),
 				),
 			},
 		},
@@ -75,7 +76,7 @@ func testAccFieldExists(ctx context.Context, n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
-		_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, "")
+		_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
 
 		return err
 	}
@@ -90,7 +91,7 @@ func testAccFieldDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, "")
+			_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -117,7 +118,7 @@ resource "aws_connectcases_field" "test" {
   name        = %[1]q
   description = "example description of field"
   domain_id   = aws_connectcases_domain.test.domain_id
-  type        = "fieldTypeText"
+  type        = "Text"
 }
 `, rName)
 }

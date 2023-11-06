@@ -36,7 +36,7 @@ func FindDomainById(ctx context.Context, conn *connectcases.Client, id string) (
 	return output, nil
 }
 
-func FindLayoutById(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetLayoutOutput, error) {
+func FindLayoutByDomainAndId(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetLayoutOutput, error) {
 	input := &connectcases.GetLayoutInput{
 		DomainId: aws.String(domainId),
 		LayoutId: aws.String(id),
@@ -62,7 +62,7 @@ func FindLayoutById(ctx context.Context, conn *connectcases.Client, id, domainId
 	return output, nil
 }
 
-func FindFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, domainId, id string) (*types.FieldSummary, error) {
+func FindFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, id, domainId string) (*types.FieldSummary, error) {
 	input := &connectcases.ListFieldsInput{
 		DomainId: aws.String(domainId),
 	}

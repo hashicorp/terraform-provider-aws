@@ -168,7 +168,7 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
 	domainId := d.Get("domain_id").(string)
-	output, err := FindLayoutById(ctx, conn, d.Id(), domainId)
+	output, err := FindLayoutByDomainAndId(ctx, conn, d.Id(), domainId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Case Layout %s not found, removing from state", d.Id())

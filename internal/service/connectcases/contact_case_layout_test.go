@@ -74,8 +74,7 @@ func testAccLayoutExists(ctx context.Context, n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
-		//Have to fix the Domain ID here
-		_, err := connectcases.FindLayoutById(ctx, conn, rs.Primary.ID, "")
+		_, err := connectcases.FindLayoutByDomainAndId(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
 
 		return err
 	}
@@ -90,8 +89,7 @@ func testAccLayoutDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			//Have to fix the Domain ID here
-			_, err := connectcases.FindLayoutById(ctx, conn, rs.Primary.ID, "")
+			_, err := connectcases.FindLayoutByDomainAndId(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -114,6 +112,13 @@ resource "aws_connectcases_domain" "test" {
   name = %[1]q
 }
 
+resource "aws_connectcases_field" "test" {
+  name        = %[1]q
+  description = "example description of field"
+  domain_id   = aws_connectcases_domain.test.domain_id
+  type        = "Text"
+}
+
 resource "aws_connectcases_layout" "test" {
   name      = %[1]q
   domain_id = aws_connectcases_domain.test.domain_id
@@ -124,7 +129,7 @@ resource "aws_connectcases_layout" "test" {
         name = "more_info_example"
         field_group {
           fields {
-            id = "" //Insert field resource ID
+            id = aws_connectcases_field.test.field_id
           }
         }
       }
@@ -134,7 +139,7 @@ resource "aws_connectcases_layout" "test" {
         name = "top_panel_example"
         field_group {
           fields {
-            id = "" //Insert field resource ID
+            id = aws_connectcases_field.test.field_id
           }
         }
       }
