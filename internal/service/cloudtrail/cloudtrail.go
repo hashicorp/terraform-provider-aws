@@ -864,7 +864,7 @@ func flattenInsightSelector(configured []*cloudtrail.InsightSelector) []map[stri
 }
 
 // aws_cloudtrail's Schema @v5.24.0 minus validators.
-func resourceCloudTrailV0() *schema.Resource {
+func resourceCloudTrailV0() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-name
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"advanced_event_selector": {
@@ -1064,7 +1064,7 @@ func resourceCloudTrailV0() *schema.Resource {
 	}
 }
 
-func cloudTrailUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func cloudTrailUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) { // nosemgrep:ci.cloudtrail-in-func-name
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}
