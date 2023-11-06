@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -34,6 +35,15 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceCloudTrailV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: cloudTrailUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -244,7 +254,6 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -852,4 +861,217 @@ func flattenInsightSelector(configured []*cloudtrail.InsightSelector) []map[stri
 	}
 
 	return insightSelectors
+}
+
+// aws_cloudtrail's Schema @v5.24.0 minus validators.
+func resourceCloudTrailV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"advanced_event_selector": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"event_selector"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"field_selector": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ends_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"field": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"not_ends_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"not_starts_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"starts_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cloud_watch_logs_group_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"cloud_watch_logs_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"enable_log_file_validation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_logging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"event_selector": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"advanced_event_selector"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_resource": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 250,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"exclude_management_event_sources": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"include_management_events": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"read_write_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  cloudtrail.ReadWriteTypeAll,
+						},
+					},
+				},
+			},
+			"home_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"include_global_service_events": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"insight_selector": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"insight_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"is_multi_region_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"is_organization_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"s3_bucket_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"s3_key_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"sns_topic_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
+	}
+}
+
+func cloudTrailUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if rawState == nil {
+		rawState = map[string]interface{}{}
+	}
+
+	if !arn.IsARN(rawState["id"].(string)) {
+		rawState["id"] = rawState["arn"]
+	}
+
+	return rawState, nil
 }
