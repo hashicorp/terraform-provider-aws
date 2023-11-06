@@ -121,23 +121,17 @@ func (data *foundationModel) refreshFromOutput(ctx context.Context, model *bedro
 	}
 	data.CustomizationsSupported = flex.FlattenFrameworkStringValueSet(ctx, customizationsSupported)
 
-	inferenceTypesSupported := make([]string, 0, len(model.ModelDetails.InferenceTypesSupported))
-	for _, r := range model.ModelDetails.InferenceTypesSupported {
-		inferenceTypesSupported = append(inferenceTypesSupported, string(r))
-	}
-	data.InferenceTypesSupported = flex.FlattenFrameworkStringValueSet(ctx, inferenceTypesSupported)
-
-	inputModalities := make([]string, 0, len(model.ModelDetails.InputModalities))
-	for _, r := range model.ModelDetails.InputModalities {
-		inputModalities = append(inputModalities, string(r))
-	}
-	data.InputModalities = flex.FlattenFrameworkStringValueSet(ctx, inputModalities)
-
-	outputModalities := make([]string, 0, len(model.ModelDetails.OutputModalities))
-	for _, r := range model.ModelDetails.OutputModalities {
-		outputModalities = append(outputModalities, string(r))
-	}
-	data.OutputModalities = flex.FlattenFrameworkStringValueSet(ctx, outputModalities)
-
+	data.InferenceTypesSupported = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.InferenceTypesSupported))
+	data.InputModalities = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.InputModalities))
+	data.OutputModalities = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.ModelDetails.OutputModalities))
 	data.ResponseStreamingSupported = flex.BoolToFramework(ctx, model.ModelDetails.ResponseStreamingSupported)
+}
+
+// toStringSlice converts a slice of custom string types to a slice of strings
+func toStringSlice[T ~string](values []T) []string {
+	var out []string
+	for _, v := range values {
+		out = append(out, string(v))
+	}
+	return out
 }
