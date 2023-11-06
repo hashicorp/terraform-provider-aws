@@ -176,31 +176,12 @@ func flattenFoundationModelSummaries(ctx context.Context, models []awstypes.Foun
 		attr["model_name"] = flex.StringToFramework(ctx, model.ModelName)
 		attr["provider_name"] = flex.StringToFramework(ctx, model.ProviderName)
 
-		customizationsSupported := make([]string, 0, len(model.CustomizationsSupported))
-		for _, r := range model.CustomizationsSupported {
-			customizationsSupported = append(customizationsSupported, string(r))
-		}
-		attr["customizations_supported"] = flex.FlattenFrameworkStringValueSet(ctx, customizationsSupported)
-
-		inferenceTypesSupported := make([]string, 0, len(model.InferenceTypesSupported))
-		for _, r := range model.InferenceTypesSupported {
-			inferenceTypesSupported = append(inferenceTypesSupported, string(r))
-		}
-		attr["inference_types_supported"] = flex.FlattenFrameworkStringValueSet(ctx, inferenceTypesSupported)
-
-		inputModalities := make([]string, 0, len(model.InputModalities))
-		for _, r := range model.InputModalities {
-			inputModalities = append(inputModalities, string(r))
-		}
-		attr["input_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, inputModalities)
-
-		outputModalities := make([]string, 0, len(model.OutputModalities))
-		for _, r := range model.OutputModalities {
-			outputModalities = append(outputModalities, string(r))
-		}
-		attr["output_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, outputModalities)
-
+		attr["customizations_supported"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.CustomizationsSupported))
+		attr["inference_types_supported"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.InferenceTypesSupported))
+		attr["input_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.InputModalities))
+		attr["output_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.OutputModalities))
 		attr["response_streaming_supported"] = flex.BoolToFramework(ctx, model.ResponseStreamingSupported)
+
 		val := types.ObjectValueMust(attributeTypes, attr)
 		attrs = append(attrs, val)
 	}
