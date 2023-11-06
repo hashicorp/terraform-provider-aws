@@ -59,6 +59,8 @@ import (
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
+	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
+	sqs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sqs"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -207,8 +209,6 @@ import (
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
-	sqs_sdkv1 "github.com/aws/aws-sdk-go/service/sqs"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
@@ -943,12 +943,12 @@ func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
 	return errs.Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN))
 }
 
-func (c *AWSClient) SNSConn(ctx context.Context) *sns_sdkv1.SNS {
-	return errs.Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
+func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
+	return errs.Must(client[*sns_sdkv2.Client](ctx, c, names.SNS))
 }
 
-func (c *AWSClient) SQSConn(ctx context.Context) *sqs_sdkv1.SQS {
-	return errs.Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
+func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
+	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS))
 }
 
 func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {

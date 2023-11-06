@@ -82,7 +82,7 @@ The `domain_join_info` block supports the following arguments:
 The `vpc_config` block supports the following arguments:
 
 * `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
-* `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `subnet_ids` - (Optional) Identifier of the subnet to which a network interface is attached from the image builder instance.
 
 ## Attribute Reference
 
@@ -113,4 +113,4 @@ Using `terraform import`, import `aws_appstream_image_builder` using the `name`.
 % terraform import aws_appstream_image_builder.example imageBuilderExample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4adcf125fe94b0f705d78c11c3a6d984d8e9dbc720fe7e15affd7d0a48348dcb -->
+<!-- cache-key: cdktf-0.18.0 input-e224096195102b3c0af9044d63f0d830019264e7ca702c4ea0f8e3d678b94b3a -->
