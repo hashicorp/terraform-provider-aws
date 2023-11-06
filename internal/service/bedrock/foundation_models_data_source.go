@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // @FrameworkDataSource(name="Foundation Models")
@@ -154,7 +155,7 @@ type foundationModelSummary struct {
 }
 
 func flattenFoundationModelSummaries(ctx context.Context, models []awstypes.FoundationModelSummary) types.List {
-	attributeTypes := flex.AttributeTypesMust[foundationModelSummary](ctx)
+	attributeTypes := fwtypes.AttributeTypesMust[foundationModelSummary](ctx)
 
 	// HACK: Reflection used above to build the attributeTypes cannot determine the ElemType
 	attributeTypes["customizations_supported"] = types.SetType{ElemType: types.StringType}
