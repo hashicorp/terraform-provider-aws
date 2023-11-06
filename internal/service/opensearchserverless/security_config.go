@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -319,12 +320,11 @@ func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Dia
 }
 
 func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
-	attributeTypes := flex.AttributeTypesMust[samlOptions](ctx)
-
 	if so == nil {
-		return types.ObjectNull(attributeTypes)
+		return fwtypes.NewObjectValueOfNull[samlOptions](ctx).ObjectValue
 	}
 
+	attributeTypes := fwtypes.AttributeTypesMust[samlOptions](ctx)
 	attrs := map[string]attr.Value{}
 	attrs["group_attribute"] = flex.StringToFramework(ctx, so.GroupAttribute)
 	attrs["metadata"] = flex.StringToFramework(ctx, so.Metadata)
