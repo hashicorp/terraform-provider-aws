@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connectcases"
+	"github.com/aws/aws-sdk-go-v2/service/connectcases/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_connectcases_field", name="Connect Cases Field")
@@ -41,8 +42,9 @@ func ResourceField() *schema.Resource {
 				Computed: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(fieldType_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -57,8 +59,6 @@ func ResourceField() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -69,8 +69,7 @@ func resourceFieldCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &connectcases.CreateFieldInput{
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Name:     aws.String(d.Get("name").(string)),
-		//TODO: Implement Type
-		// Type:     nil,
+		Type:     d.Get("type").(types.FieldType),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -96,7 +95,7 @@ func resourceFieldRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := findFieldByDomainAndID(ctx, conn, d.Get("domain_id").(string), d.Id())
+	output, err := FindFieldByDomainAndID(ctx, conn, d.Get("domain_id").(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Connect Cases Field (%s): %s", d.Id(), err)
@@ -129,6 +128,10 @@ func resourceFieldUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("description") {
 		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("domain_id") {
+		input.DomainId = aws.String(d.Get("domain_id").(string))
 	}
 
 	_, err := conn.UpdateField(ctx, input)

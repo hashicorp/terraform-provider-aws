@@ -17,20 +17,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccContactCaseLayout_basic(t *testing.T) {
+func TestAccLayout_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_contact_case_layout.test"
+	resourceName := "aws_connectcases_layout.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccContactCaseLayoutDestroy(ctx),
+		CheckDestroy:             testAccLayoutDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactCaseLayout_base(rName),
+				Config: testAccLayout_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccContactCaseLayoutExists(ctx, resourceName),
+					testAccLayoutExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "layout_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 				),
@@ -39,21 +39,21 @@ func TestAccContactCaseLayout_basic(t *testing.T) {
 	})
 }
 
-func TestAccContactCaseLayout_disappears(t *testing.T) {
+func TestAccLayout_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_contact_case_layout.test"
+	resourceName := "aws_connectcases_layout.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccContactCaseLayoutDestroy(ctx),
+		CheckDestroy:             testAccLayoutDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactCaseLayout_base(rName),
+				Config: testAccLayout_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccContactCaseLayoutExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceContactCaseLayout(), resourceName),
+					testAccLayoutExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceLayout(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,7 +61,7 @@ func TestAccContactCaseLayout_disappears(t *testing.T) {
 	})
 }
 
-func testAccContactCaseLayoutExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccLayoutExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -69,29 +69,29 @@ func testAccContactCaseLayoutExists(ctx context.Context, n string) resource.Test
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Connect Cases Contact Case Layout ID is set")
+			return fmt.Errorf("No Connect Case Layout ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
 		//Have to fix the Domain ID here
-		_, err := connectcases.FindConnectCasesLayoutById(ctx, conn, rs.Primary.ID, "")
+		_, err := connectcases.FindLayoutById(ctx, conn, rs.Primary.ID, "")
 
 		return err
 	}
 }
 
-func testAccContactCaseLayoutDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccLayoutDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_connectcases_contact_case_layout" {
+			if rs.Type != "aws_connectcases_layout" {
 				continue
 			}
 
 			//Have to fix the Domain ID here
-			_, err := connectcases.FindConnectCasesLayoutById(ctx, conn, rs.Primary.ID, "")
+			_, err := connectcases.FindLayoutById(ctx, conn, rs.Primary.ID, "")
 
 			if tfresource.NotFound(err) {
 				continue
@@ -101,22 +101,22 @@ func testAccContactCaseLayoutDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			return fmt.Errorf("Connect Cases Contace Case Layout %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Connect Case Layout %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccContactCaseLayout_base(rName string) string {
+func testAccLayout_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_connectcases_contact_case_domain" "test" {
+resource "aws_connectcases_domain" "test" {
   name = %[1]q
 }
 
-resource "aws_connectcases_contact_case_layout" "test" {
+resource "aws_connectcases_layout" "test" {
   name      = %[1]q
-  domain_id = aws_connectcases_contact_case_domain.test.domain_id
+  domain_id = aws_connectcases_domain.test.domain_id
 
   content {
     more_info {

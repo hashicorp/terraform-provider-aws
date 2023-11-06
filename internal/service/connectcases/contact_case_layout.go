@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_connectcases_contact_case_layout", name="Connect Cases Contact Case Layout")
-func ResourceContactCaseLayout() *schema.Resource {
+// @SDKResource("aws_connectcases_contact_case_layout", name="Connect Cases Layout")
+func ResourceLayout() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceContactCaseLayoutCreate,
-		ReadWithoutTimeout:   resourceContactCaseDomainRead,
+		CreateWithoutTimeout: resourceLayoutCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -138,7 +138,7 @@ func ResourceContactCaseLayout() *schema.Resource {
 	}
 }
 
-func resourceContactCaseLayoutCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayoutCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
@@ -147,7 +147,7 @@ func resourceContactCaseLayoutCreate(ctx context.Context, d *schema.ResourceData
 	name := d.Get("name").(string)
 
 	params := &connectcases.CreateLayoutInput{
-		Content:  expandContactCaseLayoutContent(d.Get("content").([]interface{})),
+		Content:  expandLayoutContent(d.Get("content").([]interface{})),
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Name:     aws.String(name),
 	}
@@ -160,15 +160,15 @@ func resourceContactCaseLayoutCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.ToString(output.LayoutId))
 	d.Set("layout_arn", aws.ToString(output.LayoutArn))
 
-	return append(diags, resourceContactCaseLayoutRead(ctx, d, meta)...)
+	return append(diags, resourceLayoutRead(ctx, d, meta)...)
 }
 
-func resourceContactCaseLayoutRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
 	domainId := d.Get("domain_id").(string)
-	output, err := FindConnectCasesLayoutById(ctx, conn, d.Id(), domainId)
+	output, err := FindLayoutById(ctx, conn, d.Id(), domainId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Case Layout %s not found, removing from state", d.Id())
@@ -185,7 +185,7 @@ func resourceContactCaseLayoutRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandContactCaseLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
+func expandLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
 	if tfMap == nil || tfMap[0] == nil {
 		return nil
 	}

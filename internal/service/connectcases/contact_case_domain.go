@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_connectcases_contact_case_domain", name="Connect Cases Contact Case Domain")
-func ResourceContactCaseDomain() *schema.Resource {
+// @SDKResource("aws_connectcases_contact_case_domain", name="Connect Cases Domain")
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceContactCaseDomainCreate,
-		ReadWithoutTimeout:   resourceContactCaseDomainRead,
-		DeleteWithoutTimeout: resourceContactCaseDomainDelete,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -48,7 +48,7 @@ func ResourceContactCaseDomain() *schema.Resource {
 	}
 }
 
-func resourceContactCaseDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 	log.Print("[DEBUG] Creating Connect Case Domain")
@@ -65,14 +65,14 @@ func resourceContactCaseDomainCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.DomainId))
 
-	return append(diags, resourceContactCaseDomainRead(ctx, d, meta)...)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceContactCaseDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := FindConnectCasesDomainById(ctx, conn, d.Id())
+	output, err := FindDomainById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Case Domain %s not found, removing from state", d.Id())
@@ -92,7 +92,7 @@ func resourceContactCaseDomainRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceContactCaseDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Case Domain: %s", d.Id())

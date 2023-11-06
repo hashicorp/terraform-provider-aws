@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectCasesDomainById(ctx context.Context, conn *connectcases.Client, id string) (*connectcases.GetDomainOutput, error) {
+func FindDomainById(ctx context.Context, conn *connectcases.Client, id string) (*connectcases.GetDomainOutput, error) {
 	input := &connectcases.GetDomainInput{
 		DomainId: aws.String(id),
 	}
@@ -36,7 +36,7 @@ func FindConnectCasesDomainById(ctx context.Context, conn *connectcases.Client, 
 	return output, nil
 }
 
-func FindConnectCasesLayoutById(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetLayoutOutput, error) {
+func FindLayoutById(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetLayoutOutput, error) {
 	input := &connectcases.GetLayoutInput{
 		DomainId: aws.String(domainId),
 		LayoutId: aws.String(id),
@@ -62,7 +62,7 @@ func FindConnectCasesLayoutById(ctx context.Context, conn *connectcases.Client, 
 	return output, nil
 }
 
-func findFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, domainId, id string) (*types.FieldSummary, error) {
+func FindFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, domainId, id string) (*types.FieldSummary, error) {
 	input := &connectcases.ListFieldsInput{
 		DomainId: aws.String(domainId),
 	}
@@ -96,7 +96,7 @@ func findFieldByDomainAndID(ctx context.Context, conn *connectcases.Client, doma
 	return nil, nil
 }
 
-func findRelatedItemByID(ctx context.Context, conn *connectcases.Client, caseID, domainID, id string) (*types.SearchRelatedItemsResponseItem, error) {
+func FindRelatedItemByID(ctx context.Context, conn *connectcases.Client, caseID, domainID, id string) (*types.SearchRelatedItemsResponseItem, error) {
 	input := &connectcases.SearchRelatedItemsInput{
 		CaseId:   aws.String(caseID),
 		DomainId: aws.String(domainID),

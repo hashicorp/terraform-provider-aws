@@ -130,7 +130,7 @@ func resourceRelatedItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	output, err := findRelatedItemByID(ctx, conn, d.Get("case_id").(string), d.Get("domain_id").(string), d.Id())
+	output, err := FindRelatedItemByID(ctx, conn, d.Get("case_id").(string), d.Get("domain_id").(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Connect Cases Related Item (%s): %s", d.Id(), err)

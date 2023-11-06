@@ -17,20 +17,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccContactCaseDomain_basic(t *testing.T) {
+func TestAccDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_contact_case_domain.test"
+	resourceName := "aws_connectcases_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccContactCaseDomainDestroy(ctx),
+		CheckDestroy:             testAccDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactCaseDomain_base(rName),
+				Config: testAccDomain_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccContactCaseDomainExists(ctx, resourceName),
+					testAccDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_status"),
@@ -40,7 +40,7 @@ func TestAccContactCaseDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccContactCaseDomain_disappears(t *testing.T) {
+func TestAccDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_connectcases_contact_case_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -48,13 +48,13 @@ func TestAccContactCaseDomain_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccContactCaseDomainDestroy(ctx),
+		CheckDestroy:             testAccDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactCaseDomain_base(rName),
+				Config: testAccDomain_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccContactCaseDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceContactCaseDomain(), resourceName),
+					testAccDomainExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,7 +62,7 @@ func TestAccContactCaseDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccContactCaseDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -70,18 +70,18 @@ func testAccContactCaseDomainExists(ctx context.Context, n string) resource.Test
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Connect Cases Contact Case Domain ID is set")
+			return fmt.Errorf("No Connect Cases Domain ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
-		_, err := connectcases.FindConnectCasesDomainById(ctx, conn, rs.Primary.ID)
+		_, err := connectcases.FindDomainById(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccContactCaseDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
@@ -90,7 +90,7 @@ func testAccContactCaseDomainDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := connectcases.FindConnectCasesDomainById(ctx, conn, rs.Primary.ID)
+			_, err := connectcases.FindDomainById(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -107,7 +107,7 @@ func testAccContactCaseDomainDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccContactCaseDomain_base(rName string) string {
+func testAccDomain_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connectcases_contact_case_domain" "test" {
   name = %[1]q
