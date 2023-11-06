@@ -434,7 +434,7 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 	}
 
 	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
-		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTtlDuration(v)
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
 	}
 
 	return config
@@ -458,7 +458,7 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 	}
 
 	if config.TtlDuration != nil {
-		m["ttl_duration"] = flattenFeatureGroupOnlineStoreConfigTtlDuration(config.TtlDuration)
+		m["ttl_duration"] = flattenFeatureGroupOnlineStoreConfigTTLDuration(config.TtlDuration)
 	}
 
 	return []map[string]interface{}{m}
@@ -490,7 +490,7 @@ func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.Online
 	return []map[string]interface{}{m}
 }
 
-func expandFeatureGroupOnlineStoreConfigTtlDuration(l []interface{}) *sagemaker.TtlDuration {
+func expandFeatureGroupOnlineStoreConfigTTLDuration(l []interface{}) *sagemaker.TtlDuration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -505,7 +505,7 @@ func expandFeatureGroupOnlineStoreConfigTtlDuration(l []interface{}) *sagemaker.
 	return config
 }
 
-func flattenFeatureGroupOnlineStoreConfigTtlDuration(config *sagemaker.TtlDuration) []map[string]interface{} {
+func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *sagemaker.TtlDuration) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -649,7 +649,7 @@ func expandFeatureGroupOnlineStoreConfigUpdate(l []interface{}) *sagemaker.Onlin
 	config := &sagemaker.OnlineStoreConfigUpdate{}
 
 	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
-		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTtlDuration(v)
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
 	}
 
 	return config
