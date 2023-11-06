@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
@@ -39,11 +40,11 @@ func ResourceDeploymentConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(types.ComputePlatformServer),
-					string(types.ComputePlatformLambda),
-					string(types.ComputePlatformEcs),
-				}, false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(
+					types.ComputePlatformServer,
+					types.ComputePlatformLambda,
+					types.ComputePlatformEcs,
+				), false),
 				Default: types.ComputePlatformServer,
 			},
 
@@ -58,10 +59,10 @@ func ResourceDeploymentConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.MinimumHealthyHostsTypeHostCount),
-								string(types.MinimumHealthyHostsTypeFleetPercent),
-							}, false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(
+								types.MinimumHealthyHostsTypeHostCount,
+								types.MinimumHealthyHostsTypeFleetPercent,
+							), false),
 						},
 						"value": {
 							Type:     schema.TypeInt,
@@ -83,11 +84,11 @@ func ResourceDeploymentConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.TrafficRoutingTypeAllAtOnce),
-								string(types.TrafficRoutingTypeTimeBasedCanary),
-								string(types.TrafficRoutingTypeTimeBasedLinear),
-							}, false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(
+								types.TrafficRoutingTypeAllAtOnce,
+								types.TrafficRoutingTypeTimeBasedCanary,
+								types.TrafficRoutingTypeTimeBasedLinear,
+							), false),
 							Default: string(types.TrafficRoutingTypeAllAtOnce),
 						},
 
