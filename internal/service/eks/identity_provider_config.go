@@ -6,18 +6,16 @@ package eks
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -133,7 +131,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 }
 
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
@@ -145,7 +143,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		Tags:               getTagsIn(ctx),
 	}
 
-	_, err := client.AssociateIdentityProviderConfig(ctx, input)
+	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("associating EKS Identity Provider Config (%s): %s", idpID, err)
@@ -153,7 +151,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(idpID)
 
-	_, err = waitOIDCIdentityProviderConfigCreated(ctx, client, clusterName, configName, d.Timeout(schema.TimeoutCreate))
+	_, err = waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("waiting for EKS Identity Provider Config (%s) association: %s", d.Id(), err)
@@ -163,7 +161,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 
@@ -171,7 +169,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	oidc, err := FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, client, clusterName, configName)
+	oidc, err := FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Identity Provider Config (%s) not found, removing from state", d.Id())
@@ -203,7 +201,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 
@@ -212,29 +210,27 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Disassociating EKS Identity Provider Config: %s", d.Id())
-	_, err = client.DisassociateIdentityProviderConfig(ctx, &eks.DisassociateIdentityProviderConfigInput{
+	_, err = conn.DisassociateIdentityProviderConfigWithContext(ctx, &eks.DisassociateIdentityProviderConfigInput{
 		ClusterName: aws.String(clusterName),
-		IdentityProviderConfig: &types.IdentityProviderConfig{
+		IdentityProviderConfig: &eks.IdentityProviderConfig{
 			Name: aws.String(configName),
 			Type: aws.String(IdentityProviderConfigTypeOIDC),
 		},
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
-	if errs.IsA[*types.InvalidRequestException](err) {
-		if strings.Contains(err.Error(), "Identity provider config is not associated with cluster") {
-			return nil
-		}
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidRequestException, "Identity provider config is not associated with cluster") {
+		return nil
 	}
 
 	if err != nil {
 		return diag.Errorf("disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitOIDCIdentityProviderConfigDeleted(ctx, client, clusterName, configName, d.Timeout(schema.TimeoutDelete))
+	_, err = waitOIDCIdentityProviderConfigDeleted(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("waiting for EKS Identity Provider Config (%s) disassociation: %s", d.Id(), err)
@@ -243,12 +239,12 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *types.OidcIdentityProviderConfigRequest) {
+func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *eks.OidcIdentityProviderConfigRequest) {
 	if tfMap == nil {
 		return "", nil
 	}
 
-	apiObject := &types.OidcIdentityProviderConfigRequest{}
+	apiObject := &eks.OidcIdentityProviderConfigRequest{}
 
 	if v, ok := tfMap["client_id"].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
@@ -273,7 +269,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 	}
 
 	if v, ok := tfMap["required_claims"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.RequiredClaims = flex.ExpandStringValueMap(v)
+		apiObject.RequiredClaims = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["username_claim"].(string); ok && v != "" {
@@ -287,7 +283,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 	return identityProviderConfigName, apiObject
 }
 
-func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConfig) map[string]interface{} {
+func flattenOIDCIdentityProviderConfig(apiObject *eks.OidcIdentityProviderConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -295,35 +291,35 @@ func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = v
+		tfMap["client_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.GroupsClaim; v != nil {
-		tfMap["groups_claim"] = v
+		tfMap["groups_claim"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.GroupsPrefix; v != nil {
-		tfMap["groups_prefix"] = v
+		tfMap["groups_prefix"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.IdentityProviderConfigName; v != nil {
-		tfMap["identity_provider_config_name"] = v
+		tfMap["identity_provider_config_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.IssuerUrl; v != nil {
-		tfMap["issuer_url"] = v
+		tfMap["issuer_url"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RequiredClaims; v != nil {
-		tfMap["required_claims"] = v
+		tfMap["required_claims"] = aws.StringValueMap(v)
 	}
 
 	if v := apiObject.UsernameClaim; v != nil {
-		tfMap["username_claim"] = v
+		tfMap["username_claim"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.UsernamePrefix; v != nil {
-		tfMap["username_prefix"] = v
+		tfMap["username_prefix"] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -9,9 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +22,7 @@ import (
 
 func TestAccEKSFargateProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fargateProfile types.FargateProfile
+	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	eksClusterResourceName := "aws_eks_cluster.test"
 	iamRoleResourceName := "aws_iam_role.pod"
@@ -31,7 +30,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,7 +43,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fargate_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "pod_execution_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "selector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.FargateProfileStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "status", eks.FargateProfileStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -60,13 +59,13 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 
 func TestAccEKSFargateProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fargateProfile types.FargateProfile
+	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,14 +83,14 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 
 func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fargateProfile types.FargateProfile
+	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName1 := "aws_eks_fargate_profile.test.0"
 	resourceName2 := "aws_eks_fargate_profile.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,13 +107,13 @@ func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 
 func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fargateProfile1 types.FargateProfile
+	var fargateProfile1 eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,13 +134,13 @@ func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 
 func TestAccEKSFargateProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fargateProfile1, fargateProfile2, fargateProfile3 types.FargateProfile
+	var fargateProfile1, fargateProfile2, fargateProfile3 eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +178,7 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckFargateProfileExists(ctx context.Context, n string, v *types.FargateProfile) resource.TestCheckFunc {
+func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.FargateProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -196,9 +195,9 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *types.Fa
 			return err
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
-		output, err := tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, client, clusterName, fargateProfileName)
+		output, err := tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
 		if err != nil {
 			return err
@@ -212,7 +211,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *types.Fa
 
 func testAccCheckFargateProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_fargate_profile" {
@@ -225,7 +224,7 @@ func testAccCheckFargateProfileDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			_, err = tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, client, clusterName, fargateProfileName)
+			_, err = tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
 			if tfresource.NotFound(err) {
 				continue

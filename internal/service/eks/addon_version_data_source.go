@@ -40,14 +40,14 @@ func DataSourceAddonVersion() *schema.Resource {
 }
 
 func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
 	mostRecent := d.Get("most_recent").(bool)
 	id := addonName
 
-	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, client, id, kubernetesVersion, mostRecent)
+	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, conn, id, kubernetesVersion, mostRecent)
 
 	if err != nil {
 		return diag.Errorf("reading EKS Add-On version info (%s, %s): %s", id, kubernetesVersion, err)

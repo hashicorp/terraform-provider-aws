@@ -131,7 +131,7 @@ ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,,,aws_ecr_,,ecr_,ECR (Elastic Container Regist
 ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,1,,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,
-eks,eks,eks,eks,,eks,,,EKS,EKS,,,2,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,
+eks,eks,eks,eks,,eks,,,EKS,EKS,,1,,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,
 elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,1,,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,
 elastic-inference,elasticinference,elasticinference,elasticinference,,elasticinference,,,ElasticInference,ElasticInference,,1,,,aws_elasticinference_,,elasticinference_,Elastic Inference,Amazon,,x,,,,
 elastictranscoder,elastictranscoder,elastictranscoder,elastictranscoder,,elastictranscoder,,,ElasticTranscoder,ElasticTranscoder,,1,,,aws_elastictranscoder_,,elastictranscoder_,Elastic Transcoder,Amazon,,,,,,

@@ -6,20 +6,17 @@ package eks
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,22 +89,25 @@ func ResourceAddon() *schema.Resource {
 				Optional: true,
 			},
 			"resolve_conflicts": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				Deprecated:   `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
 			},
 			"resolve_conflicts_on_create": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringInSlice(enum.Slice(types.ResolveConflictsNone, types.ResolveConflictsOverwrite), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					eks.ResolveConflictsNone,
+					eks.ResolveConflictsOverwrite,
+				}, false),
 				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"resolve_conflicts_on_update": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				ConflictsWith:    []string{"resolve_conflicts"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
@@ -122,7 +122,7 @@ func ResourceAddon() *schema.Resource {
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
@@ -143,9 +143,9 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("resolve_conflicts"); ok {
-		input.ResolveConflicts = types.ResolveConflicts(v.(string))
+		input.ResolveConflicts = aws.String(v.(string))
 	} else if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
-		input.ResolveConflicts = types.ResolveConflicts(v.(string))
+		input.ResolveConflicts = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_account_role_arn"); ok {
@@ -154,13 +154,15 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return client.CreateAddon(ctx, input)
+			return conn.CreateAddonWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsA[*types.InvalidParameterException](err) {
-				if strings.Contains(err.Error(), "CREATE_FAILED") || strings.Contains(err.Error(), "does not exist") {
-					return true, err
-				}
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
+				return true, err
 			}
 
 			return false, err
@@ -173,14 +175,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	waiter := eks.NewAddonActiveWaiter(client)
-	waiterParams := &eks.DescribeAddonInput{
-		AddonName:   aws.String(addonName),
-		ClusterName: aws.String(clusterName),
-	}
-
-	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
+	if _, err := waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
 		// might result in a failed creation, if unmanaged version of addon is already deployed
 		// and there are configuration conflicts:
@@ -199,7 +194,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -207,14 +202,12 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	addon, err := FindAddonByClusterNameAndAddonName(ctx, client, clusterName, addonName)
+	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
-		if !d.IsNewResource() {
-			log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if err != nil {
@@ -226,8 +219,8 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("arn", addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
 	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set("created_at", aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
-	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	setTagsOut(ctx, addon.Tags)
@@ -237,7 +230,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -260,17 +253,16 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
-		var conflictResolutionAttr string
-		var conflictResolution types.ResolveConflicts
+		var conflictResolutionAttr, conflictResolution string
 
 		if v, ok := d.GetOk("resolve_conflicts"); ok {
 			conflictResolutionAttr = "resolve_conflicts"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
+			conflictResolution = v.(string)
+			input.ResolveConflicts = aws.String(v.(string))
 		} else if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
 			conflictResolutionAttr = "resolve_conflicts_on_update"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
+			conflictResolution = v.(string)
+			input.ResolveConflicts = aws.String(v.(string))
 		}
 
 		// If service account role ARN is already provided, use it. Otherwise, the add-on uses
@@ -279,19 +271,19 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ServiceAccountRoleArn = aws.String(d.Get("service_account_role_arn").(string))
 		}
 
-		output, err := client.UpdateAddon(ctx, input)
+		output, err := conn.UpdateAddonWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Add-On (%s): %s", d.Id(), err)
 		}
 
-		updateID := aws.ToString(output.Update.Id)
-		if _, err := waitAddonUpdateSuccessful(ctx, client, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			if conflictResolution != types.ResolveConflictsOverwrite {
+		updateID := aws.StringValue(output.Update.Id)
+		if _, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if conflictResolution != eks.ResolveConflictsOverwrite {
 				// Changing addon version w/o setting resolve_conflicts to "OVERWRITE"
 				// might result in a failed update if there are conflicts:
 				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting attribute %q to %q", d.Id(), updateID, err, conflictResolutionAttr, string(types.ResolveConflictsOverwrite))
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting attribute %q to %q", d.Id(), updateID, err, conflictResolutionAttr, eks.ResolveConflictsOverwrite)
 			}
 
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
@@ -303,7 +295,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -315,26 +307,20 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
 	}
+
 	if v, ok := d.GetOk("preserve"); ok {
-		input.Preserve = v.(bool)
+		input.Preserve = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
-	_, err = client.DeleteAddon(ctx, input)
+	_, err = conn.DeleteAddonWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Add-On (%s): %s", d.Id(), err)
 	}
 
-	waiter := eks.NewAddonDeletedWaiter(client)
-	waiterParams := &eks.DescribeAddonInput{
-		AddonName:   aws.String(addonName),
-		ClusterName: aws.String(clusterName),
-	}
-
-	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) delete: %s", d.Id(), err)
+	if _, err := waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

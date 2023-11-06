@@ -9,17 +9,15 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,22 +47,22 @@ func ResourceNodeGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.AMITypes](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(eks.AMITypes_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"capacity_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(eks.CapacityTypes_Values(), false),
 			},
 			"cluster_name": {
 				Type:         schema.TypeString,
@@ -250,9 +248,9 @@ func ResourceNodeGroup() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 63),
 						},
 						"effect": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.TaintEffect](),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(eks.TaintEffect_Values(), false),
 						},
 					},
 				},
@@ -295,7 +293,7 @@ func ResourceNodeGroup() *schema.Resource {
 }
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
@@ -305,28 +303,28 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
-		Subnets:            flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
-		input.AmiType = types.AMITypes(v.(string))
+		input.AmiType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("capacity_type"); ok {
-		input.CapacityType = types.CapacityTypes(v.(string))
+		input.CapacityType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("disk_size"); ok {
-		input.DiskSize = aws.Int32(int32(v.(int)))
+		input.DiskSize = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("instance_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InstanceTypes = flex.ExpandStringValueList(v.([]interface{}))
+		input.InstanceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
-		input.Labels = flex.ExpandStringValueMap(v)
+		input.Labels = flex.ExpandStringMap(v)
 	}
 
 	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
@@ -357,7 +355,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Version = aws.String(v.(string))
 	}
 
-	_, err := client.CreateNodegroup(ctx, input)
+	_, err := conn.CreateNodegroupWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating EKS Node Group (%s): %s", groupID, err)
@@ -365,13 +363,8 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(groupID)
 
-	waiter := eks.NewNodegroupActiveWaiter(client)
-	waiterParams := &eks.DescribeNodegroupInput{
-		ClusterName:   aws.String(clusterName),
-		NodegroupName: aws.String(nodeGroupName),
-	}
+	_, err = waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
 
-	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
 	}
@@ -380,7 +373,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -388,7 +381,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, client, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Node Group (%s) not found, removing from state", d.Id())
@@ -406,11 +399,11 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 
-	if err := d.Set("instance_types", nodeGroup.InstanceTypes); err != nil {
+	if err := d.Set("instance_types", aws.StringValueSlice(nodeGroup.InstanceTypes)); err != nil {
 		return diag.Errorf("setting instance_types: %s", err)
 	}
 
-	if err := d.Set("labels", nodeGroup.Labels); err != nil {
+	if err := d.Set("labels", aws.StringValueMap(nodeGroup.Labels)); err != nil {
 		return diag.Errorf("setting labels: %s", err)
 	}
 
@@ -419,7 +412,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("node_group_name", nodeGroup.NodegroupName)
-	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
+	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.StringValue(nodeGroup.NodegroupName)))
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
@@ -441,7 +434,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("status", nodeGroup.Status)
 
-	if err := d.Set("subnet_ids", nodeGroup.Subnets); err != nil {
+	if err := d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets)); err != nil {
 		return diag.Errorf("setting subnets: %s", err)
 	}
 
@@ -465,7 +458,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -478,7 +471,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Force:              *aws.Bool(d.Get("force_update_version").(bool)),
+			Force:              aws.Bool(d.Get("force_update_version").(bool)),
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
@@ -510,15 +503,15 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Version = aws.String(v.(string))
 		}
 
-		output, err := client.UpdateNodegroupVersion(ctx, input)
+		output, err := conn.UpdateNodegroupVersionWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating EKS Node Group (%s) version: %s", d.Id(), err)
 		}
 
-		updateID := aws.ToString(output.Update.Id)
+		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitNodegroupUpdateSuccessful(ctx, client, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
@@ -549,15 +542,15 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		output, err := client.UpdateNodegroupConfig(ctx, input)
+		output, err := conn.UpdateNodegroupConfigWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating EKS Node Group (%s) config: %s", d.Id(), err)
 		}
 
-		updateID := aws.ToString(output.Update.Id)
+		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitNodegroupUpdateSuccessful(ctx, client, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
@@ -568,7 +561,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -577,12 +570,12 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
-	_, err = client.DeleteNodegroup(ctx, &eks.DeleteNodegroupInput{
+	_, err = conn.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -590,13 +583,8 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	waiter := eks.NewNodegroupDeletedWaiter(client)
-	waiterParams := &eks.DescribeNodegroupInput{
-		ClusterName:   aws.String(clusterName),
-		NodegroupName: aws.String(nodeGroupName),
-	}
+	_, err = waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
 
-	err = waiter.Wait(ctx, waiterParams, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("waiting for EKS Node Group (%s) to delete: %s", d.Id(), err)
 	}
@@ -604,14 +592,14 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func expandLaunchTemplateSpecification(l []interface{}) *types.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSpecification {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &types.LaunchTemplateSpecification{}
+	config := &eks.LaunchTemplateSpecification{}
 
 	if v, ok := m["id"].(string); ok && v != "" {
 		config.Id = aws.String(v)
@@ -628,34 +616,34 @@ func expandLaunchTemplateSpecification(l []interface{}) *types.LaunchTemplateSpe
 	return config
 }
 
-func expandNodegroupScalingConfig(tfMap map[string]interface{}) *types.NodegroupScalingConfig {
+func expandNodegroupScalingConfig(tfMap map[string]interface{}) *eks.NodegroupScalingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.NodegroupScalingConfig{}
+	apiObject := &eks.NodegroupScalingConfig{}
 
 	if v, ok := tfMap["desired_size"].(int); ok {
-		apiObject.DesiredSize = aws.Int32(int32(v))
+		apiObject.DesiredSize = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["max_size"].(int); ok && v != 0 {
-		apiObject.MaxSize = aws.Int32(int32(v))
+		apiObject.MaxSize = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["min_size"].(int); ok {
-		apiObject.MinSize = aws.Int32(int32(v))
+		apiObject.MinSize = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func expandTaints(l []interface{}) []types.Taint {
+func expandTaints(l []interface{}) []*eks.Taint {
 	if len(l) == 0 {
 		return nil
 	}
 
-	var taints []types.Taint
+	var taints []*eks.Taint
 
 	for _, raw := range l {
 		t, ok := raw.(map[string]interface{})
@@ -664,7 +652,7 @@ func expandTaints(l []interface{}) []types.Taint {
 			continue
 		}
 
-		taint := types.Taint{}
+		taint := &eks.Taint{}
 
 		if k, ok := t["key"].(string); ok {
 			taint.Key = aws.String(k)
@@ -675,7 +663,7 @@ func expandTaints(l []interface{}) []types.Taint {
 		}
 
 		if e, ok := t["effect"].(string); ok {
-			taint.Effect = types.TaintEffect(e)
+			taint.Effect = aws.String(e)
 		}
 
 		taints = append(taints, taint)
@@ -684,17 +672,25 @@ func expandTaints(l []interface{}) []types.Taint {
 	return taints
 }
 
-func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.UpdateTaintsPayload {
+func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *eks.UpdateTaintsPayload {
 	oldTaints := expandTaints(oldTaintsRaw)
 	newTaints := expandTaints(newTaintsRaw)
 
-	var removedTaints []types.Taint
+	var removedTaints []*eks.Taint
 	for _, ot := range oldTaints {
+		if ot == nil {
+			continue
+		}
+
 		removed := true
 		for _, nt := range newTaints {
+			if nt == nil {
+				continue
+			}
+
 			// if both taint.key and taint.effect are the same, we don't need to remove it.
-			if aws.ToString(nt.Key) == aws.ToString(ot.Key) &&
-				string(nt.Effect) == string(ot.Effect) {
+			if aws.StringValue(nt.Key) == aws.StringValue(ot.Key) &&
+				aws.StringValue(nt.Effect) == aws.StringValue(ot.Effect) {
 				removed = false
 				break
 			}
@@ -705,10 +701,18 @@ func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.
 		}
 	}
 
-	var updatedTaints []types.Taint
+	var updatedTaints []*eks.Taint
 	for _, nt := range newTaints {
+		if nt == nil {
+			continue
+		}
+
 		updated := true
 		for _, ot := range oldTaints {
+			if nt == nil {
+				continue
+			}
+
 			if reflect.DeepEqual(nt, ot) {
 				updated = false
 				break
@@ -723,7 +727,7 @@ func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.
 		return nil
 	}
 
-	updateTaintsPayload := &types.UpdateTaintsPayload{}
+	updateTaintsPayload := &eks.UpdateTaintsPayload{}
 
 	if len(removedTaints) > 0 {
 		updateTaintsPayload.RemoveTaints = removedTaints
@@ -736,45 +740,45 @@ func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.
 	return updateTaintsPayload
 }
 
-func expandRemoteAccessConfig(l []interface{}) *types.RemoteAccessConfig {
+func expandRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &types.RemoteAccessConfig{}
+	config := &eks.RemoteAccessConfig{}
 
 	if v, ok := m["ec2_ssh_key"].(string); ok && v != "" {
 		config.Ec2SshKey = aws.String(v)
 	}
 
 	if v, ok := m["source_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.SourceSecurityGroups = flex.ExpandStringValueSet(v)
+		config.SourceSecurityGroups = flex.ExpandStringSet(v)
 	}
 
 	return config
 }
 
-func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *types.NodegroupUpdateConfig {
+func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpdateConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.NodegroupUpdateConfig{}
+	apiObject := &eks.NodegroupUpdateConfig{}
 
 	if v, ok := tfMap["max_unavailable"].(int); ok && v != 0 {
-		apiObject.MaxUnavailable = aws.Int32(int32(v))
+		apiObject.MaxUnavailable = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["max_unavailable_percentage"].(int); ok && v != 0 {
-		apiObject.MaxUnavailablePercentage = aws.Int32(int32(v))
+		apiObject.MaxUnavailablePercentage = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap interface{}) *types.UpdateLabelsPayload {
+func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := tftags.New(ctx, oldLabelsMap)
 	newLabels := tftags.New(ctx, newLabelsMap)
@@ -786,20 +790,20 @@ func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap i
 		return nil
 	}
 
-	updateLabelsPayload := &types.UpdateLabelsPayload{}
+	updateLabelsPayload := &eks.UpdateLabelsPayload{}
 
 	if len(removedLabels) > 0 {
-		updateLabelsPayload.RemoveLabels = removedLabels.Keys()
+		updateLabelsPayload.RemoveLabels = aws.StringSlice(removedLabels.Keys())
 	}
 
 	if len(updatedLabels) > 0 {
-		updateLabelsPayload.AddOrUpdateLabels = updatedLabels.Map()
+		updateLabelsPayload.AddOrUpdateLabels = aws.StringMap(updatedLabels.Map())
 	}
 
 	return updateLabelsPayload
 }
 
-func flattenAutoScalingGroups(autoScalingGroups []types.AutoScalingGroup) []map[string]interface{} {
+func flattenAutoScalingGroups(autoScalingGroups []*eks.AutoScalingGroup) []map[string]interface{} {
 	if len(autoScalingGroups) == 0 {
 		return []map[string]interface{}{}
 	}
@@ -808,7 +812,7 @@ func flattenAutoScalingGroups(autoScalingGroups []types.AutoScalingGroup) []map[
 
 	for _, autoScalingGroup := range autoScalingGroups {
 		m := map[string]interface{}{
-			"name": aws.ToString(autoScalingGroup.Name),
+			"name": aws.StringValue(autoScalingGroup.Name),
 		}
 
 		l = append(l, m)
@@ -817,7 +821,7 @@ func flattenAutoScalingGroups(autoScalingGroups []types.AutoScalingGroup) []map[
 	return l
 }
 
-func flattenLaunchTemplateSpecification(config *types.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenLaunchTemplateSpecification(config *eks.LaunchTemplateSpecification) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -825,34 +829,34 @@ func flattenLaunchTemplateSpecification(config *types.LaunchTemplateSpecificatio
 	m := map[string]interface{}{}
 
 	if v := config.Id; v != nil {
-		m["id"] = aws.ToString(v)
+		m["id"] = aws.StringValue(v)
 	}
 
 	if v := config.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m["name"] = aws.StringValue(v)
 	}
 
 	if v := config.Version; v != nil {
-		m["version"] = aws.ToString(v)
+		m["version"] = aws.StringValue(v)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenNodeGroupResources(resources *types.NodegroupResources) []map[string]interface{} {
+func flattenNodeGroupResources(resources *eks.NodegroupResources) []map[string]interface{} {
 	if resources == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"autoscaling_groups":              flattenAutoScalingGroups(resources.AutoScalingGroups),
-		"remote_access_security_group_id": aws.ToString(resources.RemoteAccessSecurityGroup),
+		"remote_access_security_group_id": aws.StringValue(resources.RemoteAccessSecurityGroup),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenNodeGroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[string]interface{} {
+func flattenNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -860,21 +864,21 @@ func flattenNodeGroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DesiredSize; v != nil {
-		tfMap["desired_size"] = v
+		tfMap["desired_size"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MaxSize; v != nil {
-		tfMap["max_size"] = v
+		tfMap["max_size"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MinSize; v != nil {
-		tfMap["min_size"] = v
+		tfMap["min_size"] = aws.Int64Value(v)
 	}
 
 	return tfMap
 }
 
-func flattenNodeGroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[string]interface{} {
+func flattenNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -882,30 +886,30 @@ func flattenNodeGroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.MaxUnavailable; v != nil {
-		tfMap["max_unavailable"] = v
+		tfMap["max_unavailable"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MaxUnavailablePercentage; v != nil {
-		tfMap["max_unavailable_percentage"] = v
+		tfMap["max_unavailable_percentage"] = aws.Int64Value(v)
 	}
 
 	return tfMap
 }
 
-func flattenRemoteAccessConfig(config *types.RemoteAccessConfig) []map[string]interface{} {
+func flattenRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"ec2_ssh_key":               config.Ec2SshKey,
-		"source_security_group_ids": config.SourceSecurityGroups,
+		"ec2_ssh_key":               aws.StringValue(config.Ec2SshKey),
+		"source_security_group_ids": aws.StringValueSlice(config.SourceSecurityGroups),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenTaints(taints []types.Taint) []interface{} {
+func flattenTaints(taints []*eks.Taint) []interface{} {
 	if len(taints) == 0 {
 		return nil
 	}
@@ -913,10 +917,14 @@ func flattenTaints(taints []types.Taint) []interface{} {
 	var results []interface{}
 
 	for _, taint := range taints {
+		if taint == nil {
+			continue
+		}
+
 		t := make(map[string]interface{})
-		t["key"] = taint.Key
-		t["value"] = taint.Value
-		t["effect"] = taint.Effect
+		t["key"] = aws.StringValue(taint.Key)
+		t["value"] = aws.StringValue(taint.Value)
+		t["effect"] = aws.StringValue(taint.Effect)
 
 		results = append(results, t)
 	}

@@ -6,7 +6,8 @@ package eks
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,22 +31,27 @@ func DataSourceClusters() *schema.Resource {
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
-	var clusters []string
+	var clusters []*string
 
-	paginator := eks.NewListClustersPaginator(client, &eks.ListClustersInput{})
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing EKS Clusters: %s", err)
+	err := conn.ListClustersPagesWithContext(ctx, &eks.ListClustersInput{}, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		clusters = append(clusters, output.Clusters...)
+		clusters = append(clusters, page.Clusters...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing EKS Clusters: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("names", clusters)
+
+	d.Set("names", aws.StringValueSlice(clusters))
 
 	return diags
 }

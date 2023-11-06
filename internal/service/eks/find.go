@@ -6,22 +6,21 @@ package eks
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindAddonByClusterNameAndAddonName(ctx context.Context, client *eks.Client, clusterName, addonName string) (*types.Addon, error) {
+func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
 	input := &eks.DescribeAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
 	}
 
-	output, err := client.DescribeAddon(ctx, input)
+	output, err := conn.DescribeAddonWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -42,16 +41,16 @@ func FindAddonByClusterNameAndAddonName(ctx context.Context, client *eks.Client,
 	return output.Addon, nil
 }
 
-func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, client *eks.Client, clusterName, addonName, id string) (*types.Update, error) {
+func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		AddonName: aws.String(addonName),
 		Name:      aws.String(clusterName),
 		UpdateId:  aws.String(id),
 	}
 
-	output, err := client.DescribeUpdate(ctx, input)
+	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -72,45 +71,47 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, client *eks
 	return output.Update, nil
 }
 
-func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, client *eks.Client, addonName, kubernetesVersion string, mostRecent bool) (*types.AddonVersionInfo, error) {
+func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *eks.EKS, addonName, kubernetesVersion string, mostRecent bool) (*eks.AddonVersionInfo, error) {
 	input := &eks.DescribeAddonVersionsInput{
 		AddonName:         aws.String(addonName),
 		KubernetesVersion: aws.String(kubernetesVersion),
 	}
-	var version *types.AddonVersionInfo
+	var version *eks.AddonVersionInfo
 
-	paginator := eks.NewDescribeAddonVersionsPaginator(client, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
+	err := conn.DescribeAddonVersionsPagesWithContext(ctx, input, func(page *eks.DescribeAddonVersionsOutput, lastPage bool) bool {
+		if page == nil || len(page.Addons) == 0 {
+			return !lastPage
 		}
 
 		for _, addon := range page.Addons {
 			for i, addonVersion := range addon.AddonVersions {
 				if mostRecent && i == 0 {
-					version = &addonVersion
-					break
+					version = addonVersion
+					return !lastPage
 				}
 				for _, versionCompatibility := range addonVersion.Compatibilities {
-					if bool(versionCompatibility.DefaultVersion) {
-						version = &addonVersion
-						break
+					if aws.BoolValue(versionCompatibility.DefaultVersion) {
+						version = addonVersion
+						return !lastPage
 					}
 				}
 			}
 		}
+		return lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	if version.AddonVersion == nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if version == nil || version.AddonVersion == nil {
 		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
@@ -120,15 +121,15 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, client
 	return version, nil
 }
 
-func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, client *eks.Client, clusterName, fargateProfileName string) (*types.FargateProfile, error) {
+func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
-	output, err := client.DescribeFargateProfile(ctx, input)
+	output, err := conn.DescribeFargateProfileWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -149,15 +150,15 @@ func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, c
 	return output.FargateProfile, nil
 }
 
-func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, client *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {
+func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
 	input := &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	}
 
-	output, err := client.DescribeNodegroup(ctx, input)
+	output, err := conn.DescribeNodegroupWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -178,16 +179,16 @@ func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, client *eks
 	return output.Nodegroup, nil
 }
 
-func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, client *eks.Client, clusterName, nodeGroupName, id string) (*types.Update, error) {
+func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 		UpdateId:      aws.String(id),
 	}
 
-	output, err := client.DescribeUpdate(ctx, input)
+	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -208,18 +209,18 @@ func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, cli
 	return output.Update, nil
 }
 
-func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, client *eks.Client, clusterName, configName string) (*types.OidcIdentityProviderConfig, error) {
+func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, conn *eks.EKS, clusterName, configName string) (*eks.OidcIdentityProviderConfig, error) {
 	input := &eks.DescribeIdentityProviderConfigInput{
 		ClusterName: aws.String(clusterName),
-		IdentityProviderConfig: &types.IdentityProviderConfig{
+		IdentityProviderConfig: &eks.IdentityProviderConfig{
 			Name: aws.String(configName),
 			Type: aws.String(IdentityProviderConfigTypeOIDC),
 		},
 	}
 
-	output, err := client.DescribeIdentityProviderConfig(ctx, input)
+	output, err := conn.DescribeIdentityProviderConfigWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

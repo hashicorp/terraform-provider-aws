@@ -6,6 +6,7 @@ package eks
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -183,13 +184,13 @@ func DataSourceNodeGroup() *schema.Resource {
 }
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, client, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
 		return diag.Errorf("reading EKS Node Group (%s): %s", id, err)
@@ -224,7 +225,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("scaling_config", nil)
 	}
 	d.Set("status", nodeGroup.Status)
-	d.Set("subnet_ids", nodeGroup.Subnets)
+	d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets))
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
 		return diag.Errorf("setting taints: %s", err)
 	}
