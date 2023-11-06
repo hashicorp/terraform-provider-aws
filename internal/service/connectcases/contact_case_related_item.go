@@ -106,7 +106,7 @@ func resourceRelatedItemCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &connectcases.CreateRelatedItemInput{
 		CaseId:   aws.String(d.Get("case_id").(string)),
 		DomainId: aws.String(d.Get("domain_id").(string)),
-		Type:     types.RelatedItemType(*aws.String(d.Get("type").(string))),
+		Type:     types.RelatedItemType(d.Get("type").(string)),
 		//TODO: fix this
 		//	Content: expandContent(d.Get("content").([]interface{})),
 	}

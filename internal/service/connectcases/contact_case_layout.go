@@ -161,7 +161,6 @@ func resourceLayoutCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(output.LayoutId))
-	d.Set("layout_arn", aws.ToString(output.LayoutArn))
 
 	return append(diags, resourceLayoutRead(ctx, d, meta)...)
 }
