@@ -24,6 +24,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		"basic":                         testAccFeatureGroup_basic,
+		"storageType":                   testAccFeatureGroup_storageType,
 		"description":                   testAccFeatureGroup_description,
 		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
@@ -32,6 +33,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
+		"onlineConfig_ttlDuration":      testAccFeatureGroup_onlineConfigTtlDuration,
 		"tags":                          testAccFeatureGroup_tags,
 	}
 
@@ -64,6 +66,37 @@ func testAccFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_storageType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.storage_type", "InMemory"),
 				),
 			},
 			{
@@ -213,6 +246,47 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_onlineConfigTtlDuration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_ttlDuration(rName, "Seconds"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Seconds"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureGroupConfig_ttlDuration(rName, "Minutes"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Minutes"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", "1"),
+				),
 			},
 		},
 	})
@@ -505,6 +579,52 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFeatureGroupConfig_storageType(rName string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name    = %[1]q
+    feature_type    = "String"
+  }
+
+  online_store_config {
+    enable_online_store = true
+    storage_type        = "InMemory"
+  }
+}
+`, rName))
+}
+
+func testAccFeatureGroupConfig_ttlDuration(rName, unit string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+    enable_online_store = true
+
+    ttl_duration {
+      unit  = %[2]q
+	  value = 1
+    }
+  }
+}
+`, rName, unit))
 }
 
 func testAccFeatureGroupConfig_description(rName string) string {
