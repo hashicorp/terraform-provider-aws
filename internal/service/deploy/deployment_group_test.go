@@ -1869,7 +1869,7 @@ func TestDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 		},
 	}
 
-	expected := []*types.TriggerConfig{
+	expected := []types.TriggerConfig{
 		{
 			TriggerEvents: []types.TriggerEventType{
 				types.TriggerEventType("DeploymentFailure"),
@@ -1902,10 +1902,10 @@ func TestDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 	}
 
 	expected := map[string]interface{}{
-		"trigger_events": schema.NewSet(schema.HashString, []interface{}{
+		"trigger_events": []string{
 			"DeploymentFailure",
 			"InstanceFailure",
-		}),
+		},
 		"trigger_name":       "test-trigger-2",
 		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2", // lintignore:AWSAT003,AWSAT005 // unit test
 	}
@@ -1922,9 +1922,9 @@ func TestDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 		fatal = true
 	}
 
-	actualEvents := actual["trigger_events"].(*schema.Set)
-	expectedEvents := expected["trigger_events"].(*schema.Set)
-	if !actualEvents.Equal(expectedEvents) {
+	actualEvents := actual["trigger_events"].([]string)
+	expectedEvents := expected["trigger_events"].([]string)
+	if !reflect.DeepEqual(expectedEvents, actualEvents) {
 		fatal = true
 	}
 
@@ -1973,10 +1973,10 @@ func TestDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 	}
 
 	expected := map[string]interface{}{
-		"events": schema.NewSet(schema.HashString, []interface{}{
+		"events": []string{
 			"DEPLOYMENT_FAILURE",
 			"DEPLOYMENT_STOP_ON_ALARM",
-		}),
+		},
 		"enabled": false,
 	}
 
@@ -1988,9 +1988,9 @@ func TestDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 		fatal = true
 	}
 
-	actualEvents := actual["events"].(*schema.Set)
-	expectedEvents := expected["events"].(*schema.Set)
-	if !actualEvents.Equal(expectedEvents) {
+	actualEvents := actual["events"].([]string)
+	expectedEvents := expected["events"].([]string)
+	if !reflect.DeepEqual(expectedEvents, actualEvents) {
 		fatal = true
 	}
 
@@ -2242,7 +2242,7 @@ func TestDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testing.T) {
 		fatal = true
 	}
 
-	if a["wait_time_in_minutes"].(int64) != 120 {
+	if a["wait_time_in_minutes"].(int32) != 120 {
 		fatal = true
 	}
 
@@ -2256,7 +2256,7 @@ func TestDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testing.T) {
 		fatal = true
 	}
 
-	if c["termination_wait_time_in_minutes"].(int64) != 90 {
+	if c["termination_wait_time_in_minutes"].(int32) != 90 {
 		fatal = true
 	}
 
