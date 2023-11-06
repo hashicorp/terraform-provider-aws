@@ -7,27 +7,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1 codedeploy.DeploymentConfigInfo
+	var config1 types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -51,13 +53,13 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 
 func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2 codedeploy.DeploymentConfigInfo
+	var config1, config2 types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,13 +97,13 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 
 func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2 codedeploy.DeploymentConfigInfo
+	var config1, config2 types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,13 +141,13 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 
 func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2 codedeploy.DeploymentConfigInfo
+	var config1, config2 types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,13 +191,13 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 
 func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2 codedeploy.DeploymentConfigInfo
+	var config1, config2 types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,18 +241,18 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 
 func testAccCheckDeploymentConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codedeploy_deployment_config" {
 				continue
 			}
 
-			resp, err := conn.GetDeploymentConfigWithContext(ctx, &codedeploy.GetDeploymentConfigInput{
+			resp, err := conn.GetDeploymentConfig(ctx, &codedeploy.GetDeploymentConfigInput{
 				DeploymentConfigName: aws.String(rs.Primary.ID),
 			})
 
-			if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
+			if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
 				continue
 			}
 
@@ -267,16 +269,16 @@ func testAccCheckDeploymentConfigDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckDeploymentConfigExists(ctx context.Context, name string, config *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentConfigExists(ctx context.Context, name string, config *types.DeploymentConfigInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
 
-		resp, err := conn.GetDeploymentConfigWithContext(ctx, &codedeploy.GetDeploymentConfigInput{
+		resp, err := conn.GetDeploymentConfig(ctx, &codedeploy.GetDeploymentConfigInput{
 			DeploymentConfigName: aws.String(rs.Primary.ID),
 		})
 
@@ -290,9 +292,9 @@ func testAccCheckDeploymentConfigExists(ctx context.Context, name string, config
 	}
 }
 
-func testAccCheckDeploymentConfigRecreated(i, j *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentConfigRecreated(i, j *types.DeploymentConfigInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
+		if aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
 			return errors.New("CodeDeploy Deployment Config was not recreated")
 		}
 
