@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_eks_addon",
 		},
 		{
-			Factory:  DataSourceAddonVersion,
+			Factory:  dataSourceAddonVersion,
 			TypeName: "aws_eks_addon_version",
 		},
 		{
