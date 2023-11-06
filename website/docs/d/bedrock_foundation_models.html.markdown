@@ -39,6 +39,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - AWS region.
 * `model_summaries` - List of model summary objects. See [`model_summaries`](#model_summaries).
 
 ### `model_summaries`
