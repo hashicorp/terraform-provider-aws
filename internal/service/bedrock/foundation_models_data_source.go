@@ -39,18 +39,6 @@ func (d *dataSourceFoundationModels) Schema(ctx context.Context, req datasource.
 			"model_summaries": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"model_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"model_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"model_name": schema.StringAttribute{
-							Computed: true,
-						},
-						"provider_name": schema.StringAttribute{
-							Computed: true,
-						},
 						"customizations_supported": schema.SetAttribute{
 							ElementType: types.StringType,
 							Computed:    true,
@@ -63,9 +51,21 @@ func (d *dataSourceFoundationModels) Schema(ctx context.Context, req datasource.
 							ElementType: types.StringType,
 							Computed:    true,
 						},
+						"model_arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"model_id": schema.StringAttribute{
+							Computed: true,
+						},
+						"model_name": schema.StringAttribute{
+							Computed: true,
+						},
 						"output_modalities": schema.SetAttribute{
 							ElementType: types.StringType,
 							Computed:    true,
+						},
+						"provider_name": schema.StringAttribute{
+							Computed: true,
 						},
 						"response_streaming_supported": schema.BoolAttribute{
 							Computed: true,
@@ -106,14 +106,14 @@ type foundationModels struct {
 }
 
 type foundationModelSummary struct {
-	ModelID                    types.String `tfsdk:"model_id"`
-	ModelArn                   types.String `tfsdk:"model_arn"`
-	ModelName                  types.String `tfsdk:"model_name"`
-	ProviderName               types.String `tfsdk:"provider_name"`
 	CustomizationsSupported    types.Set    `tfsdk:"customizations_supported"`
 	InferenceTypesSupported    types.Set    `tfsdk:"inference_types_supported"`
 	InputModalities            types.Set    `tfsdk:"input_modalities"`
+	ModelID                    types.String `tfsdk:"model_id"`
+	ModelArn                   types.String `tfsdk:"model_arn"`
+	ModelName                  types.String `tfsdk:"model_name"`
 	OutputModalities           types.Set    `tfsdk:"output_modalities"`
+	ProviderName               types.String `tfsdk:"provider_name"`
 	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
 }
 
