@@ -42,7 +42,7 @@ func TestAccDomain_basic(t *testing.T) {
 
 func TestAccDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_contact_case_domain.test"
+	resourceName := "aws_connectcases_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,7 +86,7 @@ func testAccDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_connectcases_contact_case_domain" {
+			if rs.Type != "aws_connectcases_domain" {
 				continue
 			}
 
@@ -109,7 +109,7 @@ func testAccDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccDomain_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_connectcases_contact_case_domain" "test" {
+resource "aws_connectcases_domain" "test" {
   name = %[1]q
 }
 `, rName)
