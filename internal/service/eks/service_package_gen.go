@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAddon,
+			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
 		},
 		{
