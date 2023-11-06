@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -39,11 +40,11 @@ func ResourceDeploymentConfig() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					codedeploy.ComputePlatformServer,
-					codedeploy.ComputePlatformLambda,
-					codedeploy.ComputePlatformEcs,
+					string(types.ComputePlatformServer),
+					string(types.ComputePlatformLambda),
+					string(types.ComputePlatformEcs),
 				}, false),
-				Default: codedeploy.ComputePlatformServer,
+				Default: types.ComputePlatformServer,
 			},
 
 			"minimum_healthy_hosts": {
@@ -58,8 +59,8 @@ func ResourceDeploymentConfig() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								codedeploy.MinimumHealthyHostsTypeHostCount,
-								codedeploy.MinimumHealthyHostsTypeFleetPercent,
+								string(types.MinimumHealthyHostsTypeHostCount),
+								string(types.MinimumHealthyHostsTypeFleetPercent),
 							}, false),
 						},
 						"value": {
@@ -83,11 +84,11 @@ func ResourceDeploymentConfig() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								codedeploy.TrafficRoutingTypeAllAtOnce,
-								codedeploy.TrafficRoutingTypeTimeBasedCanary,
-								codedeploy.TrafficRoutingTypeTimeBasedLinear,
+								string(types.TrafficRoutingTypeAllAtOnce),
+								string(types.TrafficRoutingTypeTimeBasedCanary),
+								string(types.TrafficRoutingTypeTimeBasedLinear),
 							}, false),
-							Default: codedeploy.TrafficRoutingTypeAllAtOnce,
+							Default: string(types.TrafficRoutingTypeAllAtOnce),
 						},
 
 						"time_based_canary": {
@@ -147,16 +148,16 @@ func ResourceDeploymentConfig() *schema.Resource {
 
 func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
-		ComputePlatform:      aws.String(d.Get("compute_platform").(string)),
+		ComputePlatform:      types.ComputePlatform(d.Get("compute_platform").(string)),
 		MinimumHealthyHosts:  expandMinimumHealthHostsConfig(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
-	_, err := conn.CreateDeploymentConfigWithContext(ctx, input)
+	_, err := conn.CreateDeploymentConfig(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", d.Get("deployment_config_name").(string), err)
 	}
@@ -168,15 +169,15 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetDeploymentConfigWithContext(ctx, input)
+	resp, err := conn.GetDeploymentConfig(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
+	if !d.IsNewResource() && errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -207,43 +208,43 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteDeploymentConfigWithContext(ctx, input); err != nil {
+	if _, err := conn.DeleteDeploymentConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 	return diags
 }
 
-func expandMinimumHealthHostsConfig(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {
+func expandMinimumHealthHostsConfig(d *schema.ResourceData) *types.MinimumHealthyHosts {
 	hosts, ok := d.GetOk("minimum_healthy_hosts")
 	if !ok {
 		return nil
 	}
 	host := hosts.([]interface{})[0].(map[string]interface{})
 
-	minimumHealthyHost := codedeploy.MinimumHealthyHosts{
-		Type:  aws.String(host["type"].(string)),
-		Value: aws.Int64(int64(host["value"].(int))),
+	minimumHealthyHost := types.MinimumHealthyHosts{
+		Type:  types.MinimumHealthyHostsType(host["type"].(string)),
+		Value: int32(host["value"].(int)),
 	}
 
 	return &minimumHealthyHost
 }
 
-func expandTrafficRoutingConfig(d *schema.ResourceData) *codedeploy.TrafficRoutingConfig {
+func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingConfig {
 	block, ok := d.GetOk("traffic_routing_config")
 	if !ok {
 		return nil
 	}
 	config := block.([]interface{})[0].(map[string]interface{})
-	trafficRoutingConfig := codedeploy.TrafficRoutingConfig{}
+	trafficRoutingConfig := types.TrafficRoutingConfig{}
 
 	if trafficType, ok := config["type"]; ok {
-		trafficRoutingConfig.Type = aws.String(trafficType.(string))
+		trafficRoutingConfig.Type = types.TrafficRoutingType(trafficType.(string))
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
 		canaryConfig := canary.([]interface{})[0].(map[string]interface{})
@@ -257,29 +258,29 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *codedeploy.TrafficRouti
 	return &trafficRoutingConfig
 }
 
-func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *codedeploy.TimeBasedCanary {
-	canary := codedeploy.TimeBasedCanary{}
+func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *types.TimeBasedCanary {
+	canary := types.TimeBasedCanary{}
 	if interval, ok := config["interval"]; ok {
-		canary.CanaryInterval = aws.Int64(int64(interval.(int)))
+		canary.CanaryInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
-		canary.CanaryPercentage = aws.Int64(int64(percentage.(int)))
+		canary.CanaryPercentage = int32(percentage.(int))
 	}
 	return &canary
 }
 
-func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *codedeploy.TimeBasedLinear {
-	linear := codedeploy.TimeBasedLinear{}
+func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *types.TimeBasedLinear {
+	linear := types.TimeBasedLinear{}
 	if interval, ok := config["interval"]; ok {
-		linear.LinearInterval = aws.Int64(int64(interval.(int)))
+		linear.LinearInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
-		linear.LinearPercentage = aws.Int64(int64(percentage.(int)))
+		linear.LinearPercentage = int32(percentage.(int))
 	}
 	return &linear
 }
 
-func flattenMinimumHealthHostsConfig(hosts *codedeploy.MinimumHealthyHosts) []map[string]interface{} {
+func flattenMinimumHealthHostsConfig(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if hosts == nil {
 		return result
@@ -287,13 +288,13 @@ func flattenMinimumHealthHostsConfig(hosts *codedeploy.MinimumHealthyHosts) []ma
 
 	item := make(map[string]interface{})
 
-	item["type"] = aws.StringValue(hosts.Type)
-	item["value"] = aws.Int64Value(hosts.Value)
+	item["type"] = string(hosts.Type)
+	item["value"] = int32(hosts.Value)
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[string]interface{} {
+func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if config == nil {
 		return result
@@ -301,35 +302,35 @@ func flattenTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[
 
 	item := make(map[string]interface{})
 
-	item["type"] = aws.StringValue(config.Type)
+	item["type"] = string(config.Type)
 	item["time_based_canary"] = flattenTrafficRoutingCanaryConfig(config.TimeBasedCanary)
 	item["time_based_linear"] = flattenTrafficRoutingLinearConfig(config.TimeBasedLinear)
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingCanaryConfig(canary *codedeploy.TimeBasedCanary) []map[string]interface{} {
+func flattenTrafficRoutingCanaryConfig(canary *types.TimeBasedCanary) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if canary == nil {
 		return result
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = aws.Int64Value(canary.CanaryInterval)
-	item["percentage"] = aws.Int64Value(canary.CanaryPercentage)
+	item["interval"] = int32(canary.CanaryInterval)
+	item["percentage"] = int32(canary.CanaryPercentage)
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingLinearConfig(linear *codedeploy.TimeBasedLinear) []map[string]interface{} {
+func flattenTrafficRoutingLinearConfig(linear *types.TimeBasedLinear) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if linear == nil {
 		return result
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = aws.Int64Value(linear.LinearInterval)
-	item["percentage"] = aws.Int64Value(linear.LinearPercentage)
+	item["interval"] = int32(linear.LinearInterval)
+	item["percentage"] = int32(linear.LinearPercentage)
 
 	return append(result, item)
 }
