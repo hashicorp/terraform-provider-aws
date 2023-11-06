@@ -78,6 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.22.0
 	github.com/beevik/etree v1.2.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
@@ -144,7 +145,6 @@ require (
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
