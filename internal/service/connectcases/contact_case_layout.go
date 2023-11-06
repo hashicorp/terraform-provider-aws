@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_connectcases_contact_case_layout", name="Connect Cases Contact Case Layout")
@@ -39,6 +38,7 @@ func ResourceContactCaseLayout() *schema.Resource {
 			"domain_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"content": {
 				Type:     schema.TypeList,
@@ -70,9 +70,8 @@ func ResourceContactCaseLayout() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"id": {
-																			Type:     schema.TypeList,
+																			Type:     schema.TypeString,
 																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																	},
 																},
@@ -113,15 +112,18 @@ func ResourceContactCaseLayout() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"id": {
-																			Type:     schema.TypeList,
+																			Type:     schema.TypeString,
 																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																	},
 																},
 															},
 														},
 													},
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
 												},
 											},
 										},
@@ -133,19 +135,19 @@ func ResourceContactCaseLayout() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceContactCaseLayoutCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 	log.Print("[DEBUG] Creating Connect Case Layout")
 
 	name := d.Get("name").(string)
 
 	params := &connectcases.CreateLayoutInput{
-		Content:  expandContactCaseLayoutContent(d.Get("content").([]interface{})[0].(map[string]interface{})),
+		Content:  expandContactCaseLayoutContent(d.Get("content").([]interface{})),
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Name:     aws.String(name),
 	}
@@ -183,35 +185,42 @@ func resourceContactCaseLayoutRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandContactCaseLayoutContent(tfMap map[string]interface{}) *types.LayoutContentMemberBasic {
-	if tfMap == nil {
+func expandContactCaseLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
+	if tfMap == nil || tfMap[0] == nil {
+		return nil
+	}
+
+	tfList, ok := tfMap[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	apiObject := &types.LayoutContentMemberBasic{}
-
-	apiObject.Value.TopPanel.Sections = expandLayoutContentSections(tfMap["top_panel"].([]interface{}))
-	apiObject.Value.MoreInfo.Sections = expandLayoutContentSections(tfMap["more_info"].([]interface{}))
+	apiObject.Value.MoreInfo = expandLayoutContentSections(tfList["more_info"].([]interface{}))
+	apiObject.Value.TopPanel = expandLayoutContentSections(tfList["top_panel"].([]interface{}))
 
 	return apiObject
 }
 
-func expandLayoutContentSections(tfList []interface{}) []types.Section {
-	if len(tfList) == 0 && tfList[0] == nil {
+func expandLayoutContentSections(tfList []interface{}) *types.LayoutSections {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObject := []types.Section{}
+	apiObject := &types.LayoutSections{}
+	apiArray := make([]types.Section, 0, len(tfList))
 
 	for i := 0; i < len(tfList); i++ {
-		apiObject = append(apiObject, expandSectionFieldGroup(tfList[i].([]interface{})))
+		apiArray = append(apiArray, expandSectionFieldGroup(tfList[i].(map[string]interface{})["sections"].([]interface{})))
 	}
+
+	apiObject.Sections = apiArray
 
 	return apiObject
 }
 
 func expandSectionFieldGroup(tfList []interface{}) *types.SectionMemberFieldGroup {
-	if len(tfList) == 0 && tfList[0] == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -226,7 +235,7 @@ func expandSectionFieldGroup(tfList []interface{}) *types.SectionMemberFieldGrou
 		apiObject.Value.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["fields"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_group"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Value.Fields = expandFieldGroupFields(v)
 	}
 
@@ -234,21 +243,25 @@ func expandSectionFieldGroup(tfList []interface{}) *types.SectionMemberFieldGrou
 }
 
 func expandFieldGroupFields(tfList []interface{}) []types.FieldItem {
-	if len(tfList) == 0 && tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObject := []types.FieldItem{}
+	apiResult := make([]types.FieldItem, 0, len(tfList))
 
 	for i := 0; i < len(tfList); i++ {
-		object := tfList[i].(map[string]interface{})
+		field, ok := tfList[i].(map[string]interface{})["fields"].([]interface{})
+		if !ok {
+			return nil
+		}
 
-		if v, ok := object["id"].(string); ok && len(v) > 0 {
-			apiObject = append(apiObject, types.FieldItem{
-				Id: aws.String(v),
-			})
+		if v, ok := field[0].(map[string]interface{}); ok && len(v) > 0 {
+			apiObject := types.FieldItem{
+				Id: aws.String(v["id"].(string)),
+			}
+			apiResult = append(apiResult, apiObject)
 		}
 	}
 
-	return apiObject
+	return apiResult
 }

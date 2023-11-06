@@ -110,30 +110,35 @@ func testAccContactCaseLayoutDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccContactCaseLayout_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_connectcases_contact_case_layout" "test" {
+resource "aws_connectcases_contact_case_domain" "test" {
   name = %[1]q
+}
+
+resource "aws_connectcases_contact_case_layout" "test" {
+  name      = %[1]q
+  domain_id = aws_connectcases_contact_case_domain.test.domain_id
 
   content {
-	more_info {
-		sections {
-			name = "more_info_example"
-			field_group {
-				fields {
-					id = "more_info_example"
-				}
-			}
-		}
-	}
-	top_panel {
-		sections {
-			name = "more_info_example"
-			field_group {
-				fields {
-					id = "more_info_example"
-				}
-			}
-		}
-	}
+    more_info {
+      sections {
+        name = "more_info_example"
+        field_group {
+          fields {
+            id = "" //Insert field resource ID
+          }
+        }
+      }
+    }
+    top_panel {
+      sections {
+        name = "top_panel_example"
+        field_group {
+          fields {
+            id = "" //Insert field resource ID
+          }
+        }
+      }
+    }
   }
 }
 `, rName)
