@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -30,29 +29,37 @@ func sweepApps(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.DeployConn(ctx)
+	conn := client.DeployClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &codedeploy.ListApplicationsInput{}
 
-	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *codedeploy.ListApplicationsOutput, lastPage bool) bool {
-		for _, app := range page.Applications {
-			if app == nil {
+	paginator := codedeploy.NewListApplicationsPaginator(conn, input, func(o *codedeploy.ListApplicationsPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		for _, app := range output.Applications {
+			if app == "" {
 				continue
 			}
 
-			appName := aws.StringValue(app)
 			r := ResourceApp()
 			d := r.Data(nil)
-			d.SetId(fmt.Sprintf("%s:%s", "xxxx", appName))
-			d.Set("name", appName)
+			d.SetId(fmt.Sprintf("%s:%s", "xxxx", app))
+			d.Set("name", app)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !lastPage
-	})
+	}
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error describing CodeDeploy Applications for %s: %w", region, err))
