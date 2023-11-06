@@ -139,7 +139,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 									"action_on_timeout": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(flattenDeploymentReadyActionValues(types.DeploymentReadyAction("").Values()), false),
+										ValidateFunc: validation.StringInSlice(flattenReadyActionValues(types.DeploymentReadyAction("").Values()), false),
 									},
 									"wait_time_in_minutes": {
 										Type:     schema.TypeInt,
@@ -215,13 +215,13 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      string(types.DeploymentOptionWithoutTrafficControl),
-							ValidateFunc: validation.StringInSlice(flattenDeploymentOptionValues(types.DeploymentOption("").Values()), false),
+							ValidateFunc: validation.StringInSlice(flattenOptionValues(types.DeploymentOption("").Values()), false),
 						},
 						"deployment_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      string(types.DeploymentTypeInPlace),
-							ValidateFunc: validation.StringInSlice(flattenDeploymentTypeValues(types.DeploymentType("").Values()), false),
+							ValidateFunc: validation.StringInSlice(flattenTypeValues(types.DeploymentType("").Values()), false),
 						},
 					},
 				},
@@ -1478,7 +1478,7 @@ func LoadBalancerInfoHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenDeploymentReadyActionValues(t []types.DeploymentReadyAction) []string {
+func flattenReadyActionValues(t []types.DeploymentReadyAction) []string {
 	var out []string
 
 	for _, v := range t {
@@ -1508,7 +1508,7 @@ func flattenInstanceActionValues(t []types.InstanceAction) []string {
 	return out
 }
 
-func flattenDeploymentOptionValues(t []types.DeploymentOption) []string {
+func flattenOptionValues(t []types.DeploymentOption) []string {
 	var out []string
 
 	for _, v := range t {
@@ -1518,7 +1518,7 @@ func flattenDeploymentOptionValues(t []types.DeploymentOption) []string {
 	return out
 }
 
-func flattenDeploymentTypeValues(t []types.DeploymentType) []string {
+func flattenTypeValues(t []types.DeploymentType) []string {
 	var out []string
 
 	for _, v := range t {
