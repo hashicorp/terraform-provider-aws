@@ -33,7 +33,8 @@ const (
 	// A constant for the supported CloudwatchLogsExports types
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
-	cloudWatchLogsExportsAudit = "audit"
+	cloudWatchLogsExportsAudit     = "audit"
+	cloudWatchLogsExportsSlowQuery = "slowquery"
 
 	DefaultPort = 8182
 
@@ -129,6 +130,7 @@ func ResourceCluster() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						cloudWatchLogsExportsAudit,
+						cloudWatchLogsExportsSlowQuery,
 					}, false),
 				},
 			},

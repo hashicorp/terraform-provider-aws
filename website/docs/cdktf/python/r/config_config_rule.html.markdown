@@ -167,11 +167,16 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `description` - (Optional) Description of the rule
+* `evaluation_mode` - (Optional) The modes the Config rule can be evaluated in. See [Evaluation Mode](#evaluation-mode) for more details.
 * `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config rule Lambda function.
 * `maximum_execution_frequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Source](#source) Below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Scope](#scope) Below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Evaluation Mode
+
+* `mode` - (Optional) The mode of an evaluation.
 
 ### Scope
 
@@ -235,4 +240,4 @@ Using `terraform import`, import Config Rule using the name. For example:
 % terraform import aws_config_config_rule.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-67891d6f2a5050d89969a205d8420e4df1348f0f2a81207255915f0868dde416 -->
+<!-- cache-key: cdktf-0.18.0 input-ddaef59fa5f30160f091633e8659aa1541092b84b1622013d4f61c51640fbed0 -->

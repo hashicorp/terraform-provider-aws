@@ -141,30 +141,37 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 						},
 						"heartbeat_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"lifecycle_transition": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"notification_metadata": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"notification_target_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"role_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -253,6 +260,7 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -309,6 +317,7 @@ func ResourceGroup() *schema.Resource {
 			"mixed_instances_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -396,6 +405,7 @@ func ResourceGroup() *schema.Resource {
 									"override": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_requirements": {
@@ -865,13 +875,60 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("launch_template.0.name")
-			}),
-			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("launch_template.0.id")
-			}),
+			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.override"),
 		),
+	}
+}
+
+func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if diff.HasChange(subAttribute) {
+			n := diff.Get(baseAttribute)
+			ba, ok := n.([]interface{})
+			if !ok {
+				return nil
+			}
+
+			if baseAttribute == "launch_template" {
+				launchTemplate := ba[0].(map[string]interface{})
+				launchTemplate["id"] = launchTemplateIDUnknown
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+
+			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
+				launchTemplateSpecification := launchTemplate.(map[string]interface{})
+				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+
+			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+
+				for i := range launchTemplate {
+					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
+
+					if diff.HasChange(key) {
+						launchTemplateSpecification := launchTemplate[i].(map[string]interface{})["launch_template_specification"].([]interface{})[0].(map[string]interface{})
+						launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+					}
+				}
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
 	}
 }
 
@@ -3035,7 +3092,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	// API returns both ID and name, which Terraform saves to state. Next update returns:
 	// ValidationError: Valid requests must contain either launchTemplateId or LaunchTemplateName
 	// Prefer the ID if we have both.
-	if v, ok := tfMap["launch_template_id"]; ok && v != "" {
+	if v, ok := tfMap["launch_template_id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["launch_template_name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
@@ -3057,7 +3114,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 
 	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap["id"]; ok && v != "" {
+	if v, ok := tfMap["id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))

@@ -226,10 +226,10 @@ This argument supports the following arguments:
 * `deltaTarget` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodbTarget` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
 * `jdbcTarget` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
-* `s3Target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
-* `mongodbTarget` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
-* `hudiTarget` (Optional) List nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
-* `icebergTarget` (Optional) List nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
+* `s3Target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
+* `mongodbTarget` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `hudiTarget` (Optional) List of nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
+* `icebergTarget` (Optional) List of nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schemaChangePolicy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
 * `lakeFormationConfiguration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
@@ -348,4 +348,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0fe79636a772df56c0c70d645742fc1288237ce3dba667ec68c68bad3a10b2a6 -->
+<!-- cache-key: cdktf-0.18.0 input-aa6aaa4c28c3da2b4a760961f15f17a04ceb8fb380ac8fce49211f1c27ef79ba -->

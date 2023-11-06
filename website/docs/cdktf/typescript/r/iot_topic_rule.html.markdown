@@ -196,7 +196,10 @@ The `iotEvents` object takes the following arguments:
 The `kafka` object takes the following arguments:
 
 * `clientProperties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destinationArn` - (Required) The ARN of Kafka action's VPC [`awsIotTopicRuleDestination`](iot_topic_rule_destination.html) .
+* `destinationArn` - (Required) The ARN of Kafka action's VPC [`awsIotTopicRuleDestination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
@@ -284,4 +287,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4cb4989a57838eace08bc0e308834fdac933e38cc0625a3b13f328889b9cc2ff -->
+<!-- cache-key: cdktf-0.18.0 input-0a44794d64de9f42c129b62a7a3b74ae18a4fc39b0e3587d1eb7e365023e470b -->
