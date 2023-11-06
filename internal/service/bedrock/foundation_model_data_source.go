@@ -30,24 +30,12 @@ func (d *dataSourceFoundationModel) Metadata(_ context.Context, request datasour
 func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_id": schema.StringAttribute{
-				Required: true,
-			},
-			"model_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_name": schema.StringAttribute{
-				Computed: true,
-			},
-			"provider_name": schema.StringAttribute{
-				Computed: true,
-			},
 			"customizations_supported": schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
+			},
+			"id": schema.StringAttribute{
+				Computed: true,
 			},
 			"inference_types_supported": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -57,9 +45,21 @@ func (d *dataSourceFoundationModel) Schema(ctx context.Context, req datasource.S
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			"model_arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"model_id": schema.StringAttribute{
+				Required: true,
+			},
+			"model_name": schema.StringAttribute{
+				Computed: true,
+			},
 			"output_modalities": schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
+			},
+			"provider_name": schema.StringAttribute{
+				Computed: true,
 			},
 			"response_streaming_supported": schema.BoolAttribute{
 				Computed: true,
@@ -93,15 +93,15 @@ func (d *dataSourceFoundationModel) Read(ctx context.Context, request datasource
 }
 
 type foundationModel struct {
-	ID                         types.String `tfsdk:"id"`
-	ModelID                    types.String `tfsdk:"model_id"`
-	ModelArn                   types.String `tfsdk:"model_arn"`
-	ModelName                  types.String `tfsdk:"model_name"`
-	ProviderName               types.String `tfsdk:"provider_name"`
 	CustomizationsSupported    types.Set    `tfsdk:"customizations_supported"`
+	ID                         types.String `tfsdk:"id"`
 	InferenceTypesSupported    types.Set    `tfsdk:"inference_types_supported"`
 	InputModalities            types.Set    `tfsdk:"input_modalities"`
+	ModelArn                   types.String `tfsdk:"model_arn"`
+	ModelID                    types.String `tfsdk:"model_id"`
+	ModelName                  types.String `tfsdk:"model_name"`
 	OutputModalities           types.Set    `tfsdk:"output_modalities"`
+	ProviderName               types.String `tfsdk:"provider_name"`
 	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
 }
 
