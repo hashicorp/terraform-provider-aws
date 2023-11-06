@@ -406,7 +406,7 @@ func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 				),
 			},
 			{
@@ -1057,13 +1057,13 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_subnet" "new" {
-  count = 3
+  count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
+  cidr_block        = "10.0.${count.index + 2}.0/24"
   vpc_id            = aws_vpc.test.id
 
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index + 2)
   assign_ipv6_address_on_creation = true
 
   tags = {
