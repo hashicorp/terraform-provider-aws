@@ -6,10 +6,15 @@ package bedrock
 import (
 	"context"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -31,6 +36,21 @@ func (d *dataSourceFoundationModels) Metadata(_ context.Context, request datasou
 func (d *dataSourceFoundationModels) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"by_customization_type": schema.StringAttribute{
+				Optional: true,
+			},
+			"by_inference_type": schema.StringAttribute{
+				Optional: true,
+			},
+			"by_output_modality": schema.StringAttribute{
+				Optional: true,
+			},
+			"by_provider": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9-]{1,63}$`), ""),
+				},
+			},
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -78,17 +98,29 @@ func (d *dataSourceFoundationModels) Schema(ctx context.Context, req datasource.
 }
 
 func (d *dataSourceFoundationModels) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	conn := d.Meta().BedrockClient(ctx)
+
 	var data foundationModels
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := d.Meta().BedrockClient(ctx)
+	input := &bedrock.ListFoundationModelsInput{}
+	if !data.ByCustomizationType.IsNull() {
+		input.ByCustomizationType = awstypes.ModelCustomization(data.ByCustomizationType.ValueString())
+	}
+	if !data.ByInferenceType.IsNull() {
+		input.ByInferenceType = awstypes.InferenceType(data.ByInferenceType.ValueString())
+	}
+	if !data.ByOutputModality.IsNull() {
+		input.ByOutputModality = awstypes.ModelModality(data.ByOutputModality.ValueString())
+	}
+	if !data.ByProvider.IsNull() {
+		input.ByProvider = aws.String(data.ByProvider.ValueString())
+	}
 
-	models, err := conn.ListFoundationModels(ctx, nil)
+	models, err := conn.ListFoundationModels(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError("reading Bedrock Foundation Models", err.Error())
 		return
@@ -101,8 +133,12 @@ func (d *dataSourceFoundationModels) Read(ctx context.Context, request datasourc
 }
 
 type foundationModels struct {
-	ID             types.String `tfsdk:"id"`
-	ModelSummaries types.List   `tfsdk:"model_summaries"`
+	ByCustomizationType types.String `tfsdk:"by_customization_type"`
+	ByInferenceType     types.String `tfsdk:"by_inference_type"`
+	ByOutputModality    types.String `tfsdk:"by_output_modality"`
+	ByProvider          types.String `tfsdk:"by_provider"`
+	ID                  types.String `tfsdk:"id"`
+	ModelSummaries      types.List   `tfsdk:"model_summaries"`
 }
 
 type foundationModelSummary struct {
