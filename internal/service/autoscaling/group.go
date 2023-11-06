@@ -141,14 +141,17 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 						},
 						"heartbeat_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"lifecycle_transition": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -158,14 +161,17 @@ func ResourceGroup() *schema.Resource {
 						"notification_metadata": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"notification_target_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"role_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
