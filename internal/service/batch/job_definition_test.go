@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -538,7 +537,7 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_createTypeContainerWithNodeProperties(t *testing.T) {
+func TestAccBatchJobDefinition_NodeProperties_createTypeContainerErr(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -608,7 +607,7 @@ func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			re := regexp.MustCompile(`job-definition/(.*?):`)
+			re := regexache.MustCompile(`job-definition/(.*?):`)
 			name := re.FindStringSubmatch(rs.Primary.ID)[1]
 
 			jds, err := tfbatch.ListActiveJobDefinitionByName(ctx, conn, name)
@@ -714,7 +713,6 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
-
 }
 `, rName)
 }
@@ -742,7 +740,7 @@ resource "aws_batch_job_definition" "test" {
 
   scheduling_priority = %[2]d
   propagate_tags      = %[3]t
-  
+
   container_properties = jsonencode({
     command = ["echo", "test"]
     image   = "busybox"
@@ -751,11 +749,11 @@ resource "aws_batch_job_definition" "test" {
   })
 
   retry_strategy {
-	attempts = %[4]d
+    attempts = %[4]d
   }
 
   timeout {
-	attempt_duration_seconds = %[5]d
+    attempt_duration_seconds = %[5]d
   }
 
   platform_capabilities = [
@@ -964,78 +962,6 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_NodeProperties_advanced(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "multinode"
-  parameters = {
-    param1 = "val1"
-    param2 = "val2"
-  }
-  timeout {
-    attempt_duration_seconds = 60
-  }
-
-  node_properties = jsonencode({
-    mainNode = 1
-    nodeRangeProperties = [
-      {
-        container = {
-          "command" : ["ls", "-la"],
-          "image" : "busybox",
-          "memory" : 512,
-          "vcpus" : 1,
-          "volumes" : [
-            {
-              "host" : {
-                "sourcePath" : "/tmp"
-              },
-              "name" : "tmp"
-            }
-          ],
-          "environment" : [
-            { "name" : "VARNAME", "value" : "VARVAL" }
-          ],
-          "mountPoints" : [
-            {
-              "sourceVolume" : "tmp",
-              "containerPath" : "/tmp",
-              "readOnly" : false
-            }
-          ],
-          "ulimits" : [
-            {
-              "hardLimit" : 1024,
-              "name" : "nofile",
-              "softLimit" : 1024
-            }
-          ]
-        }
-        targetNodes = "0:"
-      },
-      {
-        container = {
-          command              = ["echo", "test"]
-          environment          = []
-          image                = "busybox"
-          memory               = 128
-          mountPoints          = []
-          resourceRequirements = []
-          secrets              = []
-          ulimits              = []
-          vcpus                = 1
-          volumes              = []
-        }
-        targetNodes = "1:"
-      }
-    ]
-    numNodes = 4
-  })
-}
-`, rName)
-}
-
 func testAccJobDefinitionConfig_NodeProperties_advancedUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
@@ -1145,7 +1071,6 @@ resource "aws_batch_job_definition" "test" {
     memory  = 128
     vcpus   = 1
   })
-
 }
 `, rName)
 }

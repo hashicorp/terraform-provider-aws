@@ -479,7 +479,6 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
-
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
@@ -519,7 +518,6 @@ func findJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.Desc
 }
 
 func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Batch, name string) ([]*batch.JobDefinition, error) {
-
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitionName: aws.String(name),
 		Status:            aws.String(jobDefinitionStatusActive),

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Resource no longer recreates, but updates `revision` with any changes. Included new parameters `scheduling_priority` & `arn_prefix`.
+```
+
+```release-note:note
+resource/aws_batch_job_definition: Job Definition Delete action now `deregisters` all jobs matching the job name.
+```
