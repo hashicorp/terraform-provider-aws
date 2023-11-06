@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connectcases
 
 import (
@@ -181,6 +184,7 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("name", output.Name)
+	d.Set("layout_arn", output.LayoutArn)
 
 	return diags
 }
