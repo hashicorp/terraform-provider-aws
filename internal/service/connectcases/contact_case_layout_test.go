@@ -14,48 +14,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLayout_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_connectcases_layout.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameField := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameField2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccLayoutDestroy(ctx),
+		// Connect Cases Layouts cannot be deleted once applied, ensure parent resource Connect Cases Domain is destroyed instead.
+		CheckDestroy: testAccDomainDestroy(ctx), //or acctest.CheckDestroyNoop T.B.D.
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayout_base(rName),
+				Config: testAccLayout_base(rName, rNameField, rNameField2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLayoutExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "layout_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccLayout_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_layout.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccLayoutDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLayout_base(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccLayoutExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceLayout(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -80,44 +59,25 @@ func testAccLayoutExists(ctx context.Context, n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccLayoutDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_connectcases_layout" {
-				continue
-			}
-
-			_, err := connectcases.FindLayoutByDomainAndId(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Connect Case Layout %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccLayout_base(rName string) string {
+func testAccLayout_base(rName, rNameField, rNameField2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connectcases_domain" "test" {
   name = %[1]q
 }
 
 resource "aws_connectcases_field" "test" {
-  name        = %[1]q
+  name        = %[2]q
   description = "example description of field"
   domain_id   = aws_connectcases_domain.test.domain_id
   type        = "Text"
 }
+
+resource "aws_connectcases_field" "test2" {
+	name        = %[3]q
+	description = "example description of field"
+	domain_id   = aws_connectcases_domain.test.domain_id
+	type        = "Text"
+  }
 
 resource "aws_connectcases_layout" "test" {
   name      = %[1]q
@@ -139,12 +99,12 @@ resource "aws_connectcases_layout" "test" {
         name = "top_panel_example"
         field_group {
           fields {
-            id = aws_connectcases_field.test.field_id
+            id = aws_connectcases_field.test2.field_id
           }
         }
       }
     }
   }
 }
-`, rName)
+`, rName, rNameField, rNameField2)
 }

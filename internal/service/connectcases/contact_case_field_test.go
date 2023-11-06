@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccField_basic(t *testing.T) {
@@ -25,7 +24,8 @@ func TestAccField_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccFieldDestroy(ctx),
+		// Connect Cases Fields cannot be deleted once applied, ensure parent resource Connect Cases Domain is destroyed instead.
+		CheckDestroy: testAccDomainDestroy(ctx), //or acctest.CheckDestroyNoop T.B.D.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccField_base(rName),
@@ -36,28 +36,6 @@ func TestAccField_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "field_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "field_id"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccField_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_connectcases_field.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccFieldDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccField_base(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccFieldExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, connectcases.ResourceField(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -79,32 +57,6 @@ func testAccFieldExists(ctx context.Context, n string) resource.TestCheckFunc {
 		_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
 
 		return err
-	}
-}
-
-func testAccFieldDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectCasesClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_connectcases_field" {
-				continue
-			}
-
-			_, err := connectcases.FindFieldByDomainAndID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Connect Cases Field %s still exists", rs.Primary.ID)
-		}
-
-		return nil
 	}
 }
 
