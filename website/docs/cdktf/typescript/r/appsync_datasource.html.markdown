@@ -126,7 +126,7 @@ This resource supports the following arguments:
 * `lambdaConfig` - (Optional) AWS Lambda settings. See [Lambda Config](#lambda-config)
 * `opensearchserviceConfig` - (Optional) Amazon OpenSearch Service settings. See [OpenSearch Service Config](#opensearch-service-config)
 * `relationalDatabaseConfig` (Optional) AWS RDS settings. See [Relational Database Config](#relational-database-config)
-* `serviceRoleArn` - (Optional) IAM service role ARN for the data source.
+* `serviceRoleArn` - (Optional) IAM service role ARN for the data source. Required if `type` is specified as `awsLambda`, `amazonDynamodb`, `amazonElasticsearch`, `amazonEventbridge`, or `amazonOpensearchService`.
 
 ### DynamoDB Config
 
@@ -236,4 +236,4 @@ Using `terraform import`, import `awsAppsyncDatasource` using the `apiId`, a hyp
 % terraform import aws_appsync_datasource.example abcdef123456-example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65f545420c1890e5f6affd2d36656c47c2a7c4b889f24fd05541970389549ddb -->
+<!-- cache-key: cdktf-0.18.0 input-a9f04a5458c9f7419be950e393980c31263681e22e413dc9419e676476b092d0 -->

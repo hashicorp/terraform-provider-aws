@@ -598,7 +598,7 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 
 	a := &types.NetworkACLEntry{}
 	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
-		a.RuleNumber = int32(v)
+		a.RuleNumber = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		a.Protocol = &v
