@@ -26,7 +26,7 @@ data "aws_bedrock_foundation_model" "test" {
 
 The following argument are required:
 
-* `model_id` – (Required) Model identifier. 
+* `model_id` – (Required) Model identifier.
 
 ## Attribute Reference
 
