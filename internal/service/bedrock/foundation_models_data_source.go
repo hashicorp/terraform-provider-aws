@@ -6,7 +6,7 @@ package bedrock
 import (
 	"context"
 
-	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -122,7 +122,7 @@ type foundationModelSummary struct {
 	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
 }
 
-func flattenFoundationModelSummaries(ctx context.Context, models []bedrock_types.FoundationModelSummary) types.List {
+func flattenFoundationModelSummaries(ctx context.Context, models []awstypes.FoundationModelSummary) types.List {
 	attributeTypes := flex.AttributeTypesMust[foundationModelSummary](ctx)
 
 	// HACK: Reflection used above to build the attributeTypes cannot determine the ElemType
