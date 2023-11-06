@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -551,13 +550,11 @@ func findTrailByARN(ctx context.Context, conn *cloudtrail.CloudTrail, arn string
 		TrailNameList: aws.StringSlice([]string{arn}),
 	}
 
-	return findTrail(ctx, conn, input, func(v *cloudtrail.Trail) bool {
-		return aws.StringValue(v.TrailARN) == arn
-	})
+	return findTrail(ctx, conn, input)
 }
 
-func findTrail(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput, filter tfslices.Predicate[*cloudtrail.Trail]) (*cloudtrail.Trail, error) {
-	output, err := findTrails(ctx, conn, input, filter)
+func findTrail(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput) (*cloudtrail.Trail, error) {
+	output, err := findTrails(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -566,9 +563,7 @@ func findTrail(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtra
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findTrails(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput, filter tfslices.Predicate[*cloudtrail.Trail]) ([]*cloudtrail.Trail, error) {
-	var trails []*cloudtrail.Trail
-
+func findTrails(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtrail.DescribeTrailsInput) ([]*cloudtrail.Trail, error) {
 	output, err := conn.DescribeTrailsWithContext(ctx, input)
 
 	if err != nil {
@@ -579,13 +574,7 @@ func findTrails(ctx context.Context, conn *cloudtrail.CloudTrail, input *cloudtr
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	for _, v := range output.TrailList {
-		if v != nil && filter(v) {
-			trails = append(trails, v)
-		}
-	}
-
-	return trails, nil
+	return output.TrailList, nil
 }
 
 func setLogging(ctx context.Context, conn *cloudtrail.CloudTrail, name string, enabled bool) error {
@@ -616,7 +605,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.CloudTrail, d *sche
 	}
 
 	eventSelectors := expandEventSelector(d.Get("event_selector").([]interface{}))
-	// If no defined selectors revert to the single default selector
+	// If no defined selectors revert to the single default selector.
 	if len(eventSelectors) == 0 {
 		eventSelector := &cloudtrail.EventSelector{
 			IncludeManagementEvents: aws.Bool(true),
