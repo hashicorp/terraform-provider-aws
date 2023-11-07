@@ -123,30 +123,30 @@ func (t *testDriver) Init(mode configtesting.TestMode) {
 }
 
 func (t testDriver) TestCase() configtesting.TestCaseDriver {
-	return &testThingDoer{
+	return &testCaseDriver{
 		mode: t.mode,
 	}
 }
 
-var _ configtesting.TestCaseDriver = &testThingDoer{}
+var _ configtesting.TestCaseDriver = &testCaseDriver{}
 
-type testThingDoer struct {
+type testCaseDriver struct {
 	mode   configtesting.TestMode
 	config configurer
 }
 
-func (d *testThingDoer) Configuration() configtesting.Configurer {
+func (d *testCaseDriver) Configuration() configtesting.Configurer {
 	return d.configuration()
 }
 
-func (d *testThingDoer) configuration() *configurer {
+func (d *testCaseDriver) configuration() *configurer {
 	if d.config == nil {
 		d.config = make(configurer, 0)
 	}
 	return &d.config
 }
 
-func (d *testThingDoer) Setup(t *testing.T) {
+func (d *testCaseDriver) Setup(t *testing.T) {
 	ts := servicemocks.MockAwsApiServer("STS", []*servicemocks.MockEndpoint{
 		servicemocks.MockStsGetCallerIdentityValidEndpoint,
 	})
@@ -156,7 +156,7 @@ func (d *testThingDoer) Setup(t *testing.T) {
 	d.config.AddEndpoint("sts", ts.URL)
 }
 
-func (d testThingDoer) Apply(ctx context.Context, t *testing.T) (context.Context, configtesting.Thing) {
+func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Context, configtesting.Thing) {
 	t.Helper()
 
 	// Populate required fields
@@ -194,7 +194,6 @@ func (d testThingDoer) Apply(ctx context.Context, t *testing.T) (context.Context
 		)
 	}
 
-	// if diff := cmp.Diff(diags, tc.ExpectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 	if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
 	}
