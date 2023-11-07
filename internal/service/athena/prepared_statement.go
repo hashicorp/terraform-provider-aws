@@ -190,7 +190,7 @@ func findPreparedStatementByTwoPartKey(ctx context.Context, conn *athena.Client,
 
 	output, err := conn.GetPreparedStatement(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "WorkGroup is not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
