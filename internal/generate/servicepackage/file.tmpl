@@ -4,9 +4,12 @@ package {{ .ProviderPackage }}
 
 import (
 	"context"
-	"log"
 
 {{if not .SkipClientGenerate }}
+	{{- if .SDKVersion }}
+	"log"
+	{{- end }}
+
 	{{- if eq .SDKVersion "1" "1,2" }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
