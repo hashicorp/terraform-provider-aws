@@ -6,38 +6,39 @@ package apprunner
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 )
 
-func FindConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, name string) (*apprunner.ConnectionSummary, error) {
+func FindConnectionsummaryByName(ctx context.Context, conn *apprunner.Client, name string) (*types.ConnectionSummary, error) {
 	input := &apprunner.ListConnectionsInput{
 		ConnectionName: aws.String(name),
 	}
 
-	var cs *apprunner.ConnectionSummary
+	var cs *types.ConnectionSummary
 
-	err := conn.ListConnectionsPagesWithContext(ctx, input, func(page *apprunner.ListConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := apprunner.NewListConnectionsPaginator(conn, input, func(o *apprunner.ListConnectionsPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, c := range page.ConnectionSummaryList {
-			if c == nil {
+		for _, c := range output.ConnectionSummaryList {
+			if c.ConnectionName == nil {
 				continue
 			}
 
-			if aws.StringValue(c.ConnectionName) == name {
-				cs = c
-				return false
+			if aws.ToString(c.ConnectionName) == name {
+				cs = &c
+				break
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	if cs == nil {
@@ -47,34 +48,35 @@ func FindConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner,
 	return cs, nil
 }
 
-func FindCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) (*apprunner.CustomDomain, error) {
+func FindCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) (*types.CustomDomain, error) {
 	input := &apprunner.DescribeCustomDomainsInput{
 		ServiceArn: aws.String(serviceArn),
 	}
 
-	var customDomain *apprunner.CustomDomain
+	var customDomain *types.CustomDomain
 
-	err := conn.DescribeCustomDomainsPagesWithContext(ctx, input, func(page *apprunner.DescribeCustomDomainsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := apprunner.NewDescribeCustomDomainsPaginator(conn, input, func(o *apprunner.DescribeCustomDomainsPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, cd := range page.CustomDomains {
-			if cd == nil {
+		for _, cd := range output.CustomDomains {
+			if cd.DomainName == nil {
 				continue
 			}
 
-			if aws.StringValue(cd.DomainName) == domainName {
-				customDomain = cd
-				return false
+			if aws.ToString(cd.DomainName) == domainName {
+				customDomain = &cd
+				break
 			}
 		}
 
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	if customDomain == nil {
