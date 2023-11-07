@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -42,31 +42,32 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.AppRunnerConn(ctx)
+	conn := client.AppRunnerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
 
 	input := &apprunner.ListAutoScalingConfigurationsInput{}
 
-	err = conn.ListAutoScalingConfigurationsPagesWithContext(ctx, input, func(page *apprunner.ListAutoScalingConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := apprunner.NewListAutoScalingConfigurationsPaginator(conn, input, func(o *apprunner.ListAutoScalingConfigurationsPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
 		}
-
-		for _, summaryConfig := range page.AutoScalingConfigurationSummaryList {
-			if summaryConfig == nil {
-				continue
-			}
-
+		for _, summaryConfig := range output.AutoScalingConfigurationSummaryList {
 			// Skip DefaultConfigurations as deletion not supported by the AppRunner service
 			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19840
-			if aws.StringValue(summaryConfig.AutoScalingConfigurationName) == "DefaultConfiguration" {
+			if aws.ToString(summaryConfig.AutoScalingConfigurationName) == "DefaultConfiguration" {
 				log.Printf("[INFO] Skipping App Runner AutoScaling Configuration: DefaultConfiguration")
 				continue
 			}
 
-			arn := aws.StringValue(summaryConfig.AutoScalingConfigurationArn)
+			arn := aws.ToString(summaryConfig.AutoScalingConfigurationArn)
 
 			log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version (%s)", arn)
 			r := ResourceAutoScalingConfigurationVersion()
@@ -75,9 +76,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
+	}
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, err)
@@ -108,24 +107,26 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.AppRunnerConn(ctx)
+	conn := client.AppRunnerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
 
 	input := &apprunner.ListConnectionsInput{}
 
-	err = conn.ListConnectionsPagesWithContext(ctx, input, func(page *apprunner.ListConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := apprunner.NewListConnectionsPaginator(conn, input, func(o *apprunner.ListConnectionsPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
 		}
 
-		for _, c := range page.ConnectionSummaryList {
-			if c == nil {
-				continue
-			}
-
-			name := aws.StringValue(c.ConnectionName)
+		for _, c := range output.ConnectionSummaryList {
+			name := aws.ToString(c.ConnectionName)
 
 			log.Printf("[INFO] Deleting App Runner Connection: %s", name)
 
@@ -136,9 +137,7 @@ func sweepConnections(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
+	}
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Connections sweep for %s: %s", region, err)
@@ -169,24 +168,26 @@ func sweepServices(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.AppRunnerConn(ctx)
+	conn := client.AppRunnerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
 
 	input := &apprunner.ListServicesInput{}
 
-	err = conn.ListServicesPagesWithContext(ctx, input, func(page *apprunner.ListServicesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := apprunner.NewListServicesPaginator(conn, input, func(o *apprunner.ListServicesPaginatorOptions) {
+		o.StopOnDuplicateToken = true
+	})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
 		}
 
-		for _, service := range page.ServiceSummaryList {
-			if service == nil {
-				continue
-			}
-
-			arn := aws.StringValue(service.ServiceArn)
+		for _, service := range output.ServiceSummaryList {
+			arn := aws.ToString(service.ServiceArn)
 
 			log.Printf("[INFO] Deleting App Runner Service: %s", arn)
 
@@ -196,9 +197,7 @@ func sweepServices(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
+	}
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
