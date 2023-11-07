@@ -66,7 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_eks_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
