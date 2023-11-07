@@ -7,8 +7,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -31,7 +33,7 @@ const (
 	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
 
-func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.Client, arn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{AutoScalingConfigurationStatusActive},
@@ -44,7 +46,7 @@ func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.App
 	return err
 }
 
-func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.Client, arn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{AutoScalingConfigurationStatusActive},
 		Target:  []string{AutoScalingConfigurationStatusInactive},
@@ -57,9 +59,9 @@ func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.A
 	return err
 }
 
-func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name string) error {
+func WaitConnectionDeleted(ctx context.Context, conn *apprunner.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apprunner.ConnectionStatusPendingHandshake, apprunner.ConnectionStatusAvailable, apprunner.ConnectionStatusDeleted},
+		Pending: enum.Slice(types.ConnectionStatusPendingHandshake, types.ConnectionStatusAvailable, types.ConnectionStatusDeleted),
 		Target:  []string{},
 		Refresh: StatusConnection(ctx, conn, name),
 		Timeout: ConnectionDeleteTimeout,
@@ -70,7 +72,7 @@ func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name 
 	return err
 }
 
-func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusCreating},
 		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation, CustomDomainAssociationStatusBindingCertificate},
@@ -83,7 +85,7 @@ func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.App
 	return err
 }
 
-func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusActive, CustomDomainAssociationStatusDeleting},
 		Target:  []string{},
@@ -96,7 +98,7 @@ func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.App
 	return err
 }
 
-func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
+func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.Client, observabilityConfigurationArn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{ObservabilityConfigurationStatusActive},
@@ -109,7 +111,7 @@ func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.A
 	return err
 }
 
-func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
+func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner.Client, observabilityConfigurationArn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ObservabilityConfigurationStatusActive},
 		Target:  []string{ObservabilityConfigurationStatusInactive},
@@ -122,10 +124,10 @@ func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner
 	return err
 }
 
-func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.Client, vpcIngressConnectionArn string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{VPCIngressConnectionStatusActive},
+		Target:  []string{VPCIngressConnectionstatusActive},
 		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
 		Timeout: VPCIngressConnectionCreateTimeout,
 	}
@@ -135,10 +137,10 @@ func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunn
 	return err
 }
 
-func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client, vpcIngressConnectionArn string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{VPCIngressConnectionStatusActive, VPCIngressConnectionStatusPendingDeletion},
-		Target:  []string{VPCIngressConnectionStatusDeleted},
+		Pending: []string{VPCIngressConnectionstatusActive, VPCIngressConnectionstatusPendingDeletion},
+		Target:  []string{VPCIngressConnectionstatusDeleted},
 		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
 		Timeout: VPCIngressConnectionDeleteTimeout,
 	}
@@ -148,10 +150,10 @@ func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRun
 	return err
 }
 
-func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceCreated(ctx context.Context, conn *apprunner.Client, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apprunner.ServiceStatusOperationInProgress},
-		Target:  []string{apprunner.ServiceStatusRunning},
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
 		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceCreateTimeout,
 	}
@@ -161,10 +163,10 @@ func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 	return err
 }
 
-func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceUpdated(ctx context.Context, conn *apprunner.Client, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apprunner.ServiceStatusOperationInProgress},
-		Target:  []string{apprunner.ServiceStatusRunning},
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
 		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceUpdateTimeout,
 	}
@@ -174,10 +176,10 @@ func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 	return err
 }
 
-func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceDeleted(ctx context.Context, conn *apprunner.Client, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apprunner.ServiceStatusRunning, apprunner.ServiceStatusOperationInProgress},
-		Target:  []string{apprunner.ServiceStatusDeleted},
+		Pending: enum.Slice(types.ServiceStatusRunning, types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusDeleted),
 		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceDeleteTimeout,
 	}
