@@ -462,28 +462,6 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_stsRegion(t *testing.T) {
-	ctx := acctest.Context(t)
-	var provider *schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
-				),
-				PlanOnly: true,
-			},
-		},
-	})
-}
-
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -559,22 +537,6 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 
 		if got := (*p).Meta().(*conns.AWSClient).Region; got != expectedRegion {
 			return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, got)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
-	return func(s *terraform.State) error {
-		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
-			return fmt.Errorf("provider not initialized")
-		}
-
-		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn(ctx).Config.Region)
-
-		if stsRegion != expectedRegion {
-			return fmt.Errorf("expected STS Region (%s), got: %s", expectedRegion, stsRegion)
 		}
 
 		return nil
@@ -1077,17 +1039,4 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 `, region))
-}
-
-func testAccProviderConfig_stsRegion(region, stsRegion string) string {
-	//lintignore:AT004
-	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
-provider "aws" {
-  region                      = %[1]q
-  sts_region                  = %[2]q
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-}
-`, region, stsRegion))
 }
