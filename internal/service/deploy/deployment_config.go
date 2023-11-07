@@ -290,7 +290,7 @@ func flattenMinimumHealthHostsConfig(hosts *types.MinimumHealthyHosts) []map[str
 	item := make(map[string]interface{})
 
 	item["type"] = string(hosts.Type)
-	item["value"] = int32(hosts.Value)
+	item["value"] = hosts.Value
 
 	return append(result, item)
 }
@@ -317,8 +317,8 @@ func flattenTrafficRoutingCanaryConfig(canary *types.TimeBasedCanary) []map[stri
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = int32(canary.CanaryInterval)
-	item["percentage"] = int32(canary.CanaryPercentage)
+	item["interval"] = canary.CanaryInterval
+	item["percentage"] = canary.CanaryPercentage
 
 	return append(result, item)
 }
@@ -330,8 +330,8 @@ func flattenTrafficRoutingLinearConfig(linear *types.TimeBasedLinear) []map[stri
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = int32(linear.LinearInterval)
-	item["percentage"] = int32(linear.LinearPercentage)
+	item["interval"] = linear.LinearInterval
+	item["percentage"] = linear.LinearPercentage
 
 	return append(result, item)
 }
