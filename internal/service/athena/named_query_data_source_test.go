@@ -1,40 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/athena"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
-	var output athena.NamedQuery
+	ctx := acctest.Context(t)
 	resourceName := "aws_athena_named_query.test"
 	dataSourceName := "data.aws_athena_named_query.test"
-	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaNamedQueryDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(resourceName, &output),
+				Config: testAccNamedQueryDataSourceConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "database", resourceName, "database"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "querystring", resourceName, "querystring"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workgroup", resourceName, "workgroup"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAthenaNamedQueryDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(
-		testAccNamedQueryConfig(sdkacctest.RandInt(), rName),
-		`
+func testAccNamedQueryDataSourceConfig_basic() string {
+	return acctest.ConfigCompose(testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)), `
 data "aws_athena_named_query" "test" {
   name = aws_athena_named_query.test.name
 }
