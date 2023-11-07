@@ -6,16 +6,18 @@ package apprunner_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
@@ -26,7 +28,7 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,8 +38,8 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 					testAccCheckConnectionExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_type", apprunner.ProviderTypeGithub),
-					resource.TestCheckResourceAttr(resourceName, "status", apprunner.ConnectionStatusPendingHandshake),
+					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithub)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ConnectionStatusPendingHandshake)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -57,7 +59,7 @@ func TestAccAppRunnerConnection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +82,7 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,11 +134,11 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
+			connection, err := tfapprunner.FindConnectionsummaryByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -164,9 +166,9 @@ func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
+		connection, err := tfapprunner.FindConnectionsummaryByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
