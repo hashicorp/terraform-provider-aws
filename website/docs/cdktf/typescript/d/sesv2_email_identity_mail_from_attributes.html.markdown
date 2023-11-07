@@ -55,7 +55,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `behaviorOnMxFailure` - The action to take if the required MX record isn't found when you send an email. Valid values: `useDefaultValue`, `rejectMessage`.
+* `behaviorOnMxFailure` - The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
 * `mailFromDomain` - The custom MAIL FROM domain that you want the verified identity to use.
 
-<!-- cache-key: cdktf-0.18.0 input-f06a941b8e525f3b2704cada8b06a7094de35a609eb45fe1ddea9ebc9ad88ae8 -->
+<!-- cache-key: cdktf-0.19.0 input-f06a941b8e525f3b2704cada8b06a7094de35a609eb45fe1ddea9ebc9ad88ae8 -->
