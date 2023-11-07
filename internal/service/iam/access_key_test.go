@@ -116,6 +116,40 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	})
 }
 
+func TestAccIAMAccessKey_encryptedByGitHubGPGKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.AccessKeyMetadata
+	resourceName := "aws_iam_access_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessKeyConfig_encrypted(rName, "github:chomatdam"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyAttributes(&conf, "Active"),
+					resource.TestCheckNoResourceAttr(resourceName, "secret"),
+					resource.TestCheckResourceAttrSet(resourceName, "encrypted_secret"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
+					resource.TestCheckNoResourceAttr(resourceName, "ses_smtp_password_v4"),
+					resource.TestCheckResourceAttrSet(resourceName, "encrypted_ses_smtp_password_v4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
+			},
+		},
+	})
+}
+
 func TestAccIAMAccessKey_status(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.AccessKeyMetadata
