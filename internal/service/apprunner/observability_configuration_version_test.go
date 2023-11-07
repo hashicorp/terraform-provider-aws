@@ -6,17 +6,19 @@ package apprunner_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
@@ -27,7 +29,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +59,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +91,7 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +114,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -157,15 +159,15 @@ func testAccCheckObservabilityConfigurationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 			input := &apprunner.DescribeObservabilityConfigurationInput{
 				ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
+			output, err := conn.DescribeObservabilityConfiguration(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -173,7 +175,7 @@ func testAccCheckObservabilityConfigurationDestroy(ctx context.Context) resource
 				return err
 			}
 
-			if output != nil && output.ObservabilityConfiguration != nil && aws.StringValue(output.ObservabilityConfiguration.Status) != apprunner.ObservabilityConfigurationStatusInactive {
+			if output != nil && output.ObservabilityConfiguration != nil && string(output.ObservabilityConfiguration.Status) != string(types.ObservabilityConfigurationStatusInactive) {
 				return fmt.Errorf("App Runner Observability Configuration (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -193,13 +195,13 @@ func testAccCheckObservabilityConfigurationExists(ctx context.Context, n string)
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 		input := &apprunner.DescribeObservabilityConfigurationInput{
 			ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
+		output, err := conn.DescribeObservabilityConfiguration(ctx, input)
 
 		if err != nil {
 			return err
