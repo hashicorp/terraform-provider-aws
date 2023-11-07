@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `quotaCode` - (Required) Code of the service quota to track. For example: `lF678F1Ce`. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html).
+* `quotaCode` - (Required) Code of the service quota to track. For example: `L-F678F1CE`. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html).
 * `serviceCode` - (Required) Code of the service to track. For example: `vpc`. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 * `value` - (Required) Float specifying the desired value for the service quota. If the desired value is higher than the current value, a quota increase request is submitted. When a known request is submitted and pending, the value reflects the desired value of the pending request.
 
@@ -57,14 +57,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `quotaName` - Name of the quota.
 * `serviceName` - Name of the service.
 * `usageMetric` - Information about the measurement.
-    * `metricDimensions` - The metric dimensions.
+    * `metric_dimensions` - The metric dimensions.
         * `class`
         * `resource`
         * `service`
         * `type`
-    * `metricName` - The name of the metric.
-    * `metricNamespace` - The namespace of the metric.
-    * `metricStatisticRecommendation` - The metric statistic that AWS recommend you use when determining quota usage.
+    * `metric_name` - The name of the metric.
+    * `metric_namespace` - The namespace of the metric.
+    * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import `awsServicequotasServiceQuota` using the servic
 % terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8925c6b8aa699116dcad422ba2332dd43139659327e20ceb1d3df872c9c113ea -->
+<!-- cache-key: cdktf-0.19.0 input-8925c6b8aa699116dcad422ba2332dd43139659327e20ceb1d3df872c9c113ea -->
