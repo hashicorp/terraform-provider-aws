@@ -43,9 +43,9 @@ This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. Default: `docdb`
 * `engineVersion` - (Optional) Version of the DB engine.
-* `instanceClass` - (Optional) DB instance class. Examples of classes are `dbR512Xlarge`, `dbR524Xlarge`, `dbR52Xlarge`, `dbR54Xlarge`, `dbR5Large`, `dbR5Xlarge`, and `dbT3Medium`. (Conflicts with `preferredInstanceClasses`.)
+* `instanceClass` - (Optional) DB instance class. Examples of classes are `db.r5.12xlarge`, `db.r5.24xlarge`, `db.r5.2xlarge`, `db.r5.4xlarge`, `db.r5.large`, `db.r5.xlarge`, and `db.t3.medium`. (Conflicts with `preferred_instance_classes`.)
 * `licenseModel` - (Optional) License model. Default: `na`
-* `preferredInstanceClasses` - (Optional) Ordered list of preferred DocumentDB DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. (Conflicts with `instanceClass`.)
+* `preferredInstanceClasses` - (Optional) Ordered list of preferred DocumentDB DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. (Conflicts with `instance_class`.)
 * `vpc` - (Optional) Enable to show only VPC.
 
 ## Attribute Reference
@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availabilityZones` - Availability zones where the instance is available.
 
-<!-- cache-key: cdktf-0.18.0 input-e0d401d073f27bb9d79b27ff7639257efd1b7f3f54817d94de7fdf271020db6f -->
+<!-- cache-key: cdktf-0.19.0 input-e0d401d073f27bb9d79b27ff7639257efd1b7f3f54817d94de7fdf271020db6f -->
