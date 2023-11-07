@@ -1150,7 +1150,7 @@ func ec2TagFiltersToMap(list []types.EC2TagFilter) []map[string]interface{} {
 		if v := tf.Value; aws.ToString(v) != "" {
 			l["value"] = aws.ToString(v)
 		}
-		if v := tf.Type; types.EC2TagFilterType(v) != "" {
+		if v := tf.Type; v != "" {
 			l["type"] = string(v)
 		}
 		result = append(result, l)
@@ -1375,7 +1375,7 @@ func FlattenBlueGreenDeploymentConfig(config *types.BlueGreenDeploymentConfigura
 			deploymentReadyOption["action_on_timeout"] = v
 		}
 		if v := config.DeploymentReadyOption.WaitTimeInMinutes; v != 0 {
-			deploymentReadyOption["wait_time_in_minutes"] = int32(v)
+			deploymentReadyOption["wait_time_in_minutes"] = v
 		}
 
 		m["deployment_ready_option"] = append(a, deploymentReadyOption)
@@ -1400,7 +1400,7 @@ func FlattenBlueGreenDeploymentConfig(config *types.BlueGreenDeploymentConfigura
 			blueInstanceTerminationOption["action"] = v
 		}
 		if v := config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes; v != 0 {
-			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = int32(v)
+			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = v
 		}
 
 		m["terminate_blue_instances_on_deployment_success"] = append(c, blueInstanceTerminationOption)
