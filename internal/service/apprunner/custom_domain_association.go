@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -85,7 +86,7 @@ func ResourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	serviceArn := d.Get("service_arn").(string)
@@ -96,7 +97,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 		ServiceArn:         aws.String(serviceArn),
 	}
 
-	output, err := conn.AssociateCustomDomainWithContext(ctx, input)
+	output, err := conn.AssociateCustomDomain(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
@@ -106,7 +107,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
+	d.SetId(fmt.Sprintf("%s,%s", aws.ToString(output.CustomDomain.DomainName), aws.ToString(output.ServiceArn)))
 	d.Set("dns_target", output.DNSTarget)
 
 	if err := WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
@@ -117,7 +118,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -127,7 +128,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 
 	customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -155,7 +156,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -168,9 +169,9 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 		ServiceArn: aws.String(serviceArn),
 	}
 
-	_, err = conn.DisassociateCustomDomainWithContext(ctx, input)
+	_, err = conn.DisassociateCustomDomain(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -179,7 +180,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil
 		}
 
@@ -189,19 +190,15 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
+func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []interface{} {
 	var results []interface{}
 
 	for _, record := range records {
-		if record == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"name":   aws.StringValue(record.Name),
-			"status": aws.StringValue(record.Status),
-			"type":   aws.StringValue(record.Type),
-			"value":  aws.StringValue(record.Value),
+			"name":   aws.ToString(record.Name),
+			"status": string(record.Status),
+			"type":   aws.ToString(record.Type),
+			"value":  aws.ToString(record.Value),
 		}
 
 		results = append(results, m)
