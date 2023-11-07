@@ -505,4 +505,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->
+<!-- cache-key: cdktf-0.19.0 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->

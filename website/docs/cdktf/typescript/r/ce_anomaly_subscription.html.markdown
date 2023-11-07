@@ -245,14 +245,14 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `accountId` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
-* `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `daily` | `immediate` | `weekly`.
+* `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.
 * `monitorArnList` - (Required) A list of cost anomaly monitors.
 * `name` - (Required) The name for the subscription.
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
-    * `type` - (Required) The type of subscription. Valid Values: `sns` | `email`.
-    * `address` - (Required) The address of the subscriber. If type is `sns`, this will be the arn of the sns topic. If type is `email`, this will be the destination email address.
+    * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
+    * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
 * `thresholdExpression` - (Optional) An Expression object used to specify the anomalies that you want to generate alerts for. See [Threshold Expression](#threshold-expression).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Threshold Expression
 
@@ -266,19 +266,19 @@ The following arguments are required:
 ### Cost Category
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### Dimension
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### Tags
 
 * `key` - (Optional) Key for the tag.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ## Attribute Reference
@@ -287,7 +287,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the anomaly subscription.
 * `id` - Unique ID of the anomaly subscription. Same as `arn`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -311,4 +311,4 @@ Using `terraform import`, import `awsCeAnomalySubscription` using the `id`. For 
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a5b785ffa278b065243da40d1d5af1821002775fa1e69440478be7d749ef9cfd -->
+<!-- cache-key: cdktf-0.19.0 input-a5b785ffa278b065243da40d1d5af1821002775fa1e69440478be7d749ef9cfd -->
