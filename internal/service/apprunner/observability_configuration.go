@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,7 +60,7 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 						"vendor": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(apprunner.TracingVendor_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenTracingVendorValues(types.TracingVendor("").Values()), false),
 						},
 					},
 				},
@@ -77,7 +78,7 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 }
 
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("observability_configuration_name").(string)
 	input := &apprunner.CreateObservabilityConfigurationInput{
@@ -89,7 +90,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		input.TraceConfiguration = expandTraceConfiguration(v.([]interface{}))
 	}
 
-	output, err := conn.CreateObservabilityConfigurationWithContext(ctx, input)
+	output, err := conn.CreateObservabilityConfiguration(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating App Runner Observability Configuration (%s): %s", name, err)
@@ -99,7 +100,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		return diag.Errorf("creating App Runner Observability Configuration (%s): empty output", name)
 	}
 
-	d.SetId(aws.StringValue(output.ObservabilityConfiguration.ObservabilityConfigurationArn))
+	d.SetId(aws.ToString(output.ObservabilityConfiguration.ObservabilityConfigurationArn))
 
 	if err := WaitObservabilityConfigurationActive(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for App Runner Observability Configuration (%s) creation: %s", d.Id(), err)
@@ -109,15 +110,15 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	input := &apprunner.DescribeObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeObservabilityConfiguration(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -131,9 +132,9 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("reading App Runner Observability Configuration (%s): empty output", d.Id())
 	}
 
-	if aws.StringValue(output.ObservabilityConfiguration.Status) == ObservabilityConfigurationStatusInactive {
+	if string(output.ObservabilityConfiguration.Status) == ObservabilityConfigurationStatusInactive {
 		if d.IsNewResource() {
-			return diag.Errorf("reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status))
+			return diag.Errorf("reading App Runner Observability Configuration (%s): %s after creation", d.Id(), string(output.ObservabilityConfiguration.Status))
 		}
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -141,7 +142,7 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	config := output.ObservabilityConfiguration
-	arn := aws.StringValue(config.ObservabilityConfigurationArn)
+	arn := aws.ToString(config.ObservabilityConfigurationArn)
 
 	d.Set("arn", arn)
 	d.Set("observability_configuration_name", config.ObservabilityConfigurationName)
@@ -162,15 +163,15 @@ func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	input := &apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteObservabilityConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteObservabilityConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -179,7 +180,7 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	}
 
 	if err := WaitObservabilityConfigurationInactive(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil
 		}
 		return diag.Errorf("waiting for App Runner Observability Configuration (%s) deletion: %s", d.Id(), err)
@@ -188,30 +189,40 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func expandTraceConfiguration(l []interface{}) *apprunner.TraceConfiguration {
+func expandTraceConfiguration(l []interface{}) *types.TraceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	configuration := &apprunner.TraceConfiguration{}
+	configuration := &types.TraceConfiguration{}
 
 	if v, ok := m["vendor"].(string); ok && v != "" {
-		configuration.Vendor = aws.String(v)
+		configuration.Vendor = types.TracingVendor(v)
 	}
 
 	return configuration
 }
 
-func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration) []interface{} {
+func flattenTraceConfiguration(traceConfiguration *types.TraceConfiguration) []interface{} {
 	if traceConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"vendor": aws.StringValue(traceConfiguration.Vendor),
+		"vendor": string(traceConfiguration.Vendor),
 	}
 
 	return []interface{}{m}
+}
+
+func flattenTracingVendorValues(t []types.TracingVendor) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }
