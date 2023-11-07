@@ -184,8 +184,37 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("name", output.Name)
 	d.Set("layout_arn", output.LayoutArn)
+	d.Set("content", flattenLayoutContent(output.Content.((*types.LayoutContentMemberBasic))))
 
 	return diags
+}
+
+func flattenLayoutContent(apiObject *types.LayoutContentMemberBasic) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Value.MoreInfo; v != nil {
+		tfMap["more_info"] = flattenLayoutContentSections(v.Sections)
+	}
+
+	if v := apiObject.Value.TopPanel; v != nil {
+		tfMap["top_panel"] = flattenLayoutContentSections(v.Sections)
+	}
+
+	return tfMap
+}
+
+func flattenLayoutContentSections(apiObject []types.Section) map[string]interface{} {
+	if apiObject == nil && len(apiObject) > 0 {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	return tfMap
 }
 
 func expandLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
