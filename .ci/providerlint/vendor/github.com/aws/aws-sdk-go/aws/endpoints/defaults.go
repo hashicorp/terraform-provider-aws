@@ -23708,6 +23708,16 @@ var awsPartition = partition{
 			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "af-south-1",
+				}: endpoint{
+					Hostname: "resource-explorer-2.af-south-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-east-1",
+				}: endpoint{
+					Hostname: "resource-explorer-2.ap-east-1.api.aws",
+				},
+				endpointKey{
 					Region: "ap-northeast-1",
 				}: endpoint{
 					Hostname: "resource-explorer-2.ap-northeast-1.api.aws",
@@ -23773,6 +23783,11 @@ var awsPartition = partition{
 					Hostname: "resource-explorer-2.eu-north-1.api.aws",
 				},
 				endpointKey{
+					Region: "eu-south-1",
+				}: endpoint{
+					Hostname: "resource-explorer-2.eu-south-1.api.aws",
+				},
+				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{
 					Hostname: "resource-explorer-2.eu-west-1.api.aws",
@@ -23791,6 +23806,11 @@ var awsPartition = partition{
 					Region: "il-central-1",
 				}: endpoint{
 					Hostname: "resource-explorer-2.il-central-1.api.aws",
+				},
+				endpointKey{
+					Region: "me-central-1",
+				}: endpoint{
+					Hostname: "resource-explorer-2.me-central-1.api.aws",
 				},
 				endpointKey{
 					Region: "me-south-1",
@@ -42073,6 +42093,13 @@ var awsisobPartition = partition{
 					Protocols: []string{"http", "https"},
 				},
 			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
+		"cloudcontrolapi": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-isob-east-1",
