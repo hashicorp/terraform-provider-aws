@@ -45,7 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_eks_clusters",
 		},
 		{
-			Factory:  DataSourceNodeGroup,
+			Factory:  dataSourceNodeGroup,
 			TypeName: "aws_eks_node_group",
 		},
 		{
