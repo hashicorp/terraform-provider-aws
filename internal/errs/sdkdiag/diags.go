@@ -6,6 +6,7 @@ package sdkdiag
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -47,4 +48,15 @@ func DiagnosticString(d diag.Diagnostic) string {
 		return d.Summary
 	}
 	return fmt.Sprintf("%s\n\n%s", d.Summary, d.Detail)
+}
+
+// DiagnosticsString formats a Diagnostics
+func DiagnosticsString(diags diag.Diagnostics) string {
+	var buf strings.Builder
+
+	for _, d := range diags {
+		fmt.Fprintln(&buf, DiagnosticString(d))
+	}
+
+	return buf.String()
 }
