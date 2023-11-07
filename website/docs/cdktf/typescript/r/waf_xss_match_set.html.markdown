@@ -61,8 +61,8 @@ This resource supports the following arguments:
 
 * `fieldToMatch` - (Required) Specifies where in a web request to look for cross-site scripting attacks.
 * `textTransformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
-  If you specify a transformation, AWS WAF performs the transformation on `targetString` before inspecting a request for a match.
-  e.g., `cmdLine`, `htmlEntityDecode` or `none`.
+  If you specify a transformation, AWS WAF performs the transformation on `target_string` before inspecting a request for a match.
+  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_XssMatchTuple.html#WAF-Type-XssMatchTuple-TextTransformation)
   for all supported values.
 
@@ -70,10 +70,10 @@ This resource supports the following arguments:
 
 #### Arguments
 
-* `data` - (Optional) When `type` is `header`, enter the name of the header that you want to search, e.g., `userAgent` or `referer`.
+* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g., `header`, `method` or `body`.
+  e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
@@ -108,4 +108,4 @@ Using `terraform import`, import WAF XSS Match Set using their ID. For example:
 % terraform import aws_waf_xss_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b20024f44c940ead290498f06ec9b2d740a6fb68cd9745d06916f73db65eaaa6 -->
+<!-- cache-key: cdktf-0.19.0 input-b20024f44c940ead290498f06ec9b2d740a6fb68cd9745d06916f73db65eaaa6 -->

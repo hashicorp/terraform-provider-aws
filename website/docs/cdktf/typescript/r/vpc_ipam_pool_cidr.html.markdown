@@ -115,7 +115,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmaskLength`.
+* `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmask_length`.
 * `cidrAuthorizationContext` - (Optional) A signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context) for more information.
 * `ipamPoolId` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmaskLength` - (Optional) If provided, the cidr provisioned into the specified pool will be the next available cidr given this declared netmask length. Conflicts with `cidr`.
@@ -158,4 +158,4 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 % terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->
+<!-- cache-key: cdktf-0.19.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->

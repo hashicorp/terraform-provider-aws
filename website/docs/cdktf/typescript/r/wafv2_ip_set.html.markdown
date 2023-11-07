@@ -48,10 +48,10 @@ This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the IP set.
 * `description` - (Optional) A friendly description of the IP set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `cloudfront` or `regional`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
-* `ipAddressVersion` - (Required) Specify IPV4 or IPV6. Valid values are `ipv4` or `ipv6`.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
+* `ipAddressVersion` - (Required) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.
 * `addresses` - (Required) Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
-* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A unique identifier for the IP set.
 * `arn` - The Amazon Resource Name (ARN) of the IP set.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import WAFv2 IP Sets using `id/name/scope`. For exampl
 % terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b479c9f718a616c5596b789c7ff158e99147f52c44de441fab9ea4c4e4b4ab65 -->
+<!-- cache-key: cdktf-0.19.0 input-b479c9f718a616c5596b789c7ff158e99147f52c44de441fab9ea4c4e4b4ab65 -->

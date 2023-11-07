@@ -43,8 +43,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `vpnGatewayId` - The id of the `awsVpnGateway` to propagate routes from.
-* `routeTableId` - The id of the `awsRouteTable` to propagate routes into.
+* `vpnGatewayId` - The id of the `aws_vpn_gateway` to propagate routes from.
+* `routeTableId` - The id of the `aws_route_table` to propagate routes into.
 
 ## Attribute Reference
 
@@ -54,7 +54,7 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `2M`)
-- `delete` - (Default `2M`)
+- `create` - (Default `2m`)
+- `delete` - (Default `2m`)
 
-<!-- cache-key: cdktf-0.18.0 input-1c3c2e8d2f812de0afe226b6fe030874cca2a61ce5a4b402872d573b9b0adc66 -->
+<!-- cache-key: cdktf-0.19.0 input-1c3c2e8d2f812de0afe226b6fe030874cca2a61ce5a4b402872d573b9b0adc66 -->
