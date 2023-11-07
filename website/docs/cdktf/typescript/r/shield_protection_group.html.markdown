@@ -138,14 +138,14 @@ This resource supports the following arguments:
 * `pattern` - (Required) The criteria to use to choose the protected resources for inclusion in the group.
 * `protectionGroupId` - (Required) The name of the protection group.
 * `resourceType` - (Optional) The resource type to include in the protection group. You must set this when you set `pattern` to BY_RESOURCE_TYPE and you must not set it for any other `pattern` setting.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `protectionGroupArn` - The ARN (Amazon Resource Name) of the protection group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -169,4 +169,4 @@ Using `terraform import`, import Shield protection group resources using their p
 % terraform import aws_shield_protection_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->
+<!-- cache-key: cdktf-0.19.0 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->
