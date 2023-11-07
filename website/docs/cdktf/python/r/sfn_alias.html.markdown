@@ -51,7 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for the alias you are creating.
 * `description` - (Optional) Description of the alias.
@@ -59,12 +59,8 @@ The following arguments are required:
 
 `routing_configuration` supports the following arguments:
 
-* `state_machine_version_arn` - (Required) A version of the state machine.
+* `state_machine_version_arn` - (Required) The Amazon Resource Name (ARN) of the state machine version.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Attribute Reference
 
@@ -92,4 +88,4 @@ Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For
 % terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d83123e170c73ca9bb146b2e69a4589da76c8ce58a4d40355ebfa1eec70108ab -->
+<!-- cache-key: cdktf-0.18.0 input-bfd0b99447354a387498343e81e37140646e8c656cabd51886388e3b57f53683 -->

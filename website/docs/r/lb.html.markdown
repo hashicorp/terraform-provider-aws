@@ -99,11 +99,12 @@ resource "aws_lb" "example" {
 
 ~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
+* `dns_record_client_routing_policy` - (Optional) Indicates how traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
 * `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled. For `network` and `gateway` type load balancers, this feature is disabled by default (`false`). For `application` load balancer this feature is always enabled (`true`) and cannot be disabled. Defaults to `false`.
 * `enable_deletion_protection` - (Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to `false`.

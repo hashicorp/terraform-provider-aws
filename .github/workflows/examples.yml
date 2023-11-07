@@ -18,10 +18,10 @@ jobs:
   tflint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -32,7 +32,7 @@ jobs:
       - name: install tflint
         run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -67,10 +67,10 @@ jobs:
     env:
       TF_IN_AUTOMATION: "1"
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -87,7 +87,7 @@ jobs:
           # For newer versions
           mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
           cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
-      - uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
         with:
           terraform_version: ${{ matrix.terraform_version }}
           # Needed to use the output of `terraform validate -json`

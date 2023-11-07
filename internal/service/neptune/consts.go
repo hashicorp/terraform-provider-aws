@@ -19,3 +19,7 @@ const (
 	GlobalClusterStatusModifying = "modifying"
 	GlobalClusterStatusUpgrading = "upgrading"
 )
+
+const (
+	errCodeInvalidParameterValue = "InvalidParameterValue"
+)

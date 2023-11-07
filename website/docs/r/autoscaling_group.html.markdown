@@ -465,6 +465,7 @@ This resource supports the following arguments:
   when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
 - `warm_pool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
+- `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
 ### launch_template
 
@@ -658,8 +659,8 @@ This configuration block supports the following:
     - `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
-    - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Wait`.
-    - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Wait`.
+    - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
+    - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`. Additional properties can be specified in the `triggers` property of `instance_refresh`.

@@ -12,7 +12,7 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 -> For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
-~> **NOTE:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, audit logging, or `configuration` blocks. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
+~> **NOTE:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, or audit logging. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
 
 ~> **NOTE:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
@@ -32,7 +32,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   host_instance_type = "mq.t2.micro"
   security_groups    = [aws_security_group.test.id]
 
@@ -57,7 +57,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   storage_type       = "ebs"
   host_instance_type = "mq.m5.large"
   security_groups    = [aws_security_group.test.id]
@@ -75,7 +75,7 @@ The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
+* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
@@ -84,7 +84,7 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
-* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` only. Detailed below.
+* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` and `RabbitMQ` only. Detailed below.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
 * `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)

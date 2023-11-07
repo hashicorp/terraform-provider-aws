@@ -1824,7 +1824,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1843,7 +1843,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -1890,7 +1890,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1908,7 +1908,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(updatedPath, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -1945,7 +1945,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -1964,7 +1964,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -2001,7 +2001,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
 				),
 			},
 			{
@@ -2020,7 +2020,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
 				),
 			},
 		},
@@ -2156,6 +2156,43 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 			{
 				Config:      testAccFunctionConfig_zipNoRuntime(rName),
 				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_ipv6AllowedForDualStack(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", "true"),
+				),
 			},
 		},
 	})
@@ -3865,6 +3902,45 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  vpc_config {
+    ipv6_allowed_for_dual_stack = true
+    subnet_ids                  = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids          = [aws_security_group.sg_for_lambda.id]
+  }
 }
 `, rName))
 }

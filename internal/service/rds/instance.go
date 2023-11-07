@@ -1120,6 +1120,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
@@ -1326,6 +1336,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
@@ -1799,7 +1819,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"skip_final_snapshot",
 		"tags", "tags_all",
 	) {
-		if d.Get("blue_green_update.0.enabled").(bool) {
+		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
+			"allow_major_version_upgrade",
+			"blue_green_update",
+			"delete_automated_backups",
+			"final_snapshot_identifier",
+			"replicate_source_db",
+			"skip_final_snapshot",
+			"tags", "tags_all",
+			"deletion_protection",
+			"password",
+		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
 			handler := newInstanceHandler(conn)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
@@ -1904,7 +1934,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			if d.Get("deletion_protection").(bool) {
 				input := &rds_sdkv2.ModifyDBInstanceInput{
-					ApplyImmediately:     true,
+					ApplyImmediately:     aws.Bool(true),
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 					DeletionProtection:   aws.Bool(false),
 				}
@@ -1915,7 +1945,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
 				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
-				SkipFinalSnapshot:    true,
+				SkipFinalSnapshot:    aws.Bool(true),
 			}
 			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
 				func() (any, error) {
@@ -1954,12 +1984,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				o, _ := d.GetChange("identifier")
 				oldID = o.(string)
 			}
+
+			applyImmediately := d.Get("apply_immediately").(bool)
 			input := &rds_sdkv2.ModifyDBInstanceInput{
-				ApplyImmediately:     d.Get("apply_immediately").(bool),
+				ApplyImmediately:     aws.Bool(applyImmediately),
 				DBInstanceIdentifier: aws.String(oldID),
 			}
 
-			if !input.ApplyImmediately {
+			if !applyImmediately {
 				log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
 			}
 
@@ -1967,7 +1999,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
-				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
 				// for the source
@@ -2179,6 +2211,14 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("storage_throughput") {
 		needsModify = true
 		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
+
+		if input.Iops == nil {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
+
+		if input.AllocatedStorage == nil {
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		}
 	}
 
 	if d.HasChange("storage_type") {
@@ -2208,6 +2248,10 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
 			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
 				return true, err
 			}
 
@@ -2778,6 +2822,7 @@ func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
+		InstanceEnginePostgres,
 	}
 }
 

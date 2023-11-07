@@ -135,7 +135,9 @@ The capacity_configuration block supports the following arguments:
 The cache_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of cache storage . The valid values are:
-    * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
+    * CACHE_1000 - This type provides 1000 MB/s disk access throughput.
+    * CACHE_250 - This type provides 250 MB/s disk access throughput.
+    * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
 
 ### code
@@ -192,9 +194,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `2M`)
-* `delete` - (Default `40M`)
+* `create` - (Default `45M`)
+* `update` - (Default `30M`)
+* `delete` - (Default `60M`)
 
 ## Import
 
@@ -218,4 +220,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ba9e9b61695441ed5084a8e4f387258970bfe29d8d0cd1d2e3384bca3e7f1cee -->
+<!-- cache-key: cdktf-0.18.0 input-f49ba79f2242b84e16df5a6a714b26006f2a9639ede46db32bec275901e7661a -->

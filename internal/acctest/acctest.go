@@ -19,6 +19,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -28,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -377,6 +381,13 @@ func CheckResourceAttrNameWithSuffixFromPrefix(resourceName string, attributeNam
 // CheckResourceAttrNameGenerated verifies that the state attribute value matches name automatically generated without prefix
 func CheckResourceAttrNameGenerated(resourceName string, attributeName string) resource.TestCheckFunc {
 	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
+}
+
+// CheckResourceAttrNameGeneratedWithPrefix verifies that the state attribute value matches name automatically generated with prefix
+func CheckResourceAttrNameGeneratedWithPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, ""))(s)
+	}
 }
 
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
@@ -733,6 +744,16 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+// CheckResourceAttrHasPrefix ensures the Terraform state value has the specified prefix.
+func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasPrefix(value, prefix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected prefix %#v, got %#v", name, key, prefix, value)
+	})
+}
+
 // Copied and inlined from the SDK testing code
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
@@ -908,6 +929,20 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 		if curr := Partition(); curr == partition {
 			t.Skipf("skipping tests; current partition (%s) not supported", curr)
 		}
+	}
+}
+
+func PreCheckInspector2(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+
+	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
+
+	if errs.IsA[*inspector2types.AccessDeniedException](err) {
+		t.Skipf("Amazon Inspector not available: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("listing Inspector2 delegated administrators: %s", err)
 	}
 }
 
@@ -1100,6 +1135,30 @@ func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
 		t.Skip("skipping since no Outposts found")
+	}
+}
+
+func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
+	switch Partition() {
+	case endpoints.AwsPartitionID:
+		PreCheckRegion(t, endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
+	}
+
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	input := &wafv2.ListWebACLsInput{
+		Scope: aws.String(wafv2.ScopeCloudfront),
+	}
+
+	_, err := conn.ListWebACLsWithContext(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -2075,7 +2134,7 @@ func ConfigLambdaBase(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "%s"
+  name = %[1]q
   role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
@@ -2096,7 +2155,9 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "Action": [
         "ec2:CreateNetworkInterface",
         "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface"
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
       ],
       "Resource": [
         "*"
@@ -2126,7 +2187,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -2146,7 +2207,8 @@ EOF
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
   tags = {
     Name = "terraform-testacc-lambda-function"
@@ -2154,9 +2216,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-1"
@@ -2166,9 +2230,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # This is defined here, rather than only in test cases where it's needed is to
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-2"
@@ -2176,7 +2242,7 @@ resource "aws_subnet" "subnet_for_lambda_az2" {
 }
 
 resource "aws_security_group" "sg_for_lambda" {
-  name        = "%s"
+  name        = %[3]q
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.vpc_for_lambda.id
 
@@ -2192,6 +2258,10 @@ resource "aws_security_group" "sg_for_lambda" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[3]q
   }
 }
 `, policyName, roleName, sgName))
@@ -2380,6 +2450,16 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 
 		return nil
 	})
+}
+
+// SkipIfEnvVarNotSet skips the current test if the specified environment variable is not set.
+// The variable's value is returned.
+func SkipIfEnvVarNotSet(t *testing.T, key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
 }
 
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.

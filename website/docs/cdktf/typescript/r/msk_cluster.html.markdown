@@ -352,6 +352,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `bootstrapBrokersVpcConnectivitySaslIam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrapBrokersVpcConnectivitySaslScram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrapBrokersVpcConnectivityTls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `clusterUuid` - UUID of the MSK cluster, for use in IAM policies.
 * `currentVersion` - Current version of the MSK Cluster used for updates, e.g., `k13V1Ib3Viyzzh`
 * `encryptionInfo0EncryptionAtRestKmsKeyArn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -390,4 +391,4 @@ Using `terraform import`, import MSK clusters using the cluster `arn`. For examp
 % terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-89248da292337bdb64584af34619ba0985f90ec6f20e792acdfdf9df0523e5fb -->
+<!-- cache-key: cdktf-0.18.0 input-d74467505dc35d807d612607ba3f66d806ec402f358078d3397150e5e6466657 -->

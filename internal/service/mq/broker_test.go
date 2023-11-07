@@ -239,9 +239,9 @@ func TestDiffUsers(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.16.3"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.15.12" // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.8.6"   // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -535,7 +535,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -1102,7 +1102,55 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 				Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitConfig(rName, testAccRabbitVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
@@ -1148,7 +1196,7 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 				Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
@@ -1250,7 +1298,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", "data.aws_subnets.default", "ids.#"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access": "false",
@@ -1533,7 +1581,7 @@ resource "aws_mq_broker" "test" {
     time_zone   = "CET"
   }
 
-  publicly_accessible = true
+  publicly_accessible = false
   security_groups     = aws_security_group.test[*].id
 
   user {
@@ -1973,6 +2021,49 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
+func testAccBrokerConfig_rabbitConfig(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = %[2]q
+
+  data = <<DATA
+  # Default RabbitMQ delivery acknowledgement timeout is 30 minutes
+  consumer_timeout = 1800000
+  
+  DATA
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  configuration {
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version)
+}
+
 func testAccBrokerConfig_rabbitLogs(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
@@ -2055,6 +2146,17 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
 }
 `, rName, version)
 }

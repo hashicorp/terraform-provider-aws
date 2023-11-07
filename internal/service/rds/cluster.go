@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -87,7 +87,7 @@ func ResourceCluster() *schema.Resource {
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1,
+				Computed:     true,
 				ValidateFunc: validation.IntAtMost(35),
 			},
 			"backtrack_window": {
@@ -548,6 +548,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
+	identifier := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
 	// parameters or unsupported configurations, we may need to call
@@ -556,15 +562,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var requiresModifyDbCluster bool
 	modifyDbClusterInput := &rds.ModifyDBClusterInput{
 		ApplyImmediately: aws.Bool(true),
-	}
-
-	var identifier string
-	if v, ok := d.GetOk("cluster_identifier"); ok {
-		identifier = v.(string)
-	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-		identifier = id.PrefixedUniqueId(v.(string))
-	} else {
-		identifier = id.PrefixedUniqueId("tf-")
 	}
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
@@ -1113,6 +1110,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
 		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
@@ -1741,6 +1739,8 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusBackingUp,
 			ClusterStatusDeleting,
 			ClusterStatusModifying,
+			ClusterStatusPromoting,
+			ClusterStatusScalingCompute,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),

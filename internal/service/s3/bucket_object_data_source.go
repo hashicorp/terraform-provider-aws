@@ -10,18 +10,16 @@ package s3
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -121,6 +119,7 @@ func DataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -130,8 +129,6 @@ func DataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
 		},
 
 		DeprecationMessage: `use the aws_s3_object data source instead`,
@@ -140,13 +137,12 @@ func DataSourceBucketObject() *schema.Resource {
 
 func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-
-	input := s3.HeadObjectInput{
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
@@ -157,25 +153,21 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		input.VersionId = aws.String(v.(string))
 	}
 
-	versionText := ""
-	uniqueId := bucket + "/" + key
-	if v, ok := d.GetOk("version_id"); ok {
-		versionText = fmt.Sprintf(" of version %q", v.(string))
-		uniqueId += "@" + v.(string)
-	}
+	out, err := findObject(ctx, conn, input)
 
-	log.Printf("[DEBUG] Reading S3 Object: %s", input)
-	out, err := conn.HeadObjectWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-	if aws.BoolValue(out.DeleteMarker) {
-		return sdkdiag.AppendErrorf(diags, "Requested S3 object %q%s has been deleted", bucket+key, versionText)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	log.Printf("[DEBUG] Received S3 object: %s", out)
+	if out.DeleteMarker {
+		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
+	}
 
-	d.SetId(uniqueId)
+	id := bucket + "/" + d.Get("key").(string)
+	if v, ok := d.GetOk("version_id"); ok {
+		id += "@" + v.(string)
+	}
+	d.SetId(id)
 
 	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
@@ -185,65 +177,58 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("content_length", out.ContentLength)
 	d.Set("content_type", out.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(out.ETag), `"`))
+	d.Set("etag", strings.Trim(aws.ToString(out.ETag), `"`))
 	d.Set("expiration", out.Expiration)
-	d.Set("expires", out.Expires)
+	if out.Expires != nil {
+		d.Set("expires", out.Expires.Format(time.RFC1123))
+	} else {
+		d.Set("expires", nil)
+	}
 	if out.LastModified != nil {
 		d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	} else {
 		d.Set("last_modified", "")
 	}
-	d.Set("metadata", flex.PointersMapToStringList(out.Metadata))
+	d.Set("metadata", out.Metadata)
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
+	// The "STANDARD" (which is also the default) storage
+	// class when set would not be included in the results.
+	d.Set("storage_class", types.ObjectStorageClassStandard)
+	if out.StorageClass != "" {
+		d.Set("storage_class", out.StorageClass)
+	}
 	d.Set("version_id", out.VersionId)
 	d.Set("website_redirect_location", out.WebsiteRedirectLocation)
 
-	// The "STANDARD" (which is also the default) storage
-	// class when set would not be included in the results.
-	d.Set("storage_class", s3.StorageClassStandard)
-	if out.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("storage_class", out.StorageClass)
-	}
-
 	if isContentTypeAllowed(out.ContentType) {
-		input := s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
+		input := &s3.GetObjectInput{
+			Bucket:    aws.String(bucket),
+			Key:       aws.String(key),
+			VersionId: out.VersionId,
 		}
 		if v, ok := d.GetOk("range"); ok {
 			input.Range = aws.String(v.(string))
 		}
-		if out.VersionId != nil {
-			input.VersionId = out.VersionId
-		}
-		out, err := conn.GetObjectWithContext(ctx, &input)
+
+		out, err := conn.GetObject(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Failed getting S3 object: %s", err)
+			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
 		buf := new(bytes.Buffer)
-		bytesRead, err := buf.ReadFrom(out.Body)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Failed reading content of S3 object (%s): %s", uniqueId, err)
-		}
-		log.Printf("[INFO] Saving %d bytes from S3 object %s", bytesRead, uniqueId)
-		d.Set("body", buf.String())
-	} else {
-		contentType := ""
-		if out.ContentType == nil {
-			contentType = "<EMPTY>"
-		} else {
-			contentType = aws.StringValue(out.ContentType)
+		if _, err := buf.ReadFrom(out.Body); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
+		d.Set("body", buf.String())
 	}
 
-	tags, err := ObjectListTagsV1(ctx, conn, bucket, key)
+	tags, err := ObjectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
