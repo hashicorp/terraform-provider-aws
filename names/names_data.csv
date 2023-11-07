@@ -342,7 +342,7 @@ sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,,1,,,aws_ssoa
 identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,,,2,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,,
 sso-oidc,ssooidc,ssooidc,ssooidc,,ssooidc,,,SSOOIDC,SSOOIDC,,1,,,aws_ssooidc_,,ssooidc_,SSO OIDC,AWS,,x,,,,
 storagegateway,storagegateway,storagegateway,storagegateway,,storagegateway,,,StorageGateway,StorageGateway,,1,,,aws_storagegateway_,,storagegateway_,Storage Gateway,AWS,,,,,,
-sts,sts,sts,sts,,sts,,,STS,STS,x,,2,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,
+sts,sts,sts,sts,,sts,,,STS,STS,x,1,2,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,
 ,,,,,,,,,,,,,,,,,Sumerian,Amazon,x,,,,,No SDK support
 support,support,support,support,,support,,,Support,Support,,1,,,aws_support_,,support_,Support,AWS,,x,,,,
 swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,,,,,,
