@@ -473,10 +473,6 @@ resource "aws_acmpca_certificate" "test" {
     type  = "YEARS"
     value = 1
   }
-
-  depends_on = [
-	aws_acmpca_certificate_authority_certificate.root,
-  ]
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
@@ -510,10 +506,6 @@ resource "aws_acmpca_certificate" "test" {
     type  = "DAYS"
     value = 1
   }
-
-  depends_on = [
-	aws_acmpca_certificate_authority_certificate.root,
-  ]
 }
 `, csr))
 }
@@ -533,10 +525,6 @@ resource "aws_acmpca_certificate" "test" {
     type  = "END_DATE"
     value = %[2]q
   }
-
-  depends_on = [
-	aws_acmpca_certificate_authority_certificate.root,
-  ]
 }
 `, csr, expiry))
 }
@@ -556,10 +544,6 @@ resource "aws_acmpca_certificate" "test" {
     type  = "ABSOLUTE"
     value = %[2]d
   }
-
-  depends_on = [
-	aws_acmpca_certificate_authority_certificate.root,
-  ]
 }
 `, csr, expiry))
 }
