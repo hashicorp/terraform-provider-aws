@@ -6,8 +6,10 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_athena_named_query` ([#24815](https://github.com/hashicorp/terraform-provider-aws/issues/24815))
 * **New Data Source:** `aws_bedrock_foundation_model` ([#34148](https://github.com/hashicorp/terraform-provider-aws/issues/34148))
 * **New Data Source:** `aws_bedrock_foundation_models` ([#34148](https://github.com/hashicorp/terraform-provider-aws/issues/34148))
+* **New Resource:** `aws_athena_prepared_statement` ([#33417](https://github.com/hashicorp/terraform-provider-aws/issues/33417))
 
 ENHANCEMENTS:
 
