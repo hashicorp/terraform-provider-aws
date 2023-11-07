@@ -107,7 +107,7 @@ The `storageClassAnalysis` configuration supports the following:
 
 The `dataExport` configuration supports the following:
 
-* `outputSchemaVersion` - (Optional) Schema version of exported analytics data. Allowed values: `v1`. Default value: `v1`.
+* `outputSchemaVersion` - (Optional) Schema version of exported analytics data. Allowed values: `V_1`. Default value: `V_1`.
 * `destination` - (Required) Specifies the destination for the exported analytics data (documented below).
 
 The `destination` configuration supports the following:
@@ -118,7 +118,7 @@ The `s3BucketDestination` configuration supports the following:
 
 * `bucketArn` - (Required) ARN of the destination bucket.
 * `bucketAccountId` - (Optional) Account ID that owns the destination bucket.
-* `format` - (Optional) Output format of exported analytics data. Allowed values: `csv`. Default value: `csv`.
+* `format` - (Optional) Output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
 * `prefix` - (Optional) Prefix to append to exported analytics data.
 
 ## Attribute Reference
@@ -147,4 +147,4 @@ Using `terraform import`, import S3 bucket analytics configurations using `bucke
 % terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6e60be173d72b9dbbe3cb220b8b14c97464931aea892e1e32c68720b8bf5012 -->
+<!-- cache-key: cdktf-0.19.0 input-e6e60be173d72b9dbbe3cb220b8b14c97464931aea892e1e32c68720b8bf5012 -->

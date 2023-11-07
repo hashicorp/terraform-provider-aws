@@ -52,10 +52,10 @@ This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule group association, to manage and use it.
 * `firewallRuleGroupId` - (Required) The unique identifier of the firewall rule group.
-* `mutationProtection` - (Optional) If enabled, this setting disallows modification or removal of the association, to help prevent against accidentally altering DNS firewall protections. Valid values: `enabled`, `disabled`.
+* `mutationProtection` - (Optional) If enabled, this setting disallows modification or removal of the association, to help prevent against accidentally altering DNS firewall protections. Valid values: `ENABLED`, `DISABLED`.
 * `priority` - (Required) The setting that determines the processing order of the rule group among the rule groups that you associate with the specified VPC. DNS Firewall filters VPC traffic starting from the rule group with the lowest numeric priority setting.
 * `vpcId` - (Required) The unique identifier of the VPC that you want to associate with the rule group.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN (Amazon Resource Name) of the firewall rule group association.
 * `id` - The identifier for the association.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import Route 53 Resolver DNS Firewall rule group assoc
 % terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-51bb172b49b6d58bc2272c4f5a68cd66487cbbaeb7680be17082513297427b44 -->
+<!-- cache-key: cdktf-0.19.0 input-51bb172b49b6d58bc2272c4f5a68cd66487cbbaeb7680be17082513297427b44 -->

@@ -182,4 +182,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-48934903e4041e09bace32f0ac7c06d12e2ec061fd285d0370242e8daf326808 -->
+<!-- cache-key: cdktf-0.19.0 input-48934903e4041e09bace32f0ac7c06d12e2ec061fd285d0370242e8daf326808 -->

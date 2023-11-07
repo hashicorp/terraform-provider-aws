@@ -159,4 +159,4 @@ Using `terraform import`, import S3 bucket inventory configurations using `bucke
 % terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b32aad34f97db0c4f5b57fbaab467ab8861aa26c814563550d6c606734ebbc3c -->
+<!-- cache-key: cdktf-0.19.0 input-b32aad34f97db0c4f5b57fbaab467ab8861aa26c814563550d6c606734ebbc3c -->

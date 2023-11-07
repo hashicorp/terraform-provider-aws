@@ -134,4 +134,4 @@ Using `terraform import`, import Multi-Region Access Points using the `account_i
 % terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->
+<!-- cache-key: cdktf-0.19.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->

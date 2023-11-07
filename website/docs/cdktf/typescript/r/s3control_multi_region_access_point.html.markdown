@@ -75,15 +75,15 @@ This resource supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `60m`)
+* `delete` - (Default `15m`)
 
 ### Details Configuration
 
 The `details` block supports the following:
 
 * `name` - (Required) The name of the Multi-Region Access Point.
-* `publicAccessBlock` - (Optional) Configuration block to manage the `publicAccessBlock` configuration that you want to apply to this Multi-Region Access Point. You can enable the configuration options in any combination. See [Public Access Block Configuration](#public-access-block-configuration) below for more details.
+* `publicAccessBlock` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this Multi-Region Access Point. You can enable the configuration options in any combination. See [Public Access Block Configuration](#public-access-block-configuration) below for more details.
 * `region` - (Required) The Region configuration block to specify the bucket associated with the Multi-Region Access Point. See [Region Configuration](#region-configuration) below for more details.
 
 For more information, see the documentation on [Multi-Region Access Points](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPoints.html).
@@ -118,7 +118,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
 * `domainName` - The DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
-* `status` - The current status of the Multi-Region Access Point. One of: `ready`, `inconsistentAcrossRegions`, `creating`, `partiallyCreated`, `partiallyDeleted`, `deleting`.
+* `status` - The current status of the Multi-Region Access Point. One of: `READY`, `INCONSISTENT_ACROSS_REGIONS`, `CREATING`, `PARTIALLY_CREATED`, `PARTIALLY_DELETED`, `DELETING`.
 
 ## Import
 
@@ -142,4 +142,4 @@ Using `terraform import`, import Multi-Region Access Points using the `accountId
 % terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->
+<!-- cache-key: cdktf-0.19.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->

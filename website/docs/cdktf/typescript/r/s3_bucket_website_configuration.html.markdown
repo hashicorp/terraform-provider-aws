@@ -87,12 +87,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
-* `errorDocument` - (Optional, Conflicts with `redirectAllRequestsTo`) Name of the error document for the website. [See below](#error_document).
+* `errorDocument` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
-* `indexDocument` - (Optional, Required if `redirectAllRequestsTo` is not specified) Name of the index document for the website. [See below](#index_document).
-* `redirectAllRequestsTo` - (Optional, Required if `indexDocument` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `errorDocument`, `indexDocument`, and `routingRule`.
-* `routingRule` - (Optional, Conflicts with `redirectAllRequestsTo` and `routingRules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
-* `routingRules` - (Optional, Conflicts with `routingRule` and `redirectAllRequestsTo`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
+* `indexDocument` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document).
+* `redirectAllRequestsTo` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
+* `routingRule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
+* `routingRules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
   describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
 
 ### error_document
@@ -106,7 +106,7 @@ The `errorDocument` configuration block supports the following arguments:
 The `indexDocument` configuration block supports the following arguments:
 
 * `suffix` - (Required) Suffix that is appended to a request that is for a directory on the website endpoint.
-For example, if the suffix is `indexHtml` and you make a request to `samplebucket/images/`, the data that is returned will be for the object with the key name `images/indexHtml`.
+For example, if the suffix is `index.html` and you make a request to `samplebucket/images/`, the data that is returned will be for the object with the key name `images/index.html`.
 The suffix must not be empty and must not include a slash character.
 
 ### redirect_all_requests_to
@@ -127,8 +127,8 @@ The `routingRule` configuration block supports the following arguments:
 
 The `condition` configuration block supports the following arguments:
 
-* `httpErrorCodeReturnedEquals` - (Optional, Required if `keyPrefixEquals` is not specified) HTTP error code when the redirect is applied. If specified with `keyPrefixEquals`, then both must be true for the redirect to be applied.
-* `keyPrefixEquals` - (Optional, Required if `httpErrorCodeReturnedEquals` is not specified) Object key name prefix when the redirect is applied. If specified with `httpErrorCodeReturnedEquals`, then both must be true for the redirect to be applied.
+* `httpErrorCodeReturnedEquals` - (Optional, Required if `key_prefix_equals` is not specified) HTTP error code when the redirect is applied. If specified with `key_prefix_equals`, then both must be true for the redirect to be applied.
+* `keyPrefixEquals` - (Optional, Required if `http_error_code_returned_equals` is not specified) Object key name prefix when the redirect is applied. If specified with `http_error_code_returned_equals`, then both must be true for the redirect to be applied.
 
 ### redirect
 
@@ -137,14 +137,14 @@ The `redirect` configuration block supports the following arguments:
 * `hostName` - (Optional) Host name to use in the redirect request.
 * `httpRedirectCode` - (Optional) HTTP redirect code to use on the response.
 * `protocol` - (Optional) Protocol to use when redirecting requests. The default is the protocol that is used in the original request. Valid values: `http`, `https`.
-* `replaceKeyPrefixWith` - (Optional, Conflicts with `replaceKeyWith`) Object key prefix to use in the redirect request. For example, to redirect requests for all pages with prefix `docs/` (objects in the `docs/` folder) to `documents/`, you can set a `condition` block with `keyPrefixEquals` set to `docs/` and in the `redirect` set `replaceKeyPrefixWith` to `/documents`.
-* `replaceKeyWith` - (Optional, Conflicts with `replaceKeyPrefixWith`) Specific object key to use in the redirect request. For example, redirect request to `errorHtml`.
+* `replaceKeyPrefixWith` - (Optional, Conflicts with `replace_key_with`) Object key prefix to use in the redirect request. For example, to redirect requests for all pages with prefix `docs/` (objects in the `docs/` folder) to `documents/`, you can set a `condition` block with `key_prefix_equals` set to `docs/` and in the `redirect` set `replace_key_prefix_with` to `/documents`.
+* `replaceKeyWith` - (Optional, Conflicts with `replace_key_prefix_with`) Specific object key to use in the redirect request. For example, redirect request to `error.html`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 * `websiteDomain` - Domain of the website endpoint. This is used to create Route 53 alias records.
 * `websiteEndpoint` - Website endpoint.
 
@@ -194,4 +194,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-41a0e7bf7a7343429d1d7cf6e55d272d2709263fda9bdf55fa57e0879a7d920a -->
+<!-- cache-key: cdktf-0.19.0 input-41a0e7bf7a7343429d1d7cf6e55d272d2709263fda9bdf55fa57e0879a7d920a -->
