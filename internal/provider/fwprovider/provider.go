@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,9 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+var _ provider.Provider = &fwprovider{}
+var _ provider.ProviderWithFunctions = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
@@ -446,6 +451,18 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	}
 
 	return resources
+}
+
+// Functions returns a slice of functions to instantiate each Function
+// implementation.
+//
+// The function type name is determined by the Function implementing
+// the Metadata method. All functions must have unique names.
+func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
+	return []func() function.Function{
+		tffunction.NewARNBuildFunction,
+		tffunction.NewARNParseFunction,
+	}
 }
 
 func endpointsBlock() schema.SetNestedBlock {
