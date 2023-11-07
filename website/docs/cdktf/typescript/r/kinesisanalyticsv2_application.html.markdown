@@ -301,14 +301,14 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the application.
-* `runtimeEnvironment` - (Required) The runtime environment for the application. Valid values: `sql10`, `flink16`, `flink18`, `flink111`, `flink113`, `flink115`.
+* `runtimeEnvironment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`.
 * `serviceExecutionRole` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `applicationConfiguration` - (Optional) The application's configuration
 * `cloudwatchLoggingOptions` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `forceStop` - (Optional) Whether to force stop an unresponsive Flink-based application.
 * `startApplication` - (Optional) Whether to start or stop the application.
-* `tags` - (Optional) A map of tags to assign to the application. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `applicationConfiguration` object supports the following:
 
@@ -322,7 +322,7 @@ The `applicationConfiguration` object supports the following:
 
 The `applicationCodeConfiguration` object supports the following:
 
-* `codeContentType` - (Required) Specifies whether the code content is in text or zip format. Valid values: `plaintext`, `zipfile`.
+* `codeContentType` - (Required) Specifies whether the code content is in text or zip format. Valid values: `PLAINTEXT`, `ZIPFILE`.
 * `codeContent` - (Optional) The location and type of the application code.
 
 The `codeContent` object supports the following:
@@ -357,7 +357,7 @@ The `flinkApplicationConfiguration` object supports the following:
 
 The `checkpointConfiguration` object supports the following:
 
-* `configurationType` - (Required) Describes whether the application uses Kinesis Data Analytics' default checkpointing behavior. Valid values: `custom`, `default`. Set this attribute to `custom` in order for any specified `checkpointingEnabled`, `checkpointInterval`, or `minPauseBetweenCheckpoints` attribute values to be effective. If this attribute is set to `default`, the application will always use the following values:
+* `configurationType` - (Required) Describes whether the application uses Kinesis Data Analytics' default checkpointing behavior. Valid values: `CUSTOM`, `DEFAULT`. Set this attribute to `CUSTOM` in order for any specified `checkpointing_enabled`, `checkpoint_interval`, or `min_pause_between_checkpoints` attribute values to be effective. If this attribute is set to `DEFAULT`, the application will always use the following values:
     * `checkpointing_enabled = true`
     * `checkpoint_interval = 60000`
     * `min_pause_between_checkpoints = 5000`
@@ -367,13 +367,13 @@ The `checkpointConfiguration` object supports the following:
 
 The `monitoringConfiguration` object supports the following:
 
-* `configurationType` - (Required) Describes whether to use the default CloudWatch logging configuration for an application. Valid values: `custom`, `default`. Set this attribute to `custom` in order for any specified `logLevel` or `metricsLevel` attribute values to be effective.
-* `logLevel` - (Optional) Describes the verbosity of the CloudWatch Logs for an application. Valid values: `debug`, `error`, `info`, `warn`.
-* `metricsLevel` - (Optional) Describes the granularity of the CloudWatch Logs for an application. Valid values: `application`, `operator`, `parallelism`, `task`.
+* `configurationType` - (Required) Describes whether to use the default CloudWatch logging configuration for an application. Valid values: `CUSTOM`, `DEFAULT`. Set this attribute to `CUSTOM` in order for any specified `log_level` or `metrics_level` attribute values to be effective.
+* `logLevel` - (Optional) Describes the verbosity of the CloudWatch Logs for an application. Valid values: `DEBUG`, `ERROR`, `INFO`, `WARN`.
+* `metricsLevel` - (Optional) Describes the granularity of the CloudWatch Logs for an application. Valid values: `APPLICATION`, `OPERATOR`, `PARALLELISM`, `TASK`.
 
 The `parallelismConfiguration` object supports the following:
 
-* `configurationType` - (Required) Describes whether the application uses the default parallelism for the Kinesis Data Analytics service. Valid values: `custom`, `default`. Set this attribute to `custom` in order for any specified `autoScalingEnabled`, `parallelism`, or `parallelismPerKpu` attribute values to be effective.
+* `configurationType` - (Required) Describes whether the application uses the default parallelism for the Kinesis Data Analytics service. Valid values: `CUSTOM`, `DEFAULT`. Set this attribute to `CUSTOM` in order for any specified `auto_scaling_enabled`, `parallelism`, or `parallelism_per_kpu` attribute values to be effective.
 * `autoScalingEnabled` - (Optional) Describes whether the Kinesis Data Analytics service can increase the parallelism of the application in response to increased throughput.
 * `parallelism` - (Optional) Describes the initial number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform.
 * `parallelismPerKpu` - (Optional) Describes the number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform per Kinesis Processing Unit (KPU) used by the application.
@@ -385,8 +385,8 @@ The `runConfiguration` object supports the following:
 
 The `applicationRestoreConfiguration` object supports the following:
 
-* `applicationRestoreType` - (Required) Specifies how the application should be restored. Valid values: `restoreFromCustomSnapshot`, `restoreFromLatestSnapshot`, `skipRestoreFromSnapshot`.
-* `snapshotName` - (Optional) The identifier of an existing snapshot of application state to use to restart an application. The application uses this value if `restoreFromCustomSnapshot` is specified for `applicationRestoreType`.
+* `applicationRestoreType` - (Required) Specifies how the application should be restored. Valid values: `RESTORE_FROM_CUSTOM_SNAPSHOT`, `RESTORE_FROM_LATEST_SNAPSHOT`, `SKIP_RESTORE_FROM_SNAPSHOT`.
+* `snapshotName` - (Optional) The identifier of an existing snapshot of application state to use to restart an application. The application uses this value if `RESTORE_FROM_CUSTOM_SNAPSHOT` is specified for `application_restore_type`.
 
 The `flinkRunConfiguration` object supports the following:
 
@@ -425,7 +425,7 @@ The `inputSchema` object supports the following:
 
 * `recordColumn` - (Required) Describes the mapping of each data element in the streaming source to the corresponding column in the in-application stream.
 * `recordFormat` - (Required) Specifies the format of the records on the streaming source.
-* `recordEncoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `utf8`.
+* `recordEncoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `UTF-8`.
 
 The `recordColumn` object supports the following:
 
@@ -436,7 +436,7 @@ The `recordColumn` object supports the following:
 The `recordFormat` object supports the following:
 
 * `mappingParameters` - (Required) Provides additional mapping information specific to the record format (such as JSON, CSV, or record fields delimited by some delimiter) on the streaming source.
-* `recordFormatType` - (Required) The type of record format. Valid values: `csv`, `json`.
+* `recordFormatType` - (Required) The type of record format. Valid values: `CSV`, `JSON`.
 
 The `mappingParameters` object supports the following:
 
@@ -456,7 +456,7 @@ The `inputStartingPositionConfiguration` object supports the following:
 
 ~> **NOTE:** To modify an application's starting position, first stop the application by setting `start_application = false`, then update `startingPosition` and set `start_application = true`.
 
-* `inputStartingPosition` - (Required) The starting position on the stream. Valid values: `lastStoppedPoint`, `now`, `trimHorizon`.
+* `inputStartingPosition` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
 The `kinesisFirehoseInput` object supports the following:
 
@@ -476,7 +476,7 @@ The `output` object supports the following:
 
 The `destinationSchema` object supports the following:
 
-* `recordFormatType` - (Required) Specifies the format of the records on the output stream. Valid values: `csv`, `json`.
+* `recordFormatType` - (Required) Specifies the format of the records on the output stream. Valid values: `CSV`, `JSON`.
 
 The `kinesisFirehoseOutput` object supports the following:
 
@@ -500,7 +500,7 @@ The `referenceSchema` object supports the following:
 
 * `recordColumn` - (Required) Describes the mapping of each data element in the streaming source to the corresponding column in the in-application stream.
 * `recordFormat` - (Required) Specifies the format of the records on the streaming source.
-* `recordEncoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `utf8`.
+* `recordEncoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `UTF-8`.
 
 The `s3ReferenceDataSource` object supports the following:
 
@@ -525,16 +525,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `createTimestamp` - The current timestamp when the application was created.
 * `lastUpdateTimestamp` - The current timestamp when the application was last updated.
 * `status` - The status of the application.
-* `versionId` - The current application version. Kinesis Data Analytics updates the `versionId` each time the application is updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `versionId` - The current application version. Kinesis Data Analytics updates the `version_id` each time the application is updated.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -558,4 +558,4 @@ Using `terraform import`, import `awsKinesisanalyticsv2Application` using the ap
 % terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d238f855d065dc06f35d3883f4979e1a608611ece08c6d5911d2f7d1d7c3396 -->
+<!-- cache-key: cdktf-0.19.0 input-6d238f855d065dc06f35d3883f4979e1a608611ece08c6d5911d2f7d1d7c3396 -->

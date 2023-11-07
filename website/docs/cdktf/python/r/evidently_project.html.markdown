@@ -162,4 +162,4 @@ Using `terraform import`, import CloudWatch Evidently Project using the `arn`. F
 % terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-98108c26628ca8c5832f4e1d0f90d72906605975ec0417106000b17f811ac230 -->
+<!-- cache-key: cdktf-0.19.0 input-98108c26628ca8c5832f4e1d0f90d72906605975ec0417106000b17f811ac230 -->

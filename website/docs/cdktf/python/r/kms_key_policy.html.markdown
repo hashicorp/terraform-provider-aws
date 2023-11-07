@@ -88,4 +88,4 @@ Using `terraform import`, import KMS Key Policies using the `key_id`. For exampl
 % terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-93175acbae862906327f4f8a607a99ad40bcba6f894b59f1002cd44902d5932d -->
+<!-- cache-key: cdktf-0.19.0 input-93175acbae862906327f4f8a607a99ad40bcba6f894b59f1002cd44902d5932d -->

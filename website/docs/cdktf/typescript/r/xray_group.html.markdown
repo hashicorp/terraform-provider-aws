@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 * `groupName` - (Required) The name of the group.
 * `filterExpression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
 * `insightsConfiguration` - (Optional) Configuration options for enabling insights.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested fields
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ARN of the Group.
 * `arn` - The ARN of the Group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import XRay Groups using the ARN. For example:
 % terraform import aws_xray_group.example arn:aws:xray:us-west-2:1234567890:group/example-group/TNGX7SW5U6QY36T4ZMOUA3HVLBYCZTWDIOOXY3CJAXTHSS3YCWUA
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9e9af30b9adec288e781cee25a67533fbf3d979628ed12ff8336468434aab2be -->
+<!-- cache-key: cdktf-0.19.0 input-9e9af30b9adec288e781cee25a67533fbf3d979628ed12ff8336468434aab2be -->

@@ -40,9 +40,9 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
-* `engineVersion` - (Optional) Version of the DB engine. For example, `1010`, `1012`, `1022`, and `1030`.
-* `instanceClass` - (Optional) DB instance class. Examples of classes are `dbR5Large`, `dbR5Xlarge`, `dbR4Large`, `dbR54Xlarge`, `dbR512Xlarge`, `dbR4Xlarge`, and `dbT3Medium`.
-* `licenseModel` - (Optional) License model. (Default: `amazonLicense`)
+* `engineVersion` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.1.2`, `1.0.2.2`, and `1.0.3.0`.
+* `instanceClass` - (Optional) DB instance class. Examples of classes are `db.r5.large`, `db.r5.xlarge`, `db.r4.large`, `db.r5.4xlarge`, `db.r5.12xlarge`, `db.r4.xlarge`, and `db.t3.medium`.
+* `licenseModel` - (Optional) License model. (Default: `amazon-license`)
 * `preferredInstanceClasses` - (Optional) Ordered list of preferred Neptune DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 * `vpc` - (Optional) Enable to show only VPC offerings.
 
@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportsPerformanceInsights` - Whether a DB instance supports Performance Insights.
 * `supportsStorageEncryption` - Whether a DB instance supports encrypted storage.
 
-<!-- cache-key: cdktf-0.18.0 input-96ed319d4f21711473bbe2040090bbe88fe63b3c2315bc78386e18d098f01431 -->
+<!-- cache-key: cdktf-0.19.0 input-96ed319d4f21711473bbe2040090bbe88fe63b3c2315bc78386e18d098f01431 -->

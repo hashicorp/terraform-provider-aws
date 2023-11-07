@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - IDs of the global networks.
 
-<!-- cache-key: cdktf-0.18.0 input-caac60dd34c0be6b782428c6a470c9e4f07734555611246ab87a27c694b566de -->
+<!-- cache-key: cdktf-0.19.0 input-caac60dd34c0be6b782428c6a470c9e4f07734555611246ab87a27c694b566de -->

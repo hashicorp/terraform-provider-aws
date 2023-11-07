@@ -80,4 +80,4 @@ Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. 
 % terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-027eff160d9ed7f8a55e22eabe213339e7ec60ef328ae2f09043ed6203e4c8ab -->
+<!-- cache-key: cdktf-0.19.0 input-027eff160d9ed7f8a55e22eabe213339e7ec60ef328ae2f09043ed6203e4c8ab -->

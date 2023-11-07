@@ -46,9 +46,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `cidrBlock` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4NetmaskLength`.
+* `cidrBlock` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
 * `ipv4IpamPoolId` - (Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Using IPAM you can monitor IP address usage throughout your AWS Organization.
-* `ipv4NetmaskLength` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4IpamPoolId`.
+* `ipv4NetmaskLength` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4_ipam_pool_id`.
 * `vpcId` - (Required) The ID of the VPC to make the association with.
 
 ## Attribute Reference
@@ -61,8 +61,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsVpcIpv4CidrBlockAssociation` using the VPC 
 % terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6e4470001cf2936d2999e896d3abef4818433b72b60c96368624c0b9f649444 -->
+<!-- cache-key: cdktf-0.19.0 input-e6e4470001cf2936d2999e896d3abef4818433b72b60c96368624c0b9f649444 -->

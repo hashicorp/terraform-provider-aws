@@ -74,9 +74,9 @@ class MyConvertedCode extends TerraformStack {
 
 ~> With the exception of `issuerArn`, the attributes will not be populated unless the `arn` corresponds to an STS assumed role.
 
-* `issuerArn` - IAM source role ARN if `arn` corresponds to an STS assumed role. Otherwise, `issuerArn` is equal to `arn`.
+* `issuerArn` - IAM source role ARN if `arn` corresponds to an STS assumed role. Otherwise, `issuer_arn` is equal to `arn`.
 * `issuerId` - Unique identifier of the IAM role that issues the STS assumed role.
 * `issuerName` - Name of the source role. Only available if `arn` corresponds to an STS assumed role.
 * `sessionName` - Name of the STS session. Only available if `arn` corresponds to an STS assumed role.
 
-<!-- cache-key: cdktf-0.18.0 input-2e84cd322ad745896d1da57edd8c38897f3e2a4e912db65dea1fc036c7a5e65a -->
+<!-- cache-key: cdktf-0.19.0 input-2e84cd322ad745896d1da57edd8c38897f3e2a4e912db65dea1fc036c7a5e65a -->

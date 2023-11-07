@@ -45,13 +45,13 @@ This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
-* `status` - (Required) Transfer acceleration state of the bucket. Valid values: `enabled`, `suspended`.
+* `status` - (Required) Transfer acceleration state of the bucket. Valid values: `Enabled`, `Suspended`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -99,4 +99,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_accelerate_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d5969f8a31c3a0cabfdc95aa5af8e4294acf1e21e3704ef66fc529acc0c176b8 -->
+<!-- cache-key: cdktf-0.19.0 input-d5969f8a31c3a0cabfdc95aa5af8e4294acf1e21e3704ef66fc529acc0c176b8 -->

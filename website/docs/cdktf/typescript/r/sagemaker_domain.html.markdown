@@ -137,21 +137,21 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `authMode` - (Required) The mode of authentication that members use to access the domain. Valid values are `iam` and `sso`.
+* `authMode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `defaultSpaceSettings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `defaultUserSettings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domainName` - (Required) The domain name.
+* `defaultUserSettings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domain_name` - (Required) The domain name.
 * `subnetIds` - (Required) The VPC subnets that Studio uses for communication.
 * `vpcId` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 
 The following arguments are optional:
 
-* `appNetworkAccessType` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `publicInternetOnly`. Valid values are `publicInternetOnly` and `vpcOnly`.
-* `appSecurityGroupManagement` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `vpcOnly` mode. Valid values are `service` and `customer`.
+* `appNetworkAccessType` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
+* `appSecurityGroupManagement` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
 * `domainSettings` - (Optional) The domain settings. See [Domain Settings](#domain_settings) below.
 * `domainSettings` - (Optional) The domain's settings.
 * `kmsKeyId` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `retentionPolicy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention_policy) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_space_settings
 
@@ -174,8 +174,8 @@ The following arguments are optional:
 
 #### r_studio_server_pro_app_settings
 
-* `accessStatus` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `enabled` and `disabled`.
-* `userGroup` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `rStudioUser`. The `rStudioAdmin` value allows the user access to the RStudio Administrative Dashboard. Valid values are `rStudioUser` and `rStudioAdmin`.
+* `accessStatus` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
+* `userGroup` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
 
 #### canvas_app_settings
 
@@ -186,12 +186,12 @@ The following arguments are optional:
 ##### model_register_settings
 
 * `crossAccountModelRegisterRoleArn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas AWS account than the AWS account in which SageMaker model registry is set up.
-* `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### time_series_forecasting_settings
 
 * `amazonForecastRoleArn` - (Optional) The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
-* `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `ENABLED` and `DISABLED`.
 
 ##### workspace_settings
 
@@ -200,9 +200,9 @@ The following arguments are optional:
 
 #### sharing_settings
 
-* `notebookOutputOption` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `disabled`. Valid values are `allowed` and `disabled`.
-* `s3KmsKeyId` - (Optional) When `notebookOutputOption` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
-* `s3OutputPath` - (Optional) When `notebookOutputOption` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
+* `notebookOutputOption` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `Disabled`. Valid values are `Allowed` and `Disabled`.
+* `s3KmsKeyId` - (Optional) When `notebook_output_option` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
+* `s3OutputPath` - (Optional) When `notebook_output_option` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
 
 #### tensor_board_app_settings
 
@@ -244,7 +244,7 @@ The following arguments are optional:
 
 ### domain_settings
 
-* `executionRoleIdentityConfig` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `userProfileName` and `disabled`.
+* `executionRoleIdentityConfig` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `rStudioServerProDomainSettings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [RStudioServerProDomainSettings](#r_studio_server_pro_domain_settings) below.
 * `securityGroupIds` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
 
@@ -257,7 +257,7 @@ The following arguments are optional:
 
 ### retention_policy
 
-* `homeEfsFileSystem` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `retain` or `delete`.  Default value is `retain`.
+* `homeEfsFileSystem` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
 
 ## Attribute Reference
 
@@ -269,7 +269,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `singleSignOnManagedApplicationInstanceId` - The SSO managed application instance ID.
 * `securityGroupIdForDomainBoundary` - The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
 * `homeEfsFileSystemId` - The ID of the Amazon Elastic File System (EFS) managed by this Domain.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -293,4 +293,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-19db5ea50c6e2c5430e3020c46bbc94271da9af4b5dcb1c6e538ebe50443f56a -->
+<!-- cache-key: cdktf-0.19.0 input-19db5ea50c6e2c5430e3020c46bbc94271da9af4b5dcb1c6e538ebe50443f56a -->

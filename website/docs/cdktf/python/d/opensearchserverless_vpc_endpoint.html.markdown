@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - The IDs of the subnets from which you access OpenSearch Serverless.
 * `vpc_id` - The ID of the VPC from which you access OpenSearch Serverless.
 
-<!-- cache-key: cdktf-0.18.0 input-2c446629971d0d10ff448173c283856675b8628bf661beac57c916ae51592d6d -->
+<!-- cache-key: cdktf-0.19.0 input-2c446629971d0d10ff448173c283856675b8628bf661beac57c916ae51592d6d -->

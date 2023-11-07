@@ -75,7 +75,7 @@ This resource supports the following arguments:
 The `targetGrant` configuration block supports the following arguments:
 
 * `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
-* `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `fullControl`, `read`, `write`.
+* `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `READ`, `WRITE`.
 
 ### grantee
 
@@ -83,14 +83,14 @@ The `grantee` configuration block supports the following arguments:
 
 * `emailAddress` - (Optional) Email address of the grantee. See [Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for supported AWS regions where this argument can be specified.
 * `id` - (Optional) Canonical user ID of the grantee.
-* `type` - (Required) Type of grantee. Valid values: `canonicalUser`, `amazonCustomerByEmail`, `group`.
+* `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -138,4 +138,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3cba2dd83f76e650304ea09cc4ee162c5bf05b0006a74f1eff49c0cb39bfcded -->
+<!-- cache-key: cdktf-0.19.0 input-3cba2dd83f76e650304ea09cc4ee162c5bf05b0006a74f1eff49c0cb39bfcded -->

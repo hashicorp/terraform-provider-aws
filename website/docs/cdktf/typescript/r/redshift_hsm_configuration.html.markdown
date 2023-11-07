@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `hsmPartitionName` - (Required, Forces new resource) The name of the partition in the HSM where the Amazon Redshift clusters will store their database encryption keys.
 * `hsmPartitionPassword` - (Required, Forces new resource) The password required to access the HSM partition.
 * `hsmServerPublicCertificate` - (Required, Forces new resource) The HSMs public certificate file. When using Cloud HSM, the file name is server.pem.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Hsm Client Certificate.
 * `hsmConfigurationPublicKey` - The public key that the Amazon Redshift cluster will use to connect to the HSM. You must register the public key in the HSM.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsmConf
 % terraform import aws_redshift_hsm_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd8a362c2861dd8693c1edee0bfc416d38b5b6843e0fe94fad4b67e8798aa729 -->
+<!-- cache-key: cdktf-0.19.0 input-bd8a362c2861dd8693c1edee0bfc416d38b5b6843e0fe94fad4b67e8798aa729 -->

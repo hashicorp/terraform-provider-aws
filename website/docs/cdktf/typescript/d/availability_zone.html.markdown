@@ -120,21 +120,21 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `groupName` - For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `usWest2Lax1`.
+* `groupName` - For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `nameSuffix` - Part of the AZ name that appears after the region name, uniquely identifying the AZ within its region.
-For Availability Zones this is usually a single letter, for example `a` for the `usWest2A` zone.
-For Local and Wavelength Zones this is a longer string, for example `wl1SfoWlz1` for the `usWest2Wl1SfoWlz1` zone.
+For Availability Zones this is usually a single letter, for example `a` for the `us-west-2a` zone.
+For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz-1` for the `us-west-2-wl1-sfo-wlz-1` zone.
 * `networkBorderGroup` - The name of the location from which the address is advertised.
-* `optInStatus` - For Availability Zones, this always has the value of `optInNotRequired`. For Local Zones, this is the opt in status. The possible values are `optedIn` and `notOptedIn`.
+* `optInStatus` - For Availability Zones, this always has the value of `opt-in-not-required`. For Local Zones, this is the opt in status. The possible values are `opted-in` and `not-opted-in`.
 * `parentZoneId` - ID of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `parentZoneName` - Name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `region` - Region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
-* `zoneType` - Type of zone. Values are `availabilityZone`, `localZone`, and `wavelengthZone`.
+* `zoneType` - Type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-862d7a30e7b7fec1243f9a3afe7925988e240b4d36970fb4f9743ee1e9a647b3 -->
+<!-- cache-key: cdktf-0.19.0 input-862d7a30e7b7fec1243f9a3afe7925988e240b4d36970fb4f9743ee1e9a647b3 -->

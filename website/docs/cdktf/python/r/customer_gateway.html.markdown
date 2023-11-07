@@ -77,4 +77,4 @@ Using `terraform import`, import Customer Gateways using the `id`. For example:
 % terraform import aws_customer_gateway.main cgw-b4dc3961
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-88fc55069a35af7318bebf35b35547af61fdd41a1afa9f74484f765b22315549 -->
+<!-- cache-key: cdktf-0.19.0 input-88fc55069a35af7318bebf35b35547af61fdd41a1afa9f74484f765b22315549 -->

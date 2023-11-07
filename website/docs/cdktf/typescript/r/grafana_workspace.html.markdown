@@ -62,24 +62,24 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `accountAccessType` - (Required) The type of account access for the workspace. Valid values are `currentAccount` and `organization`. If `organization` is specified, then `organizationalUnits` must also be present.
-* `authenticationProviders` - (Required) The authentication providers for the workspace. Valid values are `awsSso`, `saml`, or both.
-* `permissionType` - (Required) The permission type of the workspace. If `serviceManaged` is specified, the IAM roles and IAM policy attachments are generated automatically. If `customerManaged` is specified, the IAM roles and IAM policy attachments will not be created.
+* `accountAccessType` - (Required) The type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
+* `authenticationProviders` - (Required) The authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
+* `permissionType` - (Required) The permission type of the workspace. If `SERVICE_MANAGED` is specified, the IAM roles and IAM policy attachments are generated automatically. If `CUSTOMER_MANAGED` is specified, the IAM roles and IAM policy attachments will not be created.
 
 The following arguments are optional:
 
 * `configuration` - (Optional) The configuration string for the workspace that you create. For more information about the format and configuration options available, see [Working in your Grafana workspace](https://docs.aws.amazon.com/grafana/latest/userguide/AMG-configure-workspace.html).
-* `dataSources` - (Optional) The data sources for the workspace. Valid values are `amazonOpensearchService`, `athena`, `cloudwatch`, `prometheus`, `redshift`, `sitewise`, `timestream`, `xray`
+* `dataSources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `XRAY`
 * `description` - (Optional) The workspace description.
-* `grafanaVersion` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `84` and `94`. If not specified, defaults to `84`.
+* `grafanaVersion` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4` and `9.4`. If not specified, defaults to `8.4`.
 * `name` - (Optional) The Grafana workspace name.
 * `networkAccessControl` - (Optional) Configuration for network access to your workspace.See [Network Access Control](#network-access-control) below.
-* `notificationDestinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `sns`.
+* `notificationDestinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.
 * `organizationRoleName` - (Optional) The role name that the workspace uses to access resources through Amazon Organizations.
 * `organizationalUnits` - (Optional) The Amazon Organizations organizational units that the workspace is authorized to use data sources from.
 * `roleArn` - (Optional) The IAM role ARN that the workspace assumes.
 * `stackSetName` - (Optional) The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcConfiguration` - (Optional) The configuration settings for an Amazon VPC that contains data sources for your Grafana workspace to connect to. See [VPC Configuration](#vpc-configuration) below.
 
 ### Network Access Control
@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
 * `grafanaVersion` - The version of Grafana running on the workspace.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -123,4 +123,4 @@ Using `terraform import`, import Grafana Workspace using the workspace's `id`. F
 % terraform import aws_grafana_workspace.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-820d8fa60d26cc380b30e0e075e8870fa4551ee953fef3e08d695a7c4dd8f5a0 -->
+<!-- cache-key: cdktf-0.19.0 input-820d8fa60d26cc380b30e0e075e8870fa4551ee953fef3e08d695a7c4dd8f5a0 -->

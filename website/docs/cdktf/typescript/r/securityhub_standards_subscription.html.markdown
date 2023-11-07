@@ -123,4 +123,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-87f38b34c6cd1e5a8b36b0f50996b817110ec2206abee08341de02841e9f3b5f -->
+<!-- cache-key: cdktf-0.19.0 input-87f38b34c6cd1e5a8b36b0f50996b817110ec2206abee08341de02841e9f3b5f -->

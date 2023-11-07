@@ -268,4 +268,4 @@ Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. F
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a5b785ffa278b065243da40d1d5af1821002775fa1e69440478be7d749ef9cfd -->
+<!-- cache-key: cdktf-0.19.0 input-a5b785ffa278b065243da40d1d5af1821002775fa1e69440478be7d749ef9cfd -->

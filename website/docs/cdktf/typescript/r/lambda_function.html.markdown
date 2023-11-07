@@ -334,33 +334,33 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x8664"]` and `["arm64"]`. Default is `["x8664"]`. Removing this attribute, function's architecture stay the same.
+* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stay the same.
 * `codeSigningConfigArn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
 * `deadLetterConfig` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `environment` - (Optional) Configuration block. Detailed below.
 * `ephemeralStorage` - (Optional) The amount of Ephemeral storage(`/tmp`) to allocate for the Lambda Function in MB. This parameter is used to expand the total amount of Ephemeral storage available, beyond the default amount of `512`MB. Detailed below.
 * `fileSystemConfig` - (Optional) Configuration block. Detailed below.
-* `filename` - (Optional) Path to the function's deployment package within the local filesystem. Exactly one of `filename`, `imageUri`, or `s3Bucket` must be specified.
+* `filename` - (Optional) Path to the function's deployment package within the local filesystem. Exactly one of `filename`, `image_uri`, or `s3_bucket` must be specified.
 * `handler` - (Optional) Function [entrypoint][3] in your code.
 * `imageConfig` - (Optional) Configuration block. Detailed below.
-* `imageUri` - (Optional) ECR image URI containing the function's deployment package. Exactly one of `filename`, `imageUri`,  or `s3Bucket` must be specified.
+* `imageUri` - (Optional) ECR image URI containing the function's deployment package. Exactly one of `filename`, `image_uri`,  or `s3_bucket` must be specified.
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memorySize` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
-* `packageType` - (Optional) Lambda deployment package type. Valid values are `zip` and `image`. Defaults to `zip`.
+* `packageType` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
-* `reservedConcurrentExecutions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `1`. See [Managing Concurrency][9]
-* `replaceSecurityGroupsOnDestroy` - (Optional, **Deprecated**) **AWS no longer supports this operation. This attribute now has no effect and will be removed in a future major version.** Whether to replace the security groups on associated lambda network interfaces upon destruction. Removing these security groups from orphaned network interfaces can speed up security group deletion times by avoiding a dependency on AWS's internal cleanup operations. By default, the ENI security groups will be replaced with the `default` security group in the function's VPC. Set the `replacementSecurityGroupIds` attribute to use a custom list of security groups for replacement.
-* `replacementSecurityGroupIds` - (Optional, **Deprecated**) List of security group IDs to assign to orphaned Lambda function network interfaces upon destruction. `replaceSecurityGroupsOnDestroy` must be set to `true` to use this attribute.
+* `reservedConcurrentExecutions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
+* `replaceSecurityGroupsOnDestroy` - (Optional, **Deprecated**) **AWS no longer supports this operation. This attribute now has no effect and will be removed in a future major version.** Whether to replace the security groups on associated lambda network interfaces upon destruction. Removing these security groups from orphaned network interfaces can speed up security group deletion times by avoiding a dependency on AWS's internal cleanup operations. By default, the ENI security groups will be replaced with the `default` security group in the function's VPC. Set the `replacement_security_group_ids` attribute to use a custom list of security groups for replacement.
+* `replacementSecurityGroupIds` - (Optional, **Deprecated**) List of security group IDs to assign to orphaned Lambda function network interfaces upon destruction. `replace_security_groups_on_destroy` must be set to `true` to use this attribute.
 * `runtime` - (Optional) Identifier of the function's runtime. See [Runtimes][6] for valid values.
-* `s3Bucket` - (Optional) S3 bucket location containing the function's deployment package. This bucket must reside in the same AWS region where you are creating the Lambda function. Exactly one of `filename`, `imageUri`, or `s3Bucket` must be specified. When `s3Bucket` is set, `s3Key` is required.
-* `s3Key` - (Optional) S3 key of an object containing the function's deployment package. When `s3Bucket` is set, `s3Key` is required.
-* `s3ObjectVersion` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `imageUri`.
+* `s3Bucket` - (Optional) S3 bucket location containing the function's deployment package. This bucket must reside in the same AWS region where you are creating the Lambda function. Exactly one of `filename`, `image_uri`, or `s3_bucket` must be specified. When `s3_bucket` is set, `s3_key` is required.
+* `s3Key` - (Optional) S3 key of an object containing the function's deployment package. When `s3_bucket` is set, `s3_key` is required.
+* `s3ObjectVersion` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skipDestroy` - (Optional) Set to true if you do not wish the function to be deleted at destroy time, and instead just remove the function from the Terraform state.
-* `sourceCodeHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3Key`. The usual way to set this is `filebase64Sha256("fileZip")` (Terraform 0.11.12 and later) or `base64Sha256(file("fileZip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
+* `sourceCodeHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
 * `snapStart` - (Optional) Snap start settings block. Detailed below.
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracingConfig` - (Optional) Configuration block. Detailed below.
 * `vpcConfig` - (Optional) Configuration block. Detailed below.
@@ -369,7 +369,7 @@ The following arguments are optional:
 
 Dead letter queue configuration that specifies the queue or topic where Lambda sends asynchronous events when they fail processing. For more information, see [Dead Letter Queues](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq).
 
-* `targetArn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails. If this option is used, the function's IAM role must be granted suitable access to write to the target object, which means allowing either the `sns:publish` or `sqs:sendMessage` action on this ARN, depending on which service is targeted.
+* `targetArn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails. If this option is used, the function's IAM role must be granted suitable access to write to the target object, which means allowing either the `sns:Publish` or `sqs:SendMessage` action on this ARN, depending on which service is targeted.
 
 ### environment
 
@@ -377,7 +377,7 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 
 ### ephemeral_storage
 
-* `size` - (Required) The size of the Lambda function Ephemeral storage(`/tmp`) represented in MB. The minimum supported `ephemeralStorage` value defaults to `512`MB and the maximum supported value is `10240`MB.
+* `size` - (Required) The size of the Lambda function Ephemeral storage(`/tmp`) represented in MB. The minimum supported `ephemeral_storage` value defaults to `512`MB and the maximum supported value is `10240`MB.
 
 ### file_system_config
 
@@ -390,7 +390,7 @@ Connection settings for an EFS file system. Before creating or updating Lambda f
 
 Container image configuration values that override the values in the container image Dockerfile.
 
-* `command` - (Optional) Parameters that you want to pass in with `entryPoint`.
+* `command` - (Optional) Parameters that you want to pass in with `entry_point`.
 * `entryPoint` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
 * `workingDirectory` - (Optional) Working directory.
 
@@ -398,11 +398,11 @@ Container image configuration values that override the values in the container i
 
 Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
-* `applyOn` - (Required) Conditions where snap start is enabled. Valid values are `publishedVersions`.
+* `applyOn` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
 ### tracing_config
 
-* `mode` - (Required) Whether to sample and trace a subset of incoming requests with AWS X-Ray. Valid values are `passThrough` and `active`. If `passThrough`, Lambda will only trace the request from an upstream service if it contains a tracing header with "sampled=1". If `active`, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.
+* `mode` - (Required) Whether to sample and trace a subset of incoming requests with AWS X-Ray. Valid values are `PassThrough` and `Active`. If `PassThrough`, Lambda will only trace the request from an upstream service if it contains a tracing header with "sampled=1". If `Active`, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.
 
 ### vpc_config
 
@@ -419,15 +419,15 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
-* `invokeArn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`awsApiGatewayIntegration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
+* `invokeArn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `lastModified` - Date this resource was last modified.
 * `qualifiedArn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
-* `qualifiedInvokeArn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`awsApiGatewayIntegration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
+* `qualifiedInvokeArn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `signingJobArn` - ARN of the signing job.
 * `signingProfileVersionArn` - ARN of the signing profile version.
-* `snapStartOptimizationStatus` - Optimization status of the snap start configuration. Valid values are `on` and `off`.
+* `snapStartOptimizationStatus` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `sourceCodeSize` - Size in bytes of the function .zip file.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpcConfigVpcId` - ID of the VPC.
 
@@ -447,9 +447,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `update` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -473,4 +473,4 @@ Using `terraform import`, import Lambda Functions using the `functionName`. For 
 % terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-169b7bbe476a39e939fb773a4176feae6d770083a7a351a021d29d9dd52746cd -->
+<!-- cache-key: cdktf-0.19.0 input-169b7bbe476a39e939fb773a4176feae6d770083a7a351a021d29d9dd52746cd -->

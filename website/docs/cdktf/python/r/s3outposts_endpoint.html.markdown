@@ -73,4 +73,4 @@ Using `terraform import`, import S3 Outposts Endpoints using Amazon Resource Nam
 % terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b93127d0ddadbf29aad3870a10cc0f25e4ba9456be004933e642fe9c8e38df8b -->
+<!-- cache-key: cdktf-0.19.0 input-b93127d0ddadbf29aad3870a10cc0f25e4ba9456be004933e642fe9c8e38df8b -->
