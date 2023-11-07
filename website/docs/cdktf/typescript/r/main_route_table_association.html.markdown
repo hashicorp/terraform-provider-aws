@@ -66,12 +66,12 @@ the `mainRouteTableAssociation` delete to work properly.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `2M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
 [tf-route-tables]: /docs/providers/aws/r/route_table.html
 [tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
 
-<!-- cache-key: cdktf-0.18.0 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->
+<!-- cache-key: cdktf-0.19.0 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->
