@@ -74,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFargateProfile,
+			Factory:  resourceFargateProfile,
 			TypeName: "aws_eks_fargate_profile",
 			Name:     "Fargate Profile",
 			Tags: &types.ServicePackageResourceTags{

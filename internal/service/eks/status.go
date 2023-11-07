@@ -12,22 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusFargateProfile(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusNodegroup(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)

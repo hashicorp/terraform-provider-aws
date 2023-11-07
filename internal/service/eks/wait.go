@@ -17,40 +17,6 @@ const (
 	clusterDeleteRetryTimeout = 60 * time.Minute
 )
 
-func waitFargateProfileCreated(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.FargateProfileStatusCreating},
-		Target:  []string{eks.FargateProfileStatusActive},
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.FargateProfile); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFargateProfileDeleted(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eks.FargateProfileStatusActive, eks.FargateProfileStatusDeleting},
-		Target:  []string{},
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.FargateProfile); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitNodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusCreating},

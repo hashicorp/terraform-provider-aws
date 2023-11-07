@@ -12,35 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
-	input := &eks.DescribeFargateProfileInput{
-		ClusterName:        aws.String(clusterName),
-		FargateProfileName: aws.String(fargateProfileName),
-	}
-
-	output, err := conn.DescribeFargateProfileWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.FargateProfile == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.FargateProfile, nil
-}
-
 func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
 	input := &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
