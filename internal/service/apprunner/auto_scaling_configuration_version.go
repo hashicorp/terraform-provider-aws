@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -84,7 +85,7 @@ func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 }
 
 func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("auto_scaling_configuration_name").(string)
 	input := &apprunner.CreateAutoScalingConfigurationInput{
@@ -93,18 +94,18 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("max_concurrency"); ok {
-		input.MaxConcurrency = aws.Int64(int64(v.(int)))
+		input.MaxConcurrency = aws.Int32(v.(int32))
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {
-		input.MaxSize = aws.Int64(int64(v.(int)))
+		input.MaxSize = aws.Int32(v.(int32))
 	}
 
 	if v, ok := d.GetOk("min_size"); ok {
-		input.MinSize = aws.Int64(int64(v.(int)))
+		input.MinSize = aws.Int32(v.(int32))
 	}
 
-	output, err := conn.CreateAutoScalingConfigurationWithContext(ctx, input)
+	output, err := conn.CreateAutoScalingConfiguration(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating App Runner AutoScaling Configuration Version (%s): %s", name, err)
@@ -114,7 +115,7 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 		return diag.Errorf("creating App Runner AutoScaling Configuration Version (%s): empty output", name)
 	}
 
-	d.SetId(aws.StringValue(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
+	d.SetId(aws.ToString(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
 
 	if err := WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) creation: %s", d.Id(), err)
@@ -124,15 +125,15 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	input := &apprunner.DescribeAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeAutoScalingConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeAutoScalingConfiguration(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] App Runner AutoScaling Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -146,9 +147,9 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading App Runner AutoScaling Configuration Version (%s): empty output", d.Id())
 	}
 
-	if aws.StringValue(output.AutoScalingConfiguration.Status) == AutoScalingConfigurationStatusInactive {
+	if string(output.AutoScalingConfiguration.Status) == AutoScalingConfigurationStatusInactive {
 		if d.IsNewResource() {
-			return diag.Errorf("reading App Runner AutoScaling Configuration Version (%s): %s after creation", d.Id(), aws.StringValue(output.AutoScalingConfiguration.Status))
+			return diag.Errorf("reading App Runner AutoScaling Configuration Version (%s): %s after creation", d.Id(), string(output.AutoScalingConfiguration.Status))
 		}
 		log.Printf("[WARN] App Runner AutoScaling Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -156,7 +157,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	}
 
 	config := output.AutoScalingConfiguration
-	arn := aws.StringValue(config.AutoScalingConfigurationArn)
+	arn := aws.ToString(config.AutoScalingConfigurationArn)
 
 	d.Set("arn", arn)
 	d.Set("auto_scaling_configuration_name", config.AutoScalingConfigurationName)
@@ -176,15 +177,15 @@ func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	input := &apprunner.DeleteAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteAutoScalingConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteAutoScalingConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -193,7 +194,7 @@ func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err := WaitAutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil
 		}
 		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) deletion: %s", d.Id(), err)
