@@ -29,7 +29,7 @@ resource "aws_athena_database" "test" {
 
 resource "aws_athena_prepared_statement" "test" {
   name            = "tf_test"
-  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE x = ?" 
+  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE x = ?"
   workgroup       = aws_athena_workgroup.test.name
 }
 ```
