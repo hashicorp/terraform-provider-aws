@@ -16,7 +16,8 @@ func FindConnectionsummaryByName(ctx context.Context, conn *apprunner.Client, na
 		ConnectionName: aws.String(name),
 	}
 
-	var cs *types.ConnectionSummary
+	var cs types.ConnectionSummary
+	entryExists := false
 
 	paginator := apprunner.NewListConnectionsPaginator(conn, input, func(o *apprunner.ListConnectionsPaginatorOptions) {
 		o.StopOnDuplicateToken = true
@@ -35,17 +36,18 @@ func FindConnectionsummaryByName(ctx context.Context, conn *apprunner.Client, na
 			}
 
 			if aws.ToString(c.ConnectionName) == name {
-				cs = &c
+				cs = c
+				entryExists = true
 				break
 			}
 		}
 	}
 
-	if cs == nil {
+	if !entryExists {
 		return nil, nil
 	}
 
-	return cs, nil
+	return &cs, nil
 }
 
 func FindCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) (*types.CustomDomain, error) {
@@ -53,7 +55,8 @@ func FindCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, s
 		ServiceArn: aws.String(serviceArn),
 	}
 
-	var customDomain *types.CustomDomain
+	var customDomain types.CustomDomain
+	entryExists := false
 
 	paginator := apprunner.NewDescribeCustomDomainsPaginator(conn, input, func(o *apprunner.DescribeCustomDomainsPaginatorOptions) {
 		o.StopOnDuplicateToken = true
@@ -72,16 +75,16 @@ func FindCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, s
 			}
 
 			if aws.ToString(cd.DomainName) == domainName {
-				customDomain = &cd
+				customDomain = cd
+				entryExists = true
 				break
 			}
 		}
-
 	}
 
-	if customDomain == nil {
+	if !entryExists {
 		return nil, nil
 	}
 
-	return customDomain, nil
+	return &customDomain, nil
 }
