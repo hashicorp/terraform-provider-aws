@@ -52,4 +52,4 @@ The following attribute is additionally exported:
 * `status` - The status of the rule group.
 * `status_message` - Additional information about the status of the rule group, if available.
 
-<!-- cache-key: cdktf-0.18.0 input-472d18e53a4acc66b8fb9f05bea99d5b96b2b4c83c2cdc01e472235760993460 -->
+<!-- cache-key: cdktf-0.19.0 input-472d18e53a4acc66b8fb9f05bea99d5b96b2b4c83c2cdc01e472235760993460 -->

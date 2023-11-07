@@ -60,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
     - `AUTHOR`: A user who can create data sources, datasets, analyses, and dashboards.
     - `ADMIN`: A user who is an author, who can also manage Amazon QuickSight settings.
 
-<!-- cache-key: cdktf-0.18.0 input-8a09e3c69e880b414f66924d3def015ce6ed48913a9a062d5f17590c11a6327c -->
+<!-- cache-key: cdktf-0.19.0 input-8a09e3c69e880b414f66924d3def015ce6ed48913a9a062d5f17590c11a6327c -->
