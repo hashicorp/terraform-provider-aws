@@ -185,7 +185,7 @@ func testAccPreparedStatementConfig_basic(rName, condition string) string {
 	return acctest.ConfigCompose(testAccPreparedStatementConfig_base(rName), fmt.Sprintf(`
 resource "aws_athena_prepared_statement" "test" {
   name            = %[1]q
-  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE %[2]s" 
+  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE %[2]s"
   workgroup       = aws_athena_workgroup.test.name
 }
 `, rName, condition))
@@ -196,7 +196,7 @@ func testAccPreparedStatementConfig_update(rName, condition, description string)
 resource "aws_athena_prepared_statement" "test" {
   name            = %[1]q
   description     = %[3]q
-  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE %[2]s" 
+  query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE %[2]s"
   workgroup       = aws_athena_workgroup.test.name
 }
 `, rName, condition, description))
