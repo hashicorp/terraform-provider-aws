@@ -213,6 +213,7 @@ import (
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
+	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
@@ -969,6 +970,10 @@ func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.
 
 func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
 	return errs.Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
+}
+
+func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
+	return errs.Must(conn[*sts_sdkv1.STS](ctx, c, names.STS))
 }
 
 func (c *AWSClient) STSClient(ctx context.Context) *sts_sdkv2.Client {
