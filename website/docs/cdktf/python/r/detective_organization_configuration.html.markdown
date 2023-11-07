@@ -73,4 +73,4 @@ Using `terraform import`, import `aws_detective_organization_admin_account` usin
 % terraform import aws_detective_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-85400afaf5e889b90b36b276585b24274d5db6e55af22b711953560fdbcdcf3c -->
+<!-- cache-key: cdktf-0.19.0 input-85400afaf5e889b90b36b276585b24274d5db6e55af22b711953560fdbcdcf3c -->

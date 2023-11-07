@@ -48,7 +48,7 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the DB subnet group. Defaults to "Managed by Terraform".
 * `subnetIds` - (Required) A list of VPC subnet IDs.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The db subnet group name.
 * `arn` - The ARN of the db subnet group.
 * `supportedNetworkTypes` - The network type of the db subnet group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Provides the VPC ID of the DB subnet group.
 
 ## Import
@@ -82,4 +82,4 @@ Using `terraform import`, import DB Subnet groups using the `name`. For example:
 % terraform import aws_db_subnet_group.default production-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-179353c0fba303d203c766c21037c29f91420947dad2e027698bb64aec31054a -->
+<!-- cache-key: cdktf-0.19.0 input-179353c0fba303d203c766c21037c29f91420947dad2e027698bb64aec31054a -->
