@@ -29,7 +29,7 @@ func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "querystring", resourceName, "querystring"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "query", resourceName, "querystring"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workgroup", resourceName, "workgroup"),
 				),
 			},

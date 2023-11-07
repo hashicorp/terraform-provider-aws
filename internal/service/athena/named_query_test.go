@@ -134,12 +134,16 @@ resource "aws_athena_named_query" "test" {
 
 func testAccNamedQueryConfig_workGroup(rInt int, rName string) string {
 	return acctest.ConfigCompose(testAccNamedQueryConfig_base(rInt, rName), fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = "%[3]s-%[1]s-%[2]d"
+}
+
 resource "aws_athena_named_query" "test" {
-  name        = "%[2]s-%[1]s"
+  name        = "%[3]s-%[1]s"
   workgroup   = aws_athena_workgroup.test.id
   database    = aws_athena_database.test.name
   query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }
-`, rName, acctest.ResourcePrefix))
+`, rName, rInt, acctest.ResourcePrefix))
 }
