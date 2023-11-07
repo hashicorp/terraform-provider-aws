@@ -19,7 +19,7 @@ import (
 
 // TestSharedConfigFileParsing prevents regression in shared config file parsing
 // * https://github.com/aws/aws-sdk-go-v2/issues/2349: indented keys
-func TestSharedConfigFileParsing(t *testing.T) {
+func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 	testcases := map[string]struct {
 		Config                  map[string]any
 		SharedConfigurationFile string
@@ -30,8 +30,9 @@ func TestSharedConfigFileParsing(t *testing.T) {
 			SharedConfigurationFile: `
 	[default]
 	region = us-west-2
-	`,
+	`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
+				//lintignore:AWSAT003
 				if a, e := meta.Region, "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
@@ -39,7 +40,7 @@ func TestSharedConfigFileParsing(t *testing.T) {
 		},
 	}
 
-	for name, tc := range testcases {
+	for name, tc := range testcases { //nolint:paralleltest
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
@@ -64,7 +65,7 @@ func TestSharedConfigFileParsing(t *testing.T) {
 
 				defer os.Remove(file.Name())
 
-				err = os.WriteFile(file.Name(), []byte(tc.SharedConfigurationFile), 0600) //nolint:gomnd
+				err = os.WriteFile(file.Name(), []byte(tc.SharedConfigurationFile), 0600)
 
 				if err != nil {
 					t.Fatalf("unexpected error writing shared configuration file: %s", err)
