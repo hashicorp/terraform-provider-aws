@@ -11,21 +11,21 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/athena"
+	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_prepared_statement", name="Prepared Statement")
-func ResourcePreparedStatement() *schema.Resource {
+func resourcePreparedStatement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePreparedStatementCreate,
 		ReadWithoutTimeout:   resourcePreparedStatementRead,
@@ -33,23 +33,15 @@ func ResourcePreparedStatement() *schema.Resource {
 		DeleteWithoutTimeout: resourcePreparedStatementDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected WORKGROUP-NAME/STATEMENT-NAME", d.Id())
-				}
-				workGroupName := idParts[0]
-				statementName := idParts[1]
-				d.Set("workgroup", workGroupName)
-				d.SetId(statementName)
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:         schema.TypeString,
@@ -77,89 +69,88 @@ func ResourcePreparedStatement() *schema.Resource {
 	}
 }
 
-const (
-	ResNamePreparedStatement = "Prepared Statement"
-)
-
 func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
-	in := &athena.CreatePreparedStatementInput{
+	workGroupName, statementName := d.Get("workgroup").(string), d.Get("name").(string)
+	id := preparedStatementCreateResourceID(workGroupName, statementName)
+	input := &athena.CreatePreparedStatementInput{
 		QueryStatement: aws.String(d.Get("query_statement").(string)),
-		StatementName:  aws.String(d.Get("name").(string)),
-		WorkGroup:      aws.String(d.Get("workgroup").(string)),
+		StatementName:  aws.String(statementName),
+		WorkGroup:      aws.String(workGroupName),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.CreatePreparedStatementWithContext(ctx, in)
+	_, err := conn.CreatePreparedStatement(ctx, input)
+
 	if err != nil {
-		return append(diags, create.DiagError(names.Athena, create.ErrActionCreating, ResNamePreparedStatement, d.Get("name").(string), err)...)
+		return sdkdiag.AppendErrorf(diags, "creating Athena Prepared Statement (%s): %s", id, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(id)
 
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
 }
 
 func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	workGroupName, statementName, err := preparedStatementParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	out, err := findPreparedStatement(ctx, conn, d.Id(), d.Get("workgroup").(string))
+	preparedStatement, err := findPreparedStatementByTwoPartKey(ctx, conn, workGroupName, statementName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Athena PreparedStatement (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Athena Prepared Statement (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.Athena, create.ErrActionReading, ResNamePreparedStatement, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "reading Athena Prepared Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", out.Description)
-	d.Set("query_statement", out.QueryStatement)
-	d.Set("name", out.StatementName)
-	d.Set("workgroup", out.WorkGroupName)
+	d.Set("description", preparedStatement.Description)
+	d.Set("name", preparedStatement.StatementName)
+	d.Set("query_statement", preparedStatement.QueryStatement)
+	d.Set("workgroup", preparedStatement.WorkGroupName)
 
 	return diags
 }
 
 func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
-
-	update := false
-
-	in := &athena.UpdatePreparedStatementInput{
-		StatementName: aws.String(d.Get("name").(string)),
-		WorkGroup:     aws.String(d.Get("workgroup").(string)),
+	workGroupName, statementName, err := preparedStatementParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("query_statement") {
-		in.QueryStatement = aws.String(d.Get("query_statement").(string))
-		update = true
+	input := &athena.UpdatePreparedStatementInput{
+		StatementName: aws.String(statementName),
+		WorkGroup:     aws.String(workGroupName),
 	}
 
 	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
-		update = true
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	if !update {
-		return diags
+	if d.HasChanges("query_statement") {
+		input.QueryStatement = aws.String(d.Get("query_statement").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Athena PreparedStatement (%s): %#v", d.Id(), in)
-	_, err := conn.UpdatePreparedStatementWithContext(ctx, in)
+	_, err = conn.UpdatePreparedStatement(ctx, input)
+
 	if err != nil {
-		return append(diags, create.DiagError(names.Athena, create.ErrActionUpdating, ResNamePreparedStatement, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "updating Athena Prepared Statement (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
@@ -167,45 +158,71 @@ func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
+	workGroupName, statementName, err := preparedStatementParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	log.Printf("[INFO] Deleting Athena PreparedStatement %s", d.Id())
-
-	_, err := conn.DeletePreparedStatementWithContext(ctx, &athena.DeletePreparedStatementInput{
-		StatementName: aws.String(d.Get("name").(string)),
-		WorkGroup:     aws.String(d.Get("workgroup").(string)),
+	log.Printf("[INFO] Deleting Athena Prepared Statement: %s", d.Id())
+	_, err = conn.DeletePreparedStatement(ctx, &athena.DeletePreparedStatementInput{
+		StatementName: aws.String(statementName),
+		WorkGroup:     aws.String(workGroupName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, athena.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return append(diags, create.DiagError(names.Athena, create.ErrActionDeleting, ResNamePreparedStatement, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "deleting Athena Prepaed Statement (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findPreparedStatement(ctx context.Context, conn *athena.Athena, name string, workgroup string) (*athena.PreparedStatement, error) {
-	in := &athena.GetPreparedStatementInput{
-		StatementName: aws.String(name),
-		WorkGroup:     aws.String(workgroup),
+func findPreparedStatementByTwoPartKey(ctx context.Context, conn *athena.Client, workGroupName, statementName string) (*types.PreparedStatement, error) {
+	input := &athena.GetPreparedStatementInput{
+		StatementName: aws.String(statementName),
+		WorkGroup:     aws.String(workGroupName),
 	}
-	out, err := conn.GetPreparedStatementWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, athena.ErrCodeResourceNotFoundException) {
+
+	output, err := conn.GetPreparedStatement(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.PreparedStatement == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.PreparedStatement == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.PreparedStatement, nil
+	return output.PreparedStatement, nil
+}
+
+const preparedStatementResourceIDSeparator = "/"
+
+func preparedStatementCreateResourceID(workGroupName, statementName string) string {
+	parts := []string{workGroupName, statementName}
+	id := strings.Join(parts, preparedStatementResourceIDSeparator)
+
+	return id
+}
+
+func preparedStatementParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, preparedStatementResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected WORKGROUP-NAME%[2]sSTATEMENT-NAME", id, preparedStatementResourceIDSeparator)
 }
