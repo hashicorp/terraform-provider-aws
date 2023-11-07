@@ -1,39 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
 func TestAccIAMAccessKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig(rName),
+				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "secret"),
@@ -54,20 +58,21 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 }
 
 func TestAccIAMAccessKey_encrypted(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_encrypted(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					testDecryptSecretKeyAndTest(resourceName, testPrivKey1),
 					resource.TestCheckNoResourceAttr(resourceName, "secret"),
@@ -88,20 +93,21 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 }
 
 func TestAccIAMAccessKey_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
@@ -112,16 +118,16 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeActive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeActive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
 				),
 			},
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
@@ -129,39 +135,30 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_access_key" {
-			continue
-		}
-
-		// Try to get access key
-		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
-			UserName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			if len(resp.AccessKeyMetadata) > 0 {
-				return fmt.Errorf("still exist.")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_access_key" {
+				continue
 			}
-			return nil
+
+			_, err := tfiam.FindAccessKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("IAM Access Key (%s) still exists", rs.Primary.ID)
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(ctx context.Context, n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -169,25 +166,17 @@ func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Role name is set")
+			return fmt.Errorf("No Access Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		name := rs.Primary.Attributes["user"]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
-			UserName: aws.String(name),
-		})
+		accessKey, err := tfiam.FindAccessKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.AccessKeyMetadata) != 1 ||
-			*resp.AccessKeyMetadata[0].UserName != name {
-			return fmt.Errorf("User not found not found")
-		}
-
-		*res = *resp.AccessKeyMetadata[0]
+		*res = *accessKey
 
 		return nil
 	}
@@ -239,7 +228,7 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 	}
 }
 
-func testAccAccessKeyConfig(rName string) string {
+func testAccAccessKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -267,7 +256,7 @@ EOF
 `, rName, key)
 }
 
-func testAccAccessKeyConfig_Status(rName string, status string) string {
+func testAccAccessKeyConfig_status(rName string, status string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -280,7 +269,9 @@ resource "aws_iam_access_key" "test" {
 `, rName, status)
 }
 
-func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
+func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Region   string
 		Input    string

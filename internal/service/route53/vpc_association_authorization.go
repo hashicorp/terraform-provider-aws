@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,17 +12,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_vpc_association_authorization")
 func ResourceVPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCAssociationAuthorizationCreate,
-		Read:   resourceVPCAssociationAuthorizationRead,
-		Delete: resourceVPCAssociationAuthorizationDelete,
+		CreateWithoutTimeout: resourceVPCAssociationAuthorizationCreate,
+		ReadWithoutTimeout:   resourceVPCAssociationAuthorizationRead,
+		DeleteWithoutTimeout: resourceVPCAssociationAuthorizationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -44,8 +52,9 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 	}
 }
 
-func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
@@ -59,24 +68,28 @@ func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta inte
 		req.VPC.VPCRegion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Route53 VPC Association Authorization for hosted zone %s with VPC %s and region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	_, err := conn.CreateVPCAssociationAuthorization(req)
+	raw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+		return conn.CreateVPCAssociationAuthorizationWithContext(ctx, req)
+	}, route53.ErrCodeConcurrentModification)
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 VPC Association Authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 VPC Association Authorization: %s", err)
 	}
 
-	// Store association id
-	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
+	out := raw.(*route53.CreateVPCAssociationAuthorizationOutput)
 
-	return resourceVPCAssociationAuthorizationRead(d, meta)
+	// Store association id
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(out.HostedZoneId), aws.StringValue(out.VPC.VPCId)))
+
+	return append(diags, resourceVPCAssociationAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := route53.ListVPCAssociationAuthorizationsInput{
@@ -85,16 +98,16 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 
 	for {
 		log.Printf("[DEBUG] Listing Route53 VPC Association Authorizations for hosted zone %s", zone_id)
-		res, err := conn.ListVPCAssociationAuthorizations(&req)
+		res, err := conn.ListVPCAssociationAuthorizationsWithContext(ctx, &req)
 
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error listing Route53 VPC Association Authorizations: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing Route53 VPC Association Authorizations: %s", err)
 		}
 
 		for _, vpc := range res.VPCs {
@@ -102,7 +115,7 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 				d.Set("vpc_id", vpc.VPCId)
 				d.Set("vpc_region", vpc.VPCRegion)
 				d.Set("zone_id", zone_id)
-				return nil
+				return diags
 			}
 		}
 
@@ -117,15 +130,16 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 	// no association found
 	log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 	d.SetId("")
-	return nil
+	return diags
 }
 
-func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := route53.DeleteVPCAssociationAuthorizationInput{
@@ -136,13 +150,14 @@ func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta inte
 		},
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Assocatiation Authorization for hosted zone %s for VPC %s", zone_id, vpc_id)
-	_, err = conn.DeleteVPCAssociationAuthorization(&req)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+		return conn.DeleteVPCAssociationAuthorizationWithContext(ctx, &req)
+	}, route53.ErrCodeConcurrentModification)
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 VPC Association Authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func VPCAssociationAuthorizationParseID(id string) (string, string, error) {

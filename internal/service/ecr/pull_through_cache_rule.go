@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -15,11 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ecr_pull_through_cache_rule")
 func ResourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePullThroughCacheRuleCreate,
-		ReadContext:   resourcePullThroughCacheRuleRead,
-		DeleteContext: resourcePullThroughCacheRuleDelete,
+		CreateWithoutTimeout: resourcePullThroughCacheRuleCreate,
+		ReadWithoutTimeout:   resourcePullThroughCacheRuleRead,
+		DeleteWithoutTimeout: resourcePullThroughCacheRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -33,7 +37,7 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 20),
 					validation.StringMatch(
-						regexp.MustCompile(`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`),
+						regexache.MustCompile(`^[0-9a-z]+(?:[._-][0-9a-z]+)*$`),
 						"must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
@@ -50,8 +54,8 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 	}
 }
 
-func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ecr-in-func-name
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 	input := &ecr.CreatePullThroughCacheRuleInput{
@@ -63,7 +67,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	_, err := conn.CreatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return diag.Errorf("creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
@@ -72,7 +76,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, d.Id())
 
@@ -83,7 +87,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return diag.Errorf("reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
@@ -94,7 +98,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: (%s)", d.Id())
 	_, err := conn.DeletePullThroughCacheRuleWithContext(ctx, &ecr.DeletePullThroughCacheRuleInput{
@@ -107,7 +111,7 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	return nil

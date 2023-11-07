@@ -1,37 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
-	rName := sdkacctest.RandString(8)
-	resourceName := "aws_redshift_snapshot_schedule_association.default"
-	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.default"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
+	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleAssociationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
+					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
 				),
 			},
 			{
@@ -43,38 +48,85 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotScheduleAssociationDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_snapshot_schedule_association" {
-			continue
-		}
+func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
-			ScheduleIdentifier: aws.String(scheduleIdentifier),
-			ClusterIdentifier:  aws.String(clusterIdentifier),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && len(resp.SnapshotSchedules) > 0 {
-			return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association still exist", clusterIdentifier, scheduleIdentifier)
-		}
-
-		return err
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckFunc {
+func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
+	clusterResourceName := "aws_redshift_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_snapshot_schedule_association" {
+				continue
+			}
+
+			clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+
+			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Snapshot Schedule Association %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -82,36 +134,26 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
+			return fmt.Errorf("No Redshift Snapshot Schedule Association ID is set")
 		}
 
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
+		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
-			ScheduleIdentifier: aws.String(scheduleIdentifier),
-			ClusterIdentifier:  aws.String(clusterIdentifier),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		if err != nil {
-			return err
-		}
+		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
-		if len(resp.SnapshotSchedules) != 0 {
-			return nil
-		}
-
-		return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association not found", clusterIdentifier, scheduleIdentifier)
+		return err
 	}
 }
 
-func testAccSnapshotScheduleAssociationConfig(rName, definition string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig(rName, definition), `
-resource "aws_redshift_snapshot_schedule_association" "default" {
-  schedule_identifier = aws_redshift_snapshot_schedule.default.id
+func testAccSnapshotScheduleAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig_basic(rName), `
+resource "aws_redshift_snapshot_schedule_association" "test" {
+  schedule_identifier = aws_redshift_snapshot_schedule.test.id
   cluster_identifier  = aws_redshift_cluster.test.id
 }
 `)

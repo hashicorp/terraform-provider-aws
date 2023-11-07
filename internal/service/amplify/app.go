@@ -1,32 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_amplify_app", name="App")
+// @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAppCreate,
-		Read:   resourceAppRead,
-		Update: resourceAppUpdate,
-		Delete: resourceAppDelete,
+		CreateWithoutTimeout: resourceAppCreate,
+		ReadWithoutTimeout:   resourceAppRead,
+		UpdateWithoutTimeout: resourceAppUpdate,
+		DeleteWithoutTimeout: resourceAppDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -48,12 +56,10 @@ func ResourceApp() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_branch_creation_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -75,52 +81,43 @@ func ResourceApp() *schema.Resource {
 								return true
 							},
 						},
-
 						"build_spec": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
-
 						"enable_auto_build": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"enable_basic_auth": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"enable_performance_mode": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-
 						"enable_pull_request_preview": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"environment_variables": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-
 						"framework": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-
 						"pull_request_environment_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-
 						"stage": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -137,7 +134,6 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"auto_branch_creation_patterns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -151,7 +147,6 @@ func ResourceApp() *schema.Resource {
 					return true
 				},
 			},
-
 			"basic_auth_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -166,14 +161,18 @@ func ResourceApp() *schema.Resource {
 					return true
 				},
 			},
-
 			"build_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
-
+			"custom_headers": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
+			},
 			"custom_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -184,13 +183,11 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"source": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -202,7 +199,6 @@ func ResourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-
 						"target": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -211,70 +207,58 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"default_domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"enable_auto_branch_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_basic_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_branch_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_branch_auto_deletion": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"oauth_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"platform": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      amplify.PlatformWeb,
 				ValidateFunc: validation.StringInSlice(amplify.Platform_Values(), false),
 			},
-
 			"production_branch": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -284,17 +268,14 @@ func ResourceApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"last_deploy_time": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"thumbnail_url": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -302,28 +283,26 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"repository": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	name := d.Get("name").(string)
 
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_token"); ok {
@@ -344,6 +323,10 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("build_spec"); ok {
 		input.BuildSpec = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_headers"); ok {
+		input.CustomHeaders = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
@@ -390,43 +373,38 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Repository = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Amplify App: %s", input)
-	output, err := conn.CreateApp(input)
+	output, err := conn.CreateAppWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Amplify App (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Amplify App (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.App.AppId))
 
-	return resourceAppRead(d, meta)
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
-	app, err := FindAppByID(conn, d.Id())
+	app, err := FindAppByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Amplify App (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Amplify App (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", app.AppArn)
 	if app.AutoBranchCreationConfig != nil {
 		if err := d.Set("auto_branch_creation_config", []interface{}{flattenAutoBranchCreationConfig(app.AutoBranchCreationConfig)}); err != nil {
-			return fmt.Errorf("error setting auto_branch_creation_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting auto_branch_creation_config: %s", err)
 		}
 	} else {
 		d.Set("auto_branch_creation_config", nil)
@@ -434,8 +412,9 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("auto_branch_creation_patterns", aws.StringValueSlice(app.AutoBranchCreationPatterns))
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
+	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
-		return fmt.Errorf("error setting custom_rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
 	}
 	d.Set("default_domain", app.DefaultDomain)
 	d.Set("description", app.Description)
@@ -449,28 +428,21 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
 		if err := d.Set("production_branch", []interface{}{flattenProductionBranch(app.ProductionBranch)}); err != nil {
-			return fmt.Errorf("error setting production_branch: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting production_branch: %s", err)
 		}
 	} else {
 		d.Set("production_branch", nil)
 	}
 	d.Set("repository", app.Repository)
 
-	tags := KeyValueTags(app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, app.Tags)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &amplify.UpdateAppInput{
@@ -501,6 +473,10 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("build_spec") {
 			input.BuildSpec = aws.String(d.Get("build_spec").(string))
+		}
+
+		if d.HasChange("custom_headers") {
+			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
 		}
 
 		if d.HasChange("custom_rule") {
@@ -559,40 +535,34 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Repository = aws.String(d.Get("repository").(string))
 		}
 
-		_, err := conn.UpdateApp(input)
+		_, err := conn.UpdateAppWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Amplify App (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Amplify App (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceAppRead(d, meta)
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Amplify App (%s)", d.Id())
-	_, err := conn.DeleteApp(&amplify.DeleteAppInput{
+	log.Printf("[DEBUG] Deleting Amplify App: %s", d.Id())
+	_, err := conn.DeleteAppWithContext(ctx, &amplify.DeleteAppInput{
 		AppId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Amplify App (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Amplify App (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *amplify.AutoBranchCreationConfig {

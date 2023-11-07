@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rds_cluster_role_association: Extend timeout to 10 minutes
+```
+
+```release-note:bug
+resource/aws_db_instance_role_association: Extend timeout to 10 minutes
+```

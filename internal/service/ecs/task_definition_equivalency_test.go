@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -90,6 +95,8 @@ func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -137,6 +144,8 @@ func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -187,6 +196,8 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 }
 
 func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -440,6 +451,8 @@ func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -478,6 +491,8 @@ func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {

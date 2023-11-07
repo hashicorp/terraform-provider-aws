@@ -1,17 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findGlobalClusterByArn(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
+func findGlobalClusterByARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 
 	input := &docdb.DescribeGlobalClustersInput{
@@ -23,7 +25,6 @@ func findGlobalClusterByArn(ctx context.Context, conn *docdb.DocDB, dbClusterARN
 		},
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Global Clusters: %s", input)
 	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -48,6 +49,48 @@ func findGlobalClusterByArn(ctx context.Context, conn *docdb.DocDB, dbClusterARN
 	return globalCluster, err
 }
 
+func findGlobalClusterIDByARN(ctx context.Context, conn *docdb.DocDB, arn string) string {
+	result, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{})
+	if err != nil {
+		return ""
+	}
+	for _, cluster := range result.DBClusters {
+		if aws.StringValue(cluster.DBClusterArn) == arn {
+			return aws.StringValue(cluster.DBClusterIdentifier)
+		}
+	}
+	return ""
+}
+
+func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) (*docdb.DBClusterSnapshot, error) {
+	var dBClusterSnapshot *docdb.DBClusterSnapshot
+
+	input := &docdb.DescribeDBClusterSnapshotsInput{
+		DBClusterIdentifier: aws.String(dBClusterSnapshotID),
+	}
+
+	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, dbcss := range page.DBClusterSnapshots {
+			if dbcss == nil {
+				continue
+			}
+
+			if aws.StringValue(dbcss.DBClusterIdentifier) == dBClusterSnapshotID {
+				dBClusterSnapshot = dbcss
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return dBClusterSnapshot, err
+}
+
 func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalClusterID string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 
@@ -55,7 +98,6 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Global Cluster (%s): %s", globalClusterID, input)
 	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -78,19 +120,6 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 	return globalCluster, err
 }
 
-func findGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string) string {
-	result, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{})
-	if err != nil {
-		return ""
-	}
-	for _, cluster := range result.DBClusters {
-		if aws.StringValue(cluster.DBClusterArn) == arn {
-			return aws.StringValue(cluster.DBClusterIdentifier)
-		}
-	}
-	return ""
-}
-
 func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.EventSubscription, error) {
 	var eventSubscription *docdb.EventSubscription
 
@@ -98,7 +127,6 @@ func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string
 		SubscriptionName: aws.String(id),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Event Subscription (%s): %s", id, input)
 	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -119,7 +147,7 @@ func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string
 	})
 
 	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeSubscriptionNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

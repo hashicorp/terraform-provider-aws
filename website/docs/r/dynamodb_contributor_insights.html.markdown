@@ -20,19 +20,28 @@ resource "aws_dynamodb_contributor_insights" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 
-`aws_dynamodb_contributor_insights` can be imported using the format `name:table_name/index:index_name`, followed by the account number, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_dynamodb_contributor_insights` using the format `name:table_name/index:index_name`, followed by the account number. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_contributor_insights.test
+  id = "name:ExampleTableName/index:ExampleIndexName/123456789012"
+}
 ```
-$ terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012
+
+Using `terraform import`, import `aws_dynamodb_contributor_insights` using the format `name:table_name/index:index_name`, followed by the account number. For example:
+
+```console
+% terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012
 ```

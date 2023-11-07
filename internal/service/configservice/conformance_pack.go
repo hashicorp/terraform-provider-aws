@@ -1,30 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_config_conformance_pack")
 func ResourceConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConformancePackPut,
-		Read:   resourceConformancePackRead,
-		Update: resourceConformancePackPut,
-		Delete: resourceConformancePackDelete,
+		CreateWithoutTimeout: resourceConformancePackPut,
+		ReadWithoutTimeout:   resourceConformancePackRead,
+		UpdateWithoutTimeout: resourceConformancePackPut,
+		DeleteWithoutTimeout: resourceConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -67,8 +73,8 @@ func ResourceConformancePack() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters")),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters")),
 			},
 			"template_body": {
 				Type:             schema.TypeString,
@@ -85,7 +91,7 @@ func ResourceConformancePack() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 				AtLeastOneOf: []string{"template_s3_uri", "template_body"},
 			},
@@ -93,8 +99,9 @@ func ResourceConformancePack() *schema.Resource {
 	}
 }
 
-func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -122,43 +129,44 @@ func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error 
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutConformancePack(&input)
+	_, err := conn.PutConformancePackWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error creating Config Conformance Pack (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Config Conformance Pack (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if err := waitForConformancePackStateCreateComplete(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Config Conformance Pack (%s) to be created: %w", d.Id(), err)
+	if err := waitForConformancePackStateCreateComplete(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Config Conformance Pack (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceConformancePackRead(d, meta)
+	return append(diags, resourceConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
-	pack, err := DescribeConformancePack(conn, d.Id())
+	pack, err := DescribeConformancePack(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
 		log.Printf("[WARN] Config Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Config Conformance Pack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Config Conformance Pack (%s): %s", d.Id(), err)
 	}
 
 	if pack == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error describing Config Conformance Pack (%s): not found", d.Id())
+			return sdkdiag.AppendErrorf(diags, "describing Config Conformance Pack (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Config Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", pack.ConformancePackArn)
@@ -167,50 +175,51 @@ func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", pack.ConformancePackName)
 
 	if err = d.Set("input_parameter", flattenConfigConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
-		return fmt.Errorf("error setting input_parameter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(conformancePackDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteConformancePack(input)
+	err := retry.RetryContext(ctx, conformancePackDeleteTimeout, func() *retry.RetryError {
+		_, err := conn.DeleteConformancePackWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteConformancePack(input)
+		_, err = conn.DeleteConformancePackWithContext(ctx, input)
 	}
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("erorr deleting Config Conformance Pack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "erorr deleting Config Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForConformancePackStateDeleteComplete(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Config Conformance Pack (%s) to be deleted: %w", d.Id(), err)
+	if err := waitForConformancePackStateDeleteComplete(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Config Conformance Pack (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandConfigConformancePackInputParameters(l []interface{}) []*configservice.ConformancePackInputParameter {

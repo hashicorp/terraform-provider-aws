@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,28 +8,29 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSourceConfig(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_basic(rName),
 			},
 			{
-				Config: testAccSubnetsWithDataSourceDataSourceConfig(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_dataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", 0),
 					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", "0"),
 				),
 			},
@@ -35,15 +39,16 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSource_filter(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", "2"),
 				),
@@ -52,7 +57,7 @@ func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccSubnetsDataSourceConfig(rName string) string {
+func testAccVPCSubnetsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -108,8 +113,8 @@ resource "aws_subnet" "test_private_b" {
 `, rName))
 }
 
-func testAccSubnetsWithDataSourceDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccSubnetsDataSourceConfig(rName), `
+func testAccVPCSubnetsDataSourceConfig_dataSource(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetsDataSourceConfig_basic(rName), `
 data "aws_subnets" "selected" {
   filter {
     name   = "vpc-id"
@@ -144,7 +149,7 @@ data "aws_subnets" "none" {
 `)
 }
 
-func testAccSubnetsDataSource_filter(rName string) string {
+func testAccVPCSubnetsDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

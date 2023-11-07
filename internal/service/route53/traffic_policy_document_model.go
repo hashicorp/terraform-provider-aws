@@ -1,8 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 const (
 	trafficPolicyDocEndpointValue      = "value"
-	trafficPolicyDocEndpointCloudfront = "cloudfront"
+	trafficPolicyDocEndpointCloudFront = "cloudfront"
 	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
 	trafficPolicyDocEndpointS3         = "s3-website"
 )
@@ -11,7 +14,7 @@ const (
 func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
 		trafficPolicyDocEndpointValue,
-		trafficPolicyDocEndpointCloudfront,
+		trafficPolicyDocEndpointCloudFront,
 		trafficPolicyDocEndpointElastic,
 		trafficPolicyDocEndpointS3,
 	}
@@ -37,7 +40,7 @@ type TrafficPolicyRule struct {
 	Primary               *TrafficPolicyFailoverRule           `json:",omitempty"`
 	Secondary             *TrafficPolicyFailoverRule           `json:",omitempty"`
 	Locations             []*TrafficPolicyGeolocationRule      `json:",omitempty"`
-	GeoProximityLocations []*TrafficPolicyGeoproximityRule     `json:",omitempty"`
+	GeoProximityLocations []*TrafficPolicyGeoproximityRule     `json:"GeoproximityLocations,omitempty"`
 	Regions               []*TrafficPolicyLatencyRule          `json:",omitempty"`
 	Items                 []*TrafficPolicyMultiValueAnswerRule `json:",omitempty"`
 }

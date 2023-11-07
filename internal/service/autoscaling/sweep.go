@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
 
@@ -9,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_autoscaling_group", &resource.Sweeper{
 		Name: "aws_autoscaling_group",
 		F:    sweepGroups,
@@ -28,15 +28,16 @@ func init() {
 }
 
 func sweepGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.AutoScalingConn(ctx)
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeAutoScalingGroupsPages(input, func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeAutoScalingGroupsPagesWithContext(ctx, input, func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -53,7 +54,7 @@ func sweepGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Auto Scaling Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -62,7 +63,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Groups (%s): %w", region, err)
@@ -72,15 +73,16 @@ func sweepGroups(region string) error {
 }
 
 func sweepLaunchConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.AutoScalingConn(ctx)
 	input := &autoscaling.DescribeLaunchConfigurationsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeLaunchConfigurationsPages(input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+	err = conn.DescribeLaunchConfigurationsPagesWithContext(ctx, input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -96,7 +98,7 @@ func sweepLaunchConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Auto Scaling Launch Configuration sweep for %s: %s", region, err)
 		return nil
 	}
@@ -105,7 +107,7 @@ func sweepLaunchConfigurations(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Launch Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Launch Configurations (%s): %w", region, err)

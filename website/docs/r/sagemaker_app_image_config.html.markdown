@@ -44,11 +44,11 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Kernel Gateway Image Config
 
@@ -68,18 +68,27 @@ The following arguments are supported:
 * `name` - (Required) The name of the kernel.
 * `display_name` - (Optional) The display name of the kernel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-SageMaker App Image Configs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker App Image Configs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_app_image_config.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_app_image_config.example example
+
+Using `terraform import`, import SageMaker App Image Configs using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_app_image_config.example example
 ```

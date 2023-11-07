@@ -1,32 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccWAFRegionalWebACLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafregional_web_acl.web_acl"
 	datasourceName := "data.aws_wafregional_web_acl.web_acl"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWebACLDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`web ACLs not found`),
+				Config:      testAccWebACLDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`web ACLs not found`),
 			},
 			{
-				Config: testAccWebACLDataSourceConfig_Name(name),
+				Config: testAccWebACLDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +40,7 @@ func TestAccWAFRegionalWebACLDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWebACLDataSourceConfig_Name(name string) string {
+func testAccWebACLDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_web_acl" "web_acl" {
   name        = %[1]q
@@ -53,7 +57,7 @@ data "aws_wafregional_web_acl" "web_acl" {
 `, name)
 }
 
-const testAccWebACLDataSourceConfig_NonExistent = `
+const testAccWebACLDataSourceConfig_nonExistent = `
 data "aws_wafregional_web_acl" "web_acl" {
   name = "tf-acc-test-does-not-exist"
 }

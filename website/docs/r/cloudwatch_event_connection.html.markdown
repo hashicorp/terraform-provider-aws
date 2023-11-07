@@ -12,7 +12,6 @@ Provides an EventBridge connection resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -134,18 +133,18 @@ resource "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
 * `authorization_type` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
-* `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
 `auth_parameters` support the following:
 
 * `api_key` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
 * `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `api_key` and `oauth`. Documented below.
+* `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 * `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `api_key`. Documented below.
 
 `api_key` support the following:
@@ -184,18 +183,26 @@ The following arguments are supported:
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
     * `is_value_secret` - (Optional) Specified whether the value is secret.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connection.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
 
-
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge connection using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_connection.test
+  id = "ngrok-connection"
+}
+```
+
+Using `terraform import`, import EventBridge EventBridge connection using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_connection.test ngrok-connection
+% terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -5,17 +8,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
-	bucketCreatedTimeout                          = 2 * time.Minute
-	bucketVersioningStableTimeout                 = 1 * time.Minute
 	lifecycleConfigurationExtraRetryDelay         = 5 * time.Second
 	lifecycleConfigurationRulesPropagationTimeout = 3 * time.Minute
 	lifecycleConfigurationRulesSteadyTimeout      = 2 * time.Minute
-	propagationTimeout                            = 1 * time.Minute
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
@@ -23,12 +26,8 @@ const (
 	LifecycleConfigurationRulesStatusNotReady = "NOT_READY"
 )
 
-func retryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
-}
-
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"", LifecycleConfigurationRulesStatusNotReady},
 		Target:                    []string{LifecycleConfigurationRulesStatusReady},
 		Refresh:                   lifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules),
@@ -38,27 +37,7 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 		NotFoundChecks:            20,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
-}
-
-func waitForBucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{""},
-		Target:                    []string{s3.BucketVersioningStatusEnabled, s3.BucketVersioningStatusSuspended, BucketVersioningStatusDisabled},
-		Refresh:                   bucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   bucketVersioningStableTimeout,
-		ContinuousTargetOccurence: 3,
-		NotFoundChecks:            3,
-		Delay:                     1 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*s3.GetBucketVersioningOutput); ok {
-		return output, err
-	}
-
-	return nil, err
 }

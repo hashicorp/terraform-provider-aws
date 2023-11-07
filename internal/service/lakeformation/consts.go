@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	TableNameAllTables        = "ALL_TABLES"

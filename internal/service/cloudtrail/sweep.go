@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail
 
@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudtrail", &resource.Sweeper{
 		Name: "aws_cloudtrail",
 		F:    sweeps,
@@ -24,14 +24,15 @@ func init() {
 }
 
 func sweeps(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudTrailConn
+	conn := client.CloudTrailConn(ctx)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListTrailsPages(&cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
+	err = conn.ListTrailsPagesWithContext(ctx, &cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -44,7 +45,7 @@ func sweeps(region string) error {
 				continue
 			}
 
-			output, err := conn.DescribeTrails(&cloudtrail.DescribeTrailsInput{
+			output, err := conn.DescribeTrailsWithContext(ctx, &cloudtrail.DescribeTrailsInput{
 				TrailNameList: aws.StringSlice([]string{name}),
 			})
 			if err != nil {
@@ -65,7 +66,7 @@ func sweeps(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting CloudTrail: %s", name)
-			_, err = conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
+			_, err = conn.DeleteTrailWithContext(ctx, &cloudtrail.DeleteTrailInput{
 				Name: aws.String(name),
 			})
 			if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
@@ -81,7 +82,7 @@ func sweeps(region string) error {
 
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudTrail sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

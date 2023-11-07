@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccVPCDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt1 := sdkacctest.RandIntRange(1, 128)
 	rInt2 := sdkacctest.RandIntRange(128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
@@ -23,17 +27,18 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig(rName, cidr),
+				Config: testAccVPCDataSourceConfig_basic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", vpcResourceName, "arn"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
@@ -62,17 +67,18 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),
+				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -81,7 +87,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
-func testAccVPCDataSourceConfig(rName, cidr string) string {
+func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = %[2]q
@@ -116,7 +122,7 @@ data "aws_vpc" "by_filter" {
 `, rName, cidr)
 }
 
-func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName string) string {
+func testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

@@ -107,7 +107,6 @@ resource "aws_glue_partition_index" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:
@@ -117,29 +116,37 @@ The following arguments are required:
 * `partition_index` - (Required) Configuration block for a partition index. See [`partition_index`](#partition_index) below.
 * `catalog_id` - (Optional) The catalog ID where the table resides.
 
-
 ### partition_index
 
 * `index_name` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
 
-### Timeouts
+## Attribute Reference
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 10 mins) Used when creating the partition index.
-* `delete` - (Defaults to 10 mins) Used when deleting the partition index.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID, Database name, table name, and index name.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
 
-Glue Partition Indexes can be imported with their catalog ID (usually AWS account ID), database name, table name, and index name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Partition Indexes using the catalog ID (usually AWS account ID), database name, table name, and index name. For example:
 
+```terraform
+import {
+  to = aws_glue_partition_index.example
+  id = "123456789012:MyDatabase:MyTable:index-name"
+}
 ```
-$ terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
+
+Using `terraform import`, import Glue Partition Indexes using the catalog ID (usually AWS account ID), database name, table name, and index name. For example:
+
+```console
+% terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
 ```

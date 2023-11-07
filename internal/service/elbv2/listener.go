@@ -1,42 +1,55 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_alb_listener", name="Listener")
+// @SDKResource("aws_lb_listener", name="Listener")
+// @Tags(identifierAttribute="id")
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceListenerCreate,
-		Read:   resourceListenerRead,
-		Update: resourceListenerUpdate,
-		Delete: resourceListenerDelete,
+		CreateWithoutTimeout: resourceListenerCreate,
+		ReadWithoutTimeout:   resourceListenerRead,
+		UpdateWithoutTimeout: resourceListenerUpdate,
+		DeleteWithoutTimeout: resourceListenerDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(10 * time.Minute),
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 		),
@@ -209,7 +222,7 @@ func ResourceListener() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
 									},
 								},
 							},
@@ -361,8 +374,8 @@ func ResourceListener() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -382,132 +395,136 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	lbArn := d.Get("load_balancer_arn").(string)
-
-	params := &elbv2.CreateListenerInput{
-		LoadBalancerArn: aws.String(lbArn),
+	lbARN := d.Get("load_balancer_arn").(string)
+	input := &elbv2.CreateListenerInput{
+		LoadBalancerArn: aws.String(lbARN),
+		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("port"); ok {
-		params.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("protocol"); ok {
-		params.Protocol = aws.String(v.(string))
-	} else if strings.Contains(lbArn, "loadbalancer/app/") {
-		// Keep previous default of HTTP for Application Load Balancers
-		params.Protocol = aws.String(elbv2.ProtocolEnumHttp)
-	}
-
-	if sslPolicy, ok := d.GetOk("ssl_policy"); ok {
-		params.SslPolicy = aws.String(sslPolicy.(string))
+	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
+		input.AlpnPolicy = make([]*string, 1)
+		input.AlpnPolicy[0] = aws.String(alpnPolicy.(string))
 	}
 
 	if certificateArn, ok := d.GetOk("certificate_arn"); ok {
-		params.Certificates = make([]*elbv2.Certificate, 1)
-		params.Certificates[0] = &elbv2.Certificate{
+		input.Certificates = make([]*elbv2.Certificate, 1)
+		input.Certificates[0] = &elbv2.Certificate{
 			CertificateArn: aws.String(certificateArn.(string)),
 		}
 	}
 
-	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
-		params.AlpnPolicy = make([]*string, 1)
-		params.AlpnPolicy[0] = aws.String(alpnPolicy.(string))
-	}
-
 	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
 		var err error
-		params.DefaultActions, err = expandLbListenerActions(v.([]interface{}))
+		input.DefaultActions, err = expandLbListenerActions(v.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Listener for ARN (%s): %w", lbArn, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	output, err := retryListenerCreate(conn, params)
+	if v, ok := d.GetOk("port"); ok {
+		input.Port = aws.Int64(int64(v.(int)))
+	}
 
-	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
-		params.Tags = nil
-		output, err = retryListenerCreate(conn, params)
+	if v, ok := d.GetOk("protocol"); ok {
+		input.Protocol = aws.String(v.(string))
+	} else if strings.Contains(lbARN, "loadbalancer/app/") {
+		// Keep previous default of HTTP for Application Load Balancers
+		input.Protocol = aws.String(elbv2.ProtocolEnumHttp)
+	}
+
+	if sslPolicy, ok := d.GetOk("ssl_policy"); ok {
+		input.SslPolicy = aws.String(sslPolicy.(string))
+	}
+
+	output, err := retryListenerCreate(ctx, conn, input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		input.Tags = nil
+
+		output, err = retryListenerCreate(ctx, conn, input)
+	}
+
+	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
+	// Retry creation without tags
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+		input.Tags = nil
+
+		output, err = retryListenerCreate(ctx, conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ELBv2 Listener (%s): %w", lbArn, err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener (%s): %s", lbARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
-	// Post-create tagging supported in some partitions
-	if params.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] error adding tags after create for ELBv2 Listener (%s): %s", d.Id(), err)
-			return resourceListenerRead(d, meta)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceListenerRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Listener (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Listener (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceListenerRead(d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	const (
+		loadBalancerListenerReadTimeout = 2 * time.Minute
+	)
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var listener *elbv2.Listener
 
-	err := resource.Retry(loadBalancerListenerReadTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, loadBalancerListenerReadTimeout, func() *retry.RetryError {
 		var err error
-		listener, err = FindListenerByARN(conn, d.Id())
+		listener, err = FindListenerByARN(ctx, conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		listener, err = FindListenerByARN(conn, d.Id())
+		listener, err = FindListenerByARN(ctx, conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing ELBv2 Listener (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
 	if listener == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error describing ELBv2 Listener (%s): empty response", d.Id())
+			return sdkdiag.AppendErrorf(diags, "describing ELBv2 Listener (%s): empty response", d.Id())
 		}
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", listener.ListenerArn)
@@ -529,167 +546,119 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
-		return fmt.Errorf("error setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_action for ELBv2 listener (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	const (
+		loadBalancerListenerUpdateTimeout = 5 * time.Minute
+	)
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		params := &elbv2.ModifyListenerInput{
+		input := &elbv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("port"); ok {
-			params.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("protocol"); ok {
-			params.Protocol = aws.String(v.(string))
+			input.Protocol = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("ssl_policy"); ok {
-			params.SslPolicy = aws.String(v.(string))
+			input.SslPolicy = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("certificate_arn"); ok {
-			params.Certificates = make([]*elbv2.Certificate, 1)
-			params.Certificates[0] = &elbv2.Certificate{
+			input.Certificates = make([]*elbv2.Certificate, 1)
+			input.Certificates[0] = &elbv2.Certificate{
 				CertificateArn: aws.String(v.(string)),
 			}
 		}
 
 		if v, ok := d.GetOk("alpn_policy"); ok {
-			params.AlpnPolicy = aws.StringSlice([]string{v.(string)})
+			input.AlpnPolicy = aws.StringSlice([]string{v.(string)})
 		}
 
 		if d.HasChange("default_action") {
 			var err error
-			params.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
 			if err != nil {
-				return fmt.Errorf("error updating ELBv2 Listener (%s): %w", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		err := resource.Retry(loadBalancerListenerUpdateTimeout, func() *resource.RetryError {
-			_, err := conn.ModifyListener(params)
+		err := retry.RetryContext(ctx, loadBalancerListenerUpdateTimeout, func() *retry.RetryError {
+			_, err := conn.ModifyListenerWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyListener(params)
+			_, err = conn.ModifyListenerWithContext(ctx, input)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error modifying ELBv2 Listener (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Listener (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||
-				tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB Listener (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] Unable to update tags for ELBv2 Listener %s: %s", d.Id(), err)
-			return resourceListenerRead(d, meta)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceListenerRead(d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{
+	_, err := conn.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Listener (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Listener (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
+func retryListenerCreate(ctx context.Context, conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
+	const (
+		loadBalancerListenerCreateTimeout = 5 * time.Minute
+	)
 	var output *elbv2.CreateListenerOutput
 
-	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, loadBalancerListenerCreateTimeout, func() *retry.RetryError {
 		var err error
 
-		output, err = conn.CreateListener(params)
+		output, err = conn.CreateListenerWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateListener(params)
+		output, err = conn.CreateListenerWithContext(ctx, params)
 	}
 
 	if err != nil {
@@ -697,7 +666,7 @@ func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (
 	}
 
 	if output == nil || len(output.Listeners) == 0 {
-		return nil, fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
+		return nil, fmt.Errorf("creating ELBv2 Listener: no listeners returned in response")
 	}
 
 	return output, nil
@@ -759,7 +728,7 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 
 		case elbv2.ActionTypeEnumAuthenticateOidc:
 			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
-				action.AuthenticateOidcConfig = expandLbListenerAuthenticateOidcConfig(v)
+				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 			} else {
 				err = errors.New("for actions of type 'authenticate-oidc', you must specify a 'authenticate_oidc' block")
 			}
@@ -808,7 +777,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 	return config
 }
 
-func expandLbListenerAuthenticateOidcConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -921,7 +890,6 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.T
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
-
 		}
 
 		group := &elbv2.TargetGroupTuple{
@@ -989,7 +957,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 				clientSecret = v.(string)
 			}
 
-			m["authenticate_oidc"] = flattenLbListenerActionAuthenticateOidcConfig(action.AuthenticateOidcConfig, clientSecret)
+			m["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
 		}
 
 		vActions = append(vActions, m)
@@ -998,7 +966,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 	return vActions
 }
 
-func flattenLbListenerActionAuthenticateOidcConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenAuthenticateOIDCActionConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}

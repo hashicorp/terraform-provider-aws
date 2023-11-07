@@ -1,23 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment")
 func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayVPNAttachmentRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayVPNAttachmentRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"tags": tftags.TagsSchemaComputed(),
+			"filter": CustomFiltersSchema(),
+			"tags":   tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -26,74 +37,56 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": DataSourceFiltersSchema(),
 		},
 	}
 }
 
-func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
-	connectionId, connectionIdOk := d.GetOk("vpn_connection_id")
-	transitGatewayId, transitGatewayIdOk := d.GetOk("transit_gateway_id")
-
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-type"),
-				Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeVpn)},
-			},
-		},
+		Filters: BuildAttributeFilterList(map[string]string{
+			"resource-type": ec2.TransitGatewayAttachmentResourceTypeVpn,
+		}),
 	}
 
-	if filtersOk {
-		input.Filters = append(input.Filters, BuildFiltersDataSource(filters.(*schema.Set))...)
-	}
-	if tagsOk {
-		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
-	}
-	if connectionIdOk {
-		input.Filters = append(input.Filters, &ec2.Filter{
-			Name:   aws.String("resource-id"),
-			Values: []*string{aws.String(connectionId.(string))},
-		})
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Filters = append(input.Filters, BuildTagFilterList(
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
+		)...)
 	}
 
-	if transitGatewayIdOk {
-		input.Filters = append(input.Filters, &ec2.Filter{
-			Name:   aws.String("transit-gateway-id"),
-			Values: []*string{aws.String(transitGatewayId.(string))},
-		})
+	if v, ok := d.GetOk("vpn_connection_id"); ok {
+		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+			"resource-id": v.(string),
+		})...)
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway VPN Attachments: %s", input)
-	output, err := conn.DescribeTransitGatewayAttachments(input)
+	if v, ok := d.GetOk("transit_gateway_id"); ok {
+		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+			"transit-gateway-id": v.(string),
+		})...)
+	}
+
+	transitGatewayAttachment, err := FindTransitGatewayAttachment(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway VPN Attachment: %w", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPN Attachment", err))
 	}
 
-	if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
-		return errors.New("error reading EC2 Transit Gateway VPN Attachment: no results found")
-	}
-
-	if len(output.TransitGatewayAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway VPN Attachment: multiple results found, try adjusting search criteria")
-	}
-
-	transitGatewayAttachment := output.TransitGatewayAttachments[0]
-
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
+	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
-	return nil
+	return diags
 }

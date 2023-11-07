@@ -36,12 +36,12 @@ resource "aws_wafregional_rule" "wafrule" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the rule.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `predicate` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Fields
 
@@ -57,18 +57,27 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Regional Rule.
 * `arn` - The ARN of the WAF Regional Rule.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-WAF Regional Rule can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rule using the id. For example:
 
+```terraform
+import {
+  to = aws_wafregional_rule.wafrule
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF Regional Rule using the id. For example:
+
+```console
+% terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

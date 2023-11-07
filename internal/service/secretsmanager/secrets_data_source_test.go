@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
@@ -7,13 +10,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	dataSourceName := "data.aws_secretsmanager_secrets.test"
@@ -27,17 +31,17 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigSecrets_filter(rName),
+				Config: testAccSecretsDataSourceConfig_filter2(rName),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccConfigSecretsWithDataSource_filter(rName),
+				Config: testAccSecretsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -49,7 +53,7 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccConfigSecrets_filter(rName string) string {
+func testAccSecretsDataSourceConfig_filter2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -57,9 +61,9 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccConfigSecretsWithDataSource_filter(rName string) string {
+func testAccSecretsDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigSecrets_filter(rName),
+		testAccSecretsDataSourceConfig_filter2(rName),
 		`
 data "aws_secretsmanager_secrets" "test" {
   filter {

@@ -1,37 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
@@ -51,20 +55,21 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 }
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_nonDefaults(rName, 50, 10, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
@@ -83,8 +88,8 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 				// Test resource recreation such that the revision number is still 1
 				Config: testAccAutoScalingConfigurationVersionConfig_nonDefaults(rName, 150, 20, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
@@ -103,8 +108,8 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 				// Test resource recreation such that the revision number is still 1
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
@@ -119,22 +124,23 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 }
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_multipleVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					testAccCheckAutoScalingConfigurationVersionExists(otherResourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
@@ -142,7 +148,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.AutoScalingConfigurationStatusActive),
-					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
 					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
@@ -156,8 +162,8 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 				// Test update of "latest" computed attribute after apply
 				Config: testAccAutoScalingConfigurationVersionConfig_multipleVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					testAccCheckAutoScalingConfigurationVersionExists(otherResourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
 					resource.TestCheckResourceAttr(resourceName, "latest", "false"),
 					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
 				),
@@ -177,29 +183,30 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 }
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_multipleVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					testAccCheckAutoScalingConfigurationVersionExists(otherResourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
 				),
 			},
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_updateMultipleVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					testAccCheckAutoScalingConfigurationVersionExists(otherResourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "false"),
@@ -207,7 +214,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.AutoScalingConfigurationStatusActive),
-					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
 					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
@@ -232,20 +239,21 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 }
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,19 +262,20 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 }
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutoScalingConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -279,7 +288,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -288,7 +297,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 			{
 				Config: testAccAutoScalingConfigurationVersionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -297,37 +306,39 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAutoScalingConfigurationVersionDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_apprunner_auto_scaling_configuration_version" {
-			continue
+func testAccCheckAutoScalingConfigurationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_apprunner_auto_scaling_configuration_version" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+
+			input := &apprunner.DescribeAutoScalingConfigurationInput{
+				AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeAutoScalingConfigurationWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && output.AutoScalingConfiguration != nil && aws.StringValue(output.AutoScalingConfiguration.Status) != "inactive" {
+				return fmt.Errorf("App Runner AutoScaling Configuration (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
-
-		input := &apprunner.DescribeAutoScalingConfigurationInput{
-			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeAutoScalingConfigurationWithContext(context.Background(), input)
-
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && output.AutoScalingConfiguration != nil && aws.StringValue(output.AutoScalingConfiguration.Status) != "inactive" {
-			return fmt.Errorf("App Runner AutoScaling Configuration (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAutoScalingConfigurationVersionExists(n string) resource.TestCheckFunc {
+func testAccCheckAutoScalingConfigurationVersionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -338,13 +349,13 @@ func testAccCheckAutoScalingConfigurationVersionExists(n string) resource.TestCh
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeAutoScalingConfigurationWithContext(context.Background(), input)
+		output, err := conn.DescribeAutoScalingConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return err

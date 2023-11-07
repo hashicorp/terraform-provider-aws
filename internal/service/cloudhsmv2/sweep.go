@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package cloudhsmv2
 
@@ -9,34 +9,35 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudhsm_v2_cluster", &resource.Sweeper{
 		Name:         "aws_cloudhsm_v2_cluster",
-		F:            sweepCloudhsmv2Clusters,
+		F:            sweepClusters,
 		Dependencies: []string{"aws_cloudhsm_v2_hsm"},
 	})
 
 	resource.AddTestSweepers("aws_cloudhsm_v2_hsm", &resource.Sweeper{
 		Name: "aws_cloudhsm_v2_hsm",
-		F:    sweepCloudhsmv2HSMs,
+		F:    sweepHSMs,
 	})
 }
 
-func sweepCloudhsmv2Clusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudHSMV2Conn
+	conn := client.CloudHSMV2Conn(ctx)
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err = conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -55,7 +56,7 @@ func sweepCloudhsmv2Clusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudHSMv2 Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -64,7 +65,7 @@ func sweepCloudhsmv2Clusters(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 Clusters (%s): %w", region, err)
@@ -73,16 +74,17 @@ func sweepCloudhsmv2Clusters(region string) error {
 	return nil
 }
 
-func sweepCloudhsmv2HSMs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepHSMs(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudHSMV2Conn
+	conn := client.CloudHSMV2Conn(ctx)
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err = conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -104,7 +106,7 @@ func sweepCloudhsmv2HSMs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudHSMv2 HSM sweep for %s: %s", region, err)
 		return nil
 	}
@@ -113,7 +115,7 @@ func sweepCloudhsmv2HSMs(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 HSMs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 HSMs (%s): %w", region, err)

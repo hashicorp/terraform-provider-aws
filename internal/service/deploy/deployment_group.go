@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package deploy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"sort"
@@ -12,25 +16,31 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codedeploy_deployment_group", name="Deployment Group")
+// @Tags(identifierAttribute="arn")
 func ResourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentGroupCreate,
-		Read:   resourceDeploymentGroupRead,
-		Update: resourceDeploymentGroupUpdate,
-		Delete: resourceDeploymentGroupDelete,
+		CreateWithoutTimeout: resourceDeploymentGroupCreate,
+		ReadWithoutTimeout:   resourceDeploymentGroupRead,
+		UpdateWithoutTimeout: resourceDeploymentGroupUpdate,
+		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 
 				if len(idParts) != 2 {
@@ -39,25 +49,15 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*conns.AWSClient).DeployConn
+				conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-				input := &codedeploy.GetDeploymentGroupInput{
-					ApplicationName:     aws.String(applicationName),
-					DeploymentGroupName: aws.String(deploymentGroupName),
-				}
-
-				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
-				output, err := conn.GetDeploymentGroup(input)
+				group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
 				}
 
-				if output == nil || output.DeploymentGroupInfo == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", d.Id())
-				}
-
-				d.SetId(aws.StringValue(output.DeploymentGroupInfo.DeploymentGroupId))
+				d.SetId(aws.StringValue(group.DeploymentGroupId))
 				d.Set("app_name", applicationName)
 				d.Set("deployment_group_name", deploymentGroupName)
 
@@ -66,52 +66,62 @@ func ResourceDeploymentGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"alarm_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarms": {
+							Type:     schema.TypeSet,
+							MaxItems: 10,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"ignore_poll_alarm_failure": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"app_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"compute_platform": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deployment_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"deployment_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"deployment_style": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+			"auto_rollback_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"deployment_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
-						"deployment_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      codedeploy.DeploymentTypeInPlace,
-							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						"events": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"autoscaling_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"blue_green_deployment_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -137,7 +147,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"green_fleet_provisioning_option": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -153,7 +162,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"terminate_blue_instances_on_deployment_success": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -176,41 +184,119 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"service_role_arn": {
+			"compute_platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_config_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "CodeDeployDefault.OneAtATime",
+				ValidateFunc: validation.StringLenBetween(0, 100),
+			},
+			"deployment_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deployment_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-
-			"alarm_configuration": {
+			"deployment_style": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentOptionWithoutTrafficControl,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentOption_Values(), false),
+						},
+						"deployment_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codedeploy.DeploymentTypeInPlace,
+							ValidateFunc: validation.StringInSlice(codedeploy.DeploymentType_Values(), false),
+						},
+					},
+				},
+			},
+			"ec2_tag_filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validTagFilters,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+				Set: resourceTagFilterHash,
+			},
+			"ec2_tag_set": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ec2_tag_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validTagFilters,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							Set: resourceTagFilterHash,
+						},
+					},
+				},
+				Set: resourceTagSetHash,
+			},
+			"ecs_service": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarms": {
-							Type:     schema.TypeSet,
-							MaxItems: 10,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"cluster_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
-
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"ignore_poll_alarm_failure": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+						"service_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 					},
 				},
 			},
-
 			"load_balancer_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -230,7 +316,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -244,7 +329,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 								},
 							},
 						},
-
 						"target_group_pair_info": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -307,121 +391,6 @@ func ResourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"auto_rollback_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-
-						"events": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-
-			"autoscaling_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"deployment_config_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "CodeDeployDefault.OneAtATime",
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-
-			"ec2_tag_set": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ec2_tag_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTagFilters,
-									},
-
-									"value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-							Set: resourceTagFilterHash,
-						},
-					},
-				},
-				Set: resourceTagSetHash,
-			},
-
-			"ec2_tag_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTagFilters,
-						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceTagFilterHash,
-			},
-
-			"ecs_service": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"service_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-					},
-				},
-			},
-
 			"on_premises_instance_tag_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -431,13 +400,11 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validTagFilters,
 						},
-
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -446,7 +413,19 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTagFilterHash,
 			},
-
+			"outdated_instances_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      codedeploy.OutdatedInstancesStrategyUpdate,
+				ValidateFunc: validation.StringInSlice(codedeploy.OutdatedInstancesStrategy_Values(), false),
+			},
+			"service_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trigger_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -455,18 +434,15 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"trigger_events": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(codedeploy.TriggerEventType_Values(), false),
 							},
 						},
-
 						"trigger_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"trigger_target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -476,28 +452,24 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTriggerHashConfig,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	// required fields
+func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
 	serviceRoleArn := d.Get("service_role_arn").(string)
-
 	input := codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
@@ -526,7 +498,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("ecs_service"); ok {
-		input.EcsServices = expandCodeDeployEcsServices(attr.([]interface{}))
+		input.EcsServices = expandECSServices(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("trigger_configuration"); ok {
@@ -550,64 +522,58 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 		input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(attr.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
+	if attr, ok := d.GetOk("outdated_instances_strategy"); ok {
+		input.OutdatedInstancesStrategy = aws.String(attr.(string))
+	}
 
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreateDeploymentGroup(&input)
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 
 		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDeploymentGroup(&input)
+		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodeDeploy deployment group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
 
-	return resourceDeploymentGroupRead(d, meta)
+	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
+	group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, d.Get("app_name").(string), d.Get("deployment_group_name").(string))
 
-	deploymentGroupName := d.Get("deployment_group_name").(string)
-	resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
-		ApplicationName:     aws.String(d.Get("app_name").(string)),
-		DeploymentGroupName: aws.String(deploymentGroupName),
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("finding CodeDeploy Deployment Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
-	group := resp.DeploymentGroupInfo
 	appName := aws.StringValue(group.ApplicationName)
 	groupName := aws.StringValue(group.DeploymentGroupName)
 	groupArn := arn.ARN{
@@ -625,77 +591,62 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("deployment_group_id", group.DeploymentGroupId)
 	d.Set("compute_platform", group.ComputePlatform)
 	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
 
 	autoScalingGroups := make([]string, len(group.AutoScalingGroups))
 	for i, autoScalingGroup := range group.AutoScalingGroups {
 		autoScalingGroups[i] = aws.StringValue(autoScalingGroup.Name)
 	}
 	if err := d.Set("autoscaling_groups", autoScalingGroups); err != nil {
-		return fmt.Errorf("error setting autoscaling_groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
 	}
 
 	if err := d.Set("deployment_style", FlattenDeploymentStyle(group.DeploymentStyle)); err != nil {
-		return fmt.Errorf("error setting deployment_style: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_style: %s", err)
 	}
 
 	if err := d.Set("ec2_tag_set", ec2TagSetToMap(group.Ec2TagSet)); err != nil {
-		return fmt.Errorf("error setting ec2_tag_set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_set: %s", err)
 	}
 
 	if err := d.Set("ec2_tag_filter", ec2TagFiltersToMap(group.Ec2TagFilters)); err != nil {
-		return fmt.Errorf("error setting ec2_tag_filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_filter: %s", err)
 	}
 
-	if err := d.Set("ecs_service", flattenCodeDeployEcsServices(group.EcsServices)); err != nil {
-		return fmt.Errorf("error setting ecs_service: %w", err)
+	if err := d.Set("ecs_service", flattenECSServices(group.EcsServices)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ecs_service: %s", err)
 	}
 
 	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(group.OnPremisesInstanceTagFilters)); err != nil {
-		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
 	}
 
 	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
-		return fmt.Errorf("error setting trigger_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
 
 	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
-		return fmt.Errorf("error setting auto_rollback_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
 	}
 
 	if err := d.Set("alarm_configuration", AlarmConfigToMap(group.AlarmConfiguration)); err != nil {
-		return fmt.Errorf("error setting alarm_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting alarm_configuration: %s", err)
 	}
 
 	if err := d.Set("load_balancer_info", FlattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
-		return fmt.Errorf("error setting load_balancer_info: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting load_balancer_info: %s", err)
 	}
 
 	if err := d.Set("blue_green_deployment_config", FlattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
-		return fmt.Errorf("error setting blue_green_deployment_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting blue_green_deployment_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, groupArn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for CodeDeploy Deployment Group (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -751,7 +702,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.HasChange("ecs_service") {
-			input.EcsServices = expandCodeDeployEcsServices(d.Get("ecs_service").([]interface{}))
+			input.EcsServices = expandECSServices(d.Get("ecs_service").([]interface{}))
 		}
 
 		if d.HasChange("trigger_configuration") {
@@ -780,63 +731,91 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 			input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(n.([]interface{}))
 		}
 
+		if d.HasChange("outdated_instances_strategy") {
+			o, n := d.GetChange("outdated_instances_strategy")
+			if n.(string) == "" && o.(string) == codedeploy.OutdatedInstancesStrategyIgnore { // if the user is trying to remove the strategy, set it to update (the default)
+				input.OutdatedInstancesStrategy = aws.String(codedeploy.OutdatedInstancesStrategyUpdate)
+			} else if n.(string) != "" { //
+				input.OutdatedInstancesStrategy = aws.String(n.(string))
+			}
+		}
+
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
 
 		var err error
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err = conn.UpdateDeploymentGroup(&input)
+		err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+			_, err = conn.UpdateDeploymentGroupWithContext(ctx, &input)
 
 			if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDeploymentGroup(&input)
+			_, err = conn.UpdateDeploymentGroupWithContext(ctx, &input)
 		}
 		if err != nil {
-			return fmt.Errorf("error updating CodeDeploy deployment group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy deployment group (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating CodeDeploy Deployment Group (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceDeploymentGroupRead(d, meta)
+	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
-	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
-	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{
+	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
+	_, err := conn.DeleteDeploymentGroupWithContext(ctx, &codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func FindDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.CodeDeploy, applicationName, deploymentGroupName string) (*codedeploy.DeploymentGroupInfo, error) {
+	input := &codedeploy.GetDeploymentGroupInput{
+		ApplicationName:     aws.String(applicationName),
+		DeploymentGroupName: aws.String(deploymentGroupName),
+	}
+
+	output, err := conn.GetDeploymentGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DeploymentGroupInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DeploymentGroupInfo, nil
 }
 
 // buildOnPremTagFilters converts raw schema lists into a list of
@@ -956,7 +935,7 @@ func BuildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 	return result
 }
 
-func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
+func expandECSServices(l []interface{}) []*codedeploy.ECSService {
 	ecsServices := make([]*codedeploy.ECSService, 0)
 
 	for _, mRaw := range l {
@@ -977,7 +956,7 @@ func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
 	return ecsServices
 }
 
-func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
+func expandELBInfo(l []interface{}) []*codedeploy.ELBInfo {
 	elbInfos := []*codedeploy.ELBInfo{}
 
 	for _, mRaw := range l {
@@ -997,7 +976,7 @@ func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
 	return elbInfos
 }
 
-func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
+func expandTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
 	targetGroupInfos := []*codedeploy.TargetGroupInfo{}
 
 	for _, mRaw := range l {
@@ -1017,7 +996,7 @@ func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupI
 	return targetGroupInfos
 }
 
-func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
+func expandTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
 	targetGroupPairInfos := []*codedeploy.TargetGroupPairInfo{}
 
 	for _, mRaw := range l {
@@ -1028,9 +1007,9 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 		m := mRaw.(map[string]interface{})
 
 		targetGroupPairInfo := &codedeploy.TargetGroupPairInfo{
-			ProdTrafficRoute: expandCodeDeployTrafficRoute(m["prod_traffic_route"].([]interface{})),
-			TargetGroups:     expandCodeDeployTargetGroupInfo(m["target_group"].([]interface{})),
-			TestTrafficRoute: expandCodeDeployTrafficRoute(m["test_traffic_route"].([]interface{})),
+			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]interface{})),
+			TargetGroups:     expandTargetGroupInfo(m["target_group"].([]interface{})),
+			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]interface{})),
 		}
 
 		targetGroupPairInfos = append(targetGroupPairInfos, targetGroupPairInfo)
@@ -1039,7 +1018,7 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 	return targetGroupPairInfos
 }
 
-func expandCodeDeployTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
+func expandTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1084,15 +1063,15 @@ func ExpandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	lbInfo := list[0].(map[string]interface{})
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.ElbInfoList = expandCodeDeployElbInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.ElbInfoList = expandELBInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.TargetGroupInfoList = expandCodeDeployTargetGroupInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]interface{})) > 0 {
-		loadBalancerInfo.TargetGroupPairInfoList = expandCodeDeployTargetGroupPairInfo(attr.([]interface{}))
+		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfo(attr.([]interface{}))
 	}
 
 	return loadBalancerInfo
@@ -1273,7 +1252,7 @@ func AlarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 	return result
 }
 
-func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interface{} {
+func flattenECSServices(ecsServices []*codedeploy.ECSService) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, ecsService := range ecsServices {
@@ -1292,7 +1271,7 @@ func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interf
 	return l
 }
 
-func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
+func flattenELBInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, elbInfo := range elbInfos {
@@ -1310,7 +1289,7 @@ func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	return l
 }
 
-func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
+func flattenTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupInfo := range targetGroupInfos {
@@ -1328,7 +1307,7 @@ func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroup
 	return l
 }
 
-func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
+func flattenTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupPairInfo := range targetGroupPairInfos {
@@ -1337,9 +1316,9 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 		}
 
 		m := map[string]interface{}{
-			"prod_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
-			"target_group":       flattenCodeDeployTargetGroupInfo(targetGroupPairInfo.TargetGroups),
-			"test_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
+			"prod_traffic_route": flattenTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
+			"target_group":       flattenTargetGroupInfo(targetGroupPairInfo.TargetGroups),
+			"test_traffic_route": flattenTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
 		}
 
 		l = append(l, m)
@@ -1348,7 +1327,7 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 	return l
 }
 
-func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
+func flattenTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
 	if trafficRoute == nil {
 		return []interface{}{}
 	}
@@ -1386,9 +1365,9 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployElbInfo(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
-		"target_group_pair_info": flattenCodeDeployTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
+		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfo(loadBalancerInfo.ElbInfoList)),
+		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
+		"target_group_pair_info": flattenTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
 	return []interface{}{m}
@@ -1397,7 +1376,6 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 // FlattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
 func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
-
 	if config == nil {
 		return nil
 	}

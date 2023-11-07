@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
@@ -5,33 +8,42 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccECSCluster_basic(t *testing.T) {
-	var cluster1 ecs.Cluster
+	ctx := acctest.Context(t)
+	var v ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
+						"name":  "containerInsights",
+						"value": "disabled",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -46,21 +58,22 @@ func TestAccECSCluster_basic(t *testing.T) {
 }
 
 func TestAccECSCluster_disappears(t *testing.T) {
-	var cluster1 ecs.Cluster
+	ctx := acctest.Context(t)
+	var v ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCluster(), resourceName),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,20 +82,21 @@ func TestAccECSCluster_disappears(t *testing.T) {
 }
 
 func TestAccECSCluster_tags(t *testing.T) {
-	var cluster1 ecs.Cluster
+	ctx := acctest.Context(t)
+	var v ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterTags1Config(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -94,18 +108,18 @@ func TestAccECSCluster_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccClusterTags1Config(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,49 +128,27 @@ func TestAccECSCluster_tags(t *testing.T) {
 	})
 }
 
-func TestAccECSCluster_singleCapacityProvider(t *testing.T) {
-	var cluster1 ecs.Cluster
+func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	providerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ns := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_ecs_cluster.test"
+	namespace1ResourceName := "aws_service_discovery_http_namespace.test.0"
+	namespace2ResourceName := "aws_service_discovery_http_namespace.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSingleCapacityProvider(rName, providerName),
+				Config: testAccClusterConfig_serviceConnectDefaults(rName, ns, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     rName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccECSCluster_capacityProviders(t *testing.T) {
-	var cluster ecs.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterCapacityProviders(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_connect_defaults.0.namespace", namespace1ResourceName, "arn"),
 				),
 			},
 			{
@@ -166,79 +158,11 @@ func TestAccECSCluster_capacityProviders(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccClusterCapacityProvidersReOrdered(rName),
-				PlanOnly: true,
-			},
-		},
-	})
-}
-
-func TestAccECSCluster_capacityProvidersUpdate(t *testing.T) {
-	var cluster1 ecs.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterCapacityProvidersFargate(rName),
+				Config: testAccClusterConfig_serviceConnectDefaults(rName, ns, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     rName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClusterCapacityProvidersFargateSpot(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-				),
-			},
-			{
-				Config: testAccClusterCapacityProvidersFargateBoth(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-				),
-			},
-		},
-	})
-}
-
-func TestAccECSCluster_capacityProvidersNoStrategy(t *testing.T) {
-	var cluster1 ecs.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterCapacityProvidersFargateNoStrategy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     rName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClusterCapacityProvidersFargateSpotNoStrategy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_connect_defaults.0.namespace", namespace2ResourceName, "arn"),
 				),
 			},
 		},
@@ -246,27 +170,28 @@ func TestAccECSCluster_capacityProvidersNoStrategy(t *testing.T) {
 }
 
 func TestAccECSCluster_containerInsights(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
 				),
 			},
 			{
-				Config: testAccClusterContainerInsightsConfig(rName, "enabled"),
+				Config: testAccClusterConfig_containerInsights(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
@@ -277,9 +202,9 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterContainerInsightsConfig(rName, "disabled"),
+				Config: testAccClusterConfig_containerInsights(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						"name":  "containerInsights",
@@ -292,20 +217,21 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 }
 
 func TestAccECSCluster_configuration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigurationConfig(rName, true),
+				Config: testAccClusterConfig_configuration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
@@ -322,9 +248,9 @@ func TestAccECSCluster_configuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfigurationConfig(rName, false),
+				Config: testAccClusterConfig_configuration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
@@ -338,226 +264,113 @@ func TestAccECSCluster_configuration(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecs_cluster" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_cluster" {
+				continue
+			}
+
+			_, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ECS Cluster %s still exists", rs.Primary.ID)
 		}
 
-		c, err := tfecs.FindClusterByNameOrARN(context.Background(), conn, rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckClusterExists(ctx context.Context, n string, v *ecs.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ECS Cluster ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+
+		output, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
-			return fmt.Errorf("ECS cluster still exists:\n%s", c)
-		}
-	}
+		*v = *output
 
-	return nil
-}
-
-func testAccCheckClusterExists(resourceName string, cluster *ecs.Cluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
-		c, err := tfecs.FindClusterByNameOrARN(context.Background(), conn, rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error reading ECS Cluster (%s): %w", rs.Primary.ID, err)
-		}
-
-		if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
-			*cluster = *c
-			return nil
-		}
-
-		return fmt.Errorf("ECS Cluster (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccClusterConfig(rName string) string {
+func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 }
 `, rName)
 }
 
-func testAccClusterTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccClusterCapacityProviderConfig(rName string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_ecs_capacity_provider" "test" {
-  name = %q
-
-  auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.test.arn
-  }
-}
-`, rName)
-}
-
-func testAccClusterSingleCapacityProvider(rName, providerName string) string {
-	return testAccClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = [aws_ecs_capacity_provider.test.name]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    capacity_provider = aws_ecs_capacity_provider.test.name
-    weight            = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProviders(rName string) string {
+func testAccClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
-
-  capacity_providers = ["FARGATE_SPOT", "FARGATE"]
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-    base              = 1
-  }
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersReOrdered(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-    base              = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersFargate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE"]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersFargateSpot(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE_SPOT"]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersFargateBoth(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersFargateNoStrategy(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE"]
-}
-`, rName)
-}
-
-func testAccClusterCapacityProvidersFargateSpotNoStrategy(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE_SPOT"]
-}
-`, rName)
-}
-
-func testAccClusterTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %q
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccClusterContainerInsightsConfig(rName, value string) string {
+func testAccClusterConfig_serviceConnectDefaults(rName, ns string, idx int) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  count = 2
+
+  name = "%[2]s-${count.index}"
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  service_connect_defaults {
+    namespace = aws_service_discovery_http_namespace.test[%[3]d].arn
+  }
+}
+`, rName, ns, idx)
+}
+
+func testAccClusterConfig_containerInsights(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
+
   setting {
     name  = "containerInsights"
     value = %[2]q
@@ -566,7 +379,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName, value)
 }
 
-func testAccClusterConfigurationConfig(rName string, enable bool) string {
+func testAccClusterConfig_configuration(rName string, enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

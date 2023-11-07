@@ -1,33 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccCodeCommitTrigger_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTriggerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(resourceName),
+					testAccCheckTriggerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
 				),
 			},
@@ -35,32 +40,34 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTriggerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codecommit_trigger" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codecommit_trigger" {
+				continue
+			}
+
+			_, err := conn.GetRepositoryTriggersWithContext(ctx, &codecommit.GetRepositoryTriggersInput{
+				RepositoryName: aws.String(rs.Primary.ID),
+			})
+
+			if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
+				continue
+			}
+
+			if err == nil {
+				return fmt.Errorf("Trigger still exists: %s", rs.Primary.ID)
+			}
+			return err
 		}
 
-		_, err := conn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
-			continue
-		}
-
-		if err == nil {
-			return fmt.Errorf("Trigger still exists: %s", rs.Primary.ID)
-		}
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTriggerExists(name string) resource.TestCheckFunc {
+func testAccCheckTriggerExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -71,8 +78,8 @@ func testAccCheckTriggerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
-		out, err := conn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
+		out, err := conn.GetRepositoryTriggersWithContext(ctx, &codecommit.GetRepositoryTriggersInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
 

@@ -1,12 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,15 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceObjectLambdaAccessPointPolicy() *schema.Resource {
+// @SDKResource("aws_s3control_object_lambda_access_point_policy")
+func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceObjectLambdaAccessPointPolicyCreate,
-		Read:   resourceObjectLambdaAccessPointPolicyRead,
-		Update: resourceObjectLambdaAccessPointPolicyUpdate,
-		Delete: resourceObjectLambdaAccessPointPolicyDelete,
+		CreateWithoutTimeout: resourceObjectLambdaAccessPointPolicyCreate,
+		ReadWithoutTimeout:   resourceObjectLambdaAccessPointPolicyRead,
+		UpdateWithoutTimeout: resourceObjectLambdaAccessPointPolicyUpdate,
+		DeleteWithoutTimeout: resourceObjectLambdaAccessPointPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,50 +64,46 @@ func ResourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	}
 }
 
-func resourceObjectLambdaAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 	name := d.Get("name").(string)
-	resourceID := ObjectLambdaAccessPointCreateResourceID(accountID, name)
-
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
-	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
-	}
-
+	id := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 	input := &s3control.PutAccessPointPolicyForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 		Policy:    aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Creating S3 Object Lambda Access Point Policy: %s", input)
-	_, err = conn.PutAccessPointPolicyForObjectLambda(input)
+	_, err = conn.PutAccessPointPolicyForObjectLambda(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Object Lambda Access Point (%s) Policy: %w", resourceID, err)
+		return diag.Errorf("creating S3 Object Lambda Access Point (%s) Policy: %s", id, err)
 	}
 
-	d.SetId(resourceID)
+	d.SetId(id)
 
-	return resourceObjectLambdaAccessPointPolicyRead(d, meta)
+	return resourceObjectLambdaAccessPointPolicyRead(ctx, d, meta)
 }
 
-func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	policy, status, err := FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+	policy, status, err := findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point Policy (%s) not found, removing from state", d.Id())
@@ -109,7 +112,7 @@ func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Object Lambda Access Point Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("reading S3 Object Lambda Access Point Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -118,9 +121,8 @@ func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta inte
 
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.Set("policy", policyToSet)
@@ -131,19 +133,17 @@ func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceObjectLambdaAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+		return diag.FromErr(err)
 	}
 
 	input := &s3control.PutAccessPointPolicyForObjectLambdaInput{
@@ -152,27 +152,25 @@ func resourceObjectLambdaAccessPointPolicyUpdate(d *schema.ResourceData, meta in
 		Policy:    aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Updating S3 Object Lambda Access Point Policy: %s", input)
-	_, err = conn.PutAccessPointPolicyForObjectLambda(input)
+	_, err = conn.PutAccessPointPolicyForObjectLambda(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating S3 Object Lambda Access Point Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("updating S3 Object Lambda Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceObjectLambdaAccessPointPolicyRead(d, meta)
+	return resourceObjectLambdaAccessPointPolicyRead(ctx, d, meta)
 }
 
-func resourceObjectLambdaAccessPointPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Object Lambda Access Point Policy: %s", d.Id())
-	_, err = conn.DeleteAccessPointPolicyForObjectLambda(&s3control.DeleteAccessPointPolicyForObjectLambdaInput{
+	_, err = conn.DeleteAccessPointPolicyForObjectLambda(ctx, &s3control.DeleteAccessPointPolicyForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	})
@@ -182,8 +180,62 @@ func resourceObjectLambdaAccessPointPolicyDelete(d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Object Lambda Access Point Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting S3 Object Lambda Access Point Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (string, *types.PolicyStatus, error) {
+	inputGAPPFOL := &s3control.GetAccessPointPolicyForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	outputGAPPFOL, err := conn.GetAccessPointPolicyForObjectLambda(ctx, inputGAPPFOL)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: inputGAPPFOL,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if outputGAPPFOL == nil {
+		return "", nil, tfresource.NewEmptyResultError(inputGAPPFOL)
+	}
+
+	policy := aws.ToString(outputGAPPFOL.Policy)
+
+	if policy == "" {
+		return "", nil, tfresource.NewEmptyResultError(inputGAPPFOL)
+	}
+
+	inputGAPPSFOL := &s3control.GetAccessPointPolicyStatusForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	outputGAPPSFOL, err := conn.GetAccessPointPolicyStatusForObjectLambda(ctx, inputGAPPSFOL)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: inputGAPPSFOL,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if outputGAPPSFOL == nil || outputGAPPSFOL.PolicyStatus == nil {
+		return "", nil, tfresource.NewEmptyResultError(inputGAPPSFOL)
+	}
+
+	return policy, outputGAPPSFOL.PolicyStatus, nil
 }

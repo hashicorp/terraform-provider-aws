@@ -1,39 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := FindCluster(conn, id)
+		output, err := FindClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if cluster == nil {
-			return nil, "", nil
-		}
-
-		return cluster, aws.StringValue(cluster.State), err
+		return output, aws.StringValue(output.State), err
 	}
 }
 
-func statusHSMState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusHSM(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := FindHSM(conn, id, "")
+		output, err := FindHSMByTwoPartKey(ctx, conn, id, "")
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if hsm == nil {
-			return nil, "", nil
-		}
-
-		return hsm, aws.StringValue(hsm.State), err
+		return output, aws.StringValue(output.State), err
 	}
 }

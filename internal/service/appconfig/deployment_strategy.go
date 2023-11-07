@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,21 +12,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
+// @Tags(identifierAttribute="arn")
 func ResourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentStrategyCreate,
-		Read:   resourceDeploymentStrategyRead,
-		Update: resourceDeploymentStrategyUpdate,
-		Delete: resourceDeploymentStrategyDelete,
+		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
+		ReadWithoutTimeout:   resourceDeploymentStrategyRead,
+		UpdateWithoutTimeout: resourceDeploymentStrategyUpdate,
+		DeleteWithoutTimeout: resourceDeploymentStrategyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,27 +77,25 @@ func ResourceDeploymentStrategy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appconfig.ReplicateTo_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &appconfig.CreateDeploymentStrategyInput{
 		DeploymentDurationInMinutes: aws.Int64(int64(d.Get("deployment_duration_in_minutes").(int))),
 		GrowthFactor:                aws.Float64(d.Get("growth_factor").(float64)),
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -99,40 +106,39 @@ func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) 
 		input.FinalBakeTimeInMinutes = aws.Int64(int64(v.(int)))
 	}
 
-	strategy, err := conn.CreateDeploymentStrategy(input)
+	strategy, err := conn.CreateDeploymentStrategyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppConfig Deployment Strategy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Deployment Strategy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(strategy.Id))
 
-	return resourceDeploymentStrategyRead(d, meta)
+	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.GetDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetDeploymentStrategy(input)
+	output, err := conn.GetDeploymentStrategyWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appconfig Deployment Strategy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Deployment Strategy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting AppConfig Deployment Strategy (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Deployment Strategy (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting AppConfig Deployment Strategy (%s): empty response", d.Id())
 	}
 
 	d.Set("description", output.Description)
@@ -152,28 +158,12 @@ func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) er
 	}.String()
 	d.Set("arn", arn)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Deployment Strategy (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &appconfig.UpdateDeploymentStrategyInput{
@@ -200,39 +190,33 @@ func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) 
 			updateInput.GrowthType = aws.String(d.Get("growth_type").(string))
 		}
 
-		_, err := conn.UpdateDeploymentStrategy(updateInput)
+		_, err := conn.UpdateDeploymentStrategyWithContext(ctx, updateInput)
 
 		if err != nil {
-			return fmt.Errorf("error updating AppConfig Deployment Strategy (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Deployment Strategy (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig Deployment Strategy (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceDeploymentStrategyRead(d, meta)
+	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDeploymentStrategy(input)
+	_, err := conn.DeleteDeploymentStrategyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Deployment Strategy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appconfig Deployment Strategy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

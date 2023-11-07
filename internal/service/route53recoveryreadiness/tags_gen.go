@@ -2,28 +2,51 @@
 package route53recoveryreadiness
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness/route53recoveryreadinessiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists route53recoveryreadiness service tags.
+// listTags lists route53recoveryreadiness service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &route53recoveryreadiness.ListTagsForResourcesInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResources(input)
+	output, err := conn.ListTagsForResourcesWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists route53recoveryreadiness service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -33,43 +56,83 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 	return aws.StringMap(tags.Map())
 }
 
-// KeyValueTags creates KeyValueTags from route53recoveryreadiness service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+// KeyValueTags creates tftags.KeyValueTags from route53recoveryreadiness service tags.
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
 }
 
-// UpdateTags updates route53recoveryreadiness service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func UpdateTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &route53recoveryreadiness.UntagResourceInput{
-			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
-		}
-
-		_, err := conn.UntagResource(input)
-
-		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &route53recoveryreadiness.TagResourceInput{
-			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
-		}
-
-		_, err := conn.TagResource(input)
-
-		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+// getTagsIn returns route53recoveryreadiness service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
 		}
 	}
 
 	return nil
+}
+
+// setTagsOut sets route53recoveryreadiness service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// createTags creates route53recoveryreadiness service tags for new resources.
+func createTags(ctx context.Context, conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string, tags map[string]*string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, tags)
+}
+
+// updateTags updates route53recoveryreadiness service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Route53RecoveryReadiness)
+	if len(removedTags) > 0 {
+		input := &route53recoveryreadiness.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResourceWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Route53RecoveryReadiness)
+	if len(updatedTags) > 0 {
+		input := &route53recoveryreadiness.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        Tags(updatedTags),
+		}
+
+		_, err := conn.TagResourceWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates route53recoveryreadiness service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx), identifier, oldTags, newTags)
 }

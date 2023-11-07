@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -12,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_user_hierarchy_structure")
 func DataSourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserHierarchyStructureRead,
+		ReadWithoutTimeout: dataSourceUserHierarchyStructureRead,
 		Schema: map[string]*schema.Schema{
 			"hierarchy_structure": {
 				Type:     schema.TypeList,
@@ -22,23 +25,23 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"level_one": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_two": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_three": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_four": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_five": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 					},
@@ -54,7 +57,7 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 }
 
 // Each level shares the same schema
-func connectUserHierarchyLevelDataSourceSchema() *schema.Schema {
+func userHierarchyLevelDataSourceSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
@@ -78,7 +81,7 @@ func connectUserHierarchyLevelDataSourceSchema() *schema.Schema {
 }
 
 func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -87,15 +90,15 @@ func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.Resourc
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure for Connect Instance (%s): %w", instanceID, err))
+		return diag.Errorf("getting Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
 	}
 
 	if resp == nil || resp.HierarchyStructure == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID))
+		return diag.Errorf("getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID)
 	}
 
 	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID))
+		return diag.Errorf("setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID)
 	}
 
 	d.SetId(instanceID)

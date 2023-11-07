@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -15,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_standards_control")
 func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceStandardsControlPut,
-		ReadContext:   resourceStandardsControlRead,
-		UpdateContext: resourceStandardsControlPut,
-		DeleteContext: resourceStandardsControlDelete,
+		CreateWithoutTimeout: resourceStandardsControlPut,
+		ReadWithoutTimeout:   resourceStandardsControlRead,
+		UpdateWithoutTimeout: resourceStandardsControlPut,
+		DeleteWithoutTimeout: resourceStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
 			"control_id": {
@@ -82,7 +86,7 @@ func ResourceStandardsControl() *schema.Resource {
 }
 
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
@@ -99,7 +103,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Security Hub Standards Control (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
 	d.Set("control_id", control.ControlId)
@@ -117,7 +121,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	d.SetId(d.Get("standards_control_arn").(string))
 
@@ -131,7 +135,7 @@ func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.UpdateStandardsControlWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Security Hub Standards Control (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
 	return resourceStandardsControlRead(ctx, d, meta)

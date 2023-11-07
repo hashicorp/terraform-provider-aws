@@ -5,11 +5,11 @@ on:
       - main
   pull_request:
     paths:
-      - .markdownlinkcheck.json
+      - .ci/.markdownlinkcheck.json
       - .markdownlint.yml
       - .github/workflows/documentation.yml
-      - .go-version
       - docs/**
+      - go.mod
 
 jobs:
   markdown-link-check:
@@ -17,38 +17,35 @@ jobs:
     env:
       UV_THREADPOOL_SIZE: 128
     steps:
-    - uses: actions/checkout@v3
-    - uses: YakDriver/md-check-links@v2.0.5
-      with:
-        use-quiet-mode: 'yes'
-        use-verbose-mode: 'yes'
-        config-file: '.markdownlinkcheck.json'
-        folder-path: 'docs'
-        file-extension: '.md'
-        base-branch: "main"
-        check-modified-files-only: "yes"
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.ci/.markdownlinkcheck.json'
+          folder-path: 'docs'
+          file-extension: '.md'
+          base-branch: "main"
+          check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: avto-dev/markdown-lint@v1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
-          config: '.markdownlint.yml'
           args: 'docs'
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v3
+          go-version-file: go.mod
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
+      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text docs/

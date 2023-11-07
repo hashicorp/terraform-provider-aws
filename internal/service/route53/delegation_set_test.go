@@ -1,36 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func TestAccRoute53DelegationSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDelegationSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDelegationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSetConfig_basic(refName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegationSetExists(resourceName),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("delegationset/.+")),
+					testAccCheckDelegationSetExists(ctx, resourceName),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("delegationset/.+")),
 				),
 			},
 			{
@@ -44,6 +49,7 @@ func TestAccRoute53DelegationSet_basic(t *testing.T) {
 }
 
 func TestAccRoute53DelegationSet_withZones(t *testing.T) {
+	ctx := acctest.Context(t)
 	var zone route53.GetHostedZoneOutput
 
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -56,19 +62,19 @@ func TestAccRoute53DelegationSet_withZones(t *testing.T) {
 	zoneName2 := fmt.Sprintf("secondary.%s", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDelegationSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDelegationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSetConfig_zones(refName, zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegationSetExists(resourceName),
-					testAccCheckZoneExists(primaryZoneResourceName, &zone),
-					testAccCheckZoneExists(secondaryZoneResourceName, &zone),
-					testAccCheckNameServersMatch(resourceName, primaryZoneResourceName),
-					testAccCheckNameServersMatch(resourceName, secondaryZoneResourceName),
+					testAccCheckDelegationSetExists(ctx, resourceName),
+					testAccCheckZoneExists(ctx, primaryZoneResourceName, &zone),
+					testAccCheckZoneExists(ctx, secondaryZoneResourceName, &zone),
+					testAccCheckNameServersMatch(ctx, resourceName, primaryZoneResourceName),
+					testAccCheckNameServersMatch(ctx, resourceName, secondaryZoneResourceName),
 				),
 			},
 			{
@@ -82,20 +88,21 @@ func TestAccRoute53DelegationSet_withZones(t *testing.T) {
 }
 
 func TestAccRoute53DelegationSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDelegationSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDelegationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSetConfig_basic(refName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegationSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
+					testAccCheckDelegationSetExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,24 +110,26 @@ func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDelegationSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_delegation_set" {
-			continue
-		}
+func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_delegation_set" {
+				continue
+			}
 
-		_, err := conn.GetReusableDelegationSet(&route53.GetReusableDelegationSetInput{Id: aws.String(rs.Primary.ID)})
-		if err == nil {
-			return fmt.Errorf("Delegation set still exists")
+			_, err := conn.GetReusableDelegationSetWithContext(ctx, &route53.GetReusableDelegationSetInput{Id: aws.String(rs.Primary.ID)})
+			if err == nil {
+				return fmt.Errorf("Delegation set still exists")
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckDelegationSetExists(n string) resource.TestCheckFunc {
+func testAccCheckDelegationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -130,7 +139,7 @@ func testAccCheckDelegationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No delegation set ID is set")
 		}
 
-		out, err := conn.GetReusableDelegationSet(&route53.GetReusableDelegationSetInput{
+		out, err := conn.GetReusableDelegationSetWithContext(ctx, &route53.GetReusableDelegationSetInput{
 			Id: aws.String(rs.Primary.ID),
 		})
 
@@ -147,15 +156,15 @@ func testAccCheckDelegationSetExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckNameServersMatch(delegationSetName, zoneName string) resource.TestCheckFunc {
+func testAccCheckNameServersMatch(ctx context.Context, delegationSetName, zoneName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		delegationSetLocal, ok := s.RootModule().Resources[delegationSetName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", delegationSetName)
 		}
-		delegationSet, err := conn.GetReusableDelegationSet(&route53.GetReusableDelegationSetInput{
+		delegationSet, err := conn.GetReusableDelegationSetWithContext(ctx, &route53.GetReusableDelegationSetInput{
 			Id: aws.String(delegationSetLocal.Primary.ID),
 		})
 		if err != nil {
@@ -166,7 +175,7 @@ func testAccCheckNameServersMatch(delegationSetName, zoneName string) resource.T
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneName)
 		}
-		hostedZone, err := conn.GetHostedZone(&route53.GetHostedZoneInput{
+		hostedZone, err := conn.GetHostedZoneWithContext(ctx, &route53.GetHostedZoneInput{
 			Id: aws.String(hostedZoneLocal.Primary.ID),
 		})
 		if err != nil {

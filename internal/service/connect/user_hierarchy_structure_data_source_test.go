@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -5,23 +8,24 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectUserHierarchyStructureDataSource_instanceID(t *testing.T) {
+func testAccUserHierarchyStructureDataSource_instanceID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 	datasourceName := "data.aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyStructureDataSourceConfig_InstanceID(rName),
+				Config: testAccUserHierarchyStructureDataSourceConfig_instanceID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_structure.#", resourceName, "hierarchy_structure.#"),
@@ -78,7 +82,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, rName)
 }
 
-func testAccUserHierarchyStructureDataSourceConfig_InstanceID(rName string) string {
+func testAccUserHierarchyStructureDataSourceConfig_instanceID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseDataSourceConfig(rName),
 		`

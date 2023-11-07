@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package codepipeline
 
@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codepipeline", &resource.Sweeper{
 		Name: "aws_codepipeline",
 		F:    sweepPipelines,
@@ -23,28 +22,25 @@ func init() {
 }
 
 func sweepPipelines(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.(*conns.AWSClient).CodePipelineConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &codepipeline.ListPipelinesInput{}
+	conn := client.CodePipelineConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPipelinesPages(input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
+	err = conn.ListPipelinesPagesWithContext(ctx, input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, pipeline := range page.Pipelines {
-			r := ResourceCodePipeline()
+		for _, v := range page.Pipelines {
+			r := ResourcePipeline()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(pipeline.Name))
+			d.SetId(aws.StringValue(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -52,18 +48,20 @@ func sweepPipelines(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Codepipeline Pipeline for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Codepipeline Pipeline for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Codepipeline Pipelines (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Codepipeline Pipelines (%s): %w", region, err)
+	}
+
+	return nil
 }

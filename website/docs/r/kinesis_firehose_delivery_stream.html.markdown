@@ -49,44 +49,40 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
+data "aws_iam_policy_document" "firehose_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "firehose_role" {
+  name               = "firehose_test_role"
+  assume_role_policy = data.aws_iam_policy_document.firehose_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 resource "aws_iam_role" "lambda_iam" {
-  name = "lambda_iam"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  name               = "lambda_iam"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
 resource "aws_lambda_function" "lambda_processor" {
@@ -94,11 +90,12 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 ```
 
 ### Extended S3 Destination with dynamic partitioning
+
 These examples use built-in Firehose functionality, rather than requiring a lambda.
 
 ```terraform
@@ -110,12 +107,17 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
 
+    buffering_size = 64
+
+    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
+    dynamic_partitioning_configuration {
+      enabled = "true"
+    }
+
     # Example prefix using partitionKeyFromQuery, applicable to JQ processor
     prefix              = "data/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
-    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
-    buffer_size = 64
     processing_configuration {
       enabled = "true"
 
@@ -150,45 +152,40 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
 }
 ```
 
-### S3 Destination (deprecated)
+Multiple Dynamic Partitioning Keys (maximum of 50) can be added by comma separating the `parameter_value`.
+
+The following example adds the Dynamic Partitioning Keys: `store_id` and `customer_id` to the S3 prefix.
 
 ```terraform
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket"
-}
-
-resource "aws_s3_bucket_acl" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+  extended_s3_configuration {
+    role_arn       = aws_iam_role.firehose_role.arn
+    bucket_arn     = aws_s3_bucket.bucket.arn
+    buffering_size = 64
+    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
+    dynamic_partitioning_configuration {
+      enabled = "true"
     }
-  ]
-}
-EOF
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name        = "terraform-kinesis-firehose-test-stream"
-  destination = "s3"
-
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose_role.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
+    # Example prefix using partitionKeyFromQuery, applicable to JQ processor
+    prefix              = "data/store_id=!{partitionKeyFromQuery:store_id}/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    processing_configuration {
+      enabled = "true"
+      # JQ processor example
+      processors {
+        type = "MetadataExtraction"
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{store_id:.store_id,customer_id:.customer_id}"
+        }
+      }
+    }
   }
 }
 ```
@@ -209,14 +206,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "redshift"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
   redshift_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
     cluster_jdbcurl    = "jdbc:redshift://${aws_redshift_cluster.test_cluster.endpoint}/${aws_redshift_cluster.test_cluster.database_name}"
@@ -227,11 +216,19 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_columns = "test-col"
     s3_backup_mode     = "Enabled"
 
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
     s3_backup_configuration {
       role_arn           = aws_iam_role.firehose_role.arn
       bucket_arn         = aws_s3_bucket.bucket.arn
-      buffer_size        = 15
-      buffer_interval    = 300
+      buffering_size     = 15
+      buffering_interval = 300
       compression_format = "GZIP"
     }
   }
@@ -249,19 +246,19 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose_role.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
   elasticsearch_configuration {
     domain_arn = aws_elasticsearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose_role.arn
     index_name = "test"
     type_name  = "test"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
 
     processing_configuration {
       enabled = "true"
@@ -302,8 +299,132 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   }
 }
 
+data "aws_iam_policy_document" "firehose-elasticsearch" {
+  statement {
+    effect  = "Allow"
+    actions = ["es:*"]
+
+    resources = [
+      aws_elasticsearch_domain.test_cluster.arn,
+      "${aws_elasticsearch_domain.test_cluster.arn}/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateNetworkInterfacePermission",
+      "ec2:DeleteNetworkInterface",
+    ]
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role_policy" "firehose-elasticsearch" {
   name   = "elasticsearch"
+  role   = aws_iam_role.firehose.id
+  policy = data.aws_iam_policy_document.firehose-elasticsearch.json
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
+
+  name        = "terraform-kinesis-firehose-es"
+  destination = "elasticsearch"
+
+  elasticsearch_configuration {
+    domain_arn = aws_elasticsearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+    type_name  = "test"
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+
+    vpc_config {
+      subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+      security_group_ids = [aws_security_group.first.id]
+      role_arn           = aws_iam_role.firehose.arn
+    }
+  }
+}
+```
+
+### OpenSearch Destination
+
+```terraform
+resource "aws_opensearch_domain" "test_cluster" {
+  domain_name = "firehose-os-test"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "opensearch"
+
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose_role.arn
+    index_name = "test"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
+  }
+}
+```
+
+### OpenSearch Destination With VPC
+
+```terraform
+resource "aws_opensearch_domain" "test_cluster" {
+  domain_name = "es-test"
+
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "m4.large.search"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.first.id]
+    subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+  }
+}
+
+resource "aws_iam_role_policy" "firehose-opensearch" {
+  name   = "opensearch"
   role   = aws_iam_role.firehose.id
   policy = <<EOF
 {
@@ -315,8 +436,8 @@ resource "aws_iam_role_policy" "firehose-elasticsearch" {
         "es:*"
       ],
       "Resource": [
-        "${aws_elasticsearch_domain.test_cluster.arn}",
-        "${aws_elasticsearch_domain.test_cluster.arn}/*"
+        "${aws_opensearch_domain.test_cluster.arn}",
+        "${aws_opensearch_domain.test_cluster.arn}/*"
       ]
         },
         {
@@ -341,24 +462,65 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
 
-  name        = "terraform-kinesis-firehose-es"
-  destination = "elasticsearch"
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-  elasticsearch_configuration {
-    domain_arn = aws_elasticsearch_domain.test_cluster.arn
+  name        = "terraform-kinesis-firehose-os"
+  destination = "opensearch"
+
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
-    type_name  = "test"
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     vpc_config {
       subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
       security_group_ids = [aws_security_group.first.id]
       role_arn           = aws_iam_role.firehose.arn
+    }
+  }
+}
+```
+
+### OpenSearch Serverless Destination
+
+```terraform
+resource "aws_opensearchserverless_collection" "test_collection" {
+  name = "firehose-osserverless-test"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "opensearchserverless"
+
+  opensearchserverless_configuration {
+    collection_endpoint = aws_opensearchserverless_collection.test_collection.collection_endpoint
+    role_arn            = aws_iam_role.firehose_role.arn
+    index_name          = "test"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
     }
   }
 }
@@ -371,20 +533,20 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "splunk"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
   splunk_configuration {
     hec_endpoint               = "https://http-inputs-mydomain.splunkcloud.com:443"
     hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
     hec_acknowledgment_timeout = 600
     hec_endpoint_type          = "Event"
     s3_backup_mode             = "FailedEventsOnly"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
   }
 }
 ```
@@ -396,14 +558,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "http_endpoint"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
   http_endpoint_configuration {
     url                = "https://aws-api.newrelic.com/firehose/v1"
     name               = "New Relic"
@@ -412,6 +566,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     buffering_interval = 600
     role_arn           = aws_iam_role.firehose.arn
     s3_backup_mode     = "FailedDataOnly"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
 
     request_configuration {
       content_encoding = "GZIP"
@@ -432,29 +594,39 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) A name to identify the stream. This is unique to the
-AWS account and region the Stream is created in.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. More details are given below.
+* `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. More details are given below.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, and `http_endpoint`.
-* `s3_configuration` - (Optional) Required for non-S3 destinations. For S3 destination, use `extended_s3_configuration` instead. Configuration options for the s3 destination (or the intermediate bucket if the destination
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
 is redshift). More details are given below.
+* `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
-* `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
-Using `redshift_configuration` requires the user to also specify a
-`s3_configuration` block. More details are given below.
-* `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
-* `splunk_configuration` - (Optional) Configuration options if splunk is the destination. More details are given below.
-* `http_endpoint_configuration` - (Optional) Configuration options if http_endpoint is the destination. requires the user to also specify a `s3_configuration` block.  More details are given below.
+* `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  More details are given below.
+* `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. More details are given below.
+* `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. More details are given below.
+* `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. More details are given below.
+* `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. More details are given below.
 
 The `kinesis_source_configuration` object supports the following:
 
-* `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
-* `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
+* `kinesis_stream_arn` - (Required) The kinesis stream used as the source of the firehose delivery stream.
+* `role_arn` - (Required) The ARN of the role that provides access to the source Kinesis stream.
+
+The `msk_source_configuration` object supports the following:
+
+* `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. More details are given below.
+* `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
+* `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+
+The `authentication_configuration` object supports the following:
+
+* `connectivity` - (Required) The type of connectivity used to access the Amazon MSK cluster. Valid values: `PUBLIC`, `PRIVATE`.
+* `role_arn` - (Required) The ARN of the role used to access the Amazon MSK cluster.
 
 The `server_side_encryption` object supports the following:
 
@@ -462,29 +634,13 @@ The `server_side_encryption` object supports the following:
 * `key_type`- (Optional) Type of encryption key. Default is `AWS_OWNED_CMK`. Valid values are `AWS_OWNED_CMK` and `CUSTOMER_MANAGED_CMK`
 * `key_arn` - (Optional) Amazon Resource Name (ARN) of the encryption key. Required when `key_type` is `CUSTOMER_MANAGED_CMK`.
 
-The `s3_configuration` object supports the following:
-
-~> **NOTE:** This configuration block is deprecated for the `s3` destination.
-
-* `role_arn` - (Required) The ARN of the AWS credentials.
-* `bucket_arn` - (Required) The ARN of the S3 bucket
-* `prefix` - (Optional) The "YYYY/MM/DD/HH" time format prefix is automatically used for delivered S3 files. You can specify an extra prefix to be added in front of the time format prefix. Note that if the prefix ends with a slash, it appears as a folder in the S3 bucket
-* `buffer_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
-                                We recommend setting SizeInMBs to a value greater than the amount of data you typically ingest into the delivery stream in 10 seconds. For example, if you typically ingest data at 1 MB/sec set SizeInMBs to be 10 MB or higher.
-* `buffer_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300.
-* `compression_format` - (Optional) The compression format. If no value is specified, the default is `UNCOMPRESSED`. Other supported values are `GZIP`, `ZIP`, `Snappy`, & `HADOOP_SNAPPY`.
-* `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. Not currently supported for `redshift` destination. This prefix appears immediately following the bucket name. For information about how to specify this prefix, see [Custom Prefixes for Amazon S3 Objects](https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html).
-* `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
-be used.
-* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
-
-The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
+The `extended_s3_configuration` object supports the same fields from [s3_configuration](#s3-configuration) as well as the following:
 
 * `data_format_conversion_configuration` - (Optional) Nested argument for the serializer, deserializer, and schema for converting data from the JSON format to the Parquet or ORC format before writing it to Amazon S3. More details given below.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
-* `dynamic_partitioning_configuration` - (Optional) The configuration for dynamic partitioning. See [Dynamic Partitioning Configuration](#dynamic_partitioning_configuration) below for more details.
+* `dynamic_partitioning_configuration` - (Optional) The configuration for dynamic partitioning. See [Dynamic Partitioning Configuration](#dynamic_partitioning_configuration) below for more details. Required when using dynamic partitioning.
 
 The `redshift_configuration` object supports the following:
 
@@ -493,6 +649,7 @@ The `redshift_configuration` object supports the following:
 * `password` - (Required) The password for the username above.
 * `retry_duration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `role_arn` - (Required) The arn of the role the stream assumes.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 * `data_table_name` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
@@ -505,16 +662,48 @@ The `elasticsearch_configuration` object supports the following:
 
 * `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
-* `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The IAM role must have permission for `DescribeElasticsearchDomain`, `DescribeElasticsearchDomains`, and `DescribeElasticsearchDomainConfig` after assuming `RoleARN`.  The pattern needs to be `arn:.*`. Conflicts with `cluster_endpoint`.
+* `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
 * `cluster_endpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
 * `index_name` - (Required) The Elasticsearch index name.
 * `index_rotation_period` - (Optional) The Elasticsearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
-* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeElasticsearchDomain`, `DescribeElasticsearchDomains`, and `DescribeElasticsearchDomainConfig`.  The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to Elastic Search associated with the VPC. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `opensearch_configuration` object supports the following:
+
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
+* `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
+* `cluster_endpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
+* `index_name` - (Required) The OpenSearch index name.
+* `index_rotation_period` - (Optional) The OpenSearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
+* `retry_duration` - (Optional) After an initial failure to deliver to Amazon OpenSearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeDomain`, `DescribeDomains`, and `DescribeDomainConfig`.  The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
+* `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters. Types are deprecated in OpenSearch_1.1. TypeName must be empty.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `opensearchserverless_configuration` object supports the following:
+
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
+* `collection_endpoint` - (Required) The endpoint to use when communicating with the collection in the Serverless offering for Amazon OpenSearch Service.
+* `index_name` - (Required) The Serverless offering for Amazon OpenSearch Service index name.
+* `retry_duration` - (Optional) After an initial failure to deliver to the Serverless offering for Amazon OpenSearch Service, the total amount of time, in seconds between 0 to 7200, during which Kinesis Data Firehose retries delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch Serverless associated with the VPC. More details are given below
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `splunk_configuration` objects supports the following:
@@ -523,6 +712,7 @@ The `splunk_configuration` objects supports the following:
 * `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
 * `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
 * `hec_token` - (Required) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
@@ -534,6 +724,7 @@ The `http_endpoint_configuration` objects supports the following:
 * `name` - (Optional) The HTTP endpoint name.
 * `access_key` - (Optional) The access key required for Kinesis Firehose to authenticate with the HTTP endpoint selected as the destination.
 * `role_arn` - (Required) Kinesis Data Firehose uses this IAM role for all the permissions that the delivery stream needs. The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDataOnly` and `AllData`.  Default value is `FailedDataOnly`.
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
 * `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300 (5 minutes).
@@ -573,7 +764,7 @@ The `request_configuration` object supports the following:
 The `common_attributes` array objects support the following:
 
 * `name` - (Required) The name of the HTTP endpoint common attribute.
-* `value` - (Optional) The value of the HTTP endpoint common attribute.
+* `value` - (Required) The value of the HTTP endpoint common attribute.
 
 The `vpc_config` object supports the following:
 
@@ -592,7 +783,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   # ... other configuration ...
   extended_s3_configuration {
     # Must be at least 64
-    buffer_size = 128
+    buffering_size = 128
 
     # ... other configuration ...
     data_format_conversion_configuration {
@@ -622,6 +813,20 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 * `output_format_configuration` - (Required) Nested argument that specifies the serializer that you want Kinesis Data Firehose to use to convert the format of your data to the Parquet or ORC format. More details below.
 * `schema_configuration` - (Required) Nested argument that specifies the AWS Glue Data Catalog table that contains the column information. More details below.
 * `enabled` - (Optional) Defaults to `true`. Set it to `false` if you want to disable format conversion while preserving the configuration details.
+
+#### S3 Configuration
+
+* `role_arn` - (Required) The ARN of the AWS credentials.
+* `bucket_arn` - (Required) The ARN of the S3 bucket
+* `prefix` - (Optional) The "YYYY/MM/DD/HH" time format prefix is automatically used for delivered S3 files. You can specify an extra prefix to be added in front of the time format prefix. Note that if the prefix ends with a slash, it appears as a folder in the S3 bucket
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
+  We recommend setting SizeInMBs to a value greater than the amount of data you typically ingest into the delivery stream in 10 seconds. For example, if you typically ingest data at 1 MB/sec set SizeInMBs to be 10 MB or higher.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300.
+* `compression_format` - (Optional) The compression format. If no value is specified, the default is `UNCOMPRESSED`. Other supported values are `GZIP`, `ZIP`, `Snappy`, & `HADOOP_SNAPPY`.
+* `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. Not currently supported for `redshift` destination. This prefix appears immediately following the bucket name. For information about how to specify this prefix, see [Custom Prefixes for Amazon S3 Objects](https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html).
+* `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
+  be used.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 
 #### input_format_configuration
 
@@ -688,24 +893,45 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 
 #### dynamic_partitioning_configuration
 
-* `enabled` - (Optional) Enables or disables [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html). Defaults to `false`.
+Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html).
+
+* `enabled` - (Optional) Enables or disables dynamic partitioning. Defaults to `false`.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. Valid values between 0 and 7200. Default is 300.
 
-## Attributes Reference
+~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream. Therefore, Terraform will recreate the resource whenever dynamic partitioning is enabled or disabled.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://aws.amazon.com/documentation/firehose/
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Firehose Delivery streams using the stream ARN. For example:
 
+```terraform
+import {
+  to = aws_kinesis_firehose_delivery_stream.foo
+  id = "arn:aws:firehose:us-east-1:XXX:deliverystream/example"
+}
 ```
-$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+
+Using `terraform import`, import Kinesis Firehose Delivery streams using the stream ARN. For example:
+
+```console
+% terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
 ```
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

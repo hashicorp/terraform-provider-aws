@@ -1,31 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_provider")
 func ResourceIdentityProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIdentityProviderCreate,
-		Read:   resourceIdentityProviderRead,
-		Update: resourceIdentityProviderUpdate,
-		Delete: resourceIdentityProviderDelete,
+		CreateWithoutTimeout: resourceIdentityProviderCreate,
+		ReadWithoutTimeout:   resourceIdentityProviderRead,
+		UpdateWithoutTimeout: resourceIdentityProviderUpdate,
+		DeleteWithoutTimeout: resourceIdentityProviderDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,7 +54,7 @@ func ResourceIdentityProvider() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 40),
-						validation.StringMatch(regexp.MustCompile(`^[\w\s+=.@-]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\s+=.@-]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
 					),
 				},
 			},
@@ -63,7 +71,7 @@ func ResourceIdentityProvider() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`^[^_][\p{L}\p{M}\p{S}\p{N}\p{P}][^_]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+					validation.StringMatch(regexache.MustCompile(`^[^_][\p{L}\p{M}\p{S}\p{N}\p{P}][^_]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
 				),
 			},
 
@@ -83,8 +91,9 @@ func ResourceIdentityProvider() *schema.Resource {
 	}
 }
 
-func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
 	providerName := d.Get("provider_name").(string)
@@ -107,48 +116,49 @@ func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) er
 		params.IdpIdentifiers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	_, err := conn.CreateIdentityProvider(params)
+	_, err := conn.CreateIdentityProviderWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito Identity Provider: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Identity Provider: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))
 
-	return resourceIdentityProviderRead(d, meta)
+	return append(diags, resourceIdentityProviderRead(ctx, d, meta)...)
 }
 
-func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
 	}
 
-	ret, err := conn.DescribeIdentityProvider(&cognitoidentityprovider.DescribeIdentityProviderInput{
+	ret, err := conn.DescribeIdentityProviderWithContext(ctx, &cognitoidentityprovider.DescribeIdentityProviderInput{
 		ProviderName: aws.String(providerName),
 		UserPoolId:   aws.String(userPoolID),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), errors.New("not found after creation"))
 	}
 
 	ip := ret.IdentityProvider
@@ -157,27 +167,28 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("user_pool_id", ip.UserPoolId)
 
 	if err := d.Set("attribute_mapping", aws.StringValueMap(ip.AttributeMapping)); err != nil {
-		return fmt.Errorf("error setting attribute_mapping error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attribute_mapping error: %s", err)
 	}
 
 	if err := d.Set("provider_details", aws.StringValueMap(ip.ProviderDetails)); err != nil {
-		return fmt.Errorf("error setting provider_details error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting provider_details error: %s", err)
 	}
 
 	if err := d.Set("idp_identifiers", flex.FlattenStringList(ip.IdpIdentifiers)); err != nil {
-		return fmt.Errorf("error setting idp_identifiers error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting idp_identifiers error: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Cognito Identity Provider (%s): %s", d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.UpdateIdentityProviderInput{
@@ -197,36 +208,37 @@ func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		params.IdpIdentifiers = flex.ExpandStringList(d.Get("idp_identifiers").([]interface{}))
 	}
 
-	_, err = conn.UpdateIdentityProvider(params)
+	_, err = conn.UpdateIdentityProviderWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito Identity Provider: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating Cognito Identity Provider (%s): %s", d.Id(), err)
 	}
 
-	return resourceIdentityProviderRead(d, meta)
+	return append(diags, resourceIdentityProviderRead(ctx, d, meta)...)
 }
 
-func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceIdentityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Provider (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteIdentityProvider(&cognitoidentityprovider.DeleteIdentityProviderInput{
+	_, err = conn.DeleteIdentityProviderWithContext(ctx, &cognitoidentityprovider.DeleteIdentityProviderInput{
 		ProviderName: aws.String(providerName),
 		UserPoolId:   aws.String(userPoolID),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Provider (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeIdentityProviderID(id string) (string, string, error) {

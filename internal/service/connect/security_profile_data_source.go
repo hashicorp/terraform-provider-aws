@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -14,9 +17,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_security_profile")
 func DataSourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecurityProfileRead,
+		ReadWithoutTimeout: dataSourceSecurityProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -60,7 +64,7 @@ func DataSourceSecurityProfile() *schema.Resource {
 }
 
 func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -73,14 +77,14 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		input.SecurityProfileId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		securityProfileSummary, err := dataSourceGetConnectSecurityProfileSummaryByName(ctx, conn, instanceID, name)
+		securityProfileSummary, err := dataSourceGetSecurityProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Security Profile Summary by name (%s): %s", name, err)
 		}
 
 		if securityProfileSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Security Profile Summary by name (%s): not found", name)
 		}
 
 		input.SecurityProfileId = securityProfileSummary.Id
@@ -89,11 +93,11 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	resp, err := conn.DescribeSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile: %w", err))
+		return diag.Errorf("getting Connect Security Profile: %s", err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile: empty response"))
+		return diag.Errorf("getting Connect Security Profile: empty response")
 	}
 
 	securityProfile := resp.SecurityProfile
@@ -109,15 +113,15 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, *resp.SecurityProfile.Id)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", *resp.SecurityProfile.Id, err))
+		return diag.Errorf("finding Connect Security Profile Permissions for Security Profile (%s): %s", *resp.SecurityProfile.Id, err)
 	}
 
 	if permissions != nil {
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	if err := d.Set("tags", KeyValueTags(securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	if err := d.Set("tags", KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(resp.SecurityProfile.Id)))
@@ -125,7 +129,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func dataSourceGetConnectSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {
+func dataSourceGetSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {
 	var result *connect.SecurityProfileSummary
 
 	input := &connect.ListSecurityProfilesInput{

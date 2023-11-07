@@ -37,14 +37,21 @@ data "aws_lb_target_group" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `arn` - (Optional) The full ARN of the target group.
-* `name` - (Optional) The unique name of the target group.
+* `arn` - (Optional) Full ARN of the target group.
+* `name` - (Optional) Unique name of the target group.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match a pair on the desired target group.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has the lowest precedence.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [LB Target Group Resource](/docs/providers/aws/r/lb_target_group.html) for details
 on the returned attributes - they are identical.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

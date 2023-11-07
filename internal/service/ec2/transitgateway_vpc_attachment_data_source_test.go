@@ -1,25 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentFilterDataSourceConfig(),
+				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -36,17 +43,19 @@ func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T) {
 }
 
 func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentIDDataSourceConfig(),
+				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -62,13 +71,13 @@ func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentFilterDataSourceConfig() string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
+func testAccTransitGatewayVPCAttachmentDataSourceConfig_filter(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
@@ -78,16 +87,24 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -96,41 +113,23 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
     values = [aws_ec2_transit_gateway_vpc_attachment.test.id]
   }
 }
-`
+`, rName))
 }
 
-func testAccTransitGatewayVPCAttachmentIDDataSourceConfig() string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
-# IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test" {}
-
+func testAccTransitGatewayVPCAttachmentDataSourceConfig_id(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_vpc_attachment" "test" {
   id = aws_ec2_transit_gateway_vpc_attachment.test.id
 }
-`
+`, rName))
 }

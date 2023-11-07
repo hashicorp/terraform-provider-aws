@@ -1,6 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
-import "time"
+import (
+	"time"
+)
+
+const (
+	defaultBerkshelfVersion = "3.2.0"
+)
 
 const (
 	instanceStatusBooting      = "booting"

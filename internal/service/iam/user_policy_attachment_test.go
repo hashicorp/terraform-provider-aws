@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListAttachedUserPoliciesOutput
 	rName := sdkacctest.RandString(10)
 	policyName1 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
@@ -22,15 +28,15 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyAttachConfig(rName, policyName1),
+				Config: testAccUserPolicyAttachmentConfig_attach(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 1, &out),
+					testAccCheckUserPolicyAttachmentExists(ctx, "aws_iam_user_policy_attachment.test-attach", 1, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName1}, &out),
 				),
 			},
@@ -38,7 +44,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_user_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccUserPolicyAttachmentImportStateIdFunc("aws_iam_user_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID USER-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {
@@ -48,7 +54,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 
 					rs := s[0]
 
-					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+					if !arn.IsARN(rs.Attributes["policy_arn"]) {
 						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
 					}
 
@@ -56,9 +62,9 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3),
+				Config: testAccUserPolicyAttachmentConfig_attachUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 2, &out),
+					testAccCheckUserPolicyAttachmentExists(ctx, "aws_iam_user_policy_attachment.test-attach", 2, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
@@ -70,7 +76,7 @@ func testAccCheckUserPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyAttachmentExists(ctx context.Context, n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -81,10 +87,10 @@ func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttach
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		user := rs.Primary.Attributes["user"]
 
-		attachedPolicies, err := conn.ListAttachedUserPolicies(&iam.ListAttachedUserPoliciesInput{
+		attachedPolicies, err := conn.ListAttachedUserPoliciesWithContext(ctx, &iam.ListAttachedUserPoliciesInput{
 			UserName: aws.String(user),
 		})
 		if err != nil {
@@ -130,7 +136,7 @@ func testAccUserPolicyAttachmentImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccUserPolicyAttachConfig(rName, policyName string) string {
+func testAccUserPolicyAttachmentConfig_attach(rName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"
@@ -163,7 +169,7 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 `, rName, policyName)
 }
 
-func testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3 string) string {
+func testAccUserPolicyAttachmentConfig_attachUpdate(rName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"

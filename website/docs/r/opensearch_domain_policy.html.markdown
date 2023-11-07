@@ -1,7 +1,7 @@
 ---
 subcategory: "OpenSearch"
 layout: "aws"
-page_title: "AWS: aws_opensearch_domain"
+page_title: "AWS: aws_opensearch_domain_policy"
 description: |-
   Provides an OpenSearch Domain Policy.
 ---
@@ -18,42 +18,46 @@ resource "aws_opensearch_domain" "example" {
   engine_version = "OpenSearch_1.1"
 }
 
-resource "aws_opensearch_domain_policy" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+data "aws_iam_policy_document" "main" {
+  statement {
+    effect = "Allow"
 
-  access_policies = <<POLICIES
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "es:*",
-            "Principal": "*",
-            "Effect": "Allow",
-            "Condition": {
-                "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
-            },
-            "Resource": "${aws_opensearch_domain.example.arn}/*"
-        }
-    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["es:*"]
+    resources = ["${aws_opensearch_domain.example.arn}/*"]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["127.0.0.1/32"]
+    }
+  }
 }
-POLICIES
+
+resource "aws_opensearch_domain_policy" "main" {
+  domain_name     = aws_opensearch_domain.example.domain_name
+  access_policies = data.aws_iam_policy_document.main.json
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `domain_name` - (Required) Name of the domain.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
-`aws_opensearch_domain_policy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Optional, Default: `180m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)

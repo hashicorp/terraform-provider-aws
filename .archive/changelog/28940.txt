@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_response_headers_policy: Add `remove_headers_config` argument
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_response_headers_policy: Add `remove_headers_config` attribute
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,21 +8,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewaysDataSourceConfig(rName),
+				Config: testAccVPCNATGatewaysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_vpc_id", "ids.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_tags", "ids.#", "1"),
@@ -31,7 +35,7 @@ func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNATGatewaysDataSourceConfig(rName string) string {
+func testAccVPCNATGatewaysDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "172.5.0.0/16"
@@ -80,7 +84,7 @@ resource "aws_subnet" "test3" {
 }
 
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -88,7 +92,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -96,7 +100,7 @@ resource "aws_eip" "test2" {
 }
 
 resource "aws_eip" "test3" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

@@ -1,38 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketServerSideEncryptionConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationBasicConfig(rName),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
 				),
 			},
 			{
@@ -44,45 +50,24 @@ func TestAccS3BucketServerSideEncryptionConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketServerSideEncryptionConfiguration_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketServerSideEncryptionConfigurationBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketServerSideEncryptionConfiguration(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySEEByDefault_AES256(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, s3.ServerSideEncryptionAes256),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAes256)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAes256),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
 				),
 			},
@@ -96,22 +81,53 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySEEByDefault_AES256(t
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMS(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAwsKms)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSDSSE(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAwsKmsDsse)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKmsDsse)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
 				),
 			},
@@ -125,22 +141,23 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMS(t *t
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSSEAlgorithm(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAwsKms)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 				),
 			},
 			{
@@ -149,12 +166,12 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, s3.ServerSideEncryptionAes256),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAes256)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAes256),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
 				),
 			},
 			{
@@ -166,23 +183,24 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 	})
 }
 
-func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithMasterKeyArn(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithMasterKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyArn(rName),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMasterKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -196,22 +214,23 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithMasterKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyID(rName),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMasterKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", "id"),
 				),
 			},
@@ -225,19 +244,20 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_BucketKeyEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_BucketKeyEnabled(rName, true),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_keyEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", "true"),
@@ -249,9 +269,9 @@ func TestAccS3BucketServerSideEncryptionConfiguration_BucketKeyEnabled(t *testin
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_BucketKeyEnabled(rName, false),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_keyEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", "false"),
@@ -267,23 +287,24 @@ func TestAccS3BucketServerSideEncryptionConfiguration_BucketKeyEnabled(t *testin
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_BucketKeyEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_BucketKeyEnabled(rName, true),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKeyEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", "true"),
 				),
@@ -294,13 +315,13 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_BucketKe
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_BucketKeyEnabled(rName, false),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKeyEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", "aws_kms_key.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.bucket_key_enabled", "false"),
 				),
@@ -315,35 +336,36 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_BucketKe
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_migrate_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withDefaultEncryption_defaultKey(rName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketConfig_defaultEncryptionDefaultKey(rName, s3.ServerSideEncryptionAwsKms),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_migrate_noChange(rName),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
 				),
 			},
@@ -352,35 +374,36 @@ func TestAccS3BucketServerSideEncryptionConfiguration_migrate_noChange(t *testin
 }
 
 func TestAccS3BucketServerSideEncryptionConfiguration_migrate_withChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withDefaultEncryption_defaultKey(rName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketConfig_defaultEncryptionDefaultKey(rName, string(types.ServerSideEncryptionAwsKms)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAwsKms)),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, s3.ServerSideEncryptionAes256),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, string(types.ServerSideEncryptionAes256)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAes256),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", string(types.ServerSideEncryptionAes256)),
 					resource.TestCheckNoResourceAttr(resourceName, "rule.0.bucket_key_enabled"),
 				),
 			},
@@ -388,86 +411,27 @@ func TestAccS3BucketServerSideEncryptionConfiguration_migrate_withChange(t *test
 	})
 }
 
-func testAccCheckBucketServerSideEncryptionConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_server_side_encryption_configuration" {
-			continue
-		}
-
-		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &s3.GetBucketEncryptionInput{
-			Bucket: aws.String(bucket),
-		}
-
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
-
-		output, err := conn.GetBucketEncryption(input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, tfs3.ErrCodeServerSideEncryptionConfigurationNotFound) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket server-side encryption configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil && output.ServerSideEncryptionConfiguration != nil {
-			return fmt.Errorf("S3 Bucket server-side encryption configuration (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketServerSideEncryptionConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketEncryptionInput{
-			Bucket: aws.String(bucket),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
+		_, err = tfs3.FindServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-		output, err := conn.GetBucketEncryption(input)
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket server-side encryption configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil || output.ServerSideEncryptionConfiguration == nil {
-			return fmt.Errorf("S3 Bucket server-side encryption configuration (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccBucketServerSideEncryptionConfigurationBasicConfig(rName string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -476,12 +440,17 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
-  rule {}
+  rule {
+    # This is Amazon S3 bucket default encryption.
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 `, rName)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyArn(rName string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMasterKeyARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
@@ -505,7 +474,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyID(rName string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMasterKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
@@ -529,7 +498,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEAlgorithm(rName, sseAlgorithm string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultSSEAlgorithm(rName, sseAlgorithm string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -547,7 +516,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName, sseAlgorithm)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_BucketKeyEnabled(rName string, enabled bool) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_keyEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -557,13 +526,18 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
   rule {
+    # This is Amazon S3 bucket default encryption.
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+
     bucket_key_enabled = %[2]t
   }
 }
 `, rName, enabled)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_BucketKeyEnabled(rName string, enabled bool) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKeyEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
@@ -588,7 +562,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName, enabled)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_migrate_noChange(rName string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_migrateNoChange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

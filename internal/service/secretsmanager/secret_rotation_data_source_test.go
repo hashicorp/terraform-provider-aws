@@ -1,32 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_rotation.test"
 	datasourceName := "data.aws_secretsmanager_secret_rotation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretRotationDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
+				Config:      testAccSecretRotationDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
-				Config: testAccSecretRotationDataSourceConfig_Default(rName, 7),
+				Config: testAccSecretRotationDataSourceConfig_default(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_enabled", resourceName, "rotation_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_lambda_arn", resourceName, "rotation_lambda_arn"),
@@ -37,21 +41,21 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccSecretRotationDataSourceConfig_NonExistent = `
+const testAccSecretRotationDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret_rotation" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretRotationDataSourceConfig_Default(rName string, automaticallyAfterDays int) string {
-	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
+func testAccSecretRotationDataSourceConfig_default(rName string, automaticallyAfterDays int) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -62,7 +66,7 @@ resource "aws_lambda_permission" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = "%[1]s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {
@@ -77,5 +81,5 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 data "aws_secretsmanager_secret_rotation" "test" {
   secret_id = aws_secretsmanager_secret_rotation.test.secret_id
 }
-`, rName, automaticallyAfterDays)
+`, rName, automaticallyAfterDays))
 }

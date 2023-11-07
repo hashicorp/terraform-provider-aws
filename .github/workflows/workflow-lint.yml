@@ -7,17 +7,16 @@ on:
   pull_request:
     paths:
       - .github/workflows/*
+      - .ci/tools/go.mod
 jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: .ci/tools/go.mod
       - name: Install actionlint
-        run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
+        run: cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
         run: actionlint -shellcheck=

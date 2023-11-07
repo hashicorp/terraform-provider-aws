@@ -29,30 +29,37 @@ resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
 * `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.
 
-### Timeouts
+## Attribute Reference
 
-`aws_vpc_endpoint_subnet_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating the association
-- `delete` - (Default `10 minutes`) Used for destroying the association
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
-VPC Endpoint Subnet Associations can be imported using `vpc_endpoint_id` together with `subnet_id`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_subnet_association.example
+  id = "vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb"
+}
 ```
-$ terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
+
+Using `terraform import`, import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
 ```

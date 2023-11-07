@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect_test
 
 import (
@@ -6,28 +9,29 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 )
 
 func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationConfig(rName),
+				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
+					testAccCheckWorkerConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -44,19 +48,20 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 }
 
 func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationDescriptionConfig(rName),
+				Config: testAccWorkerConfigurationConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
+					testAccCheckWorkerConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
@@ -69,7 +74,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckWorkerConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,19 +85,15 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Worker Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
 
-		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccWorkerConfigurationConfig(rName string) string {
+func testAccWorkerConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
   name = %[1]q
@@ -105,7 +106,7 @@ EOF
 `, rName)
 }
 
-func testAccWorkerConfigurationDescriptionConfig(rName string) string {
+func testAccWorkerConfigurationConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
   name        = %[1]q

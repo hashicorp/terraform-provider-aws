@@ -1,7 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
+
+import (
+	"time"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
 
 const (
 	endpointStatusDeleting = "deleting"
+
+	replicationInstanceStatusAvailable = "available"
+	replicationInstanceStatusCreating  = "creating"
+	replicationInstanceStatusDeleting  = "deleting"
+	replicationInstanceStatusModifying = "modifying"
+	replicationInstanceStatusUpgrading = "upgrading"
 
 	replicationTaskStatusCreating  = "creating"
 	replicationTaskStatusDeleting  = "deleting"
@@ -20,7 +37,10 @@ const (
 	engineNameAuroraPostgresqlServerless = "aurora-postgresql-serverless"
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
+	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
+	engineNameBabelfish                  = "babelfish"
 	engineNameDB2                        = "db2"
+	engineNameDB2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
@@ -36,6 +56,7 @@ const (
 	engineNamePostgres                   = "postgres"
 	engineNameRedis                      = "redis"
 	engineNameRedshift                   = "redshift"
+	engineNameRedshiftServerless         = "redshift-serverless"
 	engineNameS3                         = "s3"
 	engineNameSQLServer                  = "sqlserver"
 	engineNameSybase                     = "sybase"
@@ -48,7 +69,10 @@ func engineName_Values() []string {
 		engineNameAuroraPostgresqlServerless,
 		engineNameAuroraServerless,
 		engineNameAzuredb,
+		engineNameAzureSQLManagedInstance,
+		engineNameBabelfish,
 		engineNameDB2,
+		engineNameDB2zOS,
 		engineNameTransfer,
 		engineNameDocDB,
 		engineNameDynamoDB,
@@ -64,6 +88,7 @@ func engineName_Values() []string {
 		engineNamePostgres,
 		engineNameRedis,
 		engineNameRedshift,
+		engineNameRedshiftServerless,
 		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
@@ -106,13 +131,46 @@ func s3SettingsCompressionType_Values() []string {
 }
 
 const (
-	s3SettingsEncryptionModeSseKMS = "SSE_KMS"
-	s3SettingsEncryptionModeSseS3  = "SSE_S3"
+	encryptionModeSseKMS = "SSE_KMS"
+	encryptionModeSseS3  = "SSE_S3"
 )
 
-func s3SettingsEncryptionMode_Values() []string {
+func encryptionMode_Values() []string {
 	return []string{
-		s3SettingsEncryptionModeSseKMS,
-		s3SettingsEncryptionModeSseS3,
+		encryptionModeSseKMS,
+		encryptionModeSseS3,
+	}
+}
+
+const (
+	replicationStatusCreated              = "created"
+	replicationStatusReady                = "ready"
+	replicationStatusRunning              = "running"
+	replicationStatusStopping             = "stopping"
+	replicationStatusStopped              = "stopped"
+	replicationStatusFailed               = "failed"
+	replicationStatusInitialising         = "initializing"
+	replicationStatusMetadataResources    = "preparing_metadata_resources"
+	replicationStatusTestingConnection    = "testing_connection"
+	replicationStatusFetchingMetadata     = "fetching_metadata"
+	replicationStatusCalculatingCapacity  = "calculating_capacity"
+	replicationStatusProvisioningCapacity = "provisioning_capacity"
+	replicationStatusReplicationStarting  = "replication_starting"
+)
+
+const (
+	replicationTypeValueStartReplication = "creating"
+	replicationTypeValueResumeProcessing = "resume-processing"
+)
+
+const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
 	}
 }

@@ -1,0 +1,15 @@
+```release-note:breaking-change
+resource/aws_rds_cluster: The `engine` argument is now required and has no default
+```
+
+```release-note:note
+resource/aws_rds_cluster: Configurations not including the `engine` argument must be updated to include `engine` as it is now required. Previously, not including `engine` was equivalent to `engine = "aurora"` and created a MySQL-5.6-compatible cluster
+```
+
+```release-note:breaking-change
+resource/aws_rds_cluster_instance: The `engine` argument is now required and has no default
+```
+
+```release-note:note
+resource/aws_rds_cluster_instance: Configurations not including the `engine` argument must be updated to include `engine` as it is now required. Previously, not including `engine` was equivalent to `engine = "aurora"` and created a MySQL-5.6-compatible cluster instance
+```

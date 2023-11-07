@@ -47,7 +47,7 @@ resource "aws_iam_role" "test_role" {
 ### Example of Using Data Source for Assume Role Policy
 
 ```terraform
-data "aws_iam_policy_document" "instance-assume-role-policy" {
+data "aws_iam_policy_document" "instance_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 resource "aws_iam_role" "instance" {
   name               = "instance_role"
   path               = "/system/"
-  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
 }
 ```
 
@@ -106,7 +106,6 @@ data "aws_iam_policy_document" "inline_policy" {
 ### Example of Removing Inline Policies
 
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
-
 
 ```terraform
 resource "aws_iam_role" "example" {
@@ -190,7 +189,7 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissions_boundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
@@ -201,21 +200,30 @@ This configuration block supports the following:
 * `name` - (Required) Name of the role policy.
 * `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/tutorials/terraform/aws-iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) specifying the role.
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_role.developer
+  id = "developer_name"
+}
 ```
-$ terraform import aws_iam_role.developer developer_name
+
+Using `terraform import`, import IAM Roles using the `name`. For example:
+
+```console
+% terraform import aws_iam_role.developer developer_name
 ```

@@ -22,7 +22,7 @@ resource "aws_dx_bgp_peer" "peer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
@@ -33,9 +33,9 @@ Required for IPv4 BGP peers on public virtual interfaces.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic.
 Required for IPv4 BGP peers on public virtual interfaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the BGP peer resource.
 * `bgp_status` - The Up/Down state of the BGP peer.
@@ -44,8 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_bgp_peer` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating BGP peer
-- `delete` - (Default `10 minutes`) Used for destroying BGP peer
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)

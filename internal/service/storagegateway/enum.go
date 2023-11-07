@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	authenticationActiveDirectory = "ActiveDirectory"
@@ -38,7 +43,7 @@ func defaultStorageClass_Values() []string {
 
 const (
 	gatewayTypeCached     = "CACHED"
-	gatewayTypeFileFSXSMB = "FILE_FSX_SMB"
+	gatewayTypeFileFSxSMB = "FILE_FSX_SMB"
 	gatewayTypeFileS3     = "FILE_S3"
 	gatewayTypeStored     = "STORED"
 	gatewayTypeVTL        = "VTL"
@@ -48,7 +53,7 @@ const (
 func gatewayType_Values() []string {
 	return []string{
 		gatewayTypeCached,
-		gatewayTypeFileFSXSMB,
+		gatewayTypeFileFSxSMB,
 		gatewayTypeFileS3,
 		gatewayTypeStored,
 		gatewayTypeVTL,
@@ -108,7 +113,6 @@ const (
 	fileSystemAssociationDeleteTimeout = 10 * time.Minute
 )
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	fileSystemAssociationStatusAvailable     = "AVAILABLE"
 	fileSystemAssociationStatusCreating      = "CREATING"

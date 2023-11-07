@@ -40,7 +40,7 @@ resource "aws_connect_routing_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_outbound_queue_id` - (Required) Specifies the default outbound queue for the Routing Profile.
 * `description` - (Required) Specifies the description of the Routing Profile.
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `name` - (Required) Specifies the name of the Routing Profile.
 * `queue_configs` - (Optional) One or more `queue_configs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queue_configs` block is documented below.
 * `tags` - (Optional) Tags to apply to the Routing Profile. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `media_concurrencies` block supports the following arguments:
 
@@ -63,25 +63,34 @@ A `queue_configs` block supports the following arguments:
 * `priority` - (Required) Specifies the order in which contacts are to be handled for the queue.
 * `queue_id` - (Required) Specifies the identifier for the queue.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Routing Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
 * `queue_configs` - In addition to the arguments used in the `queue_configs` argument block, there are additional attributes exported within the `queue_configs` block. These additional attributes are documented below.
 * `routing_profile_id` - The identifier for the Routing Profile.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `queue_configs` block supports the following attributes in addition to the arguments defined earlier:
 
-* `queue_arn` - Specifies the ARN for the queue.
-* `queue_name` - Specifies the name for the queue.
+* `queue_arn` - ARN for the queue.
+* `queue_name` - Name for the queue.
 
 ## Import
 
-Amazon Connect Routing Profiles can be imported using the `instance_id` and `routing_profile_id` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Routing Profiles using the `instance_id` and `routing_profile_id` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_routing_profile.example
+  id = "f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5"
+}
 ```
-$ terraform import aws_connect_routing_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
+
+Using `terraform import`, import Amazon Connect Routing Profiles using the `instance_id` and `routing_profile_id` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_connect_routing_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```

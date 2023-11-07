@@ -1,27 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	engine := "mysql"
 	licenseModel := "general-public-license"
 	storageType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_basic(engine, licenseModel, storageType),
@@ -38,6 +43,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -46,10 +52,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 	preferredClass := "db.t3.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass),
@@ -62,6 +68,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,10 +76,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(),
@@ -85,6 +92,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -92,10 +100,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(),
@@ -109,6 +117,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -116,10 +125,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring(),
@@ -132,6 +141,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -139,10 +149,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication(),
@@ -155,6 +165,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -162,10 +173,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsIops(),
@@ -178,6 +189,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -185,10 +197,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication(),
@@ -201,6 +213,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -209,13 +222,13 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccOrderableInstancePreCheck(t)
-			testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
+			acctest.PreCheck(ctx, t)
+			testAccOrderableInstancePreCheck(ctx, t)
+			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "mysql")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights(),
@@ -228,6 +241,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -235,10 +249,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling(),
@@ -251,6 +265,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -258,10 +273,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption(),
@@ -273,8 +288,8 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 	})
 }
 
-func testAccOrderableInstancePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccOrderableInstancePreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),
@@ -282,7 +297,7 @@ func testAccOrderableInstancePreCheck(t *testing.T) {
 		DBInstanceClass: aws.String("db.m5.xlarge"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptions(input)
+	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

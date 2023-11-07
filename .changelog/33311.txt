@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_identitystore_group: Restore `filter` argument to prevent `UnknownOperationException` errors in certain Regions
+```
+
+```release-note:bug
+data-source/aws_identitystore_user: Restore `filter` argument to prevent `UnknownOperationException` errors in certain Regions
+```

@@ -1,0 +1,23 @@
+```release-note:bug
+resource/aws_connect_hours_of_operation: Fix tags not being updated
+```
+
+```release-note:bug
+resource/aws_connect_queue: Fix tags not being updated
+```
+
+```release-note:bug
+resource/aws_connect_quick_connect: Fix tags not being updated
+```
+
+```release-note:bug
+resource/aws_connect_routing_profile: Fix tags not being updated
+```
+
+```release-note:bug
+resource/aws_connect_security_profile: Fix tags not being updated
+```
+
+```release-note:bug
+resource/aws_connect_user_hierarchy_group: Fix tags not being updated
+```

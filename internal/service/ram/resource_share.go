@@ -1,28 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ram_resource_share", name="Resource Share")
+// @Tags(identifierAttribute="id")
 func ResourceResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourceShareCreate,
-		Read:   resourceResourceShareRead,
-		Update: resourceResourceShareUpdate,
-		Delete: resourceResourceShareDelete,
+		CreateWithoutTimeout: resourceResourceShareCreate,
+		ReadWithoutTimeout:   resourceResourceShareRead,
+		UpdateWithoutTimeout: resourceResourceShareUpdate,
+		DeleteWithoutTimeout: resourceResourceShareDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -31,166 +43,281 @@ func ResourceResourceShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"allow_external_principals": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"permission_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	request := &ram.CreateResourceShareInput{
-		Name:                    aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &ram.CreateResourceShareInput{
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
+		Name:                    aws.String(name),
+		Tags:                    getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk("permission_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.PermissionArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Println("[DEBUG] Create RAM resource share request:", request)
-	createResp, err := conn.CreateResourceShare(request)
+	output, err := conn.CreateResourceShareWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating RAM resource share: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RAM Resource Share (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(createResp.ResourceShare.ResourceShareArn))
+	d.SetId(aws.StringValue(output.ResourceShare.ResourceShareArn))
 
-	_, err = WaitResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = tfresource.RetryWhenNotFound(ctx, FindResourceShareTimeout, func() (interface{}, error) {
+		return FindResourceShareOwnerSelfByARN(ctx, conn, d.Id())
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceResourceShareRead(d, meta)
+	if _, err := waitResourceShareOwnedBySelfActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceResourceShareRead(ctx, d, meta)...)
 }
 
-func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	request := &ram.GetResourceSharesInput{
-		ResourceShareArns: []*string{aws.String(d.Id())},
-		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
+	resourceShare, err := FindResourceShareOwnerSelfByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	output, err := conn.GetResourceShares(request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading RAM resource share %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s): %s", d.Id(), err)
 	}
 
-	if len(output.ResourceShares) == 0 {
-		log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	resourceShare := output.ResourceShares[0]
-
-	if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
-		log.Printf("[WARN] RAM resource share (%s) delet(ing|ed), removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
+	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 	d.Set("arn", resourceShare.ResourceShareArn)
 	d.Set("name", resourceShare.Name)
-	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 
-	tags := KeyValueTags(resourceShare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, resourceShare.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
-
-	if d.HasChanges("name", "allow_external_principals") {
-		request := &ram.UpdateResourceShareInput{
-			ResourceShareArn:        aws.String(d.Id()),
-			Name:                    aws.String(d.Get("name").(string)),
-			AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
-		}
-
-		log.Println("[DEBUG] Update RAM resource share request:", request)
-		_, err := conn.UpdateResourceShare(request)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-				log.Printf("[WARN] No RAM resource share by ARN (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating RAM resource share %s: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating RAM resource share (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceResourceShareRead(d, meta)
-}
-
-func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
-
-	deleteResourceShareInput := &ram.DeleteResourceShareInput{
+	input := &ram.ListResourceSharePermissionsInput{
 		ResourceShareArn: aws.String(d.Id()),
 	}
+	var permissions []*ram.ResourceSharePermissionSummary
 
-	log.Println("[DEBUG] Delete RAM resource share request:", deleteResourceShareInput)
-	_, err := conn.DeleteResourceShare(deleteResourceShareInput)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			return nil
+	err = conn.ListResourceSharePermissionsPagesWithContext(ctx, input, func(page *ram.ListResourceSharePermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)
-	}
 
-	_, err = WaitResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+		for _, v := range page.Permissions {
+			if v != nil {
+				permissions = append(permissions, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) permissions: %s", d.Id(), err)
 	}
 
-	return nil
+	permissionARNs := tfslices.ApplyToAll(permissions, func(r *ram.ResourceSharePermissionSummary) string {
+		return aws.StringValue(r.Arn)
+	})
+	d.Set("permission_arns", permissionARNs)
+
+	return diags
+}
+
+func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
+
+	if d.HasChanges("allow_external_principals", "name") {
+		input := &ram.UpdateResourceShareInput{
+			AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
+			Name:                    aws.String(d.Get("name").(string)),
+			ResourceShareArn:        aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateResourceShareWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RAM Resource Share (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceResourceShareRead(ctx, d, meta)...)
+}
+
+func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
+
+	log.Printf("[DEBUG] Deleting RAM Resource Share: %s", d.Id())
+	_, err := conn.DeleteResourceShareWithContext(ctx, &ram.DeleteResourceShareInput{
+		ResourceShareArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RAM Resource Share (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitResourceShareOwnedBySelfDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
+	input := &ram.GetResourceSharesInput{
+		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
+		ResourceShareArns: aws.StringSlice([]string{arn}),
+	}
+	output, err := findResourceShare(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == ram.ResourceShareStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findResourceShare(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.ResourceShare, error) {
+	output, err := findResourceShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findResourceShares(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSharesInput) ([]*ram.ResourceShare, error) {
+	var output []*ram.ResourceShare
+
+	err := conn.GetResourceSharesPagesWithContext(ctx, input, func(page *ram.GetResourceSharesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ResourceShares {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException, ram.ErrCodeUnknownResourceException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ram.ResourceShareStatusPending},
+		Target:  []string{ram.ResourceShareStatusActive},
+		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*ram.ResourceShare); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ram.ResourceShareStatusDeleting},
+		Target:  []string{},
+		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*ram.ResourceShare); ok {
+		return v, err
+	}
+
+	return nil, err
 }

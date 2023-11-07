@@ -1,128 +1,92 @@
-# Roadmap:  May 2022 - July 2022
+# Roadmap:  May 2023 - July 2023
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](docs/contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
-Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
+Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap.
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning February to April 2022, 912 Pull Requests were opened in the provider and 839 were closed/merged, adding support for:
+In the period spanning January to April 2023 the AWS Provider added support for the following (among many others):
 
-- Amazon OpenSearch
-- AWS Cost Categories
-- AWS AppFlow
-- Amazon Managed Grafana
-- Amazon Global Networks
-- Lambda Function URLs
+- AWS VPC Lattice
+- AWS Quicksight
+- AWS Directory Service “Trust”
+- AWS Observability Access Manager
 
-From May ‘22 - July ‘22, we will be prioritizing the following areas of work:
+From May - July 2023, we will be prioritizing the following areas of work:
 
 ## New Services  
 
-### Amazon Transcribe & Transcribe Medical
+### Amazon OpenSearch Serverless
 
-Issue: [#18865](https://github.com/hashicorp/terraform-provider-aws/issues/18865)
+Issue: [#28313](https://github.com/hashicorp/terraform-provider-aws/issues/28313)
 
-_[Amazon Transcribe](https://aws.amazon.com/transcribe/) is an automatic speech recognition service that makes it easy to add speech to text capabilities to any application. Transcribe’s features enable you to ingest audio input, produce easy to read and review transcripts, improve accuracy with customization, and filter content to ensure customer privacy._
+[Amazon OpenSearch Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) makes it easy for customers to run large-scale search and analytics workloads without managing clusters. It automatically provisions and scales the underlying resources to deliver fast data ingestion and query responses for even the most demanding and unpredictable workloads, eliminating the need to configure and optimize clusters.
 
-Support for Amazon Transcribe will include:
-
-New Resource(s):
-
-- `aws_transcribe_language_model`
-- `aws_transcribe_medical_vocabulary`
-- `aws_transcribe_vocabulary`
-- `aws_transcribe_vocabulary_filter`
-
-
-### Amazon Comprehend & Comprehend Medical
-
-Issue: [#18864](https://github.com/hashicorp/terraform-provider-aws/issues/18864)
-
-_[Amazon Comprehend](https://aws.amazon.com/comprehend/) is a natural-language processing (NLP) service that uses machine learning to uncover valuable insights and connections in text._
-
-Support for Amazon Comprehend will include:
+Support for Amazon OpenSearch Serverless may include:
 
 New Resource(s):
 
-- `aws_comprehend_endpoint`
-- `aws_comprehend_entity_recognizer`
-- `aws_comprehend_document_classifier`
+- `aws_opensearchserverless_collection`
+- `aws_opensearchserverless_access_policy`
+- `aws_opensearchserverless_security_config`
+- `aws_opensearchserverless_security_policy`
+- `aws_opensearchserverless_vpc_endpoint`
 
-### Amazon Textract
+### AWS Clean Rooms
 
-Issue: [#24478](https://github.com/hashicorp/terraform-provider-aws/issues/24478)
+Issue: [#30024](https://github.com/hashicorp/terraform-provider-aws/issues/30024)
 
-_[Amazon Textract](https://aws.amazon.com/textract/) is a machine learning (ML) service that automatically extracts text, handwriting, and data from scanned documents._
+[AWS Clean Rooms](https://aws.amazon.com/clean-rooms/) helps companies and their partners more easily and securely analyze and collaborate on their collective datasets–without sharing or copying one another's underlying data. With AWS Clean Rooms, customers can create a secure data clean room in minutes, and collaborate with any other company on the AWS Cloud to generate unique insights about advertising campaigns, investment decisions, and research and development.
 
-New Resource(s):
-
-- TBD
-
-### Amazon Kendra
-
-Issue: [#13367](https://github.com/hashicorp/terraform-provider-aws/issues/13367)
-
-_[Amazon Kendra](https://aws.amazon.com/kendra/) is an intelligent search service powered by machine learning (ML)._
-
-Support for Amazon Kendra will include:
+Support for AWS Clean Rooms may include:
 
 New Resource(s):
 
-- `aws_kendra_index`
-- `aws_kendra_query_suggestion_block_list`
-- `aws_kendra_thesaurus`
+- `aws_cleanrooms_collaboration`
+- `aws_cleanrooms_configured_table`
+- `aws_cleanrooms_configured_table_analysis_rule`
+- `aws_cleanrooms_configured_table_association`
+- `aws_cleanrooms_membership`
 
 ## Enhancements to Existing Services
 
-- [Lake Formation Tag-Based Access Control](https://github.com/hashicorp/terraform-provider-aws/issues/19640)
-- [Amazon Managed Apache Cassandra Service / Keyspaces](https://github.com/hashicorp/terraform-provider-aws/issues/11221)
-- [Assignment multiple users or groups via aws_ssoadmin_account_assignment](https://github.com/hashicorp/terraform-provider-aws/issues/18739)
-- [Add support for regex_match_statement to AWS WAF v2 ACL rules](https://github.com/hashicorp/terraform-provider-aws/pull/22452)
-- [Introduce custom timeout when waiting for aws_ecs_service to reach a steady state](https://github.com/hashicorp/terraform-provider-aws/pull/18868)
-- [r/aws_wafv2_web_acl: add support for captcha in rule actions #21766](https://github.com/hashicorp/terraform-provider-aws/pull/21766)
-- [Terraform seems to ignore "skip_final_snapshot" for rds cluster](https://github.com/hashicorp/terraform-provider-aws/issues/2588)
-- [Provider produced inconsistent final plan / an invalid new value for .tags_all](https://github.com/hashicorp/terraform-provider-aws/issues/19583)
-- [Support for Reserved Instances](https://github.com/hashicorp/terraform-provider-aws/issues/8521)
-- [Cost Explorer](https://github.com/hashicorp/terraform-provider-aws/issues/16137)
-- [Directory Service Shared Directory Support](https://github.com/hashicorp/terraform-provider-aws/issues/6004)
-- [New Feature: Launch AWS Marketplace products in linked AWS accounts](https://github.com/hashicorp/terraform-provider-aws/issues/17146)
-- [Don't mark non SecureString SSM parameters as sensitive](https://github.com/hashicorp/terraform-provider-aws/issues/9090)
-- [FIS Experiment Template](https://github.com/hashicorp/terraform-provider-aws/issues/18125)
-- [AWS Inspector Enable Service Feature](https://github.com/hashicorp/terraform-provider-aws/issues/22330)
-- [Fix aws_iam_policy_document order](https://github.com/hashicorp/terraform-provider-aws/pull/23060)
-- [Need SSM update-service-setting equivalent](https://github.com/hashicorp/terraform-provider-aws/pull/13018)
-- [Add data sources for Managed Rules for WAF and WAF Regional](https://github.com/hashicorp/terraform-provider-aws/pull/10563)
-- [Add aws_acmpca_permission resource](https://github.com/hashicorp/terraform-provider-aws/pull/12485)
-- [Terraform AWS Provider does not support CopyDBSnapshot](https://github.com/hashicorp/terraform-provider-aws/issues/9885)
-- [Access Analyzer archive_rule](https://github.com/hashicorp/terraform-provider-aws/issues/11102)
-- [Add new resource_aws_lightsail_container_service](https://github.com/hashicorp/terraform-provider-aws/pull/20625)
-- [Add resource aws_db_snapshot_copy](https://github.com/hashicorp/terraform-provider-aws/pull/9886)
-- [Dualstack prefix forcibly removed from ALIAS records](https://github.com/hashicorp/terraform-provider-aws/issues/6480)
-- [Add LoadBasedAutoscaling to OpsWorks Layer](https://github.com/hashicorp/terraform-provider-aws/pull/10962)
-- [Allow setting custom domain for click/open tracking as part of SES Event destination resource](https://github.com/hashicorp/terraform-provider-aws/issues/6339)
-- [Aws_inspector_assessment_template ability to send findings to SNS topic](https://github.com/hashicorp/terraform-provider-aws/issues/843)
-- [data_source/aws_ecr_lifecycle_policy_document: adding new data source for ECR](https://github.com/hashicorp/terraform-provider-aws/pull/6133)
+This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-## Research Topics
+- [Lack of support for sso-session in .aws/config](https://github.com/hashicorp/terraform-provider-aws/issues/28263)
+- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
+- [aws_wafv2_web_acl - Error: Provider produced inconsistent final plan](https://github.com/hashicorp/terraform-provider-aws/issues/23992)
+- [aws_lb_target_group_attachment: target_id should be a list](https://github.com/hashicorp/terraform-provider-aws/issues/9901)
+- [Extend Secrets Manager Rotation Configuration](https://github.com/hashicorp/terraform-provider-aws/issues/22969)
 
-Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
+## Major Release v5
 
-### Mux with Plugin Framework 
+The release of version 5.0 of the Terraform AWS provider will bring highly anticipated updates to default tags, and make changes and deprecations.
 
-Pull Request: [#23948](https://github.com/hashicorp/terraform-provider-aws/pull/23948)
+### Default Tags
 
-Prototyping the ability to [combine](https://www.terraform.io/plugin/mux) resources and data sources implemented in either Terraform Plugin SDK v2 or Terraform Plugin Framework using `terraform-plugin-mux`.
+Default tags in the Terraform AWS provider allow practitioners to define common metadata tags at the provider level. These tags are then applied to all supported resources in the Terraform configuration. Previously, assumptions and restrictions were made to allow this feature to function across as many resources as possible. However, it could be difficult to retrofit existing code, causing frustrating manual intervention.
+Thanks to new features available in the [Terraform plugin SDK](https://developer.hashicorp.com/terraform/plugin/sdkv2) and the [Terraform plugin framework](https://developer.hashicorp.com/terraform/plugin/framework), we have removed several limitations which made default tags difficult to integrate with existing resources and modules.
 
-### AWS Cloud Control Community Documentation 
+The updates in version 5.0 solve for:
 
-Issue: [#469](https://github.com/hashicorp/terraform-provider-awscc/issues/469)
+- Inconsistent final plans that cause failures when tags are computed.
+- Identical tags in both default tags and resource tags.
+- Perpetual diffs within tag configurations.
 
-Currently the `awscc` provider documentation that lives on the registry is generated from the CloudFormation Cloud Control API schema. This means that we are limited to attribute level and resource level descriptions that are quite terse. The `aws` Provider has rich, contributor drafted documentation which includes examples, notes, and guides that make for a much more positive user experience.
+### Remove EC2 Classic Functionality
 
-While resource behavior in `awscc` should remain wholly generated, we would like to enable contributors to append information to the generated documentation in order to foster an improved experience more inline with what Terraform practitioners are used to.
+In 2021 AWS [announced](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) the retirement of EC2 Classic Networking functionality. This was scheduled to occur on August 15th, 2022. Support for the functionality was extended until late September when any AWS customers who had qualified for extension finished their migration. At that time those features were marked as deprecated and it is now time to remove them as the functionality is no longer available through AWS. While this is a standard deprecation, this is a major feature removal.
+
+### Updating RDS Identifiers In–Place
+
+Allow DB names to be updated in place. This is now supported by AWS, so we should allow its use. Practitioners will now be able to change names without a recreation. Details for this issue can be tracked in issue [#507](https://github.com/hashicorp/terraform-provider-aws/issues/507).
+
+### Remove Default Value from Engine Parameters
+
+Removes a default value that does not have a parallel with AWS and causes unexpected behavior for end users. Practitioners will now have to specify a value. Details for this issue can be tracked in issue [#27960](https://github.com/hashicorp/terraform-provider-aws/issues/27960).
 
 ## Disclosures
 

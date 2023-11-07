@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
+func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectorByARN(ctx, conn, arn)
 
@@ -25,7 +28,7 @@ func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 	}
 }
 
-func statusCustomPluginState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
+func statusCustomPluginState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCustomPluginByARN(ctx, conn, arn)
 

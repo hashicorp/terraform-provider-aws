@@ -1,36 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccWAFV2IPSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_ip_set.test"
 	datasourceName := "data.aws_wafv2_ip_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIPSetDataSource_NonExistent(name),
-				ExpectError: regexp.MustCompile(`WAFv2 IPSet not found`),
+				Config:      testAccIPSetDataSourceConfig_nonExistent(name),
+				ExpectError: regexache.MustCompile(`WAFv2 IPSet not found`),
 			},
 			{
-				Config: testAccIPSetDataSource_Name(name),
+				Config: testAccIPSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "addresses", resourceName, "addresses"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/ipset/%v/.+$", name))),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/ipset/%v/.+$", name))),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ip_address_version", resourceName, "ip_address_version"),
@@ -42,7 +46,7 @@ func TestAccWAFV2IPSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccIPSetDataSource_Name(name string) string {
+func testAccIPSetDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"
@@ -57,7 +61,7 @@ data "aws_wafv2_ip_set" "test" {
 `, name)
 }
 
-func testAccIPSetDataSource_NonExistent(name string) string {
+func testAccIPSetDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"

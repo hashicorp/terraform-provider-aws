@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
 	"testing"
 )
 
-func TestAWSClientPartitionHostname(t *testing.T) {
+func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -30,7 +35,10 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.AWSClient.PartitionHostname(testCase.Prefix)
 
 			if got != testCase.Expected {
@@ -40,7 +48,9 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 	}
 }
 
-func TestAWSClientRegionalHostname(t *testing.T) {
+func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -68,7 +78,10 @@ func TestAWSClientRegionalHostname(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.AWSClient.RegionalHostname(testCase.Prefix)
 
 			if got != testCase.Expected {

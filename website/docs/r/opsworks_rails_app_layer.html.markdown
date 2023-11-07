@@ -20,9 +20,9 @@ resource "aws_opsworks_rails_app_layer" "app" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.
 * `app_server` - (Optional) Keyword for the app server to use. Defaults to "apache_passenger".
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.
@@ -43,7 +43,7 @@ The following arguments are supported:
 * `use_ebs_optimized_instances` - (Optional) Whether to use EBS-optimized instances.
 * `ebs_volume` - (Optional) `ebs_volume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
 * `custom_json` - (Optional) Custom JSON attributes to apply to the layer.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following extra optional arguments, all lists of Chef recipe names, allow
 custom Chef recipes to be applied to layer instances at the five different
@@ -64,10 +64,10 @@ An `ebs_volume` block supports the following arguments:
 * `type` - (Optional) The type of volume to create. This may be `standard` (the default), `io1` or `gp2`.
 * `iops` - (Optional) For PIOPS volumes, the IOPS per disk.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

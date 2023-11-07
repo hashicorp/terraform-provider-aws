@@ -1,19 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpc_peering_connection")
 func DataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCPeeringConnectionRead,
+		ReadWithoutTimeout: dataSourceVPCPeeringConnectionRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"accepter": {
@@ -106,8 +117,9 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 	}
 }
 
-func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
@@ -130,7 +142,7 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -142,10 +154,10 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 		input.Filters = nil
 	}
 
-	vpcPeeringConnection, err := FindVPCPeeringConnection(conn, input)
+	vpcPeeringConnection, err := FindVPCPeeringConnection(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPC Peering Connection", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Peering Connection", err))
 	}
 
 	d.SetId(aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId))
@@ -161,7 +173,7 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 		})
 	}
 	if err := d.Set("cidr_block_set", cidrBlockSet); err != nil {
-		return fmt.Errorf("error setting cidr_block_set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cidr_block_set: %s", err)
 	}
 
 	d.Set("region", vpcPeeringConnection.RequesterVpcInfo.Region)
@@ -176,26 +188,26 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 		})
 	}
 	if err := d.Set("peer_cidr_block_set", peerCidrBlockSet); err != nil {
-		return fmt.Errorf("error setting peer_cidr_block_set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting peer_cidr_block_set: %s", err)
 	}
 
 	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
-	if err := d.Set("tags", KeyValueTags(vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
-			return fmt.Errorf("error setting accepter: %w", err)
+		if err := d.Set("accepter", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
-			return fmt.Errorf("error setting requester: %w", err)
+		if err := d.Set("requester", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }

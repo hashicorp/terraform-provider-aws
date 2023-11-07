@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -5,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
+func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -19,12 +23,12 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileDataSourceConfig_RoutingProfileID(rName, rName2, rName3, rName4),
+				Config: testAccRoutingProfileDataSourceConfig_id(rName, rName2, rName3, rName4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
@@ -62,7 +66,8 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	})
 }
 
-func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
+func testAccRoutingProfileDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -71,12 +76,12 @@ func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileDataSourceConfig_Name(rName, rName2, rName3, rName4),
+				Config: testAccRoutingProfileDataSourceConfig_name(rName, rName2, rName3, rName4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
@@ -179,7 +184,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName, rName2, rName3, rName4)
 }
 
-func testAccRoutingProfileDataSourceConfig_RoutingProfileID(rName, rName2, rName3, rName4 string) string {
+func testAccRoutingProfileDataSourceConfig_id(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
 		`
@@ -190,7 +195,7 @@ data "aws_connect_routing_profile" "test" {
 `)
 }
 
-func testAccRoutingProfileDataSourceConfig_Name(rName, rName2, rName3, rName4 string) string {
+func testAccRoutingProfileDataSourceConfig_name(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
 		`

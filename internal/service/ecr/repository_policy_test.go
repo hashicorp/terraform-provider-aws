@@ -1,37 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
 func TestAccECRRepositoryPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -41,12 +46,12 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryPolicyUpdatedConfig(rName),
+				Config: testAccRepositoryPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("ecr:DescribeImages")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("ecr:DescribeImages")),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -55,21 +60,22 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 }
 
 func TestAccECRRepositoryPolicy_IAM_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyIAMRoleConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("iam")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("iam")),
 				),
 			},
 			{
@@ -83,31 +89,32 @@ func TestAccECRRepositoryPolicy_IAM_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19365
 func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("iam")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("iam")),
 				),
 			},
 			{
-				Config: testAccRepositoryPolicyIAMRoleNewOrderJSONEncodeConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRoleNewOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 				),
 			},
 			{
-				Config:   testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName),
+				Config:   testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
 				PlanOnly: true,
 			},
 		},
@@ -115,20 +122,21 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 }
 
 func TestAccECRRepositoryPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepositoryPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,20 +145,21 @@ func TestAccECRRepositoryPolicy_disappears(t *testing.T) {
 }
 
 func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,28 +167,30 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 	})
 }
 
-func testAccCheckRepositoryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecr_repository_policy" {
-			continue
-		}
-
-		_, err := conn.GetRepositoryPolicy(&ecr.GetRepositoryPolicyInput{
-			RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
-			RepositoryName: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
-				tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecr_repository_policy" {
+				continue
 			}
-			return err
-		}
-	}
 
-	return nil
+			_, err := conn.GetRepositoryPolicyWithContext(ctx, &ecr.GetRepositoryPolicyInput{
+				RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
+				RepositoryName: aws.String(rs.Primary.ID),
+			})
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
+					tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
+					return nil
+				}
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
@@ -193,7 +204,7 @@ func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRepositoryPolicyConfig(rName string) string {
+func testAccRepositoryPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -215,7 +226,7 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName)
 }
 
-func testAccRepositoryPolicyUpdatedConfig(rName string) string {
+func testAccRepositoryPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -240,11 +251,11 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName)
 }
 
-// testAccRepositoryPolicyIAMRoleConfig creates a new IAM Role and tries
+// testAccRepositoryPolicyConfig_iamRole creates a new IAM Role and tries
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccRepositoryPolicyIAMRoleConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -368,7 +379,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRepositoryPolicyIAMRoleOrderBaseConfig(rName),
 		fmt.Sprintf(`
@@ -396,7 +407,7 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName))
 }
 
-func testAccRepositoryPolicyIAMRoleNewOrderJSONEncodeConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRoleNewOrderJSONEncode(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRepositoryPolicyIAMRoleOrderBaseConfig(rName),
 		fmt.Sprintf(`

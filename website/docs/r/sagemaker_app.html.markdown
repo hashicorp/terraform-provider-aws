@@ -25,14 +25,15 @@ resource "aws_sagemaker_app" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the app.
-* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway` and `TensorBoard`.
+* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway` and `TensorBoard`.
 * `domain_id` - (Required) The domain ID.
-* `user_profile_name` - (Required) The user profile name.
+* `user_profile_name` - (Optional) The user profile name. At least one of `user_profile_name` or `space_name` required.
 * `resource_spec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.See [Resource Spec](#resource-spec) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `space_name` - (Optional) The name of the space. At least one of `user_profile_name` or `space_name` required.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Resource Spec
 
@@ -41,18 +42,27 @@ The following arguments are supported:
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the app.
 * `arn` - The Amazon Resource Name (ARN) of the app.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-SageMaker Code Apps can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Apps using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_app.example
+  id = "arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name"
+}
 ```
-$ terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
+
+Using `terraform import`, import SageMaker Apps using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
 ```

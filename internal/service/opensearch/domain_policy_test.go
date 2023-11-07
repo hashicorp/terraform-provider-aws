@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
@@ -6,14 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
@@ -47,16 +51,15 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainPolicyConfig(ri, policy),
+				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_opensearch_domain.test", &domain),
-					resource.TestCheckResourceAttr("aws_opensearch_domain.test", "engine_version", "OpenSearch_1.1"),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
@@ -113,11 +116,10 @@ func buildDomainARN(name, partition, accId, region string) (string, error) {
 	return fmt.Sprintf("arn:%s:es:%s:%s:domain/%s", partition, region, accId, name), nil
 }
 
-func testAccDomainPolicyConfig(randInt int, policy string) string {
+func testAccDomainPolicyConfig_basic(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = "tf-test-%d"
-  engine_version = "OpenSearch_1.1"
+  domain_name = "tf-test-%d"
 
   cluster_config {
     instance_type = "t2.small.search" # supported in both aws and aws-us-gov

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestSemVerLessThan(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		s1 string
 		s2 string
@@ -24,6 +29,8 @@ func TestSemVerLessThan(t *testing.T) {
 }
 
 func TestSemVerGreaterThanOrEqual(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		s1 string
 		s2 string

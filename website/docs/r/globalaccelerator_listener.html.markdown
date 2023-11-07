@@ -39,37 +39,45 @@ resource "aws_globalaccelerator_listener" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) The Amazon Resource Name (ARN) of your accelerator.
 * `client_affinity` - (Optional) Direct all requests from a user to the same endpoint. Valid values are `NONE`, `SOURCE_IP`. Default: `NONE`. If `NONE`, Global Accelerator uses the "five-tuple" properties of source IP address, source port, destination IP address, destination port, and protocol to select the hash value. If `SOURCE_IP`, Global Accelerator uses the "two-tuple" properties of source (client) IP address and destination IP address to select the hash value.
 * `protocol` - (Optional) The protocol for the connections from clients to the accelerator. Valid values are `TCP`, `UDP`.
 * `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
 
-**port_range** supports the following attributes:
+`port_range` supports the following arguments:
 
 * `from_port` - (Optional) The first port in the range of ports, inclusive.
 * `to_port` - (Optional) The last port in the range of ports, inclusive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
 
 ## Timeouts
 
-`aws_globalaccelerator_listener` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be updated.
-* `delete` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be deleted.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-Global Accelerator listeners can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator listeners using the `id`. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_listener.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx"
+}
 ```
-$ terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
+
+Using `terraform import`, import Global Accelerator listeners using the `id`. For example:
+
+```console
+% terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```

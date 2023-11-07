@@ -1,22 +1,21 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package apprunner
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_apprunner_auto_scaling_configuration_version", &resource.Sweeper{
 		Name:         "aws_apprunner_auto_scaling_configuration_version",
 		F:            sweepAutoScalingConfigurationVersions,
@@ -36,15 +35,16 @@ func init() {
 }
 
 func sweepAutoScalingConfigurationVersions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	ctx := context.Background()
+	conn := client.AppRunnerConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	var errs *multierror.Error
 
 	input := &apprunner.ListAutoScalingConfigurationsInput{}
@@ -79,7 +79,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, err)
 		return nil
 	}
@@ -88,11 +88,11 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner AutoScaling Configuration Versions: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner AutoScaling Configuration Version for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -101,15 +101,15 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 }
 
 func sweepConnections(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	ctx := context.Background()
+	conn := client.AppRunnerConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
 
@@ -140,7 +140,7 @@ func sweepConnections(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Connections sweep for %s: %s", region, err)
 		return nil
 	}
@@ -149,11 +149,11 @@ func sweepConnections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Connections: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Connections for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Connections sweep for %s: %s", region, err)
 		return nil // In case we have completed some pages, but had errors
 	}
@@ -162,15 +162,16 @@ func sweepConnections(region string) error {
 }
 
 func sweepServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	ctx := context.Background()
+	conn := client.AppRunnerConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	var errs *multierror.Error
 
 	input := &apprunner.ListServicesInput{}
@@ -199,7 +200,7 @@ func sweepServices(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
 		return nil
 	}
@@ -208,11 +209,11 @@ func sweepServices(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Services: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Services for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
 		return nil // In case we have completed some pages, but had errors
 	}

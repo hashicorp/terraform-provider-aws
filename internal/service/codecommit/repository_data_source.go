@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_codecommit_repository")
 func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRepositoryRead,
+		ReadWithoutTimeout: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
@@ -46,27 +52,28 @@ func DataSourceRepository() *schema.Resource {
 	}
 }
 
-func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(repositoryName),
 	}
 
-	out, err := conn.GetRepository(input)
+	out, err := conn.GetRepositoryWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
 			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return fmt.Errorf("Resource codecommit repository not found for %s", repositoryName)
+			return sdkdiag.AppendErrorf(diags, "Resource codecommit repository not found for %s", repositoryName)
 		} else {
-			return fmt.Errorf("Error reading CodeCommit Repository: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading CodeCommit Repository: %s", err)
 		}
 	}
 
 	if out.RepositoryMetadata == nil {
-		return fmt.Errorf("no matches found for repository name: %s", repositoryName)
+		return sdkdiag.AppendErrorf(diags, "no matches found for repository name: %s", repositoryName)
 	}
 
 	d.SetId(aws.StringValue(out.RepositoryMetadata.RepositoryName))
@@ -76,5 +83,5 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_name", out.RepositoryMetadata.RepositoryName)
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)
 
-	return nil
+	return diags
 }

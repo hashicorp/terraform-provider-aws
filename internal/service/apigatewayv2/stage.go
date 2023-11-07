@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,26 +13,31 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	apigatewayv2DefaultStageName = "$default"
+	defaultStageName = "$default"
 )
 
+// @SDKResource("aws_apigatewayv2_stage", name="Stage")
+// @Tags(identifierAttribute="arn")
 func ResourceStage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStageCreate,
-		Read:   resourceStageRead,
-		Update: resourceStageUpdate,
-		Delete: resourceStageDelete,
+		CreateWithoutTimeout: resourceStageCreate,
+		ReadWithoutTimeout:   resourceStageRead,
+		UpdateWithoutTimeout: resourceStageUpdate,
+		DeleteWithoutTimeout: resourceStageDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceStageImport,
+			StateContext: resourceStageImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -178,26 +187,25 @@ func ResourceStage() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
 
-	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+	apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	protocolType := aws.StringValue(apiOutput.ProtocolType)
@@ -206,7 +214,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
 		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
@@ -231,39 +239,38 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 stage: %s", req)
-	resp, err := conn.CreateStage(req)
+	resp, err := conn.CreateStageWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 stage: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 stage: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.StageName))
 
-	return resourceStageRead(d, meta)
+	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
-	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
+	resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),
 		StageName: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 stage (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 stage (%s): %s", d.Id(), err)
 	}
 
 	stageName := aws.StringValue(resp.StageName)
 	err = d.Set("access_log_settings", flattenAccessLogSettings(resp.AccessLogSettings))
 	if err != nil {
-		return fmt.Errorf("error setting access_log_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
 	region := meta.(*conns.AWSClient).Region
 	resourceArn := arn.ARN{
@@ -277,7 +284,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("client_certificate_id", resp.ClientCertificateId)
 	err = d.Set("default_route_settings", flattenDefaultRouteSettings(resp.DefaultRouteSettings))
 	if err != nil {
-		return fmt.Errorf("error setting default_route_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting default_route_settings: %s", err)
 	}
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
@@ -292,58 +299,50 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", stageName)
 	err = d.Set("route_settings", flattenRouteSettings(resp.RouteSettings))
 	if err != nil {
-		return fmt.Errorf("error setting route_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.FlattenStringMap(resp.StageVariables))
 	if err != nil {
-		return fmt.Errorf("error setting stage_variables: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting stage_variables: %s", err)
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, resp.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+	apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	switch aws.StringValue(apiOutput.ProtocolType) {
 	case apigatewayv2.ProtocolTypeWebsocket:
 		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 	case apigatewayv2.ProtocolTypeHttp:
-		if stageName == apigatewayv2DefaultStageName {
+		if stageName == defaultStageName {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
 		} else {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
 		"route_settings", "stage_variables") {
 		apiId := d.Get("api_id").(string)
 
-		apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+		apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 			ApiId: aws.String(apiId),
 		})
 		if err != nil {
-			return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+			return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiId, err)
 		}
 
 		protocolType := aws.StringValue(apiOutput.ProtocolType)
@@ -379,7 +378,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 				routeKey := vRouteSetting.(map[string]interface{})["route_key"].(string)
 
 				log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s) route settings (%s)", d.Id(), routeKey)
-				_, err := conn.DeleteRouteSettings(&apigatewayv2.DeleteRouteSettingsInput{
+				_, err := conn.DeleteRouteSettingsWithContext(ctx, &apigatewayv2.DeleteRouteSettingsInput{
 					ApiId:     aws.String(d.Get("api_id").(string)),
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
@@ -388,7 +387,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 					continue
 				}
 				if err != nil {
-					return fmt.Errorf("error deleting API Gateway v2 stage (%s) route settings (%s): %w", d.Id(), routeKey, err)
+					return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 stage (%s) route settings (%s): %s", d.Id(), routeKey, err)
 				}
 			}
 
@@ -409,52 +408,46 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating API Gateway v2 stage: %s", req)
-		_, err = conn.UpdateStage(req)
+		_, err = conn.UpdateStageWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 stage (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 stage (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceStageRead(d, meta)
+	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
-	_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
+	_, err := conn.DeleteStageWithContext(ctx, &apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 stage (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 stage (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/stage-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/stage-name'", d.Id())
 	}
 
 	apiId := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
+	resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),
 		StageName: aws.String(stageName),
 	})

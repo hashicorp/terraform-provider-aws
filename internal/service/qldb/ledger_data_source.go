@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package qldb
 
 import (
 	"context"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -12,7 +15,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceLedger() *schema.Resource {
+// @SDKDataSource("aws_qldb_ledger")
+func dataSourceLedger() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLedgerRead,
 
@@ -34,7 +38,7 @@ func DataSourceLedger() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
 			"permissions_mode": {
@@ -47,17 +51,17 @@ func DataSourceLedger() *schema.Resource {
 }
 
 func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	ledger, err := FindLedgerByName(ctx, conn, name)
+	ledger, err := findLedgerByName(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("reading QLDB Ledger (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(ledger.Name))
+	d.SetId(aws.ToString(ledger.Name))
 	d.Set("arn", ledger.Arn)
 	d.Set("deletion_protection", ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
@@ -68,7 +72,7 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)

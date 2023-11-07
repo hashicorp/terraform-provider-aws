@@ -1,8 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"bytes"
-	"errors"
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -12,42 +15,47 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	AWSAMIRetryTimeout    = 40 * time.Minute
-	AMIDeleteRetryTimeout = 90 * time.Minute
-	AWSAMIRetryDelay      = 5 * time.Second
-	AMIRetryMinTimeout    = 3 * time.Second
+	amiRetryTimeout    = 40 * time.Minute
+	amiDeleteTimeout   = 90 * time.Minute
+	amiRetryDelay      = 5 * time.Second
+	amiRetryMinTimeout = 3 * time.Second
 )
 
+// @SDKResource("aws_ami", name="AMI")
+// @Tags(identifierAttribute="id")
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAMICreate,
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
-		Read:   resourceAMIRead,
-		Update: resourceAMIUpdate,
-		Delete: resourceAMIDelete,
+		CreateWithoutTimeout: resourceAMICreate,
+		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
+		// since they differ only in how the image is created.
+		ReadWithoutTimeout:   resourceAMIRead,
+		UpdateWithoutTimeout: resourceAMIUpdate,
+		DeleteWithoutTimeout: resourceAMIDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
+			Create: schema.DefaultTimeout(amiRetryTimeout),
+			Update: schema.DefaultTimeout(amiRetryTimeout),
+			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:         schema.TypeString,
@@ -198,6 +206,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"imds_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true, // this attribute can only be set at registration time
+				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -250,10 +264,16 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "simple",
+				Default:  SriovNetSupportSimple,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -271,10 +291,9 @@ func ResourceAMI() *schema.Resource {
 	}
 }
 
-func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ec2.RegisterImageInput{
@@ -292,12 +311,20 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		input.BootMode = aws.String(v)
 	}
 
+	if v := d.Get("imds_support").(string); v != "" {
+		input.ImdsSupport = aws.String(v)
+	}
+
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
 		input.KernelId = aws.String(kernelId)
 	}
 
 	if ramdiskId := d.Get("ramdisk_id").(string); ramdiskId != "" {
 		input.RamdiskId = aws.String(ramdiskId)
+	}
+
+	if v := d.Get("tpm_support").(string); v != "" {
+		input.TpmSupport = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
@@ -321,61 +348,58 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if snapshot != "" && encrypted {
-				return errors.New("can't set both 'snapshot_id' and 'encrypted'")
+				return sdkdiag.AppendErrorf(diags, "can't set both 'snapshot_id' and 'encrypted'")
 			}
 		}
 
-		input.BlockDeviceMappings = expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(v.(*schema.Set).List())
+		input.BlockDeviceMappings = expandBlockDeviceMappingsForAMIEBSBlockDevice(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
-		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(v.(*schema.Set).List())...)
+		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
-	output, err := conn.RegisterImage(input)
+	output, err := conn.RegisterImageWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 AMI (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ImageId))
 
-	if len(tags) > 0 {
-		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): waiting for completion: %s", name, err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
-		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
-			return err
+		if err := enableImageDeprecation(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): %s", name, err)
 		}
 	}
 
-	return resourceAMIRead(d, meta)
+	return append(diags, resourceAMIRead(ctx, d, meta)...)
 }
 
-func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindImageByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 AMI %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 AMI (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 AMI (%s): %s", d.Id(), err)
 	}
 
 	image := outputRaw.(*ec2.Image)
@@ -386,10 +410,10 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		image, err = WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -409,6 +433,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_location", image.ImageLocation)
 	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
+	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)
@@ -419,44 +444,29 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("root_device_name", image.RootDeviceName)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
+	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set("ebs_block_device", flattenEc2BlockDeviceMappingsForAmiEbsBlockDevice(image.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("error setting ebs_block_device: %w", err)
+	if err := d.Set("ebs_block_device", flattenBlockDeviceMappingsForAMIEBSBlockDevice(image.BlockDeviceMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ebs_block_device: %s", err)
 	}
 
-	if err := d.Set("ephemeral_block_device", flattenEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
+	if err := d.Set("ephemeral_block_device", flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, image.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating AMI (%s) tags: %s", d.Id(), err)
-		}
-	}
+func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.Get("description").(string) != "" {
-		_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
+		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{
 			Description: &ec2.AttributeValue{
 				Value: aws.String(d.Get("description").(string)),
 			},
@@ -464,33 +474,34 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating EC2 AMI (%s) description: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s) description: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("deprecation_time") {
-		if err := enableImageDeprecation(conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
-			return err
+		if err := enableImageDeprecation(ctx, conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceAMIRead(d, meta)
+	return append(diags, resourceAMIRead(ctx, d, meta)...)
 }
 
-func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
-	_, err := conn.DeregisterImage(&ec2.DeregisterImageInput{
+	_, err := conn.DeregisterImageWithContext(ctx, &ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound) {
-		return nil
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deregistering EC2 AMI (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deregistering EC2 AMI (%s): %s", d.Id(), err)
 	}
 
 	// If we're managing the EBS snapshots then we need to delete those too.
@@ -503,7 +514,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 			snapshotId := ebsBlockDev["snapshot_id"].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
-				_, err := conn.DeleteSnapshot(req)
+				_, err := conn.DeleteSnapshotWithContext(ctx, req)
 				if err != nil {
 					errs[snapshotId] = err
 				}
@@ -516,34 +527,34 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 				errParts = append(errParts, fmt.Sprintf("%s: %s", snapshotId, err))
 			}
 			errParts = append(errParts, "These are no longer managed by Terraform and must be deleted manually.")
-			return errors.New(strings.Join(errParts, "\n"))
+			return sdkdiag.AppendErrorf(diags, strings.Join(errParts, "\n"))
 		}
 	}
 
-	if _, err := WaitImageDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for EC2 AMI (%s) delete: %w", d.Id(), err)
+	if _, err := WaitImageDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error {
+func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, deprecateAt string) error {
 	v, _ := time.Parse(time.RFC3339, deprecateAt)
 	input := &ec2.EnableImageDeprecationInput{
 		DeprecateAt: aws.Time(v),
 		ImageId:     aws.String(id),
 	}
 
-	_, err := conn.EnableImageDeprecation(input)
+	_, err := conn.EnableImageDeprecationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling EC2 AMI (%s) image deprecation: %w", id, err)
+		return fmt.Errorf("enabling deprecation: %w", err)
 	}
 
 	return nil
 }
 
-func expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -590,7 +601,7 @@ func expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEBSBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -604,7 +615,7 @@ func expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(tfList []interface{}) []*e
 			continue
 		}
 
-		apiObject := expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap)
+		apiObject := expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -616,7 +627,7 @@ func expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(tfList []interface{}) []*e
 	return apiObjects
 }
 
-func flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -666,7 +677,7 @@ func flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject *ec2.BlockDevice
 	return tfMap
 }
 
-func flattenEc2BlockDeviceMappingsForAmiEbsBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -682,13 +693,13 @@ func flattenEc2BlockDeviceMappingsForAmiEbsBlockDevice(apiObjects []*ec2.BlockDe
 			continue
 		}
 
-		tfList = append(tfList, flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject))
+		tfList = append(tfList, flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject))
 	}
 
 	return tfList
 }
 
-func expandEc2BlockDeviceMappingForAmiEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -706,7 +717,7 @@ func expandEc2BlockDeviceMappingForAmiEphemeralBlockDevice(tfMap map[string]inte
 	return apiObject
 }
 
-func expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -720,7 +731,7 @@ func expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(tfList []interface{}
 			continue
 		}
 
-		apiObject := expandEc2BlockDeviceMappingForAmiEphemeralBlockDevice(tfMap)
+		apiObject := expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -732,7 +743,7 @@ func expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(tfList []interface{}
 	return apiObjects
 }
 
-func flattenEc2BlockDeviceMappingForAmiEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -750,7 +761,7 @@ func flattenEc2BlockDeviceMappingForAmiEphemeralBlockDevice(apiObject *ec2.Block
 	return tfMap
 }
 
-func flattenEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -766,7 +777,7 @@ func flattenEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(apiObjects []*ec2.B
 			continue
 		}
 
-		tfList = append(tfList, flattenEc2BlockDeviceMappingForAmiEphemeralBlockDevice(apiObject))
+		tfList = append(tfList, flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject))
 	}
 
 	return tfList

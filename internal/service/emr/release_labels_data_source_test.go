@@ -1,24 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccEMRReleaseLabels_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReleaseLabelsDataSourceConfigBasic(),
+				Config: testAccReleaseLabelsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "release_labels.#"),
 				),
@@ -28,16 +32,17 @@ func TestAccEMRReleaseLabels_basic(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReleaseLabelsDataSourceConfigPrefix(),
+				Config: testAccReleaseLabelsDataSourceConfig_prefix(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "release_labels.#"),
 				),
@@ -47,16 +52,17 @@ func TestAccEMRReleaseLabels_prefix(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_application(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReleaseLabelsDataSourceConfigApplication(),
+				Config: testAccReleaseLabelsDataSourceConfig_application(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "release_labels.#"),
 				),
@@ -66,16 +72,17 @@ func TestAccEMRReleaseLabels_application(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReleaseLabelsDataSourceConfigFull(),
+				Config: testAccReleaseLabelsDataSourceConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "release_labels.#"),
 				),
@@ -85,16 +92,17 @@ func TestAccEMRReleaseLabels_full(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReleaseLabelsDataSourceConfigEmpty(),
+				Config: testAccReleaseLabelsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", "0"),
 				),
@@ -103,13 +111,13 @@ func TestAccEMRReleaseLabels_empty(t *testing.T) {
 	})
 }
 
-func testAccReleaseLabelsDataSourceConfigBasic() string {
+func testAccReleaseLabelsDataSourceConfig_basic() string {
 	return `
 data "aws_emr_release_labels" "test" {}
 `
 }
 
-func testAccReleaseLabelsDataSourceConfigPrefix() string {
+func testAccReleaseLabelsDataSourceConfig_prefix() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {
@@ -119,7 +127,7 @@ data "aws_emr_release_labels" "test" {
 `
 }
 
-func testAccReleaseLabelsDataSourceConfigApplication() string {
+func testAccReleaseLabelsDataSourceConfig_application() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {
@@ -129,7 +137,7 @@ data "aws_emr_release_labels" "test" {
 `
 }
 
-func testAccReleaseLabelsDataSourceConfigFull() string {
+func testAccReleaseLabelsDataSourceConfig_full() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {
@@ -140,7 +148,7 @@ data "aws_emr_release_labels" "test" {
 `
 }
 
-func testAccReleaseLabelsDataSourceConfigEmpty() string {
+func testAccReleaseLabelsDataSourceConfig_empty() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {

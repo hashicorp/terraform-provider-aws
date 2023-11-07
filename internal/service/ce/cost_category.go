@@ -1,32 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_category", name="Cost Category")
+// @Tags(identifierAttribute="id")
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostCategoryCreate,
-		ReadContext:   resourceCostCategoryRead,
-		UpdateContext: resourceCostCategoryUpdate,
-		DeleteContext: resourceCostCategoryDelete,
+		CreateWithoutTimeout: resourceCostCategoryCreate,
+		ReadWithoutTimeout:   resourceCostCategoryRead,
+		UpdateWithoutTimeout: resourceCostCategoryUpdate,
+		DeleteWithoutTimeout: resourceCostCategoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -43,6 +53,7 @@ func ResourceCostCategory() *schema.Resource {
 			},
 			"effective_start": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -121,7 +132,7 @@ func ResourceCostCategory() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(costexplorer.CostCategorySplitChargeRuleParameterType_Values(), false),
 									},
 									"values": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										MaxItems: 500,
@@ -129,11 +140,9 @@ func ResourceCostCategory() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(0, 1024),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
-							Set: costExplorerCostCategorySplitChargesParameter,
 						},
 						"source": {
 							Type:         schema.TypeString,
@@ -149,12 +158,12 @@ func ResourceCostCategory() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
-				Set: costExplorerCostCategorySplitCharges,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -185,7 +194,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -194,7 +202,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -217,7 +224,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -226,7 +232,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -259,7 +264,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -268,7 +272,6 @@ func schemaCostCategoryRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -298,7 +301,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -307,7 +309,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -330,7 +331,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -339,7 +339,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -361,7 +360,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -370,7 +368,6 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -380,11 +377,13 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 }
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
+
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
-		Name:        aws.String(d.Get("name").(string)),
-		Rules:       expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
-		RuleVersion: aws.String(d.Get("rule_version").(string)),
+		Name:         aws.String(d.Get("name").(string)),
+		ResourceTags: getTagsIn(ctx),
+		Rules:        expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+		RuleVersion:  aws.String(d.Get("rule_version").(string)),
 	}
 
 	if v, ok := d.GetOk("default_value"); ok {
@@ -395,102 +394,97 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
-	var err error
-	var output *costexplorer.CreateCostCategoryDefinitionOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err = conn.CreateCostCategoryDefinition(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateCostCategoryDefinition(input)
+	if v, ok := d.GetOk("effective_start"); ok {
+		input.EffectiveStart = aws.String(v.(string))
 	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateCostCategoryDefinitionWithContext(ctx, input)
+		},
+		costexplorer.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionCreating, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.CostCategoryArn))
+	d.SetId(aws.StringValue(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
 
 	return resourceCostCategoryRead(ctx, d, meta)
 }
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Id())})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResCostCategory, d.Id())
+	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
-	d.Set("arn", resp.CostCategory.CostCategoryArn)
-	d.Set("default_value", resp.CostCategory.DefaultValue)
-	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
-	d.Set("effective_start", resp.CostCategory.EffectiveStart)
-	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCostCategoryRules(resp.CostCategory.Rules)); err != nil {
-		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
+	d.Set("arn", costCategory.CostCategoryArn)
+	d.Set("default_value", costCategory.DefaultValue)
+	d.Set("effective_end", costCategory.EffectiveEnd)
+	d.Set("effective_start", costCategory.EffectiveStart)
+	d.Set("name", costCategory.Name)
+	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
+		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
-	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
-		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
+	d.Set("rule_version", costCategory.RuleVersion)
+	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
+		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	input := &costexplorer.UpdateCostCategoryDefinitionInput{
-		CostCategoryArn: aws.String(d.Id()),
-		Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
-		RuleVersion:     aws.String(d.Get("rule_version").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &costexplorer.UpdateCostCategoryDefinitionInput{
+			CostCategoryArn: aws.String(d.Id()),
+			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
+			Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+			RuleVersion:     aws.String(d.Get("rule_version").(string)),
+		}
 
-	if d.HasChange("default_value") {
-		input.DefaultValue = aws.String(d.Get("default_value").(string))
-	}
+		if d.HasChange("default_value") {
+			input.DefaultValue = aws.String(d.Get("default_value").(string))
+		}
 
-	if d.HasChange("split_charge_rule") {
-		input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
-	}
+		if d.HasChange("split_charge_rule") {
+			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
+		}
 
-	_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
+		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
-	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
+		if err != nil {
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
+		}
 	}
 
 	return resourceCostCategoryRead(ctx, d, meta)
 }
 
 func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+
+	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil
@@ -694,8 +688,8 @@ func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *c
 	}
 
 	apiObject := &costexplorer.CostCategorySplitChargeRuleParameter{
-		Type:   aws.String(tfMap["method"].(string)),
-		Values: flex.ExpandStringSet(tfMap["values"].(*schema.Set)),
+		Type:   aws.String(tfMap["type"].(string)),
+		Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
 	}
 
 	return apiObject
@@ -973,22 +967,4 @@ func flattenCostCategorySplitChargeRules(apiObjects []*costexplorer.CostCategory
 	}
 
 	return tfList
-}
-
-func costExplorerCostCategorySplitCharges(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["method"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["parameter"].(*schema.Set)))
-	buf.WriteString(m["source"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["targets"].(*schema.Set)))
-	return schema.HashString(buf.String())
-}
-
-func costExplorerCostCategorySplitChargesParameter(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["type"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["values"].(*schema.Set)))
-	return schema.HashString(buf.String())
 }

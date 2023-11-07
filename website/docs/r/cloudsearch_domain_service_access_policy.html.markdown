@@ -19,50 +19,68 @@ resource "aws_cloudsearch_domain" "example" {
   name = "example-domain"
 }
 
-resource "aws_cloudsearch_domain_service_access_policy" "example" {
-  domain_name = aws_cloudsearch_domain.example.id
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "search_only"
+    effect = "Allow"
 
-  access_policy = <<POLICY
-{
-  "Version":"2012-10-17",
-  "Statement":[{
-    "Sid":"search_only",
-    "Effect":"Allow",
-    "Principal":"*",
-    "Action":[
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
       "cloudsearch:search",
-      "cloudsearch:document"
-    ],
-    "Condition":{"IpAddress":{"aws:SourceIp":"192.0.2.0/32"}}
-  }]
+      "cloudsearch:document",
+    ]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["192.0.2.0/32"]
+    }
+  }
 }
-POLICY
+
+
+
+resource "aws_cloudsearch_domain_service_access_policy" "example" {
+  domain_name   = aws_cloudsearch_domain.example.id
+  access_policy = data.aws_iam_policy_document.example.json
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_policy` - (Required) The access rules you want to configure. These rules replace any existing rules. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html) for details.
 * `domain_name` - (Required) The CloudSearch domain name the policy applies to.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
-`aws_cloudsearch_domain_service_access_policy` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be created or updated.
-* `delete` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be deleted.
+* `update` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
-CloudSearch domain service access policies can be imported using the domain name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudSearch domain service access policies using the domain name. For example:
 
+```terraform
+import {
+  to = aws_cloudsearch_domain_service_access_policy.example
+  id = "example-domain"
+}
 ```
-$ terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
+
+Using `terraform import`, import CloudSearch domain service access policies using the domain name. For example:
+
+```console
+% terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
 ```

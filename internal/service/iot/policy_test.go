@@ -1,35 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 )
 
 func TestAccIoTPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &v),
+					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "default_version_id"),
@@ -46,21 +51,22 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 }
 
 func TestAccIoTPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourcePolicy(), resourceName),
+					testAccCheckPolicyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,40 +74,40 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+func testAccCheckPolicyDestroy_basic(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_policy" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iot_policy" {
+				continue
+			}
 
-		// Try to find the Policy
-		GetPolicyOpts := &iot.GetPolicyInput{
-			PolicyName: aws.String(rs.Primary.Attributes["name"]),
-		}
+			// Try to find the Policy
+			GetPolicyOpts := &iot.GetPolicyInput{
+				PolicyName: aws.String(rs.Primary.Attributes["name"]),
+			}
 
-		resp, err := conn.GetPolicy(GetPolicyOpts)
+			resp, err := conn.GetPolicyWithContext(ctx, GetPolicyOpts)
 
-		if err == nil {
-			if resp.PolicyName != nil {
-				return fmt.Errorf("IoT Policy still exists")
+			if err == nil {
+				if resp.PolicyName != nil {
+					return fmt.Errorf("IoT Policy still exists")
+				}
+			}
+
+			if err != nil {
+				if !tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+					return err
+				}
 			}
 		}
 
-		// Verify the error is what we want
-		if err != nil {
-			iotErr, ok := err.(awserr.Error)
-			if !ok || iotErr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -112,9 +118,9 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 			return fmt.Errorf("No IoT Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
-		resp, err := conn.GetPolicy(&iot.GetPolicyInput{
+		resp, err := conn.GetPolicyWithContext(ctx, &iot.GetPolicyInput{
 			PolicyName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -127,7 +133,7 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 	}
 }
 
-func testAccPolicyInitialStateConfig(rName string) string {
+func testAccPolicyConfig_initialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "test" {
   name = "%s"

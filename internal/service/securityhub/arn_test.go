@@ -1,13 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,22 +23,22 @@ func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service securityhub`),
+			ExpectedError: regexache.MustCompile(`expected service securityhub`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected at least 3 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected at least 3 resource parts`),
 		},
 		{
 			TestName:    "valid ARN",
@@ -42,7 +48,10 @@ func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {

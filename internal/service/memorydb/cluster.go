@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,14 +23,17 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_memorydb_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCreate,
-		ReadContext:   resourceClusterRead,
-		UpdateContext: resourceClusterUpdate,
-		DeleteContext: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -56,6 +63,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"cluster_endpoint": endpointSchema(),
+			"data_tiering": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -105,7 +118,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - resource.UniqueIDSuffixLength),
+				ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - id.UniqueIDSuffixLength),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -188,7 +201,6 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
-				MaxItems:      1,
 				ConflictsWith: []string{"snapshot_name"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -227,8 +239,8 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tls_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -259,9 +271,7 @@ func endpointSchema() *schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateClusterInput{
@@ -271,8 +281,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    getTagsIn(ctx),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("data_tiering"); ok {
+		input.DataTiering = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -334,11 +348,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB Cluster (%s): %s", name, err)
+		return diag.Errorf("creating MemoryDB Cluster (%s): %s", name, err)
 	}
 
 	if err := waitClusterAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
+		return diag.Errorf("waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -347,7 +361,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
@@ -433,31 +447,23 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.UpdateClusterWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error updating MemoryDB Cluster (%s): %s", d.Id(), err)
+			return diag.Errorf("updating MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		if err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
+			return diag.Errorf("waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
 		}
 
 		if waitParameterGroupInSync {
 			if err := waitClusterParameterGroupInSync(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("error waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
+				return diag.Errorf("waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
 			}
 		}
 
 		if waitSecurityGroupsActive {
 			if err := waitClusterSecurityGroupsActive(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("error waiting for MemoryDB Cluster (%s) security groups to be available: %s", d.Id(), err)
+				return diag.Errorf("waiting for MemoryDB Cluster (%s) security groups to be available: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating MemoryDB Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -465,9 +471,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	cluster, err := FindClusterByName(ctx, conn, d.Id())
 
@@ -478,7 +482,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("acl_name", cluster.ACLName)
@@ -488,6 +492,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
 		d.Set("port", v.Port)
+	}
+
+	if v := aws.StringValue(cluster.DataTiering); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.Errorf("reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+		}
+
+		d.Set("data_tiering", b)
 	}
 
 	d.Set("description", cluster.Description)
@@ -501,7 +514,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
 	if err != nil {
-		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
@@ -530,28 +543,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for MemoryDB Cluster (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for MemoryDB Cluster (%s): %s", d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -569,11 +565,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
+		return diag.Errorf("waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil

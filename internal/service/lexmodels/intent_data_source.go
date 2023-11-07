@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lex_intent")
 func DataSourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIntentRead,
+		ReadWithoutTimeout: dataSourceIntentRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -43,7 +50,7 @@ func DataSourceIntent() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"parent_intent_signature": {
@@ -56,23 +63,24 @@ func DataSourceIntent() *schema.Resource {
 				Default:  IntentVersionLatest,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
 				),
 			},
 		},
 	}
 }
 
-func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	intentName := d.Get("name").(string)
-	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
 		Version: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %w", intentName, err)
+		return sdkdiag.AppendErrorf(diags, "getting intent %s: %s", intentName, err)
 	}
 
 	arn := arn.ARN{
@@ -94,5 +102,5 @@ func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(intentName)
 
-	return nil
+	return diags
 }

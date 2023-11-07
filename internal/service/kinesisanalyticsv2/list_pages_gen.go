@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2/kinesisanalyticsv2iface"
 )
 
-func listApplicationsPages(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.ListApplicationsInput, fn func(*kinesisanalyticsv2.ListApplicationsOutput, bool) bool) error {
-	return listApplicationsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listApplicationsPagesWithContext(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.ListApplicationsInput, fn func(*kinesisanalyticsv2.ListApplicationsOutput, bool) bool) error {
+func listApplicationsPages(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, input *kinesisanalyticsv2.ListApplicationsInput, fn func(*kinesisanalyticsv2.ListApplicationsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListApplicationsWithContext(ctx, input)
 		if err != nil {

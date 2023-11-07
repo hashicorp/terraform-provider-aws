@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_codecommit_trigger")
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTriggerCreate,
-		Read:   resourceTriggerRead,
-		Delete: resourceTriggerDelete,
+		CreateWithoutTimeout: resourceTriggerCreate,
+		ReadWithoutTimeout:   resourceTriggerRead,
+		DeleteWithoutTimeout: resourceTriggerDelete,
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
@@ -71,8 +77,9 @@ func ResourceTrigger() *schema.Resource {
 	}
 }
 
-func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
 	triggers := expandTriggers(d.Get("trigger").(*schema.Set).List())
@@ -82,9 +89,9 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 		Triggers:       triggers,
 	}
 
-	resp, err := conn.PutRepositoryTriggers(input)
+	resp, err := conn.PutRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating CodeCommit Trigger: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Trigger: %s", err)
 	}
 
 	log.Printf("[INFO] Code Commit Trigger Created %s input %s", resp, input)
@@ -92,29 +99,30 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("repository_name").(string))
 	d.Set("configuration_id", resp.ConfigurationId)
 
-	return resourceTriggerRead(d, meta)
+	return append(diags, resourceTriggerRead(ctx, d, meta)...)
 }
 
-func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRepositoryTriggers(input)
+	resp, err := conn.GetRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error reading CodeCommit Trigger: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Trigger: %s", err.Error())
 	}
 
 	log.Printf("[DEBUG] CodeCommit Trigger: %s", resp)
 
-	return nil
+	return diags
 }
 
-func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())
 
@@ -123,9 +131,11 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 		Triggers:       []*codecommit.RepositoryTrigger{},
 	}
 
-	_, err := conn.PutRepositoryTriggers(input)
+	if _, err := conn.PutRepositoryTriggersWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Trigger (%s): %s", d.Id(), err)
+	}
 
-	return err
+	return diags
 }
 
 func expandTriggers(configured []interface{}) []*codecommit.RepositoryTrigger {

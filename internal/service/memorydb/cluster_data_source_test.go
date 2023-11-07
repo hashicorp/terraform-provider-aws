@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb_test
 
 import (
@@ -5,29 +8,31 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 	dataSourceName := "data.aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "acl_name", resourceName, "acl_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_endpoint.0.address", resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_endpoint.0.port", resourceName, "cluster_endpoint.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "data_tiering", resourceName, "data_tiering"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_patch_version", resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
@@ -64,9 +69,9 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {

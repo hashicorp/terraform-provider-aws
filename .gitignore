@@ -26,6 +26,7 @@ website/node_modules
 .vscode
 *.iml
 *.test
+*.prof
 *.iml
 log.txt
 markdown-link-check*.txt
@@ -41,3 +42,5 @@ aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresourc
 *.winfile eol=crlf
 /.vs
 node_modules
+
+.teamcity/target

@@ -1,24 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 )
 
-const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
+const envVarGithubTokenUsageWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
 
 func TestAccCodePipelineWebhook_basic(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -26,18 +32,18 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("webhook:%s", rName))),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("webhook:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GITHUB_HMAC"),
 					resource.TestCheckResourceAttr(resourceName, "target_action", "Source"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_pipeline", "aws_codepipeline.test", "name"),
@@ -60,7 +66,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_filters(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
 						"json_path":    "$.ref",
@@ -75,7 +81,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
 						"json_path":    "$.ref",
@@ -88,7 +94,8 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,17 +103,17 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_ipAuth(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
@@ -123,7 +130,8 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -131,17 +139,17 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_unauthenticated(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
@@ -156,7 +164,8 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_tags(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -164,17 +173,17 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1value", "tag2value", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1value", "tag2value", githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v1),
+					testAccCheckWebhookExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
@@ -182,9 +191,9 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v2),
+					testAccCheckWebhookExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1valueUpdate"),
@@ -205,7 +214,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v3),
+					testAccCheckWebhookExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					func(s *terraform.State) error {
 						if aws.StringValue(v3.Url) != aws.StringValue(v2.Url) {
@@ -220,7 +229,8 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_disappears(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -228,19 +238,19 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+					testAccCheckWebhookExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -249,7 +259,8 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -257,17 +268,17 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v1),
+					testAccCheckWebhookExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
@@ -277,7 +288,7 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_secretTokenUpdated(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &v2),
+					testAccCheckWebhookExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
@@ -294,7 +305,7 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 	})
 }
 
-func testAccCheckWebhookExists(n string, webhook *codepipeline.ListWebhookItem) resource.TestCheckFunc {
+func testAccCheckWebhookExists(ctx context.Context, n string, webhook *codepipeline.ListWebhookItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -305,9 +316,9 @@ func testAccCheckWebhookExists(n string, webhook *codepipeline.ListWebhookItem) 
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
-		resp, err := tfcodepipeline.GetWebhook(conn, rs.Primary.ID)
+		resp, err := tfcodepipeline.GetWebhook(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -400,7 +411,7 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookWithTagsConfig(rName, tag1, tag2, githubToken string) string {
+func testAccWebhookConfig_tags(rName, tag1, tag2, githubToken string) string {
 	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
@@ -450,11 +461,6 @@ func testAccWebhookConfig_base(rName, githubToken string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

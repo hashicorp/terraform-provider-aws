@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -16,6 +19,10 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
+			if v, ok := group["anonymous_auth_enabled"].(bool); ok {
+				config.AnonymousAuthEnabled = aws.Bool(v)
+			}
+
 			if v, ok := group["internal_user_database_enabled"].(bool); ok {
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
@@ -166,6 +173,56 @@ func expandSAMLOptionsIdp(l []interface{}) *opensearchservice.SAMLIdp {
 	}
 }
 
+func expandOffPeakWindowOptions(tfMap map[string]interface{}) *opensearchservice.OffPeakWindowOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.OffPeakWindowOptions{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["off_peak_window"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.OffPeakWindow = expandOffPeakWindow(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandOffPeakWindow(tfMap map[string]interface{}) *opensearchservice.OffPeakWindow {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.OffPeakWindow{}
+
+	if v, ok := tfMap["window_start_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WindowStartTime = expandWindowStartTime(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandWindowStartTime(tfMap map[string]interface{}) *opensearchservice.WindowStartTime {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.WindowStartTime{}
+
+	if v, ok := tfMap["hours"].(int); ok {
+		apiObject.Hours = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["minutes"].(int); ok {
+		apiObject.Minutes = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
 func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.AdvancedSecurityOptions) []map[string]interface{} {
 	if advancedSecurityOptions == nil {
 		return []map[string]interface{}{}
@@ -173,7 +230,12 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.A
 
 	m := map[string]interface{}{}
 	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
-	if aws.BoolValue(advancedSecurityOptions.Enabled) {
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
+		m["anonymous_auth_enabled"] = aws.BoolValue(advancedSecurityOptions.AnonymousAuthEnabled)
+	}
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
@@ -279,19 +341,6 @@ func getMasterUserOptions(d *schema.ResourceData) []interface{} {
 	return []interface{}{}
 }
 
-func getUserDBEnabled(d *schema.ResourceData) bool {
-	if v, ok := d.GetOk("advanced_security_options"); ok {
-		options := v.([]interface{})
-		if len(options) > 0 && options[0] != nil {
-			m := options[0].(map[string]interface{})
-			if enabled, ok := m["internal_user_database_enabled"]; ok {
-				return enabled.(bool)
-			}
-		}
-	}
-	return false
-}
-
 func expandLogPublishingOptions(m *schema.Set) map[string]*opensearchservice.LogPublishingOption {
 	options := make(map[string]*opensearchservice.LogPublishingOption)
 
@@ -321,4 +370,54 @@ func flattenLogPublishingOptions(o map[string]*opensearchservice.LogPublishingOp
 		m = append(m, mm)
 	}
 	return m
+}
+
+func flattenOffPeakWindowOptions(apiObject *opensearchservice.OffPeakWindowOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.OffPeakWindow; v != nil {
+		tfMap["off_peak_window"] = []interface{}{flattenOffPeakWindow(v)}
+	}
+
+	return tfMap
+}
+
+func flattenOffPeakWindow(apiObject *opensearchservice.OffPeakWindow) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.WindowStartTime; v != nil {
+		tfMap["window_start_time"] = []interface{}{flattenWindowStartTime(v)}
+	}
+
+	return tfMap
+}
+
+func flattenWindowStartTime(apiObject *opensearchservice.WindowStartTime) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Hours; v != nil {
+		tfMap["hours"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Minutes; v != nil {
+		tfMap["minutes"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

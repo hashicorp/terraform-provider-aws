@@ -2,28 +2,51 @@
 package acmpca
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go/service/acmpca/acmpcaiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists acmpca service tags.
+// listTags lists acmpca service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *acmpca.ACMPCA, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn acmpcaiface.ACMPCAAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(input)
+	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists acmpca service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ACMPCAConn(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -45,48 +68,79 @@ func Tags(tags tftags.KeyValueTags) []*acmpca.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from acmpca service tags.
-func KeyValueTags(tags []*acmpca.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*acmpca.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates acmpca service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func UpdateTags(conn *acmpca.ACMPCA, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &acmpca.UntagCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(identifier),
-			Tags:                    Tags(removedTags.IgnoreAWS()),
-		}
-
-		_, err := conn.UntagCertificateAuthority(input)
-
-		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &acmpca.TagCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(identifier),
-			Tags:                    Tags(updatedTags.IgnoreAWS()),
-		}
-
-		_, err := conn.TagCertificateAuthority(input)
-
-		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+// getTagsIn returns acmpca service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []*acmpca.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
 		}
 	}
 
 	return nil
+}
+
+// setTagsOut sets acmpca service tags in Context.
+func setTagsOut(ctx context.Context, tags []*acmpca.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates acmpca service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn acmpcaiface.ACMPCAAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ACMPCA)
+	if len(removedTags) > 0 {
+		input := &acmpca.UntagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    Tags(removedTags),
+		}
+
+		_, err := conn.UntagCertificateAuthorityWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ACMPCA)
+	if len(updatedTags) > 0 {
+		input := &acmpca.TagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    Tags(updatedTags),
+		}
+
+		_, err := conn.TagCertificateAuthorityWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates acmpca service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).ACMPCAConn(ctx), identifier, oldTags, newTags)
 }

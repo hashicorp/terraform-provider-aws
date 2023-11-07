@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix `trigger_properties.schedule` being set to `trigger_properties.trigger_properties` during resource read
+```

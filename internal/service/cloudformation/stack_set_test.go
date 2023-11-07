@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -18,32 +22,35 @@ import (
 )
 
 func TestAccCloudFormationStackSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	iamRoleResourceName := "aws_iam_role.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetNameConfig(rName),
+				Config: testAccStackSetConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
-					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName)+"\n"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
@@ -58,26 +65,37 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					"template_url",
 				},
 			},
+			// Test import with call_as.
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s,SELF", rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_url",
+				},
+			},
 		},
 	})
 }
 
 func TestAccCloudFormationStackSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetNameConfig(rName),
+				Config: testAccStackSetConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), resourceName),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,23 +104,24 @@ func TestAccCloudFormationStackSet_disappears(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	iamRoleResourceName1 := "aws_iam_role.test1"
-	iamRoleResourceName2 := "aws_iam_role.test2"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetAdministrationRoleARN1Config(rName),
+				Config: testAccStackSetConfig_administrationRoleARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
-					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName1, "arn"),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
+					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRole1ResourceName, "arn"),
 				),
 			},
 			{
@@ -115,11 +134,11 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetAdministrationRoleARN2Config(rName),
+				Config: testAccStackSetConfig_administrationRoleARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRole2ResourceName, "arn"),
 				),
 			},
 		},
@@ -127,20 +146,21 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetDescriptionConfig(rName, "description1"),
+				Config: testAccStackSetConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -154,9 +174,9 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetDescriptionConfig(rName, "description2"),
+				Config: testAccStackSetConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
@@ -166,20 +186,21 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetExecutionRoleNameConfig(rName, "name1"),
+				Config: testAccStackSetConfig_executionRoleName(rName, "name1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "name1"),
 				),
 			},
@@ -193,9 +214,9 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetExecutionRoleNameConfig(rName, "name2"),
+				Config: testAccStackSetConfig_executionRoleName(rName, "name2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "name2"),
 				),
@@ -204,38 +225,72 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackSet_managedExecution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet1 cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_managedExecution(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFormationStackSet_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackSetNameConfig(""),
-				ExpectError: regexp.MustCompile(`expected length`),
+				Config:      testAccStackSetConfig_name(""),
+				ExpectError: regexache.MustCompile(`expected length`),
 			},
 			{
-				Config:      testAccStackSetNameConfig(sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha)),
-				ExpectError: regexp.MustCompile(`(cannot be longer|expected length)`),
+				Config:      testAccStackSetConfig_name(sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha)),
+				ExpectError: regexache.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
-				Config:      testAccStackSetNameConfig("1"),
-				ExpectError: regexp.MustCompile(`must begin with alphabetic character`),
+				Config:      testAccStackSetConfig_name("1"),
+				ExpectError: regexache.MustCompile(`must begin with alphabetic character`),
 			},
 			{
-				Config:      testAccStackSetNameConfig("a_b"),
-				ExpectError: regexp.MustCompile(`must contain only alphanumeric and hyphen characters`),
+				Config:      testAccStackSetConfig_name("a_b"),
+				ExpectError: regexache.MustCompile(`must contain only alphanumeric and hyphen characters`),
 			},
 			{
-				Config: testAccStackSetNameConfig(rName1),
+				Config: testAccStackSetConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
@@ -249,9 +304,9 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetNameConfig(rName2),
+				Config: testAccStackSetConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
@@ -261,20 +316,21 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetOperationPreferencesConfig(rName, 1, 10),
+				Config: testAccStackSetConfig_operationPreferences(rName, 1, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -294,9 +350,9 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetOperationPreferencesConfig(rName, 3, 12),
+				Config: testAccStackSetConfig_operationPreferences(rName, 3, 12),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -306,9 +362,9 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackSetOperationPreferencesUpdatedConfig(rName, 15, 75),
+				Config: testAccStackSetConfig_operationPreferencesUpdated(rName, 15, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "15"),
@@ -318,9 +374,9 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackSetOperationPreferencesConfig(rName, 2, 8),
+				Config: testAccStackSetConfig_operationPreferences(rName, 2, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -330,9 +386,9 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackSetOperationPreferencesConfig(rName, 0, 3),
+				Config: testAccStackSetConfig_operationPreferences(rName, 0, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -342,9 +398,9 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackSetOperationPreferencesUpdatedConfig(rName, 0, 95),
+				Config: testAccStackSetConfig_operationPreferencesUpdated(rName, 0, 95),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -358,20 +414,21 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetParameters1Config(rName, "value1"),
+				Config: testAccStackSetConfig_parameters1(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1"),
 				),
@@ -386,9 +443,9 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetParameters2Config(rName, "value1updated", "value2"),
+				Config: testAccStackSetConfig_parameters2(rName, "value1updated", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1updated"),
@@ -396,17 +453,17 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackSetParameters1Config(rName, "value1updated"),
+				Config: testAccStackSetConfig_parameters1(rName, "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1updated"),
 				),
 			},
 			{
-				Config: testAccStackSetNameConfig(rName),
+				Config: testAccStackSetConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 				),
 			},
@@ -419,20 +476,21 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform/issues/18863
 
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetParametersDefault0Config(rName),
+				Config: testAccStackSetConfig_parametersDefault0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "defaultvalue"),
 				),
@@ -447,18 +505,18 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetParametersDefault1Config(rName, "value1"),
+				Config: testAccStackSetConfig_parametersDefault1(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1"),
 				),
 			},
 			{
-				Config: testAccStackSetParametersDefault0Config(rName),
+				Config: testAccStackSetConfig_parametersDefault0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "defaultvalue"),
 				),
@@ -472,20 +530,21 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/55
 
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetParametersNoEcho1Config(rName, "value1"),
+				Config: testAccStackSetConfig_parametersNoEcho1(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "****"),
 				),
@@ -500,9 +559,9 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetParametersNoEcho1Config(rName, "value2"),
+				Config: testAccStackSetConfig_parametersNoEcho1(rName, "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "****"),
@@ -515,30 +574,31 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) {
 	acctest.Skip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
 
+	ctx := acctest.Context(t)
 	var stackSet1 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckStackSet(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetPermissionModelConfig(rName),
+				Config: testAccStackSetConfig_permissionModel(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
-					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 				),
 			},
 			{
@@ -555,22 +615,23 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 }
 
 func TestAccCloudFormationStackSet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetTags1Config(rName, "value1"),
+				Config: testAccStackSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -583,28 +644,21 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetTags2Config(rName, "value1updated", "value2"),
+				Config: testAccStackSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccStackSetTags1Config(rName, "value1updated"),
+				Config: testAccStackSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
-				),
-			},
-			{
-				Config: testAccStackSetNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -612,20 +666,21 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetTemplateBodyConfig(rName, testAccStackSetTemplateBodyVPC(rName+"1")),
+				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+"1")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+"1")+"\n"),
 				),
 			},
@@ -639,9 +694,9 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetTemplateBodyConfig(rName, testAccStackSetTemplateBodyVPC(rName+"2")),
+				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+"2")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+"2")+"\n"),
 				),
@@ -651,20 +706,21 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetTemplateURL1Config(rName),
+				Config: testAccStackSetConfig_templateURL1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet1),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
 				),
@@ -679,9 +735,9 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetTemplateURL2Config(rName),
+				Config: testAccStackSetConfig_templateURL2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(resourceName, &stackSet2),
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
@@ -691,18 +747,94 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 	})
 }
 
-func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet) resource.TestCheckFunc {
+// https://github.com/hashicorp/terraform-provider-aws/issues/19015.
+func TestAccCloudFormationStackSet_autoDeploymentEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeployment(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/19015.
+func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeployment(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *cloudformation.StackSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
-
-		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
+		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
 
 		if err != nil {
 			return err
@@ -714,30 +846,30 @@ func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet)
 	}
 }
 
-func testAccCheckStackSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+func testAccCheckStackSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudformation_stack_set" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudformation_stack_set" {
+				continue
+			}
+
+			_, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFormation StackSet %s still exists", rs.Primary.ID)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
-
-		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CloudFormation StackSet %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckStackSetNotRecreated(i, j *cloudformation.StackSet) resource.TestCheckFunc {
@@ -760,11 +892,11 @@ func testAccCheckStackSetRecreated(i, j *cloudformation.StackSet) resource.TestC
 	}
 }
 
-func testAccPreCheckStackSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+func testAccPreCheckStackSet(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.ListStackSetsInput{}
-	_, err := conn.ListStackSets(input)
+	_, err := conn.ListStackSetsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -891,127 +1023,11 @@ Outputs:
 `, rName)
 }
 
-func testAccStackSetAdministrationRoleARN1Config(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test1" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = "%[1]s1"
-}
-
-resource "aws_iam_role" "test2" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = "%[1]s2"
-}
-
-resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test1.arn
-  name                    = %[1]q
-
-  template_body = <<TEMPLATE
-%[2]s
-TEMPLATE
-}
-`, rName, testAccStackSetTemplateBodyVPC(rName))
-}
-
-func testAccStackSetAdministrationRoleARN2Config(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test1" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = "%[1]s1"
-}
-
-resource "aws_iam_role" "test2" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = "%[1]s2"
-}
-
-resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test2.arn
-  name                    = %[1]q
-
-  template_body = <<TEMPLATE
-%[2]s
-TEMPLATE
-}
-`, rName, testAccStackSetTemplateBodyVPC(rName))
-}
-
-func testAccStackSetDescriptionConfig(rName, description string) string {
+func testAccStackSetConfig_baseAdministrationRoleARNs(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
+  count = %[2]d
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1031,11 +1047,41 @@ resource "aws_iam_role" "test" {
 }
 EOF
 
-  name = %[1]q
+  name = "%[1]s-${count.index}"
+}
+`, rName, count)
 }
 
+func testAccStackSetConfig_administrationRoleARN1(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 2), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
+  name                    = %[1]q
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_administrationRoleARN2(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 2), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test[1].arn
+  name                    = %[1]q
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test[0].arn
   description             = %[3]q
   name                    = %[1]q
 
@@ -1043,36 +1089,13 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName), description)
+`, rName, testAccStackSetTemplateBodyVPC(rName), description))
 }
 
-func testAccStackSetExecutionRoleNameConfig(rName, executionRoleName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_executionRoleName(rName, executionRoleName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   execution_role_name     = %[3]q
   name                    = %[1]q
 
@@ -1080,72 +1103,43 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName), executionRoleName)
+`, rName, testAccStackSetTemplateBodyVPC(rName), executionRoleName))
 }
 
-func testAccStackSetNameConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_managedExecution(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
+  name                    = %[1]q
+
+  managed_execution {
+    active = true
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_name(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName))
+`, rName, testAccStackSetTemplateBodyVPC(rName)))
 }
 
-func testAccStackSetParameters1Config(rName, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_parameters1(rName, value1 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   parameters = {
@@ -1156,36 +1150,13 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyParameters1(rName), value1)
+`, rName, testAccStackSetTemplateBodyParameters1(rName), value1))
 }
 
-func testAccStackSetParameters2Config(rName, value1, value2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_parameters2(rName, value1, value2 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   parameters = {
@@ -1197,72 +1168,26 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyParameters2(rName), value1, value2)
+`, rName, testAccStackSetTemplateBodyParameters2(rName), value1, value2))
 }
 
-func testAccStackSetParametersDefault0Config(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_parametersDefault0(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyParametersDefault1(rName))
+`, rName, testAccStackSetTemplateBodyParametersDefault1(rName)))
 }
 
-func testAccStackSetParametersDefault1Config(rName, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_parametersDefault1(rName, value1 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   parameters = {
@@ -1273,36 +1198,13 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyParametersDefault1(rName), value1)
+`, rName, testAccStackSetTemplateBodyParametersDefault1(rName), value1))
 }
 
-func testAccStackSetParametersNoEcho1Config(rName, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_parametersNoEcho1(rName, value1 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   parameters = {
@@ -1313,160 +1215,94 @@ resource "aws_cloudformation_stack_set" "test" {
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyParametersNoEcho1(rName), value1)
+`, rName, testAccStackSetTemplateBodyParametersNoEcho1(rName), value1))
 }
 
-func testAccStackSetTags1Config(rName, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   tags = {
-    Key1 = %[3]q
+    %[3]q = %[4]q
   }
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName), value1)
+`, rName, testAccStackSetTemplateBodyVPC(rName), tagKey1, tagValue1))
 }
 
-func testAccStackSetTags2Config(rName, value1, value2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   tags = {
-    Key1 = %[3]q
-    Key2 = %[4]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName), value1, value2)
+`, rName, testAccStackSetTemplateBodyVPC(rName), tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccStackSetTemplateBodyConfig(rName, templateBody string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_templateBody(rName, templateBody string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
-`, rName, templateBody)
+`, rName, templateBody))
 }
 
-func testAccStackSetTemplateURL1Config(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_baseTemplateURL(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
   bucket = aws_s3_bucket.test.id
   acl    = "public-read"
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+}
+`, rName))
 }
 
+func testAccStackSetConfig_templateURL1(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseTemplateURL(rName), fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
@@ -1476,50 +1312,20 @@ resource "aws_s3_object" "test" {
 CONTENT
 
   key = "%[1]s-template1.yml"
+
+  depends_on = [aws_s3_bucket_acl.test]
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName+"1"))
+`, rName, testAccStackSetTemplateBodyVPC(rName+"1")))
 }
 
-func testAccStackSetTemplateURL2Config(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "public-read"
-}
-
+func testAccStackSetConfig_templateURL2(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseTemplateURL(rName), fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
@@ -1529,17 +1335,19 @@ resource "aws_s3_object" "test" {
 CONTENT
 
   key = "%[1]s-template2.yml"
+
+  depends_on = [aws_s3_bucket_acl.test]
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
+`, rName, testAccStackSetTemplateBodyVPC(rName+"2")))
 }
 
-func testAccStackSetPermissionModelConfig(rName string) string {
+func testAccStackSetConfig_permissionModel(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
   name             = %[1]q
@@ -1557,33 +1365,10 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyVPC(rName))
 }
 
-func testAccStackSetOperationPreferencesConfig(rName string, failureToleranceCount, maxConcurrentCount int) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_operationPreferences(rName string, failureToleranceCount, maxConcurrentCount int) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   operation_preferences {
@@ -1595,36 +1380,13 @@ resource "aws_cloudformation_stack_set" "test" {
 %[4]s
 TEMPLATE
 }
-`, rName, failureToleranceCount, maxConcurrentCount, testAccStackSetTemplateBodyVPC(rName))
+`, rName, failureToleranceCount, maxConcurrentCount, testAccStackSetTemplateBodyVPC(rName)))
 }
 
-func testAccStackSetOperationPreferencesUpdatedConfig(rName string, failureTolerancePercentage, maxConcurrentPercentage int) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
+func testAccStackSetConfig_operationPreferencesUpdated(rName string, failureTolerancePercentage, maxConcurrentPercentage int) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
 
   operation_preferences {
@@ -1636,5 +1398,23 @@ resource "aws_cloudformation_stack_set" "test" {
 %[4]s
 TEMPLATE
 }
-`, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName))
+`, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_autoDeployment(rName string, enabled, retainStacksOnAccountRemoval bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = %[3]t
+    retain_stacks_on_account_removal = %[4]t
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
 }

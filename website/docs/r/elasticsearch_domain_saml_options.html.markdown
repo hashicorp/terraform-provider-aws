@@ -64,22 +64,30 @@ The following arguments are optional:
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
 * `subject_key` - (Optional) Custom SAML attribute to use for user names. Default is an empty string - `""`. This will cause Elasticsearch to use the `NameID` element of the `Subject`, which is the default location for name identifiers in the SAML specification.
 
-
 #### idp
 
 * `entity_id` - (Required) The unique Entity ID of the application in SAML Identity Provider.
 * `metadata_content` - (Required) The Metadata of the SAML application in xml format.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the domain the SAML options are associated with.
 
 ## Import
 
-Elasticsearch domains can be imported using the `domain_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elasticsearch domains using the `domain_name`. For example:
 
+```terraform
+import {
+  to = aws_elasticsearch_domain_saml_options.example
+  id = "domain_name"
+}
 ```
-$ terraform import aws_elasticsearch_domain_saml_options.example domain_name
+
+Using `terraform import`, import Elasticsearch domains using the `domain_name`. For example:
+
+```console
+% terraform import aws_elasticsearch_domain_saml_options.example domain_name
 ```

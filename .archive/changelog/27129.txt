@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_cognito_user_pool: Add `user_attribute_update_settings` attribute
+```
+

@@ -1,13 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var validRolePolicyName = validResourceName(rolePolicyNameMaxLen)
@@ -15,13 +19,13 @@ var validRolePolicyName = validResourceName(rolePolicyNameMaxLen)
 func validResourceName(max int) schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, max),
-		validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+		validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
 	)
 }
 
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
-	validation.StringMatch(regexp.MustCompile(`^[a-z0-9][a-z0-9-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
 	func(v interface{}, k string) (ws []string, es []error) {
 		val := v.(string)
 		if strings.Contains(val, "--") {
@@ -45,6 +49,17 @@ var validOpenIDURL = validation.All(
 		}
 		if len(u.Query()) > 0 {
 			es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
+		}
+		return
+	},
+)
+
+var validRolePolicyRole = validation.All(
+	validation.StringLenBetween(1, 128),
+	validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), ""),
+	func(v interface{}, k string) (ws []string, es []error) {
+		if _, errs := verify.ValidARN(v, k); len(errs) == 0 {
+			es = append(es, fmt.Errorf("%q must be the role's name not its ARN", k))
 		}
 		return
 	},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccVPCSubnetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,13 +29,13 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", snResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", snResourceName, "owner_id"),
@@ -138,19 +142,20 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6Filter(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block"),
@@ -161,19 +166,20 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 }
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6IPv6CIDRBlock(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 				),
@@ -182,7 +188,27 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
-func testAccSubnetDataSourceConfig(rName string, rInt int) string {
+func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dsResourceName := "data.aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVPCSubnetDataSourceConfig_basic(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -246,7 +272,41 @@ data "aws_subnet" "by_az_id" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6DataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName string, deviceIndex int) string {
+	return fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone          = data.aws_outposts_outpost.test.availability_zone
+  cidr_block                 = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  enable_lni_at_device_index = %[2]d
+  outpost_arn                = data.aws_outposts_outpost.test.arn
+  vpc_id                     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_subnet" "test" {
+  id = aws_subnet.test.id
+}
+`, rName, deviceIndex)
+}
+
+func testAccVPCSubnetDataSourceConfig_ipv6(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -279,7 +339,7 @@ resource "aws_subnet" "test" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_ipv6Filter(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -319,7 +379,7 @@ data "aws_subnet" "by_ipv6_cidr" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_ipv6IPv6CIDRBlock(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

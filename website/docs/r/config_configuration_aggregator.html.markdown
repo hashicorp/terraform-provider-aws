@@ -39,24 +39,21 @@ resource "aws_config_configuration_aggregator" "organization" {
   }
 }
 
-resource "aws_iam_role" "organization" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+resource "aws_iam_role" "organization" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "organization" {
@@ -67,12 +64,12 @@ resource "aws_iam_role_policy_attachment" "organization" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the configuration aggregator.
 * `account_aggregation_source` - (Optional) The account(s) to aggregate config data from as documented below.
 * `organization_aggregation_source` - (Optional) The organization to aggregate config data from as documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Either `account_aggregation_source` or `organization_aggregation_source` must be specified.
 
@@ -94,17 +91,26 @@ Either `regions` or `all_regions` (as true) must be specified.
 
 Either `regions` or `all_regions` (as true) must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the aggregator
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Configuration Aggregators can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Aggregators using the name. For example:
 
+```terraform
+import {
+  to = aws_config_configuration_aggregator.example
+  id = "foo"
+}
 ```
-$ terraform import aws_config_configuration_aggregator.example foo
+
+Using `terraform import`, import Configuration Aggregators using the name. For example:
+
+```console
+% terraform import aws_config_configuration_aggregator.example foo
 ```

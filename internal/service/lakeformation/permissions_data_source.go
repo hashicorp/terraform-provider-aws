@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_lakeformation_permissions")
 func DataSourcePermissions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePermissionsRead,
+		ReadWithoutTimeout: dataSourcePermissionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
@@ -66,6 +73,79 @@ func DataSourcePermissions() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+					},
+				},
+			},
+			"lf_tag": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateLFTagValues(),
+							},
+						},
+					},
+				},
+			},
+			"lf_tag_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidAccountID,
+						},
+						"expression": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"values": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateLFTagValues(),
+										},
+									},
+								},
+							},
+						},
+						"resource_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
 						},
 					},
 				},
@@ -135,7 +215,6 @@ func DataSourcePermissions() *schema.Resource {
 						"column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -148,7 +227,6 @@ func DataSourcePermissions() *schema.Resource {
 						"excluded_column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -169,8 +247,9 @@ func DataSourcePermissions() *schema.Resource {
 	}
 }
 
-func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -193,6 +272,14 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	tableType := ""
@@ -232,12 +319,12 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation permissions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation permissions: %s", err)
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
@@ -259,7 +346,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
 		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
-			return fmt.Errorf("error setting data_location: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting data_location: %s", err)
 		}
 	} else {
 		d.Set("data_location", nil)
@@ -267,10 +354,26 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.Database != nil {
 		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
-			return fmt.Errorf("error setting database: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
 		d.Set("database", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTag != nil {
+		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting LF-tag: %s", err)
+		}
+	} else {
+		d.Set("lf_tag", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTagPolicy != nil {
+		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting LF-tag policy: %s", err)
+		}
+	} else {
+		d.Set("lf_tag_policy", nil)
 	}
 
 	tableSet := false
@@ -284,7 +387,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
 				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
@@ -292,7 +395,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 			if perm.Resource.Table != nil {
 				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
@@ -311,7 +414,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
 				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table_with_columns: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
 				break
@@ -323,5 +426,5 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("table_with_columns", nil)
 	}
 
-	return nil
+	return diags
 }

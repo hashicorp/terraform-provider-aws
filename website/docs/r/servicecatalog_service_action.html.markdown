@@ -47,26 +47,34 @@ The `definition` configuration block supports the following attributes:
 * `type` - (Optional) Service action definition type. Valid value is `SSM_AUTOMATION`. Default is `SSM_AUTOMATION`.
 * `version` - (Required) SSM document version. For example, `1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the service action.
 
 ## Timeouts
 
-`aws_servicecatalog_service_action` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `3 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
-`aws_servicecatalog_service_action` can be imported using the service action ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_service_action` using the service action ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_service_action.example
+  id = "act-f1w12eperfslh"
+}
 ```
-$ terraform import aws_servicecatalog_service_action.example act-f1w12eperfslh
+
+Using `terraform import`, import `aws_servicecatalog_service_action` using the service action ID. For example:
+
+```console
+% terraform import aws_servicecatalog_service_action.example act-f1w12eperfslh
 ```

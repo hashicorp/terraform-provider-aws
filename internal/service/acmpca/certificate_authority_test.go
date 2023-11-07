@@ -1,38 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_Required(commonName),
+				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
@@ -42,6 +46,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -49,9 +54,9 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
-					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
 			{
@@ -64,22 +69,22 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_Required(commonName),
+				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					acctest.CheckResourceDisappears(acctest.Provider, tfacmpca.ResourceCertificateAuthority(), resourceName),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourceCertificateAuthority(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,42 +93,105 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusPendingCertificate),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &certificateAuthority),
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, false),
+				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, false),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityConfig_usageMode(commonName, acmpca.CertificateAuthorityTypeRoot, "SHORT_LIVED_CERTIFICATE"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// See https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys.
+			acctest.PreCheckRegion(t, endpoints.ApSouth2RegionID, endpoints.ApSoutheast3RegionID, endpoints.ApSoutheast4RegionID, endpoints.EuCentral2RegionID, endpoints.EuSouth2RegionID, endpoints.MeCentral1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, acmpca.CertificateAuthorityTypeRoot, "FIPS_140_2_LEVEL_2_OR_HIGHER"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_2_OR_HIGHER"),
 				),
 			},
 			{
@@ -139,53 +207,98 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_WithRootCertificate(commonName),
+				Config: testAccCertificateAuthorityConfig_root(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					// Since the status of the CA is changed by importing the certificate in
-					// aws_acmpca_certificate_authority_certificate, the value of `status` is no longer accurate
-					// resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
 				),
 			},
 		},
 	})
 }
 
+func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.subject.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.subject.0.common_name", commonName),
+					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "serial", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	domain := acctest.RandomDomain()
 	commonName := domain.String()
 	customCName := domain.Subdomain("crl").String()
 	customCName2 := domain.Subdomain("crl2").String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCNAME(rName, commonName, customCName),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName),
@@ -205,9 +318,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCNAME(rName, commonName, customCName2),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName2),
@@ -218,9 +331,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			},
 			// Test removing custom cname on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
@@ -231,9 +344,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			},
 			// Test adding custom cname on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCNAME(rName, commonName, customCName),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName),
@@ -244,9 +357,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_Required(commonName),
+				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -257,23 +370,23 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
@@ -293,9 +406,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			},
 			// Test disabling revocation configuration
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, false),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, false),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -303,9 +416,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			},
 			// Test enabling revocation configuration
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
@@ -316,9 +429,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_Required(commonName),
+				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -329,23 +442,23 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName, 1),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationExpirationInDays(rName, commonName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
@@ -366,9 +479,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName, 2),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationExpirationInDays(rName, commonName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
@@ -378,9 +491,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_Required(commonName),
+				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -391,23 +504,23 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectACL(rName, commonName, "BUCKET_OWNER_FULL_CONTROL"),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3ObjectACL(rName, commonName, "BUCKET_OWNER_FULL_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
@@ -427,9 +540,9 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectACL(rName, commonName, "PUBLIC_READ"),
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3ObjectACL(rName, commonName, "PUBLIC_READ"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
@@ -442,49 +555,173 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
+func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creating OCSP revocation configuration on resource creation
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test importing OCSP revocation configuration
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+			// Test disabling OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, false),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+			// Test enabling OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test removing revocation configuration on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_required(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	domain := acctest.RandomDomain()
+	commonName := domain.String()
+	customCName := domain.Subdomain("ocspl").String()
+	customCName2 := domain.Subdomain("ocsp2").String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creating revocation configuration on resource creation
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName),
+				),
+			},
+			// Test importing OCSP revocation configuration
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+			// Test updating OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName2),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName2),
+				),
+			},
+			// Test removing OCSP custom cname on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test adding OCSP custom cname on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName),
+				),
+			},
+			// Test removing revocation configuration on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_required(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_Tags_Single(commonName),
+				Config: testAccCertificateAuthorityConfig_tags1(commonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-				),
-			},
-			{
-				Config: testAccCertificateAuthorityConfig_Tags_SingleUpdated(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value-updated"),
-				),
-			},
-			{
-				Config: testAccCertificateAuthorityConfig_Tags_Multiple(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value"),
-				),
-			},
-			{
-				Config: testAccCertificateAuthorityConfig_Tags_Single(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -495,43 +732,58 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 					"permanent_deletion_time_in_days",
 				},
 			},
+			{
+				Config: testAccCertificateAuthorityConfig_tags2(commonName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCertificateAuthorityConfig_tags1(commonName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
 
-func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+func testAccCheckCertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_certificate_authority" {
-			continue
-		}
-
-		input := &acmpca.DescribeCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeCertificateAuthority(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acmpca_certificate_authority" {
+				continue
 			}
-			return err
+
+			_, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ACM PCA Certificate Authority %s still exists", rs.Primary.ID)
 		}
 
-		if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
-			return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCertificateAuthorityConfig_Enabled(commonName, certificateAuthorityType string, enabled bool) string {
+func testAccCertificateAuthorityConfig_enabled(commonName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = %[1]t
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
   permanent_deletion_time_in_days = 7
   type                            = %[2]q
 
@@ -547,10 +799,31 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, enabled, certificateAuthorityType, commonName)
 }
 
-func testAccCertificateAuthorityConfig_WithRootCertificate(commonName string) string {
+func testAccCertificateAuthorityConfig_usageMode(commonName, certificateAuthorityType string, usageMode string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  enabled                         = true
+  usage_mode                      = %[1]q
+  permanent_deletion_time_in_days = 7
+  type                            = %[2]q
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[3]q
+    }
+  }
+}
+`, usageMode, certificateAuthorityType, commonName)
+}
+
+func testAccCertificateAuthorityConfig_root(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
   type                            = "ROOT"
 
   certificate_authority_configuration {
@@ -587,9 +860,11 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccCertificateAuthorityConfig_Required(commonName string) string {
+func testAccCertificateAuthorityConfig_required(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -602,12 +877,33 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-func testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCNAME(rName, commonName, customCname string) string {
+func testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+  }
+}
+`, commonName)
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCname string) string {
 	return acctest.ConfigCompose(
 		testAccCertificateAuthorityConfig_S3Bucket(rName),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -627,17 +923,22 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, customCname))
 }
 
-func testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName string, enabled bool) string {
+func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccCertificateAuthorityConfig_S3Bucket(rName),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -655,16 +956,23 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, enabled))
 }
 
-func testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName string, expirationInDays int) string {
+func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationExpirationInDays(rName, commonName string, expirationInDays int) string {
 	return acctest.ConfigCompose(
 		testAccCertificateAuthorityConfig_S3Bucket(rName),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -682,16 +990,23 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, expirationInDays))
 }
 
-func testAccCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectACL(rName, commonName, s3ObjectAcl string) string {
+func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3ObjectACL(rName, commonName, s3ObjectAcl string) string {
 	return acctest.ConfigCompose(
 		testAccCertificateAuthorityConfig_S3Bucket(rName),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -711,9 +1026,62 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, s3ObjectAcl))
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCname string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+    ocsp_configuration {
+      enabled           = true
+      ocsp_custom_cname = %[2]q
+    }
+  }
+}
+`, commonName, customCname)
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+    ocsp_configuration {
+      enabled = %[2]t
+    }
+  }
+}
+`, commonName, enabled)
 }
 
 func testAccCertificateAuthorityConfig_S3Bucket(rName string) string {
@@ -721,6 +1089,23 @@ func testAccCertificateAuthorityConfig_S3Bucket(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -751,10 +1136,11 @@ resource "aws_s3_bucket_policy" "test" {
 `, rName)
 }
 
-func testAccCertificateAuthorityConfig_Tags_Single(commonName string) string {
+func testAccCertificateAuthorityConfig_tags1(commonName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -766,16 +1152,17 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 
   tags = {
-    tag1 = "tag1value"
+    %[2]q = %[3]q
   }
 }
-`, commonName)
+`, commonName, tagKey1, tagValue1)
 }
 
-func testAccCertificateAuthorityConfig_Tags_SingleUpdated(commonName string) string {
+func testAccCertificateAuthorityConfig_tags2(commonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -787,30 +1174,30 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 
   tags = {
-    tag1 = "tag1value-updated"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, commonName)
+`, commonName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCertificateAuthorityConfig_Tags_Multiple(commonName string) string {
+func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType, keyStorageSecurityStandard string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  enabled                         = true
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+  key_storage_security_standard   = %[1]q
   permanent_deletion_time_in_days = 7
+  type                            = %[2]q
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = %[1]q
+      common_name = %[3]q
     }
   }
-
-  tags = {
-    tag1 = "tag1value"
-    tag2 = "tag2value"
-  }
 }
-`, commonName)
+`, keyStorageSecurityStandard, certificateAuthorityType, commonName)
 }

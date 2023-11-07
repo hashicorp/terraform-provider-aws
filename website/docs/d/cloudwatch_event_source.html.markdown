@@ -22,15 +22,15 @@ data "aws_cloudwatch_event_source" "examplepartner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name_prefix` - (Optional) Specifying this limits the results to only those partner event sources with names that start with the specified prefix
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the partner event source
-* `created_by` - The name of the SaaS partner that created the event source
-* `name` - The name of the event source
-* `state` - The state of the event source (`ACTIVE` or `PENDING`)
+* `arn` - ARN of the partner event source
+* `created_by` - Name of the SaaS partner that created the event source
+* `name` - Name of the event source
+* `state` - State of the event source (`ACTIVE` or `PENDING`)

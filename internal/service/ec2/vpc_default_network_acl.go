@@ -1,14 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
@@ -20,22 +25,24 @@ const (
 	defaultACLRuleNumberIPv6 = 32768
 )
 
+// @SDKResource("aws_default_network_acl", name="Network ACL")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultNetworkACL() *schema.Resource {
-	networkACLRuleSetSchema := &schema.Schema{
+	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
-		Elem:     networkACLRuleResource,
+		Elem:     networkACLRuleNestedBlock,
 		Set:      networkACLRuleHash,
 	}
 
 	return &schema.Resource{
-		Create: resourceDefaultNetworkACLCreate,
-		Read:   resourceNetworkACLRead,
-		Update: resourceDefaultNetworkACLUpdate,
-		Delete: resourceDefaultNetworkACLDelete,
+		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
+		ReadWithoutTimeout:   resourceNetworkACLRead,
+		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
+		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("default_network_acl_id", d.Id())
 
 				return []*schema.ResourceData{d}, nil
@@ -60,8 +67,8 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 			// We want explicit management of Rules here, so we do not allow them to be
 			// computed. Instead, an empty config will enforce just that; removal of the
 			// rules
-			"egress":  networkACLRuleSetSchema,
-			"ingress": networkACLRuleSetSchema,
+			"egress":  networkACLRuleSetNestedBlock,
+			"ingress": networkACLRuleSetNestedBlock,
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,8 +84,8 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,48 +96,49 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 	}
 }
 
-func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	naclID := d.Get("default_network_acl_id").(string)
-	nacl, err := FindNetworkACLByID(conn, naclID)
+	nacl, err := FindNetworkACLByID(ctx, conn, naclID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", naclID, err)
 	}
 
 	if !aws.BoolValue(nacl.IsDefault) {
-		return fmt.Errorf("use the `aws_network_acl` resource instead")
+		return sdkdiag.AppendErrorf(diags, "use the `aws_network_acl` resource instead")
 	}
 
 	d.SetId(naclID)
 
 	// Revoke all default and pre-existing rules on the default network ACL.
-	if err := deleteNetworkAclEntries(conn, d.Id(), nacl.Entries); err != nil {
-		return err
+	if err := deleteNetworkACLEntries(ctx, conn, d.Id(), nacl.Entries); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := modifyNetworkACLAttributesOnCreate(conn, d); err != nil {
-		return err
+	if err := modifyNetworkACLAttributesOnCreate(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Configure tags.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
-	oldTags := KeyValueTags(nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
+	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(conn, d.Id(), oldTags, newTags); err != nil {
-			return fmt.Errorf("error updating EC2 Default Network ACL (%s) tags: %w", d.Id(), err)
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Default Network ACL (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceNetworkACLRead(d, meta)
+	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
 }
 
-func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Subnets *must* belong to a Network ACL. Subnets are not "removed" from
 	// Network ACLs, instead their association is replaced. In a normal
@@ -140,15 +148,13 @@ func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) e
 	// do that, so we simply log a NO-OP. In order to remove the Subnet here,
 	// it must be destroyed, or assigned to different Network ACL. Those
 	// operations are not handled here.
-	if err := modifyNetworkACLAttributesOnUpdate(conn, d, false); err != nil {
-		return err
+	if err := modifyNetworkACLAttributesOnUpdate(ctx, conn, d, false); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating EC2 Default Network ACL (%s): %s", d.Id(), err)
 	}
 
-	return resourceNetworkACLRead(d, meta)
+	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
 }
 
-func resourceDefaultNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] EC2 Default Network ACL (%s) not deleted, removing from state", d.Id())
-
-	return nil
+func resourceDefaultNetworkACLDelete(_ context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+	return sdkdiag.AppendWarningf(diags, "EC2 Default Network ACL (%s) not deleted, removing from state", d.Id())
 }

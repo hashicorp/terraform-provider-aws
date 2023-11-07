@@ -1,28 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
 	ResourceShareInvitationStatusNotFound = "NotFound"
 	ResourceShareInvitationStatusUnknown  = "Unknown"
 
-	ResourceShareStatusNotFound = "NotFound"
-	ResourceShareStatusUnknown  = "Unknown"
-
 	PrincipalAssociationStatusNotFound = "NotFound"
 )
 
 // StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
-func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		invitation, err := FindResourceShareInvitationByARN(conn, arn)
+		invitation, err := FindResourceShareInvitationByARN(ctx, conn, arn)
 
 		if err != nil {
 			return nil, ResourceShareInvitationStatusUnknown, err
@@ -36,30 +37,9 @@ func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefr
 	}
 }
 
-// StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
-func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		share, err := FindResourceShareOwnerSelfByARN(conn, arn)
-
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			return nil, ResourceShareStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, ResourceShareStatusUnknown, err
-		}
-
-		if share == nil {
-			return nil, ResourceShareStatusNotFound, nil
-		}
-
-		return share, aws.StringValue(share.Status), nil
-	}
-}
-
-func StatusResourceSharePrincipalAssociation(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_openid_connect_provider")
 func DataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
@@ -51,7 +55,7 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 }
 
 func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}
@@ -63,11 +67,11 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 
 		oidcpEntry, err := dataSourceGetOpenIDConnectProviderByURL(ctx, conn, url)
 		if err != nil {
-			return diag.Errorf("error finding IAM OIDC Provider by url (%s): %s", url, err)
+			return diag.Errorf("finding IAM OIDC Provider by url (%s): %s", url, err)
 		}
 
 		if oidcpEntry == nil {
-			return diag.Errorf("error finding IAM OIDC Provider by url (%s): not found", url)
+			return diag.Errorf("finding IAM OIDC Provider by url (%s): not found", url)
 		}
 		input.OpenIDConnectProviderArn = oidcpEntry.Arn
 	}
@@ -75,7 +79,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	resp, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error reading IAM OIDC Provider: %s", err)
+		return diag.Errorf("reading IAM OIDC Provider: %s", err)
 	}
 
 	d.SetId(aws.StringValue(input.OpenIDConnectProviderArn))
@@ -84,8 +88,8 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	d.Set("client_id_list", flex.FlattenStringList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(resp.ThumbprintList))
 
-	if err := d.Set("tags", KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
@@ -107,7 +111,7 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 			continue
 		}
 
-		arnUrl, err := urlFromOpenIDConnectProviderArn(aws.StringValue(oidcp.Arn))
+		arnUrl, err := urlFromOpenIDConnectProviderARN(aws.StringValue(oidcp.Arn))
 		if err != nil {
 			return nil, err
 		}
@@ -120,10 +124,10 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 	return result, nil
 }
 
-func urlFromOpenIDConnectProviderArn(arn string) (string, error) {
+func urlFromOpenIDConnectProviderARN(arn string) (string, error) {
 	parts := strings.SplitN(arn, "/", 2)
 	if len(parts) != 2 {
-		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+		return "", fmt.Errorf("reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
 	}
 	return parts[1], nil
 }

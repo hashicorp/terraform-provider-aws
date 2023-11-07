@@ -1,25 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
+	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceEncryptionConfig() *schema.Resource {
+// @SDKResource("aws_xray_encryption_config")
+func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEncryptionPutConfig,
-		Read:   resourceEncryptionConfigRead,
-		Update: resourceEncryptionPutConfig,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceEncryptionPutConfig,
+		ReadWithoutTimeout:   resourceEncryptionConfigRead,
+		UpdateWithoutTimeout: resourceEncryptionPutConfig,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,53 +40,111 @@ func ResourceEncryptionConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					xray.EncryptionTypeKms,
-					xray.EncryptionTypeNone,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
 			},
 		},
 	}
 }
 
-func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	input := &xray.PutEncryptionConfigInput{
-		Type: aws.String(d.Get("type").(string)),
+		Type: types.EncryptionType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("key_id"); ok {
 		input.KeyId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutEncryptionConfig(input)
+	_, err := conn.PutEncryptionConfig(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating XRay Encryption Config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating XRay Encryption Config: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if _, err := waitEncryptionConfigAvailable(conn); err != nil {
-		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
+	if _, err := waitEncryptionConfigAvailable(ctx, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for XRay Encryption Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEncryptionConfigRead(d, meta)
+	return append(diags, resourceEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
+	config, err := findEncryptionConfig(ctx, conn)
 
-	if err != nil {
-		return fmt.Errorf("error reading XRay Encryption Config: %w", err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] XRay Encryption Config (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("key_id", config.EncryptionConfig.KeyId)
-	d.Set("type", config.EncryptionConfig.Type)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading XRay Encryption Config (%s): %s", d.Id(), err)
+	}
 
-	return nil
+	d.Set("key_id", config.KeyId)
+	d.Set("type", config.Type)
+
+	return diags
+}
+
+func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.EncryptionConfig, error) {
+	input := &xray.GetEncryptionConfigInput{}
+
+	output, err := conn.GetEncryptionConfig(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.EncryptionConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.EncryptionConfig, nil
+}
+
+func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEncryptionConfig(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*types.EncryptionConfig, error) {
+	const (
+		timeout = 15 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EncryptionStatusUpdating),
+		Target:  enum.Slice(types.EncryptionStatusActive),
+		Refresh: statusEncryptionConfig(ctx, conn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.EncryptionConfig); ok {
+		return output, err
+	}
+
+	return nil, err
 }

@@ -1,51 +1,56 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSecretsManagerSecretDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretDataSourceConfig_MissingRequired,
-				ExpectError: regexp.MustCompile(`must specify either arn or name`),
+				Config:      testAccSecretDataSourceConfig_missingRequired,
+				ExpectError: regexache.MustCompile(`must specify either arn or name`),
 			},
 			{
-				Config:      testAccSecretDataSourceConfig_MultipleSpecified,
-				ExpectError: regexp.MustCompile(`specify only arn or name`),
+				Config:      testAccSecretDataSourceConfig_multipleSpecified,
+				ExpectError: regexache.MustCompile(`specify only arn or name`),
 			},
 			{
-				Config:      testAccSecretDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				Config:      testAccSecretDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`not found`),
 			},
 		},
 	})
 }
 
 func TestAccSecretsManagerSecretDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_ARN(rName),
+				Config: testAccSecretDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -55,17 +60,18 @@ func TestAccSecretsManagerSecretDataSource_arn(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_Name(rName),
+				Config: testAccSecretDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -75,17 +81,18 @@ func TestAccSecretsManagerSecretDataSource_name(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretDataSource_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_Policy(rName),
+				Config: testAccSecretDataSourceConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -112,9 +119,6 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			"kms_key_id",
 			"name",
 			"policy",
-			"rotation_enabled",
-			"rotation_lambda_arn",
-			"rotation_rules.#",
 			"tags.#",
 		}
 
@@ -133,7 +137,7 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 	}
 }
 
-func testAccSecretDataSourceConfig_ARN(rName string) string {
+func testAccSecretDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -149,19 +153,19 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccSecretDataSourceConfig_MissingRequired = `
+const testAccSecretDataSourceConfig_missingRequired = `
 data "aws_secretsmanager_secret" "test" {}
 `
 
-//lintignore:AWSAT003,AWSAT005
-const testAccSecretDataSourceConfig_MultipleSpecified = `
+// lintignore:AWSAT003,AWSAT005
+const testAccSecretDataSourceConfig_multipleSpecified = `
 data "aws_secretsmanager_secret" "test" {
   arn  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:tf-acc-test-does-not-exist"
   name = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretDataSourceConfig_Name(rName string) string {
+func testAccSecretDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -177,7 +181,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccSecretDataSourceConfig_Policy(rName string) string {
+func testAccSecretDataSourceConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -206,7 +210,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccSecretDataSourceConfig_NonExistent = `
+const testAccSecretDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret" "test" {
   name = "tf-acc-test-does-not-exist"
 }

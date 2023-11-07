@@ -1,38 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
+func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.fwd"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConditionalForwarderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx),
 		Steps: []resource.TestStep{
 			// test create
 			{
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConditionalForwarderExists(
-						resourceName,
+					testAccCheckConditionalForwarderExists(ctx, resourceName,
 						[]string{ip1, ip2},
 					),
 				),
@@ -41,8 +45,7 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 			{
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConditionalForwarderExists(
-						resourceName,
+					testAccCheckConditionalForwarderExists(ctx, resourceName,
 						[]string{ip1, ip3},
 					),
 				),
@@ -57,41 +60,43 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+func testAccCheckConditionalForwarderDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_conditional_forwarder" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_directory_service_conditional_forwarder" {
+				continue
+			}
+
+			directoryId, domainName, err := tfds.ParseConditionalForwarderID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			res, err := conn.DescribeConditionalForwardersWithContext(ctx, &directoryservice.DescribeConditionalForwardersInput{
+				DirectoryId:       aws.String(directoryId),
+				RemoteDomainNames: []*string{aws.String(domainName)},
+			})
+
+			if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if len(res.ConditionalForwarders) > 0 {
+				return fmt.Errorf("Expected AWS Directory Service Conditional Forwarder to be gone, but was still found")
+			}
 		}
 
-		directoryId, domainName, err := tfds.ParseConditionalForwarderID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
-			DirectoryId:       aws.String(directoryId),
-			RemoteDomainNames: []*string{aws.String(domainName)},
-		})
-
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if len(res.ConditionalForwarders) > 0 {
-			return fmt.Errorf("Expected AWS Directory Service Conditional Forwarder to be gone, but was still found")
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resource.TestCheckFunc {
+func testAccCheckConditionalForwarderExists(ctx context.Context, name string, dnsIps []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -107,9 +112,9 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
-		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
+		res, err := conn.DescribeConditionalForwardersWithContext(ctx, &directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
@@ -142,7 +147,7 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 
 func testAccConditionalForwarderConfig_basic(rName, domain, ip1, ip2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_conditional_forwarder" "fwd" {
   directory_id = aws_directory_service_directory.test.id

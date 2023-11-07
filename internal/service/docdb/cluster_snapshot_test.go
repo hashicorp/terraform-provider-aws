@@ -1,37 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbClusterSnapshot docdb.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotConfig(rName),
+				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(`cluster-snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexache.MustCompile(`cluster-snapshot:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -52,35 +57,37 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_docdb_cluster_snapshot" {
-			continue
-		}
-
-		input := &docdb.DescribeDBClusterSnapshotsInput{
-			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeDBClusterSnapshots(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_docdb_cluster_snapshot" {
 				continue
 			}
-			return err
+
+			input := &docdb.DescribeDBClusterSnapshotsInput{
+				DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) {
+					continue
+				}
+				return err
+			}
+
+			if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
+				return fmt.Errorf("DocumentDB Cluster Snapshot %q still exists", rs.Primary.ID)
+			}
 		}
 
-		if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DocDB Cluster Snapshot %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *docdb.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, resourceName string, dbClusterSnapshot *docdb.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -91,19 +98,19 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *d
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		request := &docdb.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
 		}
 
-		response, err := conn.DescribeDBClusterSnapshots(request)
+		response, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, request)
 		if err != nil {
 			return err
 		}
 
 		if response == nil || len(response.DBClusterSnapshots) == 0 || response.DBClusterSnapshots[0] == nil || aws.StringValue(response.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != rs.Primary.ID {
-			return fmt.Errorf("DocDB Cluster Snapshot %q not found", rs.Primary.ID)
+			return fmt.Errorf("DocumentDB Cluster Snapshot %q not found", rs.Primary.ID)
 		}
 
 		*dbClusterSnapshot = *response.DBClusterSnapshots[0]
@@ -112,7 +119,7 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *d
 	}
 }
 
-func testAccClusterSnapshotConfig(rName string) string {
+func testAccClusterSnapshotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
