@@ -280,11 +280,11 @@ This resource supports the following arguments:
 * `globalClusterIdentifier` - (Required, Forces new resources) Global cluster identifier.
 * `databaseName` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletionProtection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Valid values: `aurora`, `auroraMysql`, `auroraPostgresql`. Defaults to `aurora`. Conflicts with `sourceDbClusterIdentifier`.
-* `engineVersion` - (Optional) Engine version of the Aurora global database. The `engine`, `engineVersion`, and `instanceClass` (on the `awsRdsClusterInstance`) must together support global databases. See [Using Amazon Aurora global databases](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html) for more information. By upgrading the engine version, Terraform will upgrade cluster members. **NOTE:** To avoid an `inconsistent final plan` error while upgrading, use the `lifecycle` `ignoreChanges` for `engineVersion` meta argument on the associated `awsRdsCluster` resource as shown above in [Upgrading Engine Versions](#upgrading-engine-versions) example.
-* `forceDestroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `sourceDbClusterIdentifier`.
+* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Valid values: `aurora`, `aurora-mysql`, `aurora-postgresql`. Defaults to `aurora`. Conflicts with `source_db_cluster_identifier`.
+* `engineVersion` - (Optional) Engine version of the Aurora global database. The `engine`, `engine_version`, and `instance_class` (on the `aws_rds_cluster_instance`) must together support global databases. See [Using Amazon Aurora global databases](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html) for more information. By upgrading the engine version, Terraform will upgrade cluster members. **NOTE:** To avoid an `inconsistent final plan` error while upgrading, use the `lifecycle` `ignore_changes` for `engine_version` meta argument on the associated `aws_rds_cluster` resource as shown above in [Upgrading Engine Versions](#upgrading-engine-versions) example.
+* `forceDestroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `source_db_cluster_identifier`.
 * `sourceDbClusterIdentifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
-* `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `sourceDbClusterIdentifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
+* `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
 ## Attribute Reference
 
@@ -292,8 +292,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - RDS Global Cluster Amazon Resource Name (ARN)
 * `globalClusterMembers` - Set of objects containing Global Cluster members.
-    * `dbClusterArn` - Amazon Resource Name (ARN) of member DB Cluster
-    * `isWriter` - Whether the member is the primary DB Cluster
+    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
+    * `is_writer` - Whether the member is the primary DB Cluster
 * `globalClusterResourceId` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
 * `id` - RDS Global Cluster identifier
 
@@ -301,9 +301,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `90M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `30m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -357,4 +357,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa44dd874493ca45cccbd24a626a6b3f65869bfad4964390e5844ded01172f4f -->
+<!-- cache-key: cdktf-0.19.0 input-fa44dd874493ca45cccbd24a626a6b3f65869bfad4964390e5844ded01172f4f -->

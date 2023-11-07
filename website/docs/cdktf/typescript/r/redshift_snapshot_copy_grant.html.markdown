@@ -57,14 +57,14 @@ This resource supports the following arguments:
 
 * `snapshotCopyGrantName` - (Required, Forces new resource) A friendly name for identifying the grant.
 * `kmsKeyId` - (Optional, Forces new resource) The unique identifier for the customer master key (CMK) that the grant applies to. Specify the key ID or the Amazon Resource Name (ARN) of the CMK. To specify a CMK in a different AWS account, you must use the key ARN. If not specified, the default key is used.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of snapshot copy grant
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import Redshift Snapshot Copy Grants by name. For exam
 % terraform import aws_redshift_snapshot_copy_grant.test my-grant
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7132ffb13bb997106c250daca68bcc8d4f28e5d2bd7fcb63ef1d3441a64c72d3 -->
+<!-- cache-key: cdktf-0.19.0 input-7132ffb13bb997106c250daca68bcc8d4f28e5d2bd7fcb63ef1d3441a64c72d3 -->
