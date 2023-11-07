@@ -3,16 +3,16 @@ subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_named_query"
 description: |-
-    Provides an Athena Named Query resource.
+    Provides an Athena Named Query data source.
 ---
 
-# Resource: aws_athena_named_query
+# Data Source: aws_athena_named_query
 
-Provides an Athena Named Query resource.
+Provides an Athena Named Query data source.
 
 ## Example Usage
 
-```terraform
+```hcl
 data "aws_athena_named_query" "example" {
   name = "athenaQueryName"
 }
@@ -20,21 +20,16 @@ data "aws_athena_named_query" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) The plain language name for the query. Maximum length of 128.
-* `workgroup` - (Optional) The workgroup to which the query belongs. Defaults to `primary`
+* `workgroup` - (Optional) The workgroup to which the query belongs. Defaults to `primary`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `database` - Database to which the query belongs.
+* `description` - Brief explanation of the query.
 * `id` - The unique ID of the query.
-
-## Import
-
-Athena Named Query can be imported using the query ID, e.g.,
-
-```
-$ terraform import aws_athena_named_query.example 0123456789
-```
+* `query` - Text of the query itself.
