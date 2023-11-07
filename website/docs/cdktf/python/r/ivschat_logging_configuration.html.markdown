@@ -198,4 +198,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Logging Configurat
 % terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->
+<!-- cache-key: cdktf-0.19.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->

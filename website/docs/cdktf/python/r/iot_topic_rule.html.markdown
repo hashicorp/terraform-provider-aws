@@ -267,4 +267,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0a44794d64de9f42c129b62a7a3b74ae18a4fc39b0e3587d1eb7e365023e470b -->
+<!-- cache-key: cdktf-0.19.0 input-0a44794d64de9f42c129b62a7a3b74ae18a4fc39b0e3587d1eb7e365023e470b -->
