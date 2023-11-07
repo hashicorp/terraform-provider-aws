@@ -63,18 +63,18 @@ func ResourceSecretRotation() *schema.Resource {
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
+							// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+							// 	_, exists := d.GetOk("rotation_rules.0.schedule_expression")
 
-								if exists {
-									_, new := d.GetChange("rotation_rules.0.schedule_expression")
-									return new != nil && new != ""
-								}
+							// 	if exists {
+							// 		_, new := d.GetChange("rotation_rules.0.schedule_expression")
+							// 		return new != nil && new != ""
+							// 	}
 
-								return false
-							},
-							DiffSuppressOnRefresh: true,
-							ValidateFunc:          validation.IntBetween(1, 1000),
+							// 	return false
+							// },
+							// DiffSuppressOnRefresh: true,
+							ValidateFunc: validation.IntBetween(1, 1000),
 						},
 					},
 				},
@@ -234,9 +234,7 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
 	if s := rules.ScheduleExpression; s != nil && *s != "" {
 		m["schedule_expression"] = aws.StringValue(s)
-	}
-
-	if v := rules.AutomaticallyAfterDays; v != nil && *v != 0 {
+	} else if v := rules.AutomaticallyAfterDays; v != nil && *v != 0 {
 		m["automatically_after_days"] = int(aws.Int64Value(v))
 	}
 
