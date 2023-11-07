@@ -41,7 +41,7 @@ data "aws_ami" "example" {
 
 ## Argument Reference
 
-* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `awsMarketplace`, `microsoft`).
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -75,20 +75,20 @@ are exported:
 interpolation.
 
 * `arn` - ARN of the AMI.
-* `architecture` - OS architecture of the AMI (ie: `i386` or `x8664`).
+* `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `bootMode` - Boot mode of the image.
 * `blockDeviceMappings` - Set of objects with block device mappings of the AMI.
-    * `deviceName` - Physical name of the device.
-    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebsVolumeSize` or `ebs["volumeSize"]`) rather than accessed through the first element of a list (e.g., `ebs[0]VolumeSize`).
-        * `deleteOnTermination` - `true` if the EBS volume will be deleted on termination.
+    * `device_name` - Physical name of the device.
+    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
+        * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
         * `encrypted` - `true` if the EBS volume is encrypted.
         * `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-        * `snapshotId` - The ID of the snapshot.
-        * `volumeSize` - The size of the volume, in GiB.
+        * `snapshot_id` - The ID of the snapshot.
+        * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
-        * `volumeType` - The volume type.
-    * `noDevice` - Suppresses the specified device included in the block device mapping of the AMI.
-    * `virtualName` - Virtual device name (for instance stores).
+        * `volume_type` - The volume type.
+    * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
+    * `virtual_name` - Virtual device name (for instance stores).
 * `creationDate` - Date and time the image was created.
 * `deprecationTime` - Date and time when the image will be deprecated.
 * `description` - Description of the AMI that was provided during image
@@ -99,32 +99,32 @@ interpolation.
 * `imageOwnerAlias` - AWS account alias (for example, `amazon`, `self`) or
   the AWS account ID of the AMI owner.
 * `imageType` - Type of image.
-* `imdsSupport` - Instance Metadata Service (IMDS) support mode for the image. Set to `v20` if instances ran from this image enforce IMDSv2.
+* `imdsSupport` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernelId` - Kernel associated with the image, if any. Only applicable
   for machine images.
 * `name` - Name of the AMI that was provided during image creation.
 * `ownerId` - AWS account ID of the image owner.
-* `platform` - Value is Windows for `windows` AMIs; otherwise blank.
+* `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
 * `productCodes` - Any product codes associated with the AMI.
-    * `productCodes.#ProductCodeId` - The product code.
-    * `productCodes.#ProductCodeType` - The type of product code.
+    * `product_codes.#.product_code_id` - The product code.
+    * `product_codes.#.product_code_type` - The type of product code.
 * `public` - `true` if the image has public launch permissions.
 * `ramdiskId` - RAM disk associated with the image, if any. Only applicable
   for machine images.
 * `rootDeviceName` - Device name of the root device.
-* `rootDeviceType` - Type of root device (ie: `ebs` or `instanceStore`).
+* `rootDeviceType` - Type of root device (ie: `ebs` or `instance-store`).
 * `rootSnapshotId` - Snapshot id associated with the root device, if any
   (only applies to `ebs` root devices).
 * `sriovNetSupport` - Whether enhanced networking is enabled.
 * `state` - Current state of the AMI. If the state is `available`, the image
   is successfully registered and can be used to launch an instance.
-* `stateReason` - Describes a state change. Fields are `unset` if not available.
-    * `stateReasonCode` - The reason code for the state change.
-    * `stateReasonMessage` - The message for the state change.
+* `stateReason` - Describes a state change. Fields are `UNSET` if not available.
+    * `state_reason.code` - The reason code for the state change.
+    * `state_reason.message` - The message for the state change.
 * `tags` - Any tags assigned to the image.
-    * `tags.#Key` - Key name of the tag.
-    * `tags.#Value` - Value of the tag.
-* `tpmSupport` - If the image is configured for NitroTPM support, the value is `v20`.
+    * `tags.#.key` - Key name of the tag.
+    * `tags.#.value` - Value of the tag.
+* `tpmSupport` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `virtualizationType` - Type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
 * `usageOperation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
@@ -135,8 +135,8 @@ interpolation.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.18.0 input-b27379b47e46b092af0eb0d0592f4690caa729d66535c1d3f2706e8aa24bff38 -->
+<!-- cache-key: cdktf-0.19.0 input-b27379b47e46b092af0eb0d0592f4690caa729d66535c1d3f2706e8aa24bff38 -->
