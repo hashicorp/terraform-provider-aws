@@ -94,15 +94,15 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("max_concurrency"); ok {
-		input.MaxConcurrency = aws.Int32(v.(int32))
+		input.MaxConcurrency = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {
-		input.MaxSize = aws.Int32(v.(int32))
+		input.MaxSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("min_size"); ok {
-		input.MinSize = aws.Int32(v.(int32))
+		input.MinSize = aws.Int32(int32(v.(int)))
 	}
 
 	output, err := conn.CreateAutoScalingConfiguration(ctx, input)
