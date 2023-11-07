@@ -90,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNodeGroup,
+			Factory:  resourceNodeGroup,
 			TypeName: "aws_eks_node_group",
 			Name:     "Node Group",
 			Tags: &types.ServicePackageResourceTags{

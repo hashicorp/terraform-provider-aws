@@ -529,7 +529,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *retry.RetryError {
+	const (
+		timeout = 60 * time.Minute
+	)
+	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
 
 		_, err = conn.DeleteClusterWithContext(ctx, input)
