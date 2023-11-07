@@ -81,6 +81,7 @@ const (
 // These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
+	ChinaPartitionID      = "aws-cn"     // AWS China partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.
 	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )
