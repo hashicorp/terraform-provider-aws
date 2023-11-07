@@ -6,17 +6,19 @@ package apprunner_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
@@ -27,7 +29,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +63,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +133,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,7 +192,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -245,7 +247,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -268,7 +270,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(apprunner.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -313,15 +315,15 @@ func testAccCheckAutoScalingConfigurationVersionDestroy(ctx context.Context) res
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 			input := &apprunner.DescribeAutoScalingConfigurationInput{
 				AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeAutoScalingConfigurationWithContext(ctx, input)
+			output, err := conn.DescribeAutoScalingConfiguration(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -329,7 +331,7 @@ func testAccCheckAutoScalingConfigurationVersionDestroy(ctx context.Context) res
 				return err
 			}
 
-			if output != nil && output.AutoScalingConfiguration != nil && aws.StringValue(output.AutoScalingConfiguration.Status) != "inactive" {
+			if output != nil && output.AutoScalingConfiguration != nil && string(output.AutoScalingConfiguration.Status) != "inactive" {
 				return fmt.Errorf("App Runner AutoScaling Configuration (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -349,13 +351,13 @@ func testAccCheckAutoScalingConfigurationVersionExists(ctx context.Context, n st
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeAutoScalingConfigurationWithContext(ctx, input)
+		output, err := conn.DescribeAutoScalingConfiguration(ctx, input)
 
 		if err != nil {
 			return err
