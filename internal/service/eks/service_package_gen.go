@@ -41,7 +41,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_eks_cluster_auth",
 		},
 		{
-			Factory:  DataSourceClusters,
+			Factory:  dataSourceClusters,
 			TypeName: "aws_eks_clusters",
 		},
 		{
