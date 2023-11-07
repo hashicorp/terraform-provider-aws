@@ -754,6 +754,16 @@ func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc
 	})
 }
 
+// CheckResourceAttrHasSuffix ensures the Terraform state value has the specified suffix.
+func CheckResourceAttrHasSuffix(name, key, suffix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasSuffix(value, suffix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected suffix %#v, got %#v", name, key, suffix, value)
+	})
+}
+
 // Copied and inlined from the SDK testing code
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
