@@ -233,6 +233,7 @@ func sweepClusters(region string) error {
 			d.SetId(id)
 			d.Set("apply_immediately", true)
 			d.Set("arn", arn)
+			d.Set("delete_automated_backups", true)
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 

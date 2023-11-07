@@ -2461,8 +2461,61 @@ func TestAccRDSCluster_password(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterAutomatedBackupsDelete(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_noDeleteAutomatedBackups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
+	}
+}
+
+func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+			describeOutput, err := conn.DescribeDBClusterAutomatedBackupsWithContext(ctx, &rds.DescribeDBClusterAutomatedBackupsInput{
+				DBClusterIdentifier: aws.String(rs.Primary.Attributes["cluster_identifier"]),
+			})
+			if err != nil {
+				return err
+			}
+
+			if describeOutput == nil || len(describeOutput.DBClusterAutomatedBackups) == 0 {
+				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes["cluster_identifier"])
+			}
+
+			_, err = conn.DeleteDBClusterAutomatedBackupWithContext(ctx, &rds.DeleteDBClusterAutomatedBackupInput{
+				DbClusterResourceId: describeOutput.DBClusterAutomatedBackups[0].DbClusterResourceId,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
 }
@@ -4701,4 +4754,18 @@ resource "aws_db_subnet_group" "test" {
 }
 `, rName),
 	)
+}
+
+func testAccClusterConfig_noDeleteAutomatedBackups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = "aurora-mysql"
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  skip_final_snapshot      = true
+  delete_automated_backups = false
+}
+`, rName)
 }

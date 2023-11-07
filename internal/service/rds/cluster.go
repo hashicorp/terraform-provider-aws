@@ -157,6 +157,11 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1219,6 +1224,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
+		"delete_automated_backups",
 		"final_snapshot_identifier",
 		"global_cluster_identifier",
 		"iam_roles",
@@ -1468,10 +1474,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	deleteAutomatedBackups := d.Get("delete_automated_backups").(bool)
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &rds.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
+		DBClusterIdentifier:    aws.String(d.Id()),
+		DeleteAutomatedBackups: aws.Bool(deleteAutomatedBackups),
+		SkipFinalSnapshot:      aws.Bool(skipFinalSnapshot),
 	}
 
 	if !skipFinalSnapshot {
@@ -1554,6 +1562,7 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
 }
 

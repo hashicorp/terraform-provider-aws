@@ -387,6 +387,7 @@ This argument supports the following arguments:
 * `dbSubnetGroupName` - (Optional) DB subnet group to associate with this DB cluster.
   **NOTE:** This must match the `dbSubnetGroupName` specified on every [`awsRdsClusterInstance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `dbSystemId` - (Optional) For use with RDS Custom.
+* `deleteAutomatedBackups` - (Optional) Specifies whether to remove automated backups immediately after the DB cluster is deleted. Default is `true`.
 * `deletionProtection` - (Optional) If the DB cluster should have deletion protection enabled.
   The database can't be deleted when this value is set to `true`.
   The default is `false`.
