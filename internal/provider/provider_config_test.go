@@ -5,15 +5,12 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"maps"
 	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/hashicorp/aws-sdk-go-base/v2/mockdata"
+	configtesting "github.com/hashicorp/aws-sdk-go-base/v2/configtesting"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -115,293 +112,153 @@ func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 
 type DiagsValidator func(*testing.T, diag.Diagnostics)
 
-func ExpectNoDiags(t *testing.T, diags diag.Diagnostics) {
-	expectDiagsCount(t, diags, 0)
+var _ configtesting.TestDriver = &testDriver{}
+
+type testDriver struct {
+	mode configtesting.TestMode
 }
 
-func expectDiagsCount(t *testing.T, diags diag.Diagnostics, c int) {
-	if l := len(diags); l != c {
-		t.Fatalf("Diagnostics: expected %d element, got %d\n%#v", c, l, diags)
+func (t *testDriver) Init(mode configtesting.TestMode) {
+	t.mode = mode
+}
+
+func (t testDriver) TestCase() configtesting.TestCaseDriver {
+	return &testThingDoer{
+		mode: t.mode,
 	}
+}
+
+var _ configtesting.TestCaseDriver = &testThingDoer{}
+
+type testThingDoer struct {
+	mode   configtesting.TestMode
+	config configurer
+}
+
+func (d *testThingDoer) Configuration() configtesting.Configurer {
+	return d.configuration()
+}
+
+func (d *testThingDoer) configuration() *configurer {
+	if d.config == nil {
+		d.config = make(configurer, 0)
+	}
+	return &d.config
+}
+
+func (d *testThingDoer) Setup(t *testing.T) {
+	ts := servicemocks.MockAwsApiServer("STS", []*servicemocks.MockEndpoint{
+		servicemocks.MockStsGetCallerIdentityValidEndpoint,
+	})
+	t.Cleanup(func() {
+		ts.Close()
+	})
+	d.config.AddEndpoint("sts", ts.URL)
+}
+
+func (d testThingDoer) Apply(ctx context.Context, t *testing.T) (context.Context, configtesting.Thing) {
+	t.Helper()
+
+	// Populate required fields
+	d.config.SetRegion("us-west-2") // lintignore:AWSAT003,
+	if d.mode == configtesting.TestModeLocal {
+		d.config.SetSkipCredsValidation(true)
+		d.config.SetSkipRequestingAccountId(true)
+	}
+
+	config := map[string]any(d.config)
+
+	rc := terraformsdk.NewResourceConfigRaw(config)
+
+	p, err := New(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var diags diag.Diagnostics
+	diags = append(diags, p.Validate(rc)...)
+	if diags.HasError() {
+		t.Fatalf("validating: %s", sdkdiag.DiagnosticsString(diags))
+	}
+
+	diags = append(diags, p.Configure(ctx, rc)...)
+
+	// The provider always returns a warning if there is no account ID
+	var expected diag.Diagnostics
+	if d.mode == configtesting.TestModeLocal {
+		expected = append(expected,
+			errs.NewWarningDiagnostic(
+				"AWS account ID not found for provider",
+				"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
+			),
+		)
+	}
+
+	// if diff := cmp.Diff(diags, tc.ExpectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+	if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+		t.Errorf("unexpected diagnostics difference: %s", diff)
+	}
+
+	meta := p.Meta().(*conns.AWSClient)
+
+	return ctx, thing{meta.CredentialsProvider()}
+}
+
+var _ configtesting.Configurer = &configurer{}
+
+type configurer map[string]any
+
+func (c configurer) AddEndpoint(k, v string) {
+	if endpoints, ok := c["endpoints"]; ok {
+		l := endpoints.([]any)
+		m := l[0].(map[string]any)
+		m[k] = v
+	} else {
+		c["endpoints"] = []any{
+			map[string]any{
+				k: v,
+			},
+		}
+	}
+}
+
+func (c configurer) AddSharedConfigFile(f string) {
+	x := c["shared_config_files"]
+	if x == nil {
+		c["shared_config_files"] = []any{f}
+	} else {
+		files := x.([]any)
+		files = append(files, f)
+		c["shared_config_files"] = files
+	}
+}
+
+func (c configurer) SetRegion(s string) {
+	c["region"] = s
+}
+
+func (c configurer) SetSkipCredsValidation(b bool) {
+	c["skip_credentials_validation"] = b
+}
+
+func (c configurer) SetSkipRequestingAccountId(b bool) {
+	c["skip_requesting_account_id"] = b
+}
+
+var _ configtesting.Thing = thing{}
+
+type thing struct {
+	aws.CredentialsProvider
+}
+
+func (t thing) GetCredentials() aws.CredentialsProvider {
+	return t
 }
 
 func TestProviderConfig_Authentication_SSO(t *testing.T) { //nolint:paralleltest
-	const ssoSessionName = "test-sso-session"
-
-	testCases := map[string]struct {
-		config                     map[string]any
-		SharedConfigurationFile    string
-		SetSharedConfigurationFile bool
-		ExpectedCredentialsValue   aws.Credentials
-		ExpectedDiags              diag.Diagnostics
-		MockStsEndpoints           []*servicemocks.MockEndpoint
-	}{
-		"shared configuration file": {
-			config: map[string]any{},
-			//lintignore:AWSAT003
-			SharedConfigurationFile: fmt.Sprintf(`
-[default]
-sso_session = %s
-sso_account_id = 123456789012
-sso_role_name = testRole
-region = us-east-1
-
-[sso-session test-sso-session]
-sso_region = us-east-1
-sso_start_url = https://d-123456789a.awsapps.com/start
-sso_registration_scopes = sso:account:access
-`, ssoSessionName),
-			SetSharedConfigurationFile: true,
-			ExpectedCredentialsValue:   mockdata.MockSsoCredentials,
-			MockStsEndpoints: []*servicemocks.MockEndpoint{
-				servicemocks.MockStsGetCallerIdentityValidEndpoint,
-			},
-		},
-	}
-
-	for name, tc := range testCases { //nolint:paralleltest
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-			servicemocks.InitSessionTestEnv(t)
-
-			ctx := context.TODO()
-
-			// Populate required fields
-			config := map[string]any{
-				"region":                      "us-west-2", //lintignore:AWSAT003
-				"skip_credentials_validation": true,
-				"skip_requesting_account_id":  true,
-			}
-
-			// The provider always returns a warning if there is no account ID
-			expectedDiags := tc.ExpectedDiags
-			expectedDiags = append(expectedDiags,
-				errs.NewWarningDiagnostic(
-					"AWS account ID not found for provider",
-					"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-				),
-			)
-
-			err := servicemocks.SsoTestSetup(t, ssoSessionName)
-			if err != nil {
-				t.Fatalf("setup: %s", err)
-			}
-
-			endpoints := []any{}
-
-			closeSso, ssoEndpoint := servicemocks.SsoCredentialsApiMock()
-			defer closeSso()
-			endpoints = append(endpoints, map[string]any{
-				"sso": ssoEndpoint,
-			})
-
-			ts := servicemocks.MockAwsApiServer("STS", tc.MockStsEndpoints)
-			defer ts.Close()
-			endpoints = append(endpoints, map[string]any{
-				"sts": ts.URL,
-			})
-
-			tempdir, err := os.MkdirTemp("", "temp")
-			if err != nil {
-				t.Fatalf("error creating temp dir: %s", err)
-			}
-			defer os.Remove(tempdir)
-			t.Setenv("TMPDIR", tempdir)
-
-			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
-
-				if err != nil {
-					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)
-				}
-
-				defer os.Remove(file.Name())
-
-				err = os.WriteFile(file.Name(), []byte(tc.SharedConfigurationFile), 0600)
-
-				if err != nil {
-					t.Fatalf("unexpected error writing shared configuration file: %s", err)
-				}
-
-				tc.config["shared_config_files"] = []any{file.Name()}
-			}
-
-			tc.config["skip_credentials_validation"] = true
-			tc.config["skip_requesting_account_id"] = true
-
-			tc.config["endpoints"] = endpoints
-
-			maps.Copy(config, tc.config)
-
-			p, err := New(ctx)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			var diags diag.Diagnostics
-
-			rc := terraformsdk.NewResourceConfigRaw(config)
-
-			diags = append(diags, p.Validate(rc)...)
-			if diags.HasError() {
-				t.Fatalf("validating: %s", sdkdiag.DiagnosticsString(diags))
-			}
-
-			diags = append(diags, p.Configure(ctx, rc)...)
-
-			if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
-			}
-
-			meta := p.Meta().(*conns.AWSClient)
-
-			credentials, err := meta.CredentialsProvider().Retrieve(ctx)
-			if err != nil {
-				t.Fatalf("Error when requesting credentials: %s", err)
-			}
-
-			if diff := cmp.Diff(credentials, tc.ExpectedCredentialsValue, cmpopts.IgnoreFields(aws.Credentials{}, "Expires")); diff != "" {
-				t.Fatalf("unexpected credentials: (- got, + expected)\n%s", diff)
-			}
-		})
-	}
+	configtesting.SSO(t, &testDriver{})
 }
 
 func TestProviderConfig_Authentication_LegacySSO(t *testing.T) { //nolint:paralleltest
-	const ssoStartUrl = "https://d-123456789a.awsapps.com/start"
-
-	testCases := map[string]struct {
-		config                     map[string]any
-		SharedConfigurationFile    string
-		SetSharedConfigurationFile bool
-		ExpectedCredentialsValue   aws.Credentials
-		ExpectedDiags              diag.Diagnostics
-		MockStsEndpoints           []*servicemocks.MockEndpoint
-	}{
-		"shared configuration file": {
-			config: map[string]any{},
-			SharedConfigurationFile: fmt.Sprintf(`
-[default]
-sso_start_url = %s
-sso_region = us-east-1
-sso_account_id = 123456789012
-sso_role_name = testRole
-region = us-east-1
-`, ssoStartUrl),
-			SetSharedConfigurationFile: true,
-			ExpectedCredentialsValue:   mockdata.MockSsoCredentials,
-			MockStsEndpoints: []*servicemocks.MockEndpoint{
-				servicemocks.MockStsGetCallerIdentityValidEndpoint,
-			},
-		},
-	}
-
-	for name, tc := range testCases { //nolint:paralleltest
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-			servicemocks.InitSessionTestEnv(t)
-
-			ctx := context.TODO()
-
-			// Populate required fields
-			config := map[string]any{
-				"region":                      "us-west-2", //lintignore:AWSAT003
-				"skip_credentials_validation": true,
-				"skip_requesting_account_id":  true,
-			}
-
-			// The provider always returns a warning if there is no account ID
-			expectedDiags := tc.ExpectedDiags
-			expectedDiags = append(expectedDiags,
-				errs.NewWarningDiagnostic(
-					"AWS account ID not found for provider",
-					"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-				),
-			)
-
-			err := servicemocks.SsoTestSetup(t, ssoStartUrl)
-			if err != nil {
-				t.Fatalf("setup: %s", err)
-			}
-
-			endpoints := []any{}
-
-			closeSso, ssoEndpoint := servicemocks.SsoCredentialsApiMock()
-			defer closeSso()
-			endpoints = append(endpoints, map[string]any{
-				"sso": ssoEndpoint,
-			})
-
-			ts := servicemocks.MockAwsApiServer("STS", tc.MockStsEndpoints)
-			defer ts.Close()
-			endpoints = append(endpoints, map[string]any{
-				"sts": ts.URL,
-			})
-
-			tempdir, err := os.MkdirTemp("", "temp")
-			if err != nil {
-				t.Fatalf("error creating temp dir: %s", err)
-			}
-			defer os.Remove(tempdir)
-			t.Setenv("TMPDIR", tempdir)
-
-			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
-
-				if err != nil {
-					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)
-				}
-
-				defer os.Remove(file.Name())
-
-				err = os.WriteFile(file.Name(), []byte(tc.SharedConfigurationFile), 0600)
-
-				if err != nil {
-					t.Fatalf("unexpected error writing shared configuration file: %s", err)
-				}
-
-				tc.config["shared_config_files"] = []any{file.Name()}
-			}
-
-			tc.config["skip_credentials_validation"] = true
-			tc.config["skip_requesting_account_id"] = true
-
-			tc.config["endpoints"] = endpoints
-
-			maps.Copy(config, tc.config)
-
-			p, err := New(ctx)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			var diags diag.Diagnostics
-
-			rc := terraformsdk.NewResourceConfigRaw(config)
-
-			diags = append(diags, p.Validate(rc)...)
-			if diags.HasError() {
-				t.Fatalf("validating: %s", sdkdiag.DiagnosticsString(diags))
-			}
-
-			diags = append(diags, p.Configure(ctx, rc)...)
-
-			if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
-			}
-
-			meta := p.Meta().(*conns.AWSClient)
-
-			credentials, err := meta.CredentialsProvider().Retrieve(ctx)
-			if err != nil {
-				t.Fatalf("Error when requesting credentials: %s", err)
-			}
-
-			if diff := cmp.Diff(credentials, tc.ExpectedCredentialsValue, cmpopts.IgnoreFields(aws.Credentials{}, "Expires")); diff != "" {
-				t.Fatalf("unexpected credentials: (- got, + expected)\n%s", diff)
-			}
-		})
-	}
+	configtesting.LegacySSO(t, &testDriver{})
 }
