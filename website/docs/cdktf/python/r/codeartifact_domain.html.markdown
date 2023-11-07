@@ -70,4 +70,4 @@ Using `terraform import`, import CodeArtifact Domain using the CodeArtifact Doma
 % terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a89c6d8c19079509b918e67525ee7273ddf173853ad8232d1909b2d3be8ac22c -->
+<!-- cache-key: cdktf-0.19.0 input-a89c6d8c19079509b918e67525ee7273ddf173853ad8232d1909b2d3be8ac22c -->
