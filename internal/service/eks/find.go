@@ -99,35 +99,3 @@ func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, con
 
 	return output.Update, nil
 }
-
-func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, conn *eks.EKS, clusterName, configName string) (*eks.OidcIdentityProviderConfig, error) {
-	input := &eks.DescribeIdentityProviderConfigInput{
-		ClusterName: aws.String(clusterName),
-		IdentityProviderConfig: &eks.IdentityProviderConfig{
-			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
-		},
-	}
-
-	output, err := conn.DescribeIdentityProviderConfigWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.IdentityProviderConfig.Oidc, nil
-}

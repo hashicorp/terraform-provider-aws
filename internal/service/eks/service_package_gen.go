@@ -82,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIdentityProviderConfig,
+			Factory:  resourceIdentityProviderConfig,
 			TypeName: "aws_eks_identity_provider_config",
 			Name:     "Identity Provider Config",
 			Tags: &types.ServicePackageResourceTags{

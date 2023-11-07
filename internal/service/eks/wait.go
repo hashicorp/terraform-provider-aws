@@ -113,37 +113,3 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterNa
 
 	return nil, err
 }
-
-func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
-	stateConf := retry.StateChangeConf{
-		Pending: []string{eks.ConfigStatusCreating},
-		Target:  []string{eks.ConfigStatusActive},
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.OidcIdentityProviderConfig); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitOIDCIdentityProviderConfigDeleted(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
-	stateConf := retry.StateChangeConf{
-		Pending: []string{eks.ConfigStatusActive, eks.ConfigStatusDeleting},
-		Target:  []string{},
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.OidcIdentityProviderConfig); ok {
-		return output, err
-	}
-
-	return nil, err
-}
