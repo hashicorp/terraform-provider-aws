@@ -114,8 +114,8 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion1 := "v1.12.5-eksbuild.2"
-	addonVersion2 := "v1.12.6-eksbuild.1"
+	addonVersion1 := "v1.14.1-eksbuild.1"
+	addonVersion2 := "v1.15.3-eksbuild.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
@@ -308,7 +308,7 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 	emptyConfigurationValues := "{}"
 	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
 	addonName := "vpc-cni"
-	addonVersion := "v1.12.6-eksbuild.1"
+	addonVersion := "v1.15.3-eksbuild.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
