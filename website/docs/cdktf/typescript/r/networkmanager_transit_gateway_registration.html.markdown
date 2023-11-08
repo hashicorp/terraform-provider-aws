@@ -86,4 +86,4 @@ Using `terraform import`, import `awsNetworkmanagerTransitGatewayRegistration` u
 % terraform import aws_networkmanager_transit_gateway_registration.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8baed1ca903bd794c7c27da978d545077eb8d2bb46a566626335caaaaad7c781 -->
+<!-- cache-key: cdktf-0.19.0 input-8baed1ca903bd794c7c27da978d545077eb8d2bb46a566626335caaaaad7c781 -->

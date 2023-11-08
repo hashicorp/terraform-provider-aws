@@ -71,4 +71,4 @@ Using `terraform import`, import `aws_lightsail_certificate` using the certifica
 % terraform import aws_lightsail_certificate.test CertificateName
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa74f908bf0e275af92966e17e2db46d1735155118450df59ddb6d8e9735f416 -->
+<!-- cache-key: cdktf-0.19.0 input-fa74f908bf0e275af92966e17e2db46d1735155118450df59ddb6d8e9735f416 -->

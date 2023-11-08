@@ -50,15 +50,15 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the Index.
 * `documentMetadataConfigurationUpdates` - One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Documented below.
 * `edition` - Amazon Kendra edition for the index.
-* `errorMessage` - When the Status field value is `failed`, this contains a message that explains why.
+* `errorMessage` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `id` - Identifier of the Index.
 * `indexStatistics` - Block that provides information about the number of FAQ questions and answers and the number of text documents indexed. Documented below.
 * `name` - Name of the Index.
-* `roleArn` - An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `batchPutDocument` API to index documents from an Amazon S3 bucket.
+* `roleArn` - An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `serverSideEncryptionConfiguration` - A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. Documented below.
-* `status` - Current status of the index. When the value is `active`, the index is ready for use. If the Status field value is `failed`, the `errorMessage` field contains a message that explains why.
+* `status` - Current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updatedAt` - Unix datetime that the index was last updated.
-* `userContextPolicy` - User context policy. Valid values are `attributeFilter` or `userToken`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy).
+* `userContextPolicy` - User context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy).
 * `userGroupResolutionConfiguration` - A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. Documented below.
 * `userTokenConfigurations` - A block that specifies the user token configuration. Documented below.
 * `tags` - Metadata that helps organize the Indices you create.
@@ -73,7 +73,7 @@ A `documentMetadataConfigurationUpdates` block supports the following attributes
 * `name` - Name of the index field. Minimum length of 1. Maximum length of 30.
 * `relevance` - Block that provides manual tuning parameters to determine how the field affects the search results. Documented below.
 * `search` - Block that provides information about how the field is used during a search. Documented below.
-* `type` - Data type of the index field. Valid values are `stringValue`, `stringListValue`, `longValue`, `dateValue`.
+* `type` - Data type of the index field. Valid values are `STRING_VALUE`, `STRING_LIST_VALUE`, `LONG_VALUE`, `DATE_VALUE`.
 
 A `relevance` block supports the following attributes:
 
@@ -110,7 +110,7 @@ A `serverSideEncryptionConfiguration` block supports the following attributes:
 
 A `userGroupResolutionConfiguration` block supports the following attributes:
 
-* `userGroupResolutionMode` - The identity store provider (mode) you want to use to fetch access levels of groups and users. AWS Single Sign-On is currently the only available mode. Your users and groups must exist in an AWS SSO identity source in order to use this mode. Valid Values are `awsSso` or `none`.
+* `userGroupResolutionMode` - The identity store provider (mode) you want to use to fetch access levels of groups and users. AWS Single Sign-On is currently the only available mode. Your users and groups must exist in an AWS SSO identity source in order to use this mode. Valid Values are `AWS_SSO` or `NONE`.
 
 A `userTokenConfigurations` block supports the following attributes:
 
@@ -127,9 +127,9 @@ A `jwtTokenTypeConfiguration` block supports the following attributes:
 * `claimRegex` - Regular expression that identifies the claim.
 * `groupAttributeField` - The group attribute field.
 * `issuer` - Issuer of the token.
-* `keyLocation` - Location of the key. Valid values are `url` or `secretManager`
+* `keyLocation` - Location of the key. Valid values are `URL` or `SECRET_MANAGER`
 * `secretsManagerArn` - ARN of the secret.
 * `url` - Signing key URL.
 * `userNameAttributeField` - The user name attribute field.
 
-<!-- cache-key: cdktf-0.18.0 input-e76a9b0bb218897eea66052e6f4809ec4cf76d678314db182219fa620bdbe4a4 -->
+<!-- cache-key: cdktf-0.19.0 input-e76a9b0bb218897eea66052e6f4809ec4cf76d678314db182219fa620bdbe4a4 -->

@@ -39,9 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `clusterType` - (Optional) Reshift Cluster typeE.g., `multiNode` or `singleNode`
-* `clusterVersion` - (Optional) Redshift Cluster versionE.g., `10`
-* `nodeType` - (Optional) Redshift Cluster node typeE.g., `dc28Xlarge`
+* `clusterType` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
+* `clusterVersion` - (Optional) Redshift Cluster versionE.g., `1.0`
+* `nodeType` - (Optional) Redshift Cluster node typeE.g., `dc2.8xlarge`
 * `preferredNodeTypes` - (Optional) Ordered list of preferred Redshift Cluster node types. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 
 ## Attribute Reference
@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availabilityZones` - List of Availability Zone names where the Redshift Cluster is available.
 
-<!-- cache-key: cdktf-0.18.0 input-e0fdf3575794ac21787874dcbc817842b5e948d938752511869f169f7c1ca44e -->
+<!-- cache-key: cdktf-0.19.0 input-e0fdf3575794ac21787874dcbc817842b5e948d938752511869f169f7c1ca44e -->

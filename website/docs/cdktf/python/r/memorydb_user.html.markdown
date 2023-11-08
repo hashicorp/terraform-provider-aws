@@ -98,4 +98,4 @@ Using `terraform import`, import a user using the `user_name`. For example:
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.
 
-<!-- cache-key: cdktf-0.18.0 input-f5d027129bff54db7aaaaecf18b5e8da10653dddeb0e00e2f474bf78aa1508d7 -->
+<!-- cache-key: cdktf-0.19.0 input-f5d027129bff54db7aaaaecf18b5e8da10653dddeb0e00e2f474bf78aa1508d7 -->

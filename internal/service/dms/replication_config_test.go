@@ -277,9 +277,19 @@ resource "aws_security_group" "test" {
   }
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-mysql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   name        = "%[1]s-pg-cluster"
-  family      = "aurora-mysql5.7"
+  family      = data.aws_rds_engine_version.default.parameter_group_family
   description = "DMS cluster parameter group"
 
   parameter {
@@ -301,10 +311,10 @@ resource "aws_rds_cluster_parameter_group" "test" {
   }
 }
 
-resource "aws_rds_cluster" "test1" {
+resource "aws_rds_cluster" "source" {
   cluster_identifier              = "%[1]s-aurora-cluster-source"
-  engine                          = "aurora-mysql"
-  engine_version                  = "5.7.mysql_aurora.2.11.2"
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
   database_name                   = "tftest"
   master_username                 = "tftest"
   master_password                 = "mustbeeightcharaters"
@@ -314,19 +324,19 @@ resource "aws_rds_cluster" "test1" {
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
 }
 
-resource "aws_rds_cluster_instance" "test1" {
-  identifier           = "%[1]s-test1-primary"
-  cluster_identifier   = aws_rds_cluster.test1.id
-  instance_class       = "db.t2.small"
-  engine               = aws_rds_cluster.test1.engine
-  engine_version       = aws_rds_cluster.test1.engine_version
+resource "aws_rds_cluster_instance" "source" {
+  identifier           = "%[1]s-source-primary"
+  cluster_identifier   = aws_rds_cluster.source.id
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name = aws_db_subnet_group.test.name
 }
 
-resource "aws_rds_cluster" "test2" {
+resource "aws_rds_cluster" "target" {
   cluster_identifier     = "%[1]s-aurora-cluster-target"
-  engine                 = "aurora-mysql"
-  engine_version         = "5.7.mysql_aurora.2.11.2"
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
   database_name          = "tftest"
   master_username        = "tftest"
   master_password        = "mustbeeightcharaters"
@@ -335,12 +345,12 @@ resource "aws_rds_cluster" "test2" {
   db_subnet_group_name   = aws_db_subnet_group.test.name
 }
 
-resource "aws_rds_cluster_instance" "test2" {
-  identifier           = "%[1]s-test2-primary"
-  cluster_identifier   = aws_rds_cluster.test2.id
-  instance_class       = "db.t2.small"
-  engine               = aws_rds_cluster.test2.engine
-  engine_version       = aws_rds_cluster.test2.engine_version
+resource "aws_rds_cluster_instance" "target" {
+  identifier           = "%[1]s-target-primary"
+  cluster_identifier   = aws_rds_cluster.target.id
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name = aws_db_subnet_group.test.name
 }
 
@@ -349,7 +359,7 @@ resource "aws_dms_endpoint" "target" {
   endpoint_id   = "%[1]s-target"
   endpoint_type = "target"
   engine_name   = "aurora"
-  server_name   = aws_rds_cluster.test2.endpoint
+  server_name   = aws_rds_cluster.target.endpoint
   port          = 3306
   username      = "tftest"
   password      = "mustbeeightcharaters"
@@ -360,7 +370,7 @@ resource "aws_dms_endpoint" "source" {
   endpoint_id   = "%[1]s-source"
   endpoint_type = "source"
   engine_name   = "aurora"
-  server_name   = aws_rds_cluster.test1.endpoint
+  server_name   = aws_rds_cluster.source.endpoint
   port          = 3306
   username      = "tftest"
   password      = "mustbeeightcharaters"

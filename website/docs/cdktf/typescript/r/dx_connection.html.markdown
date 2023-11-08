@@ -96,7 +96,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
-* `encryptionMode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `noEncrypt`, `shouldEncrypt`, and `mustEncrypt`.
+* `encryptionMode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `name` - (Required) The name of the connection.
 * `providerName` - (Optional) The name of the service provider associated with the connection.
@@ -105,7 +105,7 @@ This resource supports the following arguments:
 ~> **NOTE:** Changing the value of `requestMacsec` will cause the resource to be destroyed and re-created.
 
 * `skipDestroy` - (Optional) Set to true if you do not wish the connection to be deleted at destroy time, and instead just removed from the Terraform state.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -120,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `ownerAccountId` - The ID of the AWS account that owns the connection.
 * `partnerName` - The name of the AWS Direct Connect service provider associated with the connection.
 * `portEncryptionStatus` - The MAC Security (MACsec) port link status of the connection.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlanId` - The VLAN ID.
 
 ## Import
@@ -145,4 +145,4 @@ Using `terraform import`, import Direct Connect connections using the connection
 % terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d13e1be5ac537438097f3cb1617cb8cb47731fc5c21629b7b4afb1e95a242b92 -->
+<!-- cache-key: cdktf-0.19.0 input-d13e1be5ac537438097f3cb1617cb8cb47731fc5c21629b7b4afb1e95a242b92 -->

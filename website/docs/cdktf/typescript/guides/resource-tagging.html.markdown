@@ -327,4 +327,4 @@ class MyConvertedCode extends TerraformStack {
 In this example, the `environment` and `owner` tags defined within the provider configuration block will be added to the VPC on resource creation, in addition to the `name` tag defined within the VPC resource configuration.
 To access all the tags applied to the VPC resource, use the read-only attribute `tagsAll`, e.g., `awsVpcExampleTagsAll`.
 
-<!-- cache-key: cdktf-0.18.0 input-d76ea6fe81ad5c47295d3452558feb86a504b39383ae3e8bd97aba4cffd8dba7 -->
+<!-- cache-key: cdktf-0.19.0 input-d76ea6fe81ad5c47295d3452558feb86a504b39383ae3e8bd97aba4cffd8dba7 -->

@@ -93,4 +93,4 @@ Using `terraform import`, import SageMaker Model Package Groups using the `name`
 % terraform import aws_sagemaker_model_package_group_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-46286c0641f184f18c019c6248020bf4125d9e8e0f2d0db78bf45be76f1e8205 -->
+<!-- cache-key: cdktf-0.19.0 input-46286c0641f184f18c019c6248020bf4125d9e8e0f2d0db78bf45be76f1e8205 -->

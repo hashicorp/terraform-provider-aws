@@ -6,6 +6,7 @@ package tfresource
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -56,7 +57,7 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}
 	return output, nil
 }
 
-// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
+// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
 func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) || tfawserr_sdkv2.ErrCodeEquals(err, codes...) {
@@ -91,6 +92,53 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (interface{}, error), needle string) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsAErrorMessageContains[T](err, needle) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryUntilEqual retries the specified function until it returns a value equal to `t`.
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
+	var output T
+
+	err := Retry(ctx, timeout, func() *retry.RetryError {
+		var err error
+
+		output, err = f()
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if output != t {
+			return retry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
+		}
+
+		return nil
+	})
+
+	if TimedOut(err) {
+		output, err = f()
+
+		if err == nil && output != t {
+			err = fmt.Errorf("output = %v, want %v", output, t)
+		}
+	}
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return output, nil
+}
+
+// RetryWhenHTTPStatusCodeEquals retries the specified function when it returns one of the specified HTTP status codes.
+func RetryWhenHTTPStatusCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), statusCodes ...int) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, statusCodes...) {
 			return true, err
 		}
 

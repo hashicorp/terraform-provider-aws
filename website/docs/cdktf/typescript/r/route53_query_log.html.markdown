@@ -133,4 +133,4 @@ Using `terraform import`, import Route53 query logging configurations using thei
 % terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d9656f2fc1e20251769a3e2a3d8099ca32009721211d5ef362901f305ddc7e9e -->
+<!-- cache-key: cdktf-0.19.0 input-d9656f2fc1e20251769a3e2a3d8099ca32009721211d5ef362901f305ddc7e9e -->

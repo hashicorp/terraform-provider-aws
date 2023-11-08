@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloudformation
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudformation_stack_set_instance", &resource.Sweeper{
 		Name: "aws_cloudformation_stack_set_instance",
 		F:    sweepStackSetInstances,
@@ -95,7 +93,7 @@ func sweepStackSetInstances(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -107,7 +105,7 @@ func sweepStackSetInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFormation StackSet Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -154,7 +152,7 @@ func sweepStackSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -228,7 +226,7 @@ func sweepStacks(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
 		return nil
 	}

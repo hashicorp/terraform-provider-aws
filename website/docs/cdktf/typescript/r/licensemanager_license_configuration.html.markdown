@@ -52,9 +52,9 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the license configuration.
 * `licenseCount` - (Optional) Number of licenses managed by the license configuration.
 * `licenseCountHardLimit` - (Optional) Sets the number of available licenses as a hard limit.
-* `licenseCountingType` - (Required) Dimension to use to track license inventory. Specify either `vCpu`, `instance`, `core` or `socket`.
+* `licenseCountingType` - (Required) Dimension to use to track license inventory. Specify either `vCPU`, `Instance`, `Core` or `Socket`.
 * `licenseRules` - (Optional) Array of configured License Manager rules.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Rules
 
@@ -66,7 +66,7 @@ License rules should be in the format of `#ruleType=ruleValue`. Supported rule t
 * `maximumCores` - Resource must have maximum core count in order to use the license. Default: unbounded, limit: 10000
 * `minimumSockets` - Resource must have minimum socket count in order to use the license. Default: 1
 * `maximumSockets` - Resource must have maximum socket count in order to use the license. Default: unbounded, limit: 10000
-* `allowedTenancy` - Defines where the license can be used. If set, restricts license usage to selected tenancies. Specify a comma delimited list of `ec2Default`, `ec2DedicatedHost`, `ec2DedicatedInstance`
+* `allowedTenancy` - Defines where the license can be used. If set, restricts license usage to selected tenancies. Specify a comma delimited list of `EC2-Default`, `EC2-DedicatedHost`, `EC2-DedicatedInstance`
 
 ## Attribute Reference
 
@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The license configuration ARN.
 * `id` - The license configuration ARN.
 * `ownerAccountId` - Account ID of the owner of the license configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -99,4 +99,4 @@ Using `terraform import`, import license configurations using the `id`. For exam
 % terraform import aws_licensemanager_license_configuration.example arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5a8f27111f7375c06f96dc77659a24d2efcdd9bfe181e061904d734084d24650 -->
+<!-- cache-key: cdktf-0.19.0 input-5a8f27111f7375c06f96dc77659a24d2efcdd9bfe181e061904d734084d24650 -->

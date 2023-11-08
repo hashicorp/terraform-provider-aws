@@ -107,4 +107,4 @@ Using `terraform import`, import CodeArtifact Domain Permissions Policies using 
 % terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ad7db656ffa6152a6f3b17e85bd919f6f92ab7d824fe3b18d3dfdd0e0c9f5daf -->
+<!-- cache-key: cdktf-0.19.0 input-ad7db656ffa6152a6f3b17e85bd919f6f92ab7d824fe3b18d3dfdd0e0c9f5daf -->

@@ -271,13 +271,13 @@ class MyConvertedCode extends TerraformStack {
 
 This argument supports the following arguments:
 
-* `trafficType` - (Required) The type of traffic to capture. Valid values: `accept`,`reject`, `all`.
+* `trafficType` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliverCrossAccountRole` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
 * `eniId` - (Optional) Elastic Network Interface ID to attach to
 * `iamRoleArn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
-* `logDestinationType` - (Optional) The type of the logging destination. Valid values: `cloudWatchLogs`, `s3`, `kinesisDataFirehose`. Default: `cloudWatchLogs`.
-* `logDestination` - (Optional) The ARN of the logging destination. Either `logDestination` or `logGroupName` must be set.
-* `logGroupName` - (Optional) **Deprecated:** Use `logDestination` instead. The name of the CloudWatch log group. Either `logGroupName` or `logDestination` must be set.
+* `logDestinationType` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
+* `logDestination` - (Optional) The ARN of the logging destination. Either `log_destination` or `log_group_name` must be set.
+* `logGroupName` - (Optional) **Deprecated:** Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
 * `subnetId` - (Optional) Subnet ID to attach to
 * `transitGatewayId` - (Optional) Transit Gateway ID to attach to
 * `transitGatewayAttachmentId` - (Optional) Transit Gateway Attachment ID to attach to
@@ -286,15 +286,15 @@ This argument supports the following arguments:
 * `maxAggregationInterval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
-  minutes). Default: `600`. When `transitGatewayId` or `transitGatewayAttachmentId` is specified, `maxAggregationInterval` *must* be 60 seconds (1 minute).
+  minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
 * `destinationOptions` - (Optional) Describes the destination options for a flow log. More details below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### destination_options
 
 Describes the destination options for a flow log.
 
-* `fileFormat` - (Optional) The format for the flow log. Default value: `plainText`. Valid values: `plainText`, `parquet`.
+* `fileFormat` - (Optional) The format for the flow log. Default value: `plain-text`. Valid values: `plain-text`, `parquet`.
 * `hiveCompatiblePartitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
 * `perHourPartition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
@@ -304,7 +304,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -328,4 +328,4 @@ Using `terraform import`, import Flow Logs using the `id`. For example:
 % terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-379eebee0faf6ddc6b72192ea7791d99a401f706aaa6660a39aa2f4709546656 -->
+<!-- cache-key: cdktf-0.19.0 input-379eebee0faf6ddc6b72192ea7791d99a401f706aaa6660a39aa2f4709546656 -->

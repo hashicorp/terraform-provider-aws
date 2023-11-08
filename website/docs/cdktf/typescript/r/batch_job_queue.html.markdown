@@ -86,29 +86,28 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Specifies the name of the job queue.
-* `computeEnvironments` - (Required) Specifies the set of compute environments
-    mapped to a job queue and their order.  The position of the compute environments
-    in the list will dictate the order.
+* `computeEnvironments` - (Required) List of compute environment ARNs mapped to a job queue.
+  The position of the compute environments in the list will dictate the order.
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
     are evaluated first when associated with the same compute environment.
 * `schedulingPolicyArn` - (Optional) The ARN of the fair share scheduling policy. If this parameter is specified, the job queue uses a fair share scheduling policy. If this parameter isn't specified, the job queue uses a first in, first out (FIFO) scheduling policy. After a job queue is created, you can replace but can't remove the fair share scheduling policy.
-* `state` - (Required) The state of the job queue. Must be one of: `enabled` or `disabled`
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the job queue.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -132,4 +131,4 @@ Using `terraform import`, import Batch Job Queue using the `arn`. For example:
 % terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-871c25beb9996ab260333b1892e775ecffa17cd69dd5dc593937bc7d6caf5b36 -->
+<!-- cache-key: cdktf-0.19.0 input-11a6c4c8622e2192aee9e7e7cc4d490a2dcbd3674d74501dcd201fc0b34547ee -->

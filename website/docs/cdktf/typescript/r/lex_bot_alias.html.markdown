@@ -59,11 +59,11 @@ Contains information about conversation log settings.
 
 The settings for conversation logs.
 
-* `destination` - (Required) The destination where logs are delivered. Options are `cloudwatchLogs` or `s3`.
-* `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an S3 bucket. This can only be specified when `destination` is set to `s3`. Must be between 20 and 2048 characters in length.
-* `logType` - (Required) The type of logging that is enabled. Options are `audio` or `text`.
+* `destination` - (Required) The destination where logs are delivered. Options are `CLOUDWATCH_LOGS` or `S3`.
+* `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an S3 bucket. This can only be specified when `destination` is set to `S3`. Must be between 20 and 2048 characters in length.
+* `logType` - (Required) The type of logging that is enabled. Options are `AUDIO` or `TEXT`.
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
-* `resourcePrefix` - (Computed) The prefix of the S3 object key for `audio` logs or the log stream name for `text` logs.
+* `resourcePrefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
 ## Attribute Reference
 
@@ -78,9 +78,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -104,4 +104,4 @@ Using `terraform import`, import bot aliases using an ID with the format `botNam
 % terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45b5fa895e86b52a4a0265d1cd0006d748a86ae86a7462e4c4c8ab42d16123fc -->
+<!-- cache-key: cdktf-0.19.0 input-45b5fa895e86b52a4a0265d1cd0006d748a86ae86a7462e4c4c8ab42d16123fc -->

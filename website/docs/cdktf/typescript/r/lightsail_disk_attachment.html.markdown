@@ -79,7 +79,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `diskName`,`instanceName`
+* `id` - A combination of attributes to create a unique id: `disk_name`,`instance_name`
 
 ## Import
 
@@ -103,4 +103,4 @@ Using `terraform import`, import `awsLightsailDisk` using the id attribute. For 
 % terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8aa776f81865acd643ae2da7cb03aaafbc8afae9bb63c07ef0a52959cc6fe723 -->
+<!-- cache-key: cdktf-0.19.0 input-8aa776f81865acd643ae2da7cb03aaafbc8afae9bb63c07ef0a52959cc6fe723 -->

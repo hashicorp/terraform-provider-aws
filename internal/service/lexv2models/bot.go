@@ -162,7 +162,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		BotName:                 aws.String(plan.Name.ValueString()),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
-		RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+		RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		BotTags:                 getTagsIn(ctx),
 	}
 
@@ -222,7 +222,6 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 
 func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	var diags diag.Diagnostics
 	var state resourceBotData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -250,7 +249,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
 	}.String()
 	state.ARN = flex.StringValueToFramework(ctx, botArn)
-	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
+	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
@@ -301,7 +300,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			BotName:                 flex.StringFromFramework(ctx, plan.Name),
 			IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 			DataPrivacy:             dpInput,
-			RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+			RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		}
 
 		if !plan.Description.IsNull() {
@@ -572,7 +571,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	if out == nil {
 		return diags
 	}
-	rd.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
+	rd.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	rd.ID = flex.StringToFramework(ctx, out.BotId)
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))

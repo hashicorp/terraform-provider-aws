@@ -81,4 +81,4 @@ This argument supports the following arguments:
 
 * `failure_threshold` -  The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
-<!-- cache-key: cdktf-0.18.0 input-7f7cfd8f45e41436fd49818ccfcd8108e8b10153e1f88948ca383049b98272be -->
+<!-- cache-key: cdktf-0.19.0 input-7f7cfd8f45e41436fd49818ccfcd8108e8b10153e1f88948ca383049b98272be -->

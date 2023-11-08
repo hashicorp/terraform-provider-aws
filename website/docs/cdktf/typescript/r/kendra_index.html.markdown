@@ -669,15 +669,15 @@ This resource supports the following arguments:
 * `capacityUnits` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
 * `documentMetadataConfigurationUpdates` - (Optional) One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Minimum number of 0 items. Maximum number of 500 items. If specified, you must define all elements, including those that are provided by default. These index fields are documented at [Amazon Kendra Index documentation](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html). For an example resource that defines these default index fields, refer to the [default example above](#specifying-the-predefined-elements). For an example resource that appends additional index fields, refer to the [append example above](#appending-additional-elements). All arguments for each block must be specified. Note that blocks cannot be removed since index fields cannot be deleted. This argument is [detailed below](#document_metadata_configuration_updates).
-* `edition` - (Optional) The Amazon Kendra edition to use for the index. Choose `developerEdition` for indexes intended for development, testing, or proof of concept. Use `enterpriseEdition` for your production databases. Once you set the edition for an index, it can't be changed. Defaults to `enterpriseEdition`
+* `edition` - (Optional) The Amazon Kendra edition to use for the index. Choose `DEVELOPER_EDITION` for indexes intended for development, testing, or proof of concept. Use `ENTERPRISE_EDITION` for your production databases. Once you set the edition for an index, it can't be changed. Defaults to `ENTERPRISE_EDITION`
 * `name` - (Required) Specifies the name of the Index.
-* `roleArn` - (Required) An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `batchPutDocument` API to index documents from an Amazon S3 bucket.
+* `roleArn` - (Required) An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `serverSideEncryptionConfiguration` - (Optional) A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. [Detailed below](#server_side_encryption_configuration).
-* `userContextPolicy` - (Optional) The user context policy. Valid values are `attributeFilter` or `userToken`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy). Defaults to `attributeFilter`.
+* `userContextPolicy` - (Optional) The user context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy). Defaults to `ATTRIBUTE_FILTER`.
 * `userGroupResolutionConfiguration` - (Optional) A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. To configure this, see [UserGroupResolutionConfiguration](https://docs.aws.amazon.com/kendra/latest/dg/API_UserGroupResolutionConfiguration.html). [Detailed below](#user_group_resolution_configuration).
 * `userTokenConfigurations` - (Optional) A block that specifies the user token configuration. [Detailed below](#user_token_configurations).
 * `tags` - (Optional) Tags to apply to the Index. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `capacityUnits`
 
@@ -693,17 +693,17 @@ A `documentMetadataConfigurationUpdates` block supports the following arguments:
 * `name` - (Required) The name of the index field. Minimum length of 1. Maximum length of 30.
 * `relevance` - (Required) A block that provides manual tuning parameters to determine how the field affects the search results. [Detailed below](#relevance)
 * `search` - (Required) A block that provides information about how the field is used during a search. Documented below. [Detailed below](#search)
-* `type` - (Required) The data type of the index field. Valid values are `stringValue`, `stringListValue`, `longValue`, `dateValue`.
+* `type` - (Required) The data type of the index field. Valid values are `STRING_VALUE`, `STRING_LIST_VALUE`, `LONG_VALUE`, `DATE_VALUE`.
 
 #### `relevance`
 
 A `relevance` block supports the following attributes:
 
-* `duration` - (Required if type is of `dateValue`) Specifies the time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
-* `freshness` - (Required if type is of `dateValue`) Indicates that this field determines how "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
+* `duration` - (Required if type is of `DATE_VALUE`) Specifies the time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
+* `freshness` - (Required if type is of `DATE_VALUE`) Indicates that this field determines how "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
 * `importance` - (Required for all types) The relative importance of the field in the search. Larger numbers provide more of a boost than smaller numbers. Minimum value of 1. Maximum value of 10.
-* `rankOrder` - (Required if type is of `dateValue`, or `longValue`) Determines how values should be interpreted. For more information, refer to [RankOrder](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-RankOrder).
-* `valuesImportanceMap` - (Required if type is of `stringValue`) A list of values that should be given a different boost when they appear in the result list. For more information, refer to [ValueImportanceMap](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-ValueImportanceMap).
+* `rankOrder` - (Required if type is of `DATE_VALUE`, or `LONG_VALUE`) Determines how values should be interpreted. For more information, refer to [RankOrder](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-RankOrder).
+* `valuesImportanceMap` - (Required if type is of `STRING_VALUE`) A list of values that should be given a different boost when they appear in the result list. For more information, refer to [ValueImportanceMap](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-ValueImportanceMap).
 
 #### `search`
 
@@ -724,7 +724,7 @@ A `serverSideEncryptionConfiguration` block supports the following arguments:
 
 A `userGroupResolutionConfiguration` block supports the following arguments:
 
-* `userGroupResolutionMode` - (Required) The identity store provider (mode) you want to use to fetch access levels of groups and users. AWS Single Sign-On is currently the only available mode. Your users and groups must exist in an AWS SSO identity source in order to use this mode. Valid Values are `awsSso` or `none`.
+* `userGroupResolutionMode` - (Required) The identity store provider (mode) you want to use to fetch access levels of groups and users. AWS Single Sign-On is currently the only available mode. Your users and groups must exist in an AWS SSO identity source in order to use this mode. Valid Values are `AWS_SSO` or `NONE`.
 
 ### `userTokenConfigurations`
 
@@ -747,7 +747,7 @@ A `jwtTokenTypeConfiguration` block supports the following arguments:
 * `claimRegex` - (Optional) The regular expression that identifies the claim. Minimum length of 1. Maximum length of 100.
 * `groupAttributeField` - (Optional) The group attribute field. Minimum length of 1. Maximum length of 100.
 * `issuer` - (Optional) The issuer of the token. Minimum length of 1. Maximum length of 65.
-* `keyLocation` - (Required) The location of the key. Valid values are `url` or `secretManager`
+* `keyLocation` - (Required) The location of the key. Valid values are `URL` or `SECRET_MANAGER`
 * `secretsManagerArn` - (Optional) The Amazon Resource Name (ARN) of the secret.
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `userNameAttributeField` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
@@ -756,9 +756,9 @@ A `jwtTokenTypeConfiguration` block supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `40M`)
-* `delete` - (Default `40M`)
-* `update` - (Default `40M`)
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
+* `update` - (Default `40m`)
 
 ## Attribute Reference
 
@@ -766,12 +766,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
 * `createdAt` - The Unix datetime that the index was created.
-* `errorMessage` - When the Status field value is `failed`, this contains a message that explains why.
+* `errorMessage` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `id` - The identifier of the Index.
 * `indexStatistics` - A block that provides information about the number of FAQ questions and answers and the number of text documents indexed. [Detailed below](#index_statistics).
-* `status` - The current status of the index. When the value is `active`, the index is ready for use. If the Status field value is `failed`, the `errorMessage` field contains a message that explains why.
+* `status` - The current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updatedAt` - The Unix datetime that the index was last updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `indexStatistics`
 
@@ -815,4 +815,4 @@ Using `terraform import`, import Amazon Kendra Indexes using its `id`. For examp
 % terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-00f20f85239aecb494058ad449f9a2170d10a5017c988607e2f0d4556b31b4f2 -->
+<!-- cache-key: cdktf-0.19.0 input-00f20f85239aecb494058ad449f9a2170d10a5017c988607e2f0d4556b31b4f2 -->

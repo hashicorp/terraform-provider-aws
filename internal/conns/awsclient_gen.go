@@ -8,7 +8,9 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -47,14 +49,19 @@ import (
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
+	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
+	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
+	sqs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sqs"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -78,7 +85,6 @@ import (
 	apprunner_sdkv1 "github.com/aws/aws-sdk-go/service/apprunner"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	athena_sdkv1 "github.com/aws/aws-sdk-go/service/athena"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
@@ -185,8 +191,6 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	resourcegroups_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroups"
-	resourcegroupstaggingapi_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
@@ -201,13 +205,10 @@ import (
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
-	servicequotas_sdkv1 "github.com/aws/aws-sdk-go/service/servicequotas"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
-	sqs_sdkv1 "github.com/aws/aws-sdk-go/service/sqs"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
@@ -294,8 +295,8 @@ func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationins
 	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
 }
 
-func (c *AWSClient) AthenaConn(ctx context.Context) *athena_sdkv1.Athena {
-	return errs.Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
+func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
+	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
@@ -316,6 +317,10 @@ func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
 
 func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
 	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch))
+}
+
+func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
+	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock))
 }
 
 func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
@@ -874,12 +879,12 @@ func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplor
 	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2))
 }
 
-func (c *AWSClient) ResourceGroupsConn(ctx context.Context) *resourcegroups_sdkv1.ResourceGroups {
-	return errs.Must(conn[*resourcegroups_sdkv1.ResourceGroups](ctx, c, names.ResourceGroups))
+func (c *AWSClient) ResourceGroupsClient(ctx context.Context) *resourcegroups_sdkv2.Client {
+	return errs.Must(client[*resourcegroups_sdkv2.Client](ctx, c, names.ResourceGroups))
 }
 
-func (c *AWSClient) ResourceGroupsTaggingAPIConn(ctx context.Context) *resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI {
-	return errs.Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](ctx, c, names.ResourceGroupsTaggingAPI))
+func (c *AWSClient) ResourceGroupsTaggingAPIClient(ctx context.Context) *resourcegroupstaggingapi_sdkv2.Client {
+	return errs.Must(client[*resourcegroupstaggingapi_sdkv2.Client](ctx, c, names.ResourceGroupsTaggingAPI))
 }
 
 func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
@@ -938,12 +943,12 @@ func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
 	return errs.Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN))
 }
 
-func (c *AWSClient) SNSConn(ctx context.Context) *sns_sdkv1.SNS {
-	return errs.Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
+func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
+	return errs.Must(client[*sns_sdkv2.Client](ctx, c, names.SNS))
 }
 
-func (c *AWSClient) SQSConn(ctx context.Context) *sqs_sdkv1.SQS {
-	return errs.Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
+func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
+	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS))
 }
 
 func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
@@ -1010,8 +1015,8 @@ func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_
 	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
 }
 
-func (c *AWSClient) ServiceQuotasConn(ctx context.Context) *servicequotas_sdkv1.ServiceQuotas {
-	return errs.Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
+func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
+	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas))
 }
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {

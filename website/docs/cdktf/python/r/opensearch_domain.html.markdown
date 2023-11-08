@@ -570,4 +570,4 @@ Using `terraform import`, import OpenSearch domains using the `domain_name`. For
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6be783c117732ccc247a91f3a21b873ce34ae5384be5834b261ffa5d5d287402 -->
+<!-- cache-key: cdktf-0.19.0 input-6be783c117732ccc247a91f3a21b873ce34ae5384be5834b261ffa5d5d287402 -->

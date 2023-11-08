@@ -242,4 +242,4 @@ Using `terraform import`, import MWAA Environment using `Name`. For example:
 % terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3002c93c3e9fc1e98e7cfbd839e153f618d73c8c38a32a37712a4061c84cbe9 -->
+<!-- cache-key: cdktf-0.19.0 input-d3002c93c3e9fc1e98e7cfbd839e153f618d73c8c38a32a37712a4061c84cbe9 -->

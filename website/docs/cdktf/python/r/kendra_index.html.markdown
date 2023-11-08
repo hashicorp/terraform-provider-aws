@@ -759,4 +759,4 @@ Using `terraform import`, import Amazon Kendra Indexes using its `id`. For examp
 % terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-00f20f85239aecb494058ad449f9a2170d10a5017c988607e2f0d4556b31b4f2 -->
+<!-- cache-key: cdktf-0.19.0 input-00f20f85239aecb494058ad449f9a2170d10a5017c988607e2f0d4556b31b4f2 -->

@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `revision_id` - The revision identifier for the state machine.
 * `status` - Set to the current status of the state machine.
 
-<!-- cache-key: cdktf-0.18.0 input-0f22f10a18b56fd2ce60408fbc367e0d625ee8c7fc8072d7009918250afe27d7 -->
+<!-- cache-key: cdktf-0.19.0 input-0f22f10a18b56fd2ce60408fbc367e0d625ee8c7fc8072d7009918250afe27d7 -->

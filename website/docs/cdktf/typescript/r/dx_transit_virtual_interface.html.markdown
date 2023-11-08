@@ -67,7 +67,7 @@ This resource supports the following arguments:
 * `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
 The MTU of a virtual transit interface can be either `1500` or `8500` (jumbo frames). Default is `1500`.
 * `sitelinkEnabled` - (Optional) Indicates whether to enable or disable SiteLink.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -77,15 +77,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the virtual interface.
 * `awsDevice` - The Direct Connect endpoint on which the virtual interface terminates.
 * `jumboFrameCapable` - Indicates whether jumbo frames (8500 MTU) are supported.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -109,4 +109,4 @@ Using `terraform import`, import Direct Connect transit virtual interfaces using
 % terraform import aws_dx_transit_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-50fafeb6465a4e137f551c411cb1ceffa75181ced4f85830fcb62fdb271ace49 -->
+<!-- cache-key: cdktf-0.19.0 input-50fafeb6465a4e137f551c411cb1ceffa75181ced4f85830fcb62fdb271ace49 -->

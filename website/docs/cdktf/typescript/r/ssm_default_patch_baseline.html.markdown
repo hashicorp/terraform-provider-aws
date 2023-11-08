@@ -57,19 +57,19 @@ The following arguments are required:
   When specifying an AWS-provided patch baseline, must be the ARN.
 * `operatingSystem` - (Required) The operating system the patch baseline applies to.
   Valid values are
-  `amazonLinux`,
-  `amazonLinux2`,
-  `amazonLinux2022`,
-  `centos`,
-  `debian`,
-  `macos`,
-  `oracleLinux`,
-  `raspbian`,
-  `redhatEnterpriseLinux`,
-  `rockyLinux`,
-  `suse`,
-  `ubuntu`, and
-  `windows`.
+  `AMAZON_LINUX`,
+  `AMAZON_LINUX_2`,
+  `AMAZON_LINUX_2022`,
+  `CENTOS`,
+  `DEBIAN`,
+  `MACOS`,
+  `ORACLE_LINUX`,
+  `RASPBIAN`,
+  `REDHAT_ENTERPRISE_LINUX`,
+  `ROCKY_LINUX`,
+  `SUSE`,
+  `UBUNTU`, and
+  `WINDOWS`.
 
 ## Attribute Reference
 
@@ -141,4 +141,4 @@ Using the operating system value:
 % terraform import aws_ssm_default_patch_baseline.example CENTOS
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c7888a2bf80f497e5fee504012a5094fc9dc5491b266b6f048528ab317dd5ecd -->
+<!-- cache-key: cdktf-0.19.0 input-c7888a2bf80f497e5fee504012a5094fc9dc5491b266b6f048528ab317dd5ecd -->

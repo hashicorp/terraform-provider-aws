@@ -90,9 +90,9 @@ class MyConvertedCode extends TerraformStack {
   for more information on generating a certificate from a certificate signing request (CSR).
   If none is specified both the certificate and keys will be generated, review [CreateKeysAndCertificate](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateKeysAndCertificate.html)
   for more information on generating keys and a certificate.
-* `certificatePem` - (Optional) The certificate to be registered. If `caPem` is unspecified, review
+* `certificatePem` - (Optional) The certificate to be registered. If `ca_pem` is unspecified, review
   [RegisterCertificateWithoutCA](https://docs.aws.amazon.com/iot/latest/apireference/API_RegisterCertificateWithoutCA.html).
-  If `caPem` is specified, review
+  If `ca_pem` is specified, review
   [RegisterCertificate](https://docs.aws.amazon.com/iot/latest/apireference/API_RegisterCertificate.html)
   for more information on registering a certificate.
 * `caPem` - (Optional) The CA certificate for the certificate to be registered. If this is set, the CA needs to be registered with AWS IoT beforehand.
@@ -107,4 +107,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `publicKey` - When neither CSR nor certificate is provided, the public key.
 * `privateKey` - When neither CSR nor certificate is provided, the private key.
 
-<!-- cache-key: cdktf-0.18.0 input-18d65d2043d283d5d12c775ce5c1b04cb6470c6818ca20175568246ddcc6c9cd -->
+<!-- cache-key: cdktf-0.19.0 input-18d65d2043d283d5d12c775ce5c1b04cb6470c6818ca20175568246ddcc6c9cd -->

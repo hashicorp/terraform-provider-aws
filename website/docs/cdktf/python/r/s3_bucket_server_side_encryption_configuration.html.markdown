@@ -117,4 +117,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->
+<!-- cache-key: cdktf-0.19.0 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->

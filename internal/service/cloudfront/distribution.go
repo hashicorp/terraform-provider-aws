@@ -987,7 +987,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 			return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
 		}
 
-		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil {
+		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
 			return diag.Errorf("waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 	}
@@ -1022,7 +1022,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
-		}, cloudfront.ErrCodePreconditionFailed)
+		}, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion)
 	}
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
@@ -1059,7 +1059,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.CloudFront, id str
 		return err
 	}
 
-	if err := WaitDistributionDeleted(ctx, conn, id); err != nil && !tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if err := WaitDistributionDeleted(ctx, conn, id); err != nil {
 		return err
 	}
 
@@ -1076,13 +1076,20 @@ func distroETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (st
 }
 
 func disableDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
-	if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
-		return err
-	}
-
 	out, err := FindDistributionByID(ctx, conn, id)
 	if err != nil {
 		return err
+	}
+
+	if aws.StringValue(out.Distribution.Status) == "InProgress" {
+		if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
+			return err
+		}
+
+		out, err = FindDistributionByID(ctx, conn, id)
+		if err != nil {
+			return err
+		}
 	}
 
 	if !aws.BoolValue(out.Distribution.DistributionConfig.Enabled) {
@@ -1133,33 +1140,6 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 	return output, nil
 }
 
-func FindDistributionByDomainName(ctx context.Context, conn *cloudfront.CloudFront, name string) (*cloudfront.DistributionSummary, error) {
-	var dist *cloudfront.DistributionSummary
-
-	input := &cloudfront.ListDistributionsInput{}
-
-	err := conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, d := range page.DistributionList.Items {
-			if d == nil {
-				continue
-			}
-
-			if aws.StringValue(d.DomainName) == name {
-				dist = d
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dist, err
-}
-
 // resourceAwsCloudFrontWebDistributionWaitUntilDeployed blocks until the
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
@@ -1167,10 +1147,10 @@ func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.CloudFront, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
-		Refresh:    distributionRefreshFunc(ctx, conn, id),
+		Refresh:    distributionDeployRefreshFunc(ctx, conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
-		Delay:      1 * time.Minute,
+		Delay:      30 * time.Second,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -1181,33 +1161,46 @@ func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.CloudFront, i
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress", "Deployed"},
 		Target:     []string{},
-		Refresh:    distributionRefreshFunc(ctx, conn, id),
+		Refresh:    distributionDeleteRefreshFunc(ctx, conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
-		Delay:      1 * time.Minute,
+		Delay:      15 * time.Second,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-// The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
-func distributionRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
+func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		params := &cloudfront.GetDistributionInput{
-			Id: aws.String(id),
-		}
-
-		resp, err := conn.GetDistributionWithContext(ctx, params)
-		if err != nil {
-			log.Printf("[WARN] Error retrieving CloudFront Distribution %q details: %s", id, err)
-			return nil, "", err
-		}
-
-		if resp == nil {
+		out, err := FindDistributionByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return resp.Distribution, *resp.Distribution.Status, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
+		}
+
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
+	}
+}
+
+func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindDistributionByID(ctx, conn, id)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
+		}
+
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
 	}
 }
