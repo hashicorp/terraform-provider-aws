@@ -391,7 +391,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("container_properties"); ok {
 			props, err := expandJobContainerProperties(v.(string))
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+				return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 			}
 
 			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
