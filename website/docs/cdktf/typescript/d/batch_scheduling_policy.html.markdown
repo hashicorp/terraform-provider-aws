@@ -44,7 +44,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `fairsharePolicy` - Fairshare policy block specifies the `computeReservation`, `shareDelaySeconds`, and `shareDistribution` of the scheduling policy. The `fairsharePolicy` block is documented below.
+* `fairsharePolicy` - Fairshare policy block specifies the `compute_reservation`, `share_delay_seconds`, and `share_distribution` of the scheduling policy. The `fairshare_policy` block is documented below.
 * `name` - Name of the scheduling policy.
 * `tags` - Key-value map of resource tags
 
@@ -52,11 +52,11 @@ A `fairsharePolicy` block supports the following arguments:
 
 * `computeReservation` - Value used to reserve some of the available maximum vCPU for fair share identifiers that have not yet been used. For more information, see [FairsharePolicy](https://docs.aws.amazon.com/batch/latest/APIReference/API_FairsharePolicy.html).
 * `shareDelaySeconds` - Time period to use to calculate a fair share percentage for each fair share identifier in use, in seconds. For more information, see [FairsharePolicy](https://docs.aws.amazon.com/batch/latest/APIReference/API_FairsharePolicy.html).
-* `shareDistribution` - One or more share distribution blocks which define the weights for the fair share identifiers for the fair share policy. For more information, see [FairsharePolicy](https://docs.aws.amazon.com/batch/latest/APIReference/API_FairsharePolicy.html). The `shareDistribution` block is documented below.
+* `shareDistribution` - One or more share distribution blocks which define the weights for the fair share identifiers for the fair share policy. For more information, see [FairsharePolicy](https://docs.aws.amazon.com/batch/latest/APIReference/API_FairsharePolicy.html). The `share_distribution` block is documented below.
 
 A `shareDistribution` block supports the following arguments:
 
 * `shareIdentifier` - Fair share identifier or fair share identifier prefix. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 * `weightFactor` - Weight factor for the fair share identifier. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 
-<!-- cache-key: cdktf-0.18.0 input-a3c940bd9dab02eb61feff7643ca700cbd6562b5e25eb6379d0c7a0bc4618bc4 -->
+<!-- cache-key: cdktf-0.19.0 input-a3c940bd9dab02eb61feff7643ca700cbd6562b5e25eb6379d0c7a0bc4618bc4 -->

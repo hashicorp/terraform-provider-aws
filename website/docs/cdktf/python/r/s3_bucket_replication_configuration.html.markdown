@@ -452,4 +452,4 @@ Using `terraform import`, import S3 bucket replication configuration using the `
 % terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fb3dd63caebf8f9a5354d73fe9c5e62bdefe563725f98aa597f6c1c77451e28c -->
+<!-- cache-key: cdktf-0.19.0 input-fb3dd63caebf8f9a5354d73fe9c5e62bdefe563725f98aa597f6c1c77451e28c -->

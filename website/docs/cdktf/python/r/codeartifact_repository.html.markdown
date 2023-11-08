@@ -146,4 +146,4 @@ Using `terraform import`, import CodeArtifact Repository using the CodeArtifact 
 % terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->
+<!-- cache-key: cdktf-0.19.0 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->

@@ -46,39 +46,39 @@ This data source exports the following attributes in addition to the arguments a
 * `dateUpdated` - Date the distribution configuration was updated.
 * `description` - Description of the distribution configuration.
 * `distribution` - Set of distributions.
-    * `amiDistributionConfiguration` - Nested list of AMI distribution configuration.
-        * `amiTags` - Key-value map of tags to apply to distributed AMI.
+    * `ami_distribution_configuration` - Nested list of AMI distribution configuration.
+        * `ami_tags` - Key-value map of tags to apply to distributed AMI.
         * `description` - Description to apply to distributed AMI.
-        * `kmsKeyId` - ARN of Key Management Service (KMS) Key to encrypt AMI.
-        * `launchPermission` - Nested list of EC2 launch permissions.
-            * `organizationArns` - Set of AWS Organization ARNs.
-            * `organizationalUnitArns` - Set of AWS Organizational Unit ARNs.
-            * `userGroups` - Set of EC2 launch permission user groups.
-            * `userIds` - Set of AWS Account identifiers.
-        * `targetAccountIds` - Set of target AWS Account identifiers.
-    * `containerDistributionConfiguration` - Nested list of container distribution configurations.
-        * `containerTags` - Set of tags that are attached to the container distribution configuration.
+        * `kms_key_id` - ARN of Key Management Service (KMS) Key to encrypt AMI.
+        * `launch_permission` - Nested list of EC2 launch permissions.
+            * `organization_arns` - Set of AWS Organization ARNs.
+            * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
+            * `user_groups` - Set of EC2 launch permission user groups.
+            * `user_ids` - Set of AWS Account identifiers.
+        * `target_account_ids` - Set of target AWS Account identifiers.
+    * `container_distribution_configuration` - Nested list of container distribution configurations.
+        * `container_tags` - Set of tags that are attached to the container distribution configuration.
         * `description` - Description of the container distribution configuration.
-        * `targetRepository` - Set of destination repositories for the container distribution configuration.
-            * `repositoryName` - Name of the container repository where the output container image is stored.
+        * `target_repository` - Set of destination repositories for the container distribution configuration.
+            * `repository_name` - Name of the container repository where the output container image is stored.
             * `service` - Service in which the image is registered.
-    * `fastLaunchConfiguration` - Nested list of Windows faster-launching configurations to use for AMI distribution.
-        * `accountId` - The owner account ID for the fast-launch enabled Windows AMI.
+    * `fast_launch_configuration` - Nested list of Windows faster-launching configurations to use for AMI distribution.
+        * `account_id` - The owner account ID for the fast-launch enabled Windows AMI.
         * `enabled` - A Boolean that represents the current state of faster launching for the Windows AMI.
-        * `launchTemplate` - Nested list of launch templates that the fast-launch enabled Windows AMI uses when it launches Windows instances to create pre-provisioned snapshots.
-            * `launchTemplateId` - The ID of the launch template to use for faster launching for a Windows AMI.
-            * `launchTemplateName` - The name of the launch template to use for faster launching for a Windows AMI.
-            * `launchTemplateVersion` - The version of the launch template to use for faster launching for a Windows AMI.
-        * `maxParallelLaunches` - The maximum number of parallel instances that are launched for creating resources.
-        * `snapshotConfiguration` - Nested list of configurations for managing the number of snapshots that are created from pre-provisioned instances for the Windows AMI when faster launching is enabled.
-            * `targetResourceCount` - The number of pre-provisioned snapshots to keep on hand for a fast-launch enabled Windows AMI.
-    * `launchTemplateConfiguration` - Nested list of launch template configurations.
+        * `launch_template` - Nested list of launch templates that the fast-launch enabled Windows AMI uses when it launches Windows instances to create pre-provisioned snapshots.
+            * `launch_template_id` - The ID of the launch template to use for faster launching for a Windows AMI.
+            * `launch_template_name` - The name of the launch template to use for faster launching for a Windows AMI.
+            * `launch_template_version` - The version of the launch template to use for faster launching for a Windows AMI.
+        * `max_parallel_launches` - The maximum number of parallel instances that are launched for creating resources.
+        * `snapshot_configuration` - Nested list of configurations for managing the number of snapshots that are created from pre-provisioned instances for the Windows AMI when faster launching is enabled.
+            * `target_resource_count` - The number of pre-provisioned snapshots to keep on hand for a fast-launch enabled Windows AMI.
+    * `launch_template_configuration` - Nested list of launch template configurations.
         * `default` - Whether the specified Amazon EC2 launch template is set as the default launch template.
-        * `launchTemplateId` - ID of the Amazon EC2 launch template.
-        * `accountId` - The account ID that this configuration applies to.
-    * `licenseConfigurationArns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+        * `launch_template_id` - ID of the Amazon EC2 launch template.
+        * `account_id` - The account ID that this configuration applies to.
+    * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
     * `region` - AWS Region of distribution.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.18.0 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->
+<!-- cache-key: cdktf-0.19.0 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->

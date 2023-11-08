@@ -111,22 +111,22 @@ This resource supports the following arguments:
 * `replicationSubnetGroupDescription` - (Required) Description for the subnet group.
 * `replicationSubnetGroupId` - (Required) Name for the replication subnet group. This value is stored as a lowercase string. It must contain no more than 255 alphanumeric characters, periods, spaces, underscores, or hyphens and cannot be `default`.
 * `subnetIds` - (Required) List of at least 2 EC2 subnet IDs for the subnet group. The subnets must cover at least 2 availability zones.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - The ID of the VPC the subnet group is in.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `15M`)
-- `update` - (Default `15M`)
-- `delete` - (Default `15M`)
+- `create` - (Default `15m`)
+- `update` - (Default `15m`)
+- `delete` - (Default `15m`)
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import replication subnet groups using the `replicatio
 % terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa31dcade703f4d670cd66caa1d006a3088f31feb8196071fd288c511faec143 -->
+<!-- cache-key: cdktf-0.19.0 input-fa31dcade703f4d670cd66caa1d006a3088f31feb8196071fd288c511faec143 -->

@@ -129,8 +129,8 @@ The following arguments are optional:
 * `maintenance` - (Optional) Maintenance settings for this channel. See [Maintenance](#maintenance) for more details.
 * `roleArn` - (Optional) Concise argument description.
 * `startChannel` - (Optional) Whether to start/stop channel. Default: `false`
-* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Settings for the VPC outputs.
+* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
 
@@ -223,7 +223,7 @@ The following arguments are optional:
 ### Caption Selector Settings
 
 * `ancillarySourceSettings` - (Optional) Ancillary Source Settings. See [Ancillary Source Settings](#ancillary-source-settings) for more details.
-* `aribSourceSettings` - (Optional) Arib Source Settings.
+* `aribSourceSettings` - (Optional) ARIB Source Settings.
 * `dvbSubSourceSettings` - (Optional) DVB Sub Source Settings. See [DVB Sub Source Settings](#dvb-sub-source-settings) for more details.
 * `embeddedSourceSettings` - (Optional) Embedded Source Settings. See [Embedded Source Settings](#embedded-source-settings) for more details.
 * `scte20SourceSettings` - (Optional) SCTE20 Source Settings. See [SCTE 20 Source Settings](#scte-20-source-settings) for more details.
@@ -249,11 +249,6 @@ The following arguments are optional:
 
 * `convert608To708` – (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
 * `source608ChannelNumber` - (Optional) Specifies the 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
-
-### SCTE 20 Source Settings
-
-* `ocrLanguage` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
-* `pid` - (Optional) The pid field is used in conjunction with the caption selector languageCode field as follows: - Specify PID and Language: Extracts captions from that PID; the language is “informational”. - Specify PID and omit Language: Extracts the specified PID. - Omit PID and specify Language: Extracts the specified language, whichever PID that happens to be. - Omit PID and omit Language: Valid only if source is DVB-Sub that is being passed through; all languages will be passed through.
 
 ### SCTE 27 Source Settings
 
@@ -389,7 +384,7 @@ The following arguments are optional:
 ### EAC3 Atmos Settings
 
 * `bitrate` - (Optional) Average bitrate in bits/second.
-* `codingMode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
+* `codingMode` - (Optional) Dolby Digital Plus with Dolby Atmos coding mode.
 * `dialnorm` - (Optional) Sets the dialnorm for the output.
 * `drcLine` - (Optional) Sets the Dolby dynamic range compression profile.
 * `drcRf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
@@ -406,7 +401,7 @@ The following arguments are optional:
 ### Nielsen Watermark Settings
 
 * `nielsenCbetSettings` - (Optional) Used to insert watermarks of type Nielsen CBET. See [Nielsen CBET Settings](#nielsen-cbet-settings) for more details.
-* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `programContent` and `finalDistributor`.
+* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `PROGRAM_CONTENT` and `FINAL_DISTRIBUTOR`.
 * `nielsenNaesIiNwSettings` - (Optional) Used to insert watermarks of type Nielsen NAES, II (N2) and Nielsen NAES VI (NW). See [Nielsen NAES II NW Settings](#nielsen-naes-ii-nw-settings) for more details.
 
 ### Nielsen CBET Settings
@@ -486,8 +481,8 @@ The following arguments are optional:
 * `gopBReference` - (Optional) GOP-B reference.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
 * `gopNumBFrames` - (Optional) Number of B-frames between reference frames.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
-* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
 * `level` - (Optional) H264 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
@@ -529,8 +524,8 @@ The following arguments are optional:
 * `framerateDenominator` - (Required) Framerate denominator.
 * `framerateNumerator` - (Required) Framerate numerator.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
-* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
@@ -545,7 +540,7 @@ The following arguments are optional:
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
 * `timecodeBurninSettings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
-* `timecodeInsertion` = (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `timecodeInsertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
 
 ### H265 Color Space Settings
 
@@ -586,7 +581,7 @@ The following arguments are optional:
 
 ### Destination Settings
 
-* `aribDestinationSettings` - (Optional) Arib Destination Settings.
+* `aribDestinationSettings` - (Optional) ARIB Destination Settings.
 * `burnInDestinationSettings` - (Optional) Burn In Destination Settings. See [Burn In Destination Settings](#burn-in-destination-settings) for more details.
 * `dvbSubDestinationSettings` - (Optional) DVB Sub Destination Settings. See [DVB Sub Destination Settings](#dvb-sub-destination-settings) for more details.
 * `ebuTtDDestinationSettings` - (Optional) EBU TT D Destination Settings. See [EBU TT D Destination Settings](#ebu-tt-d-destination-settings) for more details.
@@ -766,7 +761,7 @@ The following arguments are optional:
 
 ### Container Settings
 
-* `m2TsSettings` - (Optional) M2ts Settings. See [M2ts Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
+* `m2TsSettings` - (Optional) M2TS Settings. See [M2TS Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
 * `rawSettings`- (Optional) Raw Settings. This can be set as an empty block.
 
 ### UDP Output Settings
@@ -782,6 +777,12 @@ The following arguments are optional:
 * `includeFec` - (Optional) Enables column only or column and row based FEC.
 * `rowLength` - (Optional) The width of the FEC protection matrix.
 
+### VPC
+
+* `subnetIds` - (Required) A list of VPC subnet IDs from the same VPC. If STANDARD channel, subnet IDs must be mapped to two unique availability zones (AZ).
+* `publicAddressAllocationIds` - (Required) List of public address allocation ids to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
+* `securityGroupIds` - (Optional) A list of up to 5 EC2 VPC security group IDs to attach to the Output VPC network interfaces. If none are specified then the VPC default security group will be used.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -793,9 +794,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -819,4 +820,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-571a359c838df10c2be2ed2e92dddd2426f2b9fcd68054cf3c5dbeb6ceb93a31 -->
+<!-- cache-key: cdktf-0.19.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->

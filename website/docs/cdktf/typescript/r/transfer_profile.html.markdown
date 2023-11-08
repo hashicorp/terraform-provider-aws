@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `as2Id` - (Required) The As2Id is the AS2 name as defined in the RFC 4130. For inbound ttransfers this is the AS2 From Header for the AS2 messages sent from the partner. For Outbound messages this is the AS2 To Header for the AS2 messages sent to the partner. his ID cannot include spaces.
 * `certificateIds` - (Optional) The list of certificate Ids from the imported certificate operation.
 * `profileType` - (Required) The profile type should be LOCAL or PARTNER.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -82,4 +82,4 @@ Using `terraform import`, import Transfer AS2 Profile using the `profileId`. For
 % terraform import aws_transfer_profile.example p-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-16bf118d7f42726eb3b4479223e202a1b8630bdd949a41b0aec899a9608267bf -->
+<!-- cache-key: cdktf-0.19.0 input-16bf118d7f42726eb3b4479223e202a1b8630bdd949a41b0aec899a9608267bf -->

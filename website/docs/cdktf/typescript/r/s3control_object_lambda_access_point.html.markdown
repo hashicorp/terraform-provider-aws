@@ -74,7 +74,7 @@ This resource supports the following arguments:
 
 The `configuration` block supports the following:
 
-* `allowedFeatures` - (Optional) Allowed features. Valid values: `getObjectRange`, `getObjectPartNumber`.
+* `allowedFeatures` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`.
 * `cloudWatchMetricsEnabled` - (Optional) Whether or not the CloudWatch metrics configuration is enabled.
 * `supportingAccessPoint` - (Required) Standard access point associated with the Object Lambda Access Point.
 * `transformationConfiguration` - (Required) List of transformation configurations for the Object Lambda Access Point. See [Transformation Configuration](#transformation-configuration) below for more details.
@@ -83,7 +83,7 @@ The `configuration` block supports the following:
 
 The `transformationConfiguration` block supports the following:
 
-* `actions` - (Required) The actions of an Object Lambda Access Point configuration. Valid values: `getObject`.
+* `actions` - (Required) The actions of an Object Lambda Access Point configuration. Valid values: `GetObject`.
 * `contentTransformation` - (Required) The content transformation of an Object Lambda Access Point configuration. See [Content Transformation](#content-transformation) below for more details.
 
 ### Content Transformation
@@ -103,6 +103,7 @@ The `awsLambda` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `alias` - Alias for the S3 Object Lambda Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
 
@@ -128,4 +129,4 @@ Using `terraform import`, import Object Lambda Access Points using the `accountI
 % terraform import aws_s3control_object_lambda_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ecc1dbcbd726e24841bc1aaa51a1a775969f3d04b48b1704c49f37a7c49a16a1 -->
+<!-- cache-key: cdktf-0.19.0 input-1722496a257bb581d51080c0ab0b09b859a573051013001e69e87f94d3f99bed -->

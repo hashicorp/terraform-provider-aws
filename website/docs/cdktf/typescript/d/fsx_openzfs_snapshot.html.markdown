@@ -59,10 +59,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Amazon Resource Name of the snapshot.
 * `creationTime` - Time that the resource was created.
-* `id` - Identifier of the snapshot, e.g., `fsvolsnap12345678`
+* `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
 * `name` - Name of the snapshot.
 * `snapshotId` - ID of the snapshot.
 * `tags` - List of Tag values, with a maximum of 50 elements.
 * `volumeId` - ID of the volume that the snapshot is of.
 
-<!-- cache-key: cdktf-0.18.0 input-8de9bd583ae91dc99a2426809f4ba7a76d20e95064b4a418a3d285d9bb3c459b -->
+<!-- cache-key: cdktf-0.19.0 input-8de9bd583ae91dc99a2426809f4ba7a76d20e95064b4a418a3d285d9bb3c459b -->

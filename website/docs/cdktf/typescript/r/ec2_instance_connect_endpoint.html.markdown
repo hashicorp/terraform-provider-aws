@@ -41,14 +41,14 @@ This resource supports the following arguments:
 * `preserveClientIp` - (Optional) Indicates whether your client's IP address is preserved as the source. Default: `true`.
 * `securityGroupIds` - (Optional) One or more security groups to associate with the endpoint. If you don't specify a security group, the default security group for the VPC will be associated with the endpoint.
 * `subnetId` - (Required) The ID of the subnet in which to create the EC2 Instance Connect Endpoint.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Attribute Reference
 
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `fipsDnsName` - The DNS name of the EC2 Instance Connect FIPS Endpoint.
 * `networkInterfaceIds` - The IDs of the ENIs that Amazon EC2 automatically created when creating the EC2 Instance Connect Endpoint.
 * `ownerId` - The ID of the AWS account that created the EC2 Instance Connect Endpoint.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - The ID of the VPC in which the EC2 Instance Connect Endpoint was created.
 
 ## Import
@@ -85,4 +85,4 @@ Using `terraform import`, import EC2 Instance Connect Endpoints using the `id`. 
 % terraform import aws_ec2_instance_connect_endpoint.example eice-012345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b6a7a4118c37b347c22b70a637e3a2dec2ab1a881d2fb350da6ffa550807522b -->
+<!-- cache-key: cdktf-0.19.0 input-b6a7a4118c37b347c22b70a637e3a2dec2ab1a881d2fb350da6ffa550807522b -->

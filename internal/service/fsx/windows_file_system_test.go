@@ -885,6 +885,7 @@ func testAccCheckWindowsFileSystemDestroy(ctx context.Context) resource.TestChec
 
 			return fmt.Errorf("FSx for Windows File Server File System (%s) still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

@@ -43,8 +43,8 @@ This resource supports the following arguments:
 * `domain` - (Required) The top-level internet domain name for which your application has administrative authority.
 * `appMonitorConfiguration` - (Optional) configuration data for the app monitor. See [app_monitor_configuration](#app_monitor_configuration) below.
 * `cwLogEnabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter  specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
-* `customEvents` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. If you omit this parameter, custom events are `disabled`. See [custom_events](#custom_events) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `customEvents` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. If you omit this parameter, custom events are `DISABLED`. See [custom_events](#custom_events) below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### app_monitor_configuration
 
@@ -55,12 +55,12 @@ This resource supports the following arguments:
 * `guestRoleArn` - (Optional) The ARN of the guest IAM role that is attached to the Amazon Cognito identity pool that is used to authorize the sending of data to RUM.
 * `identityPoolId` - (Optional) The ID of the Amazon Cognito identity pool that is used to authorize the sending of data to RUM.
 * `includedPages` - (Optional)  If this app monitor is to collect data from only certain pages in your application, this structure lists those pages.
-* `sessionSampleRate` - (Optional) Specifies the percentage of user sessions to use for RUM data collection. Choosing a higher percentage gives you more data but also incurs more costs. The number you specify is the percentage of user sessions that will be used. Default value is `01`.
+* `sessionSampleRate` - (Optional) Specifies the percentage of user sessions to use for RUM data collection. Choosing a higher percentage gives you more data but also incurs more costs. The number you specify is the percentage of user sessions that will be used. Default value is `0.1`.
 * `telemetries` - (Optional) An array that lists the types of telemetry data that this app monitor is to collect. Valid values are `errors`, `performance`, and `http`.
 
 ### custom_events
 
-* `status` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. The default is for custom events to be `disabled`. Valid values are `disabled` and `enabled`.
+* `status` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. The default is for custom events to be `DISABLED`. Valid values are `DISABLED` and `ENABLED`.
 
 ## Attribute Reference
 
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The CloudWatch RUM name as it is the identifier of a RUM.
 * `appMonitorId` - The unique ID of the app monitor. Useful for JS templates.
 * `cwLogGroup` - The name of the log group where the copies are stored.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. Fo
 % terraform import aws_rum_app_monitor.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b381cc3a01207454edb5a73b4ffe67c1902d1625465d5195b0a31d7bc968ed4e -->
+<!-- cache-key: cdktf-0.19.0 input-b381cc3a01207454edb5a73b4ffe67c1902d1625465d5195b0a31d7bc968ed4e -->

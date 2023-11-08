@@ -60,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `permissions` - List of permissions granted to the principal.
 * `principal` - Principal who is granted permissions.
 
-<!-- cache-key: cdktf-0.18.0 input-f9ed67609f11fe3dc75d11e8316427f119ef11af97f179f341207047f1fe3023 -->
+<!-- cache-key: cdktf-0.19.0 input-f9ed67609f11fe3dc75d11e8316427f119ef11af97f179f341207047f1fe3023 -->

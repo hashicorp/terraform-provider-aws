@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `projectName` - (Required) The name of the Project.
 * `projectDescription` - (Optional) A description for the project.
 * `serviceCatalogProvisioningDetails` - (Required) The product ID and provisioning artifact ID to provision a service catalog. See [Service Catalog Provisioning Details](#service-catalog-provisioning-details) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Service Catalog Provisioning Details
 
@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Project.
 * `id` - The name of the Project.
 * `projectId` - The ID of the project.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -91,4 +91,4 @@ Using `terraform import`, import SageMaker Projects using the `projectName`. For
 % terraform import aws_sagemaker_project.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->
+<!-- cache-key: cdktf-0.19.0 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->

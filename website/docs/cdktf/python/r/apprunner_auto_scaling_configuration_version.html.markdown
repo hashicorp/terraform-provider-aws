@@ -76,4 +76,4 @@ Using `terraform import`, import App Runner AutoScaling Configuration Versions u
 % terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->
+<!-- cache-key: cdktf-0.19.0 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->

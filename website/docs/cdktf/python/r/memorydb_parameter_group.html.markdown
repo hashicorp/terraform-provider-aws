@@ -85,4 +85,4 @@ Using `terraform import`, import a parameter group using the `name`. For example
 % terraform import aws_memorydb_parameter_group.example my-parameter-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8e9e3599e180f75dd2d3f6d66e99565f9996fadbf7ea8fdbbfa56522a00edac7 -->
+<!-- cache-key: cdktf-0.19.0 input-8e9e3599e180f75dd2d3f6d66e99565f9996fadbf7ea8fdbbfa56522a00edac7 -->

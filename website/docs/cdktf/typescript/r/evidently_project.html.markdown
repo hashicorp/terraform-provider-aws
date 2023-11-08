@@ -110,7 +110,7 @@ This resource supports the following arguments:
 * `dataDelivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.
 * `name` - (Required) A name for the project.
-* `tags` - (Optional) Tags to apply to the project. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the project. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `dataDelivery` block supports the following arguments:
 
@@ -132,9 +132,9 @@ The `s3Destination` block supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `2M`)
-* `delete` - (Default `2M`)
-* `update` - (Default `2M`)
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Attribute Reference
 
@@ -149,8 +149,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID has the same value as the arn of the project.
 * `lastUpdatedTime` - The date and time that the project was most recently updated.
 * `launchCount` - The number of launches currently in the project. This includes all launches that have been created and not deleted, whether they are ongoing or not.
-* `status` - The current state of the project. Valid values are `available` and `updating`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `status` - The current state of the project. Valid values are `AVAILABLE` and `UPDATING`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -174,4 +174,4 @@ Using `terraform import`, import CloudWatch Evidently Project using the `arn`. F
 % terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-98108c26628ca8c5832f4e1d0f90d72906605975ec0417106000b17f811ac230 -->
+<!-- cache-key: cdktf-0.19.0 input-98108c26628ca8c5832f4e1d0f90d72906605975ec0417106000b17f811ac230 -->

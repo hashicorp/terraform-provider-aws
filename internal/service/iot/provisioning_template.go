@@ -108,6 +108,13 @@ func ResourceProvisioningTemplate() *schema.Resource {
 					validation.StringLenBetween(0, 10240),
 				),
 			},
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(iot.TemplateType_Values(), false),
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -138,6 +145,10 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
+	}
+
+	if v, ok := d.Get("type").(string); ok && v != "" {
+		input.Type = aws.String(v)
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
@@ -184,6 +195,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	}
 	d.Set("provisioning_role_arn", output.ProvisioningRoleArn)
 	d.Set("template_body", output.TemplateBody)
+	d.Set("type", output.Type)
 
 	return nil
 }

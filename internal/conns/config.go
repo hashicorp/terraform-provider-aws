@@ -14,6 +14,7 @@ import (
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
 	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -116,6 +117,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// Avoid duplicate calls to STS by enabling SkipCredsValidation for the call to GetAwsConfig
+	// and then restoring the configured value for the call to GetAwsAccountIDAndPartition.
+	skipCredsValidation := awsbaseConfig.SkipCredsValidation
+	awsbaseConfig.SkipCredsValidation = true
+
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
 	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 
@@ -132,11 +138,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	if !c.SkipRegionValidation {
-		if err := awsbase.ValidateRegion(cfg.Region); err != nil {
+		if err := basevalidation.SupportedRegion(cfg.Region); err != nil {
 			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 	c.Region = cfg.Region
+
+	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
 	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
@@ -195,6 +203,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
+	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion

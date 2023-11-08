@@ -198,7 +198,7 @@ This resource supports the following arguments:
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `virtualRouterName` - (Required) Name of the virtual router in which to create the route. Must be between 1 and 255 characters in length.
 * `spec` - (Required) Route specification to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -245,7 +245,7 @@ The `idle` object supports the following:
 The `grpcRoute`'s `match` object supports the following:
 
 * `metadata` - (Optional) Data to match from the gRPC request.
-* `methodName` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `serviceName`.
+* `methodName` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `service_name`.
 * `serviceName` - (Optional) Fully qualified domain name for the service to match from the request.
 * `port`- (Optional) The port number to match from the request.
 
@@ -267,12 +267,12 @@ The `metadata`'s `match` object supports the following:
 The `grpcRoute`'s `retryPolicy` object supports the following:
 
 * `grpcRetryEvents` - (Optional) List of gRPC retry events.
-Valid values: `cancelled`, `deadlineExceeded`, `internal`, `resourceExhausted`, `unavailable`.
+Valid values: `cancelled`, `deadline-exceeded`, `internal`, `resource-exhausted`, `unavailable`.
 * `httpRetryEvents` - (Optional) List of HTTP retry events.
-Valid values: `clientError` (HTTP status code 409), `gatewayError` (HTTP status codes 502, 503, and 504), `serverError` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `streamError` (retry on refused stream).
+Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
 * `maxRetries` - (Required) Maximum number of retries.
 * `perRetryTimeout` - (Required) Per-retry timeout.
-* `tcpRetryEvents` - (Optional) List of TCP retry events. The only valid value is `connectionError`.
+* `tcpRetryEvents` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
 The `grpcRoute`'s `timeout` object supports the following:
 
@@ -290,7 +290,7 @@ The `http2Route` and `httpRoute`'s `match` object supports the following:
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
 * `port`- (Optional) The port number to match from the request.
 * `header` - (Optional) Client request headers to match on.
-* `method` - (Optional) Client request header method to match on. Valid values: `get`, `head`, `post`, `put`, `delete`, `connect`, `options`, `trace`, `patch`.
+* `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
 * `path` - (Optional) Client request path to match on.
 * `queryParameter` - (Optional) Client request query parameters to match on.
 * `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
@@ -312,10 +312,10 @@ The `queryParameter`'s `match` object supports the following:
 The `http2Route` and `httpRoute`'s `retryPolicy` object supports the following:
 
 * `httpRetryEvents` - (Optional) List of HTTP retry events.
-Valid values: `clientError` (HTTP status code 409), `gatewayError` (HTTP status codes 502, 503, and 504), `serverError` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `streamError` (retry on refused stream).
+Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
 * `maxRetries` - (Required) Maximum number of retries.
 * `perRetryTimeout` - (Required) Per-retry timeout.
-* `tcpRetryEvents` - (Optional) List of TCP retry events. The only valid value is `connectionError`.
+* `tcpRetryEvents` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
 You must specify at least one value for `httpRetryEvents`, or at least one value for `tcpRetryEvents`.
 
@@ -369,7 +369,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDate` - Creation date of the route.
 * `lastUpdatedDate` - Last update date of the route.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -395,4 +395,4 @@ Using `terraform import`, import App Mesh virtual routes using `meshName` and `v
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-80e17b52a5e66a8d0e459a22b8228d6395a8847cf0270d3e66fc0d8a47b1bb28 -->
+<!-- cache-key: cdktf-0.19.0 input-80e17b52a5e66a8d0e459a22b8228d6395a8847cf0270d3e66fc0d8a47b1bb28 -->

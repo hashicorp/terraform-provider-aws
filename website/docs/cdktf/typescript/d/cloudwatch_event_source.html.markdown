@@ -49,6 +49,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the partner event source
 * `createdBy` - Name of the SaaS partner that created the event source
 * `name` - Name of the event source
-* `state` - State of the event source (`active` or `pending`)
+* `state` - State of the event source (`ACTIVE` or `PENDING`)
 
-<!-- cache-key: cdktf-0.18.0 input-7fea3094a9236a42f149275c2bbaa33e18c22a2111ac12ba23865c087753c6e6 -->
+<!-- cache-key: cdktf-0.19.0 input-7fea3094a9236a42f149275c2bbaa33e18c22a2111ac12ba23865c087753c6e6 -->

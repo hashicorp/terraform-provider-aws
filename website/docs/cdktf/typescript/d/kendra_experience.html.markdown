@@ -47,15 +47,15 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Experience.
-* `configuration` - Block that specifies the configuration information for your Amazon Kendra Experience. This includes `contentSourceConfiguration`, which specifies the data source IDs and/or FAQ IDs, and `userIdentityConfiguration`, which specifies the user or group information to grant access to your Amazon Kendra Experience. Documented below.
+* `configuration` - Block that specifies the configuration information for your Amazon Kendra Experience. This includes `content_source_configuration`, which specifies the data source IDs and/or FAQ IDs, and `user_identity_configuration`, which specifies the user or group information to grant access to your Amazon Kendra Experience. Documented below.
 * `createdAt` - Unix datetime that the Experience was created.
 * `description` - Description of the Experience.
 * `endpoints` - Shows the endpoint URLs for your Amazon Kendra Experiences. The URLs are unique and fully hosted by AWS. Documented below.
 * `errorMessage` - Reason your Amazon Kendra Experience could not properly process.
 * `id` - Unique identifiers of the Experience and index separated by a slash (`/`).
 * `name` - Name of the Experience.
-* `roleArn` - Shows the ARN of a role with permission to access `query` API, `querySuggestions` API, `submitFeedback` API, and AWS SSO that stores your user and group information.
-* `status` - Current processing status of your Amazon Kendra Experience. When the status is `active`, your Amazon Kendra Experience is ready to use. When the status is `failed`, the `errorMessage` field contains the reason that this failed.
+* `roleArn` - Shows the ARN of a role with permission to access `Query` API, `QuerySuggestions` API, `SubmitFeedback` API, and AWS SSO that stores your user and group information.
+* `status` - Current processing status of your Amazon Kendra Experience. When the status is `ACTIVE`, your Amazon Kendra Experience is ready to use. When the status is `FAILED`, the `error_message` field contains the reason that this failed.
 * `updatedAt` - Date and time that the Experience was last updated.
 
 The `configuration` block supports the following attributes:
@@ -78,4 +78,4 @@ The `endpoints` block supports the following attributes:
 * `endpoint` - Endpoint of your Amazon Kendra Experience.
 * `endpointType` - Type of endpoint for your Amazon Kendra Experience.
 
-<!-- cache-key: cdktf-0.18.0 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->
+<!-- cache-key: cdktf-0.19.0 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->

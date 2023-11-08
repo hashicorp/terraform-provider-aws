@@ -285,7 +285,7 @@ The `rule` configuration block supports the following arguments:
 * `prefix` - (Optional, Conflicts with `filter`, **Deprecated**) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
 * `priority` - (Optional) Priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
 * `sourceSelectionCriteria` - (Optional) Specifies special object selection criteria. [See below](#source_selection_criteria).
-* `status` - (Required) Status of the rule. Either `"enabled"` or `"disabled"`. The rule is ignored if status is not "Enabled".
+* `status` - (Required) Status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
 
 ### delete_marker_replication
 
@@ -305,16 +305,16 @@ class MyConvertedCode extends TerraformStack {
 
 The `deleteMarkerReplication` configuration block supports the following arguments:
 
-* `status` - (Required) Whether delete markers should be replicated. Either `"enabled"` or `"disabled"`.
+* `status` - (Required) Whether delete markers should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 ### destination
 
 The `destination` configuration block supports the following arguments:
 
 * `accessControlTranslation` - (Optional) Configuration block that specifies the overrides to use for object owners on replication. [See below](#access_control_translation). Specify this only in a cross-account scenario (where source and destination bucket owners are not the same), and you want to change replica ownership to the AWS account that owns the destination bucket. If this is not specified in the replication configuration, the replicas are owned by same AWS account that owns the source object. Must be used in conjunction with `account` owner override configuration.
-* `account` - (Optional) Account ID to specify the replica ownership. Must be used in conjunction with `accessControlTranslation` override configuration.
+* `account` - (Optional) Account ID to specify the replica ownership. Must be used in conjunction with `access_control_translation` override configuration.
 * `bucket` - (Required) ARN of the bucket where you want Amazon S3 to store the results.
-* `encryptionConfiguration` - (Optional) Configuration block that provides information about encryption. [See below](#encryption_configuration). If `sourceSelectionCriteria` is specified, you must specify this element.
+* `encryptionConfiguration` - (Optional) Configuration block that provides information about encryption. [See below](#encryption_configuration). If `source_selection_criteria` is specified, you must specify this element.
 * `metrics` - (Optional) Configuration block that specifies replication metrics-related settings enabling replication metrics and events. [See below](#metrics).
 * `replicationTime` - (Optional) Configuration block that specifies S3 Replication Time Control (S3 RTC), including whether S3 RTC is enabled and the time when all objects and operations on objects must be replicated. [See below](#replication_time). Replication Time Control must be used in conjunction with `metrics`.
 * `storageClass` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
@@ -335,7 +335,7 @@ class MyConvertedCode extends TerraformStack {
 
 The `accessControlTranslation` configuration block supports the following arguments:
 
-* `owner` - (Required) Specifies the replica ownership. For default and valid values, see [PUT bucket replication](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html) in the Amazon S3 API Reference. Valid values: `destination`.
+* `owner` - (Required) Specifies the replica ownership. For default and valid values, see [PUT bucket replication](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html) in the Amazon S3 API Reference. Valid values: `Destination`.
 
 ### encryption_configuration
 
@@ -371,8 +371,8 @@ class MyConvertedCode extends TerraformStack {
 
 The `metrics` configuration block supports the following arguments:
 
-* `eventThreshold` - (Optional) Configuration block that specifies the time threshold for emitting the `s3:replication:operationMissedThreshold` event. [See below](#event_threshold).
-* `status` - (Required) Status of the Destination Metrics. Either `"enabled"` or `"disabled"`.
+* `eventThreshold` - (Optional) Configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event. [See below](#event_threshold).
+* `status` - (Required) Status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
 
 ### event_threshold
 
@@ -396,7 +396,7 @@ class MyConvertedCode extends TerraformStack {
 
 The `replicationTime` configuration block supports the following arguments:
 
-* `status` - (Required) Status of the Replication Time Control. Either `"enabled"` or `"disabled"`.
+* `status` - (Required) Status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`.
 * `time` - (Required) Configuration block specifying the time by which replication should be complete for all objects and operations on objects. [See below](#time).
 
 ### time
@@ -423,7 +423,7 @@ class MyConvertedCode extends TerraformStack {
 
 The `existingObjectReplication` configuration block supports the following arguments:
 
-* `status` - (Required) Whether the existing objects should be replicated. Either `"enabled"` or `"disabled"`.
+* `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 ### filter
 
@@ -466,21 +466,21 @@ class MyConvertedCode extends TerraformStack {
 
 The `sourceSelectionCriteria` configuration block supports the following arguments:
 
-* `replicaModifications` - (Optional) Configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `enabled` to replicate modifications on replicas.
+* `replicaModifications` - (Optional) Configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
 
-* `sseKmsEncryptedObjects` - (Optional) Configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replicaKmsKeyId` in `destination` `encryptionConfiguration` must be specified as well.
+* `sseKmsEncryptedObjects` - (Optional) Configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replica_kms_key_id` in `destination` `encryption_configuration` must be specified as well.
 
 ### replica_modifications
 
 The `replicaModifications` configuration block supports the following arguments:
 
-* `status` - (Required) Whether the existing objects should be replicated. Either `"enabled"` or `"disabled"`.
+* `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 ### sse_kms_encrypted_objects
 
 The `sseKmsEncryptedObjects` configuration block supports the following arguments:
 
-* `status` - (Required) Whether the existing objects should be replicated. Either `"enabled"` or `"disabled"`.
+* `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 ## Attribute Reference
 
@@ -510,4 +510,4 @@ Using `terraform import`, import S3 bucket replication configuration using the `
 % terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fb3dd63caebf8f9a5354d73fe9c5e62bdefe563725f98aa597f6c1c77451e28c -->
+<!-- cache-key: cdktf-0.19.0 input-fb3dd63caebf8f9a5354d73fe9c5e62bdefe563725f98aa597f6c1c77451e28c -->

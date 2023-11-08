@@ -72,14 +72,14 @@ The `rule` configuration block supports the following arguments:
 
 The `applyServerSideEncryptionByDefault` configuration block supports the following arguments:
 
-* `sseAlgorithm` - (Required) Server-side encryption algorithm to use. Valid values are `aes256`, `aws:kms`, and `aws:kms:dsse`
-* `kmsMasterKeyId` - (Optional) AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sseAlgorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sseAlgorithm` is `aws:kms`.
+* `sseAlgorithm` - (Required) Server-side encryption algorithm to use. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse`
+* `kmsMasterKeyId` - (Optional) AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -127,4 +127,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->
+<!-- cache-key: cdktf-0.19.0 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->

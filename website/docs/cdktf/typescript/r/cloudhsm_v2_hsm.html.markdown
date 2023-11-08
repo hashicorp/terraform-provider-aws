@@ -48,8 +48,8 @@ This resource supports the following arguments:
 ~> **NOTE:** Either `subnetId` or `availabilityZone` must be specified.
 
 * `clusterId` - (Required) The ID of Cloud HSM v2 cluster to which HSM will be added.
-* `subnetId` - (Optional) The ID of subnet in which HSM module will be located. Conflicts with `availabilityZone`.
-* `availabilityZone` - (Optional) The IDs of AZ in which HSM module will be located. Conflicts with `subnetId`.
+* `subnetId` - (Optional) The ID of subnet in which HSM module will be located. Conflicts with `availability_zone`.
+* `availabilityZone` - (Optional) The IDs of AZ in which HSM module will be located. Conflicts with `subnet_id`.
 * `ipAddress` - (Optional) The IP address of HSM module. Must be within the CIDR of selected subnet.
 
 ## Attribute Reference
@@ -82,4 +82,4 @@ Using `terraform import`, import HSM modules using their HSM ID. For example:
 % terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3969951d1910a8cfdfc7ba1e038e8b5797479bc0a89a46b5174ec4142d750a5c -->
+<!-- cache-key: cdktf-0.19.0 input-3969951d1910a8cfdfc7ba1e038e8b5797479bc0a89a46b5174ec4142d750a5c -->

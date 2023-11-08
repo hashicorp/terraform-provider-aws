@@ -40,15 +40,15 @@ class MyConvertedCode extends TerraformStack {
 * `deprecated` - (Optional, Defaults to false) Whether the thing type is deprecated. If true, no new things could be associated with this type.
 * `properties` - (Optional), Configuration block that can contain the following properties of the thing type:
     * `description` - (Optional, Forces New Resource) The description of the thing type.
-    * `searchableAttributes` - (Optional, Forces New Resource) A list of searchable thing attribute names.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+    * `searchable_attributes` - (Optional, Forces New Resource) A list of searchable thing attribute names.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the created AWS IoT Thing Type.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -72,4 +72,4 @@ Using `terraform import`, import IOT Thing Types using the name. For example:
 % terraform import aws_iot_thing_type.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f6bb5e58ad214ec278c62df3ca0c39674a3e3f822552368c4b48cf6dedb96258 -->
+<!-- cache-key: cdktf-0.19.0 input-f6bb5e58ad214ec278c62df3ca0c39674a3e3f822552368c4b48cf6dedb96258 -->

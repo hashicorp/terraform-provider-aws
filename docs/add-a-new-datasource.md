@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Data Source
 
 New data sources are required when AWS adds a new service, or adds new features within an existing service which would require a new data source to allow practitioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a data source, but some are more useful than others.
@@ -36,18 +37,44 @@ These will map the AWS API response to the data source schema. You will also nee
 
 Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make gen` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
-```
-package something
+=== "Terraform Plugin Framework (Preferred)"
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    ```go
+    package something
 
-// @SDKDataSource("aws_something_example", name="Example")
-func DataSourceExample() *schema.Resource {
-	return &schema.Resource{
-	    // some configuration
-	}
-}
-```
+    import (
+        "github.com/hashicorp/terraform-plugin-framework/datasource"
+        "github.com/hashicorp/terraform-provider-aws/internal/framework"
+    )
+
+    // @FrameworkDataSource(name="Example")
+    func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
+    	return &dataSourceExample{}, nil
+    }
+
+    type dataSourceExample struct {
+	    framework.DataSourceWithConfigure
+    }
+
+    func (r *dataSourceExample) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+    	response.TypeName = "aws_something_example"
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    package something
+
+    import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+    // @SDKDataSource("aws_something_example", name="Example")
+    func DataSourceExample() *schema.Resource {
+    	return &schema.Resource{
+    	    // some configuration
+    	}
+    }
+    ```
 
 ### Write Passing Acceptance Tests
 

@@ -22,6 +22,7 @@ const (
 	ClusterStatusMigrating                  = "migrating"
 	ClusterStatusModifying                  = "modifying"
 	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusPromoting                  = "promoting"
 	ClusterStatusRebooting                  = "rebooting"
 	ClusterStatusRenaming                   = "renaming"
 	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"

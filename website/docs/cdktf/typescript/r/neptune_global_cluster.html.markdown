@@ -139,11 +139,11 @@ This resource supports the following arguments:
 
 * `globalClusterIdentifier` - (Required, Forces new resources) The global cluster identifier.
 * `deletionProtection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Current Valid values: `neptune`. Conflicts with `sourceDbClusterIdentifier`.
+* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Current Valid values: `neptune`. Conflicts with `source_db_cluster_identifier`.
 * `engineVersion` - (Optional) Engine version of the global database. Upgrading the engine version will result in all cluster members being immediately updated and will.
     * **NOTE:** Upgrading major versions is not supported.
 * `sourceDbClusterIdentifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
-* `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `sourceDbClusterIdentifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
+* `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
 ### Timeouts
 
@@ -159,8 +159,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Global Cluster Amazon Resource Name (ARN)
 * `globalClusterMembers` - Set of objects containing Global Cluster members.
-    * `dbClusterArn` - Amazon Resource Name (ARN) of member DB Cluster.
-    * `isWriter` - Whether the member is the primary DB Cluster.
+    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
+    * `is_writer` - Whether the member is the primary DB Cluster.
 * `globalClusterResourceId` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
 * `id` - Neptune Global Cluster.
 
@@ -214,4 +214,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8950ed9539f8cfa73cf920a0d999502a62c1a0cc78e2fc0e44cf362c351b01bc -->
+<!-- cache-key: cdktf-0.19.0 input-8950ed9539f8cfa73cf920a0d999502a62c1a0cc78e2fc0e44cf362c351b01bc -->

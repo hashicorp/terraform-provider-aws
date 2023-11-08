@@ -238,7 +238,7 @@ func ownerIsAWSFilter() types.PatchOrchestratorFilter { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This function is called from a sweeper.
+func ownerIsSelfFilter() types.PatchOrchestratorFilter {
 	return types.PatchOrchestratorFilter{
 		Key:    aws.String("OWNER"),
 		Values: []string{"Self"},

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package elasticache
 
 import (
@@ -18,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 // These timeouts are lower to fail faster during sweepers
@@ -26,7 +24,7 @@ const (
 	sweeperGlobalReplicationGroupDefaultUpdatedTimeout      = 10 * time.Minute
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
 		Name: "aws_elasticache_cluster",
 		F:    sweepClusters,
@@ -103,7 +101,7 @@ func sweepClusters(region string) error {
 		}
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Cluster sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -157,7 +155,7 @@ func sweepGlobalReplicationGroups(region string) error {
 
 	grgErrs := grgGroup.Wait()
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Global Replication Group sweep for %q: %s", region, err)
 		return grgErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -202,7 +200,7 @@ func sweepParameterGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ElastiCache Parameter Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -255,7 +253,7 @@ func sweepReplicationGroups(region string) error {
 
 	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping ElastiCache Replication Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -296,7 +294,7 @@ func sweepSubnetGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ElastiCache Subnet Group sweep for %s: %s", region, err)
 			return nil
 		}

@@ -48,14 +48,14 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) Name of the control.
-* `controlMappingSources` - (Required) Data mapping sources. See [`controlMappingSources`](#control_mapping_sources) below.
+* `controlMappingSources` - (Required) Data mapping sources. See [`control_mapping_sources`](#control_mapping_sources) below.
 
 The following arguments are optional:
 
 * `actionPlanInstructions` - (Optional) Recommended actions to carry out if the control isn't fulfilled.
 * `actionPlanTitle` - (Optional) Title of the action plan for remediating the control.
 * `description` - (Optional) Description of the control.
-* `tags` - (Optional) A map of tags to assign to the control. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the control. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `testingInformation` - (Optional) Steps to follow to determine if the control is satisfied.
 
 ### control_mapping_sources
@@ -63,21 +63,21 @@ The following arguments are optional:
 The following arguments are required:
 
 * `sourceName` - (Required) Name of the source.
-* `sourceSetUpOption` - (Required) The setup option for the data source. This option reflects if the evidence collection is automated or manual. Valid values are `systemControlsMapping` (automated) and `proceduralControlsMapping` (manual).
-* `sourceType` - (Required) Type of data source for evidence collection. If `sourceSetUpOption` is manual, the only valid value is `manual`. If `sourceSetUpOption` is automated, valid values are `awsCloudtrail`, `awsConfig`, `awsSecurityHub`, or `awsApiCall`.
+* `sourceSetUpOption` - (Required) The setup option for the data source. This option reflects if the evidence collection is automated or manual. Valid values are `System_Controls_Mapping` (automated) and `Procedural_Controls_Mapping` (manual).
+* `sourceType` - (Required) Type of data source for evidence collection. If `source_set_up_option` is manual, the only valid value is `MANUAL`. If `source_set_up_option` is automated, valid values are `AWS_Cloudtrail`, `AWS_Config`, `AWS_Security_Hub`, or `AWS_API_Call`.
 
 The following arguments are optional:
 
 * `sourceDescription` - (Optional) Description of the source.
-* `sourceFrequency` - (Optional) Frequency of evidence collection. Valid values are `daily`, `weekly`, or `monthly`.
-* `sourceKeyword` - (Optional) The keyword to search for in CloudTrail logs, Config rules, Security Hub checks, and Amazon Web Services API names. See [`sourceKeyword`](#source_keyword) below.
+* `sourceFrequency` - (Optional) Frequency of evidence collection. Valid values are `DAILY`, `WEEKLY`, or `MONTHLY`.
+* `sourceKeyword` - (Optional) The keyword to search for in CloudTrail logs, Config rules, Security Hub checks, and Amazon Web Services API names. See [`source_keyword`](#source_keyword) below.
 * `troubleshootingText` - (Optional) Instructions for troubleshooting the control.
 
 ### source_keyword
 
 The following arguments are required:
 
-* `keywordInputType` - (Required) Input method for the keyword. Valid values are `selectFromList`.
+* `keywordInputType` - (Required) Input method for the keyword. Valid values are `SELECT_FROM_LIST`.
 * `keywordValue` - (Required) The value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
 
 ## Attribute Reference
@@ -111,4 +111,4 @@ Using `terraform import`, import an Audit Manager Control using the `id`. For ex
 % terraform import aws_auditmanager_control.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b868688bbd20f6d5af9ab3798d86ae2370658daf4faa22e5cee0ffe9436e3cc0 -->
+<!-- cache-key: cdktf-0.19.0 input-b868688bbd20f6d5af9ab3798d86ae2370658daf4faa22e5cee0ffe9436e3cc0 -->

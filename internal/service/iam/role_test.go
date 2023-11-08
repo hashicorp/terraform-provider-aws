@@ -382,7 +382,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_badJSON(rName),
-				ExpectError: regexache.MustCompile(`.*contains an invalid JSON:.*`),
+				ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
 			},
 		},
 	})
@@ -545,6 +545,27 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			// Test addition
 			{
 				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test drift detection
+			{
+				PreConfig: func() {
+					// delete the boundary manually
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+					input := &iam.DeleteRolePermissionsBoundaryInput{
+						RoleName: role.RoleName,
+					}
+					_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+					if err != nil {
+						t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
+					}
+				},
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				// check the boundary was restored
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),

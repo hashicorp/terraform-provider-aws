@@ -44,8 +44,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `apiId` - (Required) API identifier.
-* `domainName` - (Required) Domain name. Use the [`awsApigatewayv2DomainName`](/docs/providers/aws/r/apigatewayv2_domain_name.html) resource to configure a domain name.
-* `stage` - (Required) API stage. Use the [`awsApigatewayv2Stage`](/docs/providers/aws/r/apigatewayv2_stage.html) resource to configure an API stage.
+* `domainName` - (Required) Domain name. Use the [`aws_apigatewayv2_domain_name`](/docs/providers/aws/r/apigatewayv2_domain_name.html) resource to configure a domain name.
+* `stage` - (Required) API stage. Use the [`aws_apigatewayv2_stage`](/docs/providers/aws/r/apigatewayv2_stage.html) resource to configure an API stage.
 * `apiMappingKey` - (Optional) The API mapping key. Refer to [REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/rest-api-mappings.html), [HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-mappings.html) or [WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-mappings.html).
 
 ## Attribute Reference
@@ -76,4 +76,4 @@ Using `terraform import`, import `awsApigatewayv2ApiMapping` using the API mappi
 % terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-580fc04639f7b69e714911cbb27a6fa6354fc412415a99400266b16e65672884 -->
+<!-- cache-key: cdktf-0.19.0 input-580fc04639f7b69e714911cbb27a6fa6354fc412415a99400266b16e65672884 -->

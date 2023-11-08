@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `fixed_price` - Fixed price charged for this reserved DB instance.
 * `offering_id` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.18.0 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->
+<!-- cache-key: cdktf-0.19.0 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->

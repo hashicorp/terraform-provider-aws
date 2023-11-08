@@ -48,6 +48,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceDetectorFeature,
+			TypeName: "aws_guardduty_detector_feature",
+			Name:     "Detector Feature",
+		},
+		{
 			Factory:  ResourceFilter,
 			TypeName: "aws_guardduty_filter",
 			Name:     "Filter",
@@ -78,6 +83,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceOrganizationConfiguration,
 			TypeName: "aws_guardduty_organization_configuration",
+			Name:     "Organization Configuration",
+		},
+		{
+			Factory:  ResourceOrganizationConfigurationFeature,
+			TypeName: "aws_guardduty_organization_configuration_feature",
+			Name:     "Organization Configuration Feature",
 		},
 		{
 			Factory:  ResourcePublishingDestination,
