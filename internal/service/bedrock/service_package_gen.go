@@ -17,6 +17,15 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceCustomModel,
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "model_arn",
+			},
+		},
+		{
+			Factory: newDataSourceCustomModels,
+		},
+		{
 			Factory: newDataSourceFoundationModel,
 			Name:    "Foundation Model",
 		},
@@ -32,6 +41,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceModelInvocationLoggingConfiguration,
 			Name:    "Model Invocation Logging Configuration",
+		},
+		{
+			Factory: newResourceCustomModel,
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "model_arn",
+			},
 		},
 	}
 }
