@@ -67,7 +67,6 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
-	description := sdkacctest.RandString(100)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -79,7 +78,7 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
+				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
