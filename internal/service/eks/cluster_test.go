@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	clusterVersionUpgradeInitial = "1.21"
-	clusterVersionUpgradeUpdated = "1.22"
+	clusterVersionUpgradeInitial = "1.27"
+	clusterVersionUpgradeUpdated = "1.28"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
