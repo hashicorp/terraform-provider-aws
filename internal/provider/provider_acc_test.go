@@ -154,6 +154,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 	})
 }
 
+// TODO: revert this test, it's being used as a simple placeholder
 func TestAccProvider_fipsEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -919,6 +920,7 @@ provider "aws" {
   endpoints {
     s3 = %[1]q
   }
+  https_proxy = ""
 }
 
 resource "aws_s3_bucket" "test" {

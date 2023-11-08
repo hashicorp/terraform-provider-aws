@@ -95,8 +95,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"http_proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
-					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
+				Description: "URL of a proxy to use for HTTP requests when accessing the AWS API. " +
+					"Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.",
+			},
+			"https_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "URL of a proxy to use for HTTPS requests when accessing the AWS API. " +
+					"Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.",
 			},
 			"ignore_tags": {
 				Type:        schema.TypeList,
@@ -132,6 +138,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "The maximum number of times an AWS API request is\n" +
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
+			},
+			"no_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Comma-separated list of hosts that should not use HTTP or HTTPS proxies. " +
+					"Can also be set using the `NO_PROXY` or `no_proxy` environment variables.",
 			},
 			"profile": {
 				Type:     schema.TypeString,
@@ -463,7 +475,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
-		HTTPProxy:                      d.Get("http_proxy").(string),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
@@ -534,6 +545,21 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOkExists("http_proxy"); ok {
+		if s, sok := v.(string); sok {
+			config.HTTPProxy = aws.String(s)
+		}
+	}
+	if v, ok := d.GetOkExists("https_proxy"); ok {
+		if s, sok := v.(string); sok {
+			config.HTTPSProxy = aws.String(s)
+		}
+	}
+
+	if v, ok := d.Get("no_proxy").(string); ok && v != "" {
+		config.NoProxy = v
 	}
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

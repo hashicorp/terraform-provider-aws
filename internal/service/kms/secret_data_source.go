@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const SecretRemovedMessage = "This data source has been replaced with the `aws_kms_secrets` data source. Upgrade information is available at: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret"
+const SecretRemovedMessage = "This data source has been replaced with the `aws_kms_secrets` data source. Upgrade information is available at: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/version-2-upgrade.html#data-source-aws_kms_secret"
 
 // @SDKDataSource("aws_kms_secret")
 func DataSourceSecret() *schema.Resource {
