@@ -527,7 +527,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.17"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.27"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, "value"),
@@ -539,7 +539,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.18"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.28"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
