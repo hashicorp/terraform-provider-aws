@@ -21,7 +21,7 @@ import (
 func ResourceLayout() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayoutCreate,
-		ReadWithoutTimeout:   resourceDomainRead,
+		ReadWithoutTimeout:   resourceLayoutRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -171,7 +171,6 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	domainId := d.Get("domain_id").(string)
 	output, err := FindLayoutByDomainAndId(ctx, conn, d.Id(), domainId)
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Case Layout %s not found, removing from state", d.Id())
 		d.SetId("")
@@ -184,37 +183,85 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("name", output.Name)
 	d.Set("layout_arn", output.LayoutArn)
-	d.Set("content", flattenLayoutContent(output.Content.((*types.LayoutContentMemberBasic))))
+	d.Set("content", flattenLayoutContent(output.Content))
 
 	return diags
 }
 
-func flattenLayoutContent(apiObject *types.LayoutContentMemberBasic) map[string]interface{} {
+func flattenLayoutContent(apiObject types.LayoutContent) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	layout := apiObject.(*types.LayoutContentMemberBasic).Value
 
-	if v := apiObject.Value.MoreInfo; v != nil {
+	tfMap := map[string]interface{}{}
+	if v := layout.MoreInfo; v != nil {
 		tfMap["more_info"] = flattenLayoutContentSections(v.Sections)
 	}
 
-	if v := apiObject.Value.TopPanel; v != nil {
+	if v := layout.TopPanel; v != nil {
 		tfMap["top_panel"] = flattenLayoutContentSections(v.Sections)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenLayoutContentSections(apiObject []types.Section) map[string]interface{} {
-	if apiObject == nil && len(apiObject) > 0 {
+func flattenLayoutContentSections(apiObject []types.Section) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	var tfList []interface{}
+	for _, section := range apiObject {
+		if section == nil {
+			continue
+		}
 
-	return tfMap
+		sectionMember := section.(*types.SectionMemberFieldGroup)
+		sections := map[string]interface{}{
+			"sections": flattenSectionFieldGroup(sectionMember),
+		}
+
+		tfList = append(tfList, sections)
+	}
+
+	return tfList
+}
+
+func flattenSectionFieldGroup(apiObject *types.SectionMemberFieldGroup) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	fieldGroup := map[string]interface{}{
+		"name":        aws.ToString(apiObject.Value.Name),
+		"field_group": flattenFieldGroupFields(apiObject.Value.Fields),
+	}
+
+	return []interface{}{fieldGroup}
+}
+
+func flattenFieldGroupFields(apiObject []types.FieldItem) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, fieldItem := range apiObject {
+
+		tfMap := map[string]interface{}{
+			"id": aws.ToString(fieldItem.Id),
+		}
+
+		fields := map[string]interface{}{
+			"fields": []interface{}{tfMap},
+		}
+
+		tfList = append(tfList, fields)
+	}
+
+	return tfList
 }
 
 func expandLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
@@ -234,16 +281,19 @@ func expandLayoutContent(tfMap []interface{}) *types.LayoutContentMemberBasic {
 	return apiObject
 }
 
-func expandLayoutContentSections(tfList []interface{}) *types.LayoutSections {
-	if len(tfList) == 0 || tfList[0] == nil {
+func expandLayoutContentSections(sections []interface{}) *types.LayoutSections {
+	if len(sections) == 0 || sections[0] == nil {
 		return nil
 	}
 
 	apiObject := &types.LayoutSections{}
-	apiArray := make([]types.Section, 0, len(tfList))
+	apiArray := make([]types.Section, 0, len(sections))
 
-	for i := 0; i < len(tfList); i++ {
-		apiArray = append(apiArray, expandSectionFieldGroup(tfList[i].(map[string]interface{})["sections"].([]interface{})))
+	for _, section := range sections {
+		if section == nil {
+			continue
+		}
+		apiArray = append(apiArray, expandSectionFieldGroup(section.(map[string]interface{})["sections"].([]interface{})))
 	}
 
 	apiObject.Sections = apiArray
@@ -287,7 +337,7 @@ func expandFieldGroupFields(tfList []interface{}) []types.FieldItem {
 			return nil
 		}
 
-		if v, ok := field[0].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := field[i].(map[string]interface{}); ok && len(v) > 0 {
 			apiObject := types.FieldItem{
 				Id: aws.String(v["id"].(string)),
 			}
