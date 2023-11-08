@@ -155,7 +155,11 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		Tags: getTagsIn(ctx),
 	}
 
-	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
+	response.Diagnostics.Append(flex.Expand(ctx, &data, &input)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	if !data.SchedulingPolicyARN.IsNull() {
 		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
@@ -165,7 +169,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobQueue, data.JobQueueName.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -175,11 +179,11 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	state.ID = flex.StringToFramework(ctx, output.JobQueueArn)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	out, err := waitJobQueueCreated(ctx, conn, data.Name.ValueString(), createTimeout)
+	out, err := waitJobQueueCreated(ctx, conn, data.JobQueueName.ValueString(), createTimeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForCreation, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForCreation, ResNameJobQueue, data.JobQueueName.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -203,7 +207,7 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, data.Name.ValueString(), err),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, data.JobQueueName.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -232,7 +236,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 
 	var update bool
 	input := &batch.UpdateJobQueueInput{
-		JobQueue: flex.StringFromFramework(ctx, plan.Name),
+		JobQueue: flex.StringFromFramework(ctx, plan.JobQueueName),
 	}
 
 	if !plan.ComputeEnvironments.Equal(state.ComputeEnvironments) {
@@ -278,7 +282,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, plan.Name.ValueString(), nil),
+				create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, plan.JobQueueName.ValueString(), nil),
 				err.Error(),
 			)
 			return
@@ -289,7 +293,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForCreation, ResNameJobQueue, plan.Name.ValueString(), nil),
+				create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForCreation, ResNameJobQueue, plan.JobQueueName.ValueString(), nil),
 				err.Error(),
 			)
 			return
@@ -316,7 +320,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobQueue, data.JobQueueName.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -328,7 +332,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobQueue, data.JobQueueName.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -338,7 +342,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForDeletion, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionWaitingForDeletion, ResNameJobQueue, data.JobQueueName.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -369,7 +373,7 @@ type resourceJobQueueData struct {
 	ComputeEnvironments     types.List                                               `tfsdk:"compute_environments"`
 	ComputeEnvironmentOrder fwtypes.ListNestedObjectValueOf[computeEnvironmentOrder] `tfsdk:"compute_environment_order"`
 	ID                      types.String                                             `tfsdk:"id"`
-	Name                    types.String                                             `tfsdk:"name"`
+	JobQueueName            types.String                                             `tfsdk:"name"`
 	Priority                types.Int64                                              `tfsdk:"priority"`
 	SchedulingPolicyARN     fwtypes.ARN                                              `tfsdk:"scheduling_policy_arn"`
 	State                   types.String                                             `tfsdk:"state"`
@@ -387,7 +391,7 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 	var diags diag.Diagnostics
 
 	r.ARN = flex.StringToFrameworkLegacy(ctx, out.JobQueueArn)
-	r.Name = flex.StringToFramework(ctx, out.JobQueueName)
+	r.JobQueueName = flex.StringToFramework(ctx, out.JobQueueName)
 	r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
 	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
