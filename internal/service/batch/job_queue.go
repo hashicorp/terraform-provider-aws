@@ -119,6 +119,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 			Delete: true,
 		}),
 		"compute_environment_order": schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[computeEnvironmentOrder](ctx),
 			NestedObject: schema.NestedBlockObject{
 				Attributes: map[string]schema.Attribute{
 					"order": schema.Int64Attribute{
