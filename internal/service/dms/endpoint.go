@@ -1645,7 +1645,6 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrati
 				return stoppedTasks, err
 			}
 			stoppedTasks = append(stoppedTasks, task)
-
 		default:
 			continue
 		}
