@@ -471,7 +471,7 @@ func FindReplicationTasksByEndpointARN(ctx context.Context, conn *dms.DatabaseMi
 		Filters: []*dms.Filter{
 			{
 				Name:   aws.String("endpoint-arn"),
-				Values: []*string{aws.String(arn)}, // Must use d.Id() to work with import.
+				Values: []*string{aws.String(arn)},
 			},
 		},
 	}
