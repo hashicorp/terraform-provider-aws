@@ -24,15 +24,10 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 			{
 				Config: testAccCustomModelConfig_basic(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-				// testAccCheckAddonExists(ctx, customModelResourceName, &model),
 				  resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
           resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
           resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
           resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
-        // acctest.MatchResourceAttrRegionalARN(customModelResourceName, "arn", "bedrock", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
-				// resource.TestCheckResourceAttrSet(customModelResourceName, "addon_version"),
-				// resource.TestCheckNoResourceAttr(customModelResourceName, "preserve"),
-				  
 				),
 			},
 			{
