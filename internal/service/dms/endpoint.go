@@ -1681,7 +1681,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrat
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
-					Values: []*string{aws.String(arn)}, // Must use d.Id() to work with import.
+					Values: []*string{aws.String(arn)},
 				},
 			},
 		})
@@ -1690,7 +1690,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrat
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
 		}
 
-		if err := startReplicationTask(ctx, aws.StringValue(task.ReplicationTaskIdentifier), conn); err != nil {
+		if err := startReplicationTask(ctx, conn, aws.StringValue(task.ReplicationTaskIdentifier)); err != nil {
 			return fmt.Errorf("starting replication task: %w", err)
 		}
 	}

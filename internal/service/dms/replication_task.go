@@ -164,7 +164,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.Get("start_replication_task").(bool) {
-		if err := startReplicationTask(ctx, d.Id(), conn); err != nil {
+		if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -262,7 +262,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			err := startReplicationTask(ctx, d.Id(), conn)
+			err := startReplicationTask(ctx, conn, d.Id())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -273,7 +273,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		status := d.Get("status").(string)
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
-				if err := startReplicationTask(ctx, d.Id(), conn); err != nil {
+				if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
@@ -352,7 +352,7 @@ func replicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
 	return &cleanedSettingsString, nil
 }
 
-func startReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
+func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
 	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(ctx, conn, id)
