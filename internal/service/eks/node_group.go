@@ -466,7 +466,33 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(err)
 	}
 
-	// Do any version update first.
+	// update_config should be handled first since that might affect the version update strategy.
+	if d.HasChanges("update_config") {
+		if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input := &eks.UpdateNodegroupConfigInput{
+				ClientRequestToken: aws.String(id.UniqueId()),
+				ClusterName:        aws.String(clusterName),
+				NodegroupName:      aws.String(nodeGroupName),
+				UpdateConfig:       expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{})),
+			}
+
+			output, err := conn.UpdateNodegroupConfigWithContext(ctx, input)
+
+			if err != nil {
+				return diag.Errorf("updating EKS Node Group (%s) config (update_config only): %s", d.Id(), err)
+			}
+
+			updateID := aws.StringValue(output.Update.Id)
+
+			_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return diag.Errorf("waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
+			}
+		}
+	}
+
+	// Do any version update next.
 	if d.HasChanges("launch_template", "release_version", "version") {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
@@ -518,7 +544,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "scaling_config", "taint") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -533,12 +559,6 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if d.HasChange("scaling_config") {
 			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ScalingConfig = expandNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
-			}
-		}
-
-		if d.HasChange("update_config") {
-			if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.UpdateConfig = expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
