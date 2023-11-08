@@ -63,7 +63,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lex V2 Models Bot Locale using the `example_id_arg`. For example:
+Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For example:
 
 ```console
 % terraform import aws_lexv2models_bot_locale.example bot_locale-id-12345678
