@@ -39,7 +39,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotVersionConfig_basic(rName, 60, true),
+				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -77,7 +77,7 @@ func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotVersionConfig_basic(rName, 60, true),
+				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotVersion, resourceName),
@@ -136,17 +136,17 @@ func testAccCheckBotVersionExists(ctx context.Context, name string, botversion *
 	}
 }
 
-func testAccBotVersionConfig_basic(rName string, ttl int, dp bool) string {
+func testAccBotVersionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBotBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
-  idle_session_ttl_in_seconds = %[2]d
+  idle_session_ttl_in_seconds = 60
   role_arn                    = aws_iam_role.test_role.arn
 
   data_privacy {
-    child_directed = "%[3]t"
+    child_directed = "true"
   }
 }
 
@@ -158,5 +158,5 @@ resource "aws_lexv2models_bot_version" "test" {
     }
   }
 }
-`, rName, ttl, dp))
+`, rName))
 }

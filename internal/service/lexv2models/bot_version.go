@@ -15,7 +15,6 @@ import (
 
 	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -199,12 +198,11 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	var diags diag.Diagnostics
 
 	// TIP: -- 2. Fetch the state
 	var state resourceBotVersionData
@@ -233,7 +231,7 @@ func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest,
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
-	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
+	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 
 	members, _ := flattenMembers(ctx, out.BotMembers)
 	if resp.Diagnostics.HasError() {
