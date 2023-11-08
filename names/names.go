@@ -20,8 +20,9 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // These "should" be defined by the AWS Go SDK v2, but currently aren't.
