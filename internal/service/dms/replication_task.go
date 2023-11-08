@@ -423,7 +423,10 @@ func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationSer
 			},
 		},
 	}
+	return FindReplicationTask(ctx, conn, input)
+}
 
+func FindReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) (*dms.ReplicationTask, error) {
 	var results []*dms.ReplicationTask
 
 	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
@@ -461,6 +464,51 @@ func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationSer
 	}
 
 	return results[0], nil
+}
+
+func FindReplicationTasksByEndpointARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) ([]*dms.ReplicationTask, error) {
+	input := &dms.DescribeReplicationTasksInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("endpoint-arn"),
+				Values: []*string{aws.String(arn)}, // Must use d.Id() to work with import.
+			},
+		},
+	}
+
+	var results []*dms.ReplicationTask
+
+	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, task := range page.ReplicationTasks {
+			if task == nil {
+				continue
+			}
+
+			switch aws.StringValue(task.Status) {
+			case replicationTaskStatusRunning, replicationTaskStatusStarting:
+				results = append(results, task)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
@@ -549,12 +597,30 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 
 func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
-		Target:     []string{replicationTaskStatusStopped},
-		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    replicationTaskRunningTimeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      60 * time.Second, // Wait 30 secs before starting
+		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
+		Target:                    []string{replicationTaskStatusStopped},
+		Refresh:                   statusReplicationTask(ctx, conn, id),
+		Timeout:                   replicationTaskRunningTimeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     60 * time.Second, // Wait 60 secs before starting
+		ContinuousTargetOccurence: 2,
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
+		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
+		Refresh:                   statusReplicationTask(ctx, conn, id),
+		Timeout:                   replicationTaskRunningTimeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     60 * time.Second, // Wait 60 secs before starting
+		ContinuousTargetOccurence: 2,
 	}
 
 	// Wait, catching any errors
