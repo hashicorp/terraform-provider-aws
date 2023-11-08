@@ -78,6 +78,58 @@ func ResourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"direct_deploy_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"identity_provider_oauth_settings": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 20,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"data_source_name": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.DataSourceName_Values(), false),
+												},
+												"secret_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"kendra_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
 									"model_register_settings": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -251,7 +303,7 @@ func ResourceUserProfile() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
@@ -330,7 +382,7 @@ func ResourceUserProfile() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
