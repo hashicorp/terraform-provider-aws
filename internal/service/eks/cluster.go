@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -864,21 +865,18 @@ func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.Kubernete
 }
 
 func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
-	vEksLogTypes := []interface{}{}
-	for _, eksLogType := range enum.Values[types.LogType]() {
-		vEksLogTypes = append(vEksLogTypes, eksLogType)
-	}
-	vAllLogTypes := schema.NewSet(schema.HashString, vEksLogTypes)
+	allLogTypes := enum.EnumValues[types.LogType]()
+	enabledLogTypes := flex.ExpandStringyValueSet[types.LogType](vEnabledLogTypes)
 
 	return &types.Logging{
 		ClusterLogging: []types.LogSetup{
 			{
 				Enabled: aws.Bool(true),
-				Types:   flex.ExpandStringyValueSet[types.LogType](vEnabledLogTypes),
+				Types:   enabledLogTypes,
 			},
 			{
 				Enabled: aws.Bool(false),
-				Types:   flex.ExpandStringyValueSet[types.LogType](vAllLogTypes.Difference(vEnabledLogTypes)),
+				Types:   tfslices.RemoveAll(allLogTypes, enabledLogTypes...),
 			},
 		},
 	}
