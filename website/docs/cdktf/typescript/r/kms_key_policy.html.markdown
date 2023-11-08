@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `keyId` - (Required) The ID of the KMS Key to attach the policy.
-* `policy` - (Required) A valid policy JSON document. Although this is a key policy, not an IAM policy, an [`awsIamPolicyDocument`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `policy` - (Required) A valid policy JSON document. Although this is a key policy, not an IAM policy, an [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
 ~> **NOTE:** Note: All KMS keys must have a key policy. If a key policy is not specified, or this resource is destroyed, AWS gives the KMS key a [default key policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default) that gives all principals in the owning account unlimited access to all KMS operations for the key. This default key policy effectively delegates all access control to IAM policies and KMS grants.
 
@@ -96,4 +96,4 @@ Using `terraform import`, import KMS Key Policies using the `keyId`. For example
 % terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-93175acbae862906327f4f8a607a99ad40bcba6f894b59f1002cd44902d5932d -->
+<!-- cache-key: cdktf-0.19.0 input-93175acbae862906327f4f8a607a99ad40bcba6f894b59f1002cd44902d5932d -->

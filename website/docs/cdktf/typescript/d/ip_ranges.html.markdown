@@ -56,18 +56,18 @@ class MyConvertedCode extends TerraformStack {
 
 * `regions` - (Optional) Filter IP ranges by regions (or include all regions, if
 omitted). Valid items are `global` (for `cloudfront`) as well as all AWS regions
-(e.g., `euCentral1`)
+(e.g., `eu-central-1`)
 
 * `services` - (Required) Filter IP ranges by services. Valid items are `amazon`
-(for amazon.com), `amazonConnect`, `apiGateway`, `cloud9`, `cloudfront`,
-`codebuild`, `dynamodb`, `ec2`, `ec2InstanceConnect`, `globalaccelerator`,
-`route53`, `route53Healthchecks`, `s3` and `workspacesGateways`. See the
+(for amazon.com), `amazon_connect`, `api_gateway`, `cloud9`, `cloudfront`,
+`codebuild`, `dynamodb`, `ec2`, `ec2_instance_connect`, `globalaccelerator`,
+`route53`, `route53_healthchecks`, `s3` and `workspaces_gateways`. See the
 [`service` attribute][2] documentation for other possible values.
 
 ~> **NOTE:** If the specified combination of regions and services does not yield any
 CIDR blocks, Terraform will fail.
 
-* `url` - (Optional) Custom URL for source JSON file. Syntax must match [AWS IP Address Ranges documentation][1]. Defaults to `https://ipRangesAmazonawsCom/ipRangesJson`.
+* `url` - (Optional) Custom URL for source JSON file. Syntax must match [AWS IP Address Ranges documentation][1]. Defaults to `https://ip-ranges.amazonaws.com/ip-ranges.json`.
 
 ## Attribute Reference
 
@@ -75,11 +75,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `cidrBlocks` - Lexically ordered list of CIDR blocks.
 * `ipv6CidrBlocks` - Lexically ordered list of IPv6 CIDR blocks.
-* `createDate` - Publication time of the IP ranges (e.g., `20160803234605`).
+* `createDate` - Publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
 * `syncToken` - Publication time of the IP ranges, in Unix epoch time format
   (e.g., `1470267965`).
 
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html#aws-ip-syntax
 
-<!-- cache-key: cdktf-0.18.0 input-73d6997abbb59dd921b8bcd692995e1403416e2fa26a744feb3a7bbef5d83b63 -->
+<!-- cache-key: cdktf-0.19.0 input-73d6997abbb59dd921b8bcd692995e1403416e2fa26a744feb3a7bbef5d83b63 -->

@@ -138,23 +138,23 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `administrationRoleArn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `selfManaged` permission model.
-* `autoDeployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `serviceManaged` permission model.
+* `administrationRoleArn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `SELF_MANAGED` permission model.
+* `autoDeployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
     * `enabled` - (Optional) Whether or not auto-deployment is enabled.
-    * `retainStacksOnAccountRemoval` - (Optional) Whether or not to retain stacks when the account is removed.
+    * `retain_stacks_on_account_removal` - (Optional) Whether or not to retain stacks when the account is removed.
 * `name` - (Required) Name of the StackSet. The name must be unique in the region where you create your StackSet. The name can contain only alphanumeric characters (case-sensitive) and hyphens. It must start with an alphabetic character and cannot be longer than 128 characters.
-* `capabilities` - (Optional) A list of capabilities. Valid values: `capabilityIam`, `capabilityNamedIam`, `capabilityAutoExpand`.
+* `capabilities` - (Optional) A list of capabilities. Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_AUTO_EXPAND`.
 * `operationPreferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set update.
 * `description` - (Optional) Description of the StackSet.
-* `executionRoleName` - (Optional) Name of the IAM Role in all target accounts for StackSet operations. Defaults to `awsCloudFormationStackSetExecutionRole` when using the `selfManaged` permission model. This should not be defined when using the `serviceManaged` permission model.
+* `executionRoleName` - (Optional) Name of the IAM Role in all target accounts for StackSet operations. Defaults to `AWSCloudFormationStackSetExecutionRole` when using the `SELF_MANAGED` permission model. This should not be defined when using the `SERVICE_MANAGED` permission model.
 * `managedExecution` - (Optional) Configuration block to allow StackSets to perform non-conflicting operations concurrently and queues conflicting operations.
     * `active` - (Optional) When set to true, StackSets performs non-conflicting operations concurrently and queues conflicting operations. After conflicting operations finish, StackSets starts queued operations in request order. Default is false.
-* `parameters` - (Optional) Key-value map of input parameters for the StackSet template. All template parameters, including those with a `default`, must be configured or ignored with `lifecycle` configuration block `ignoreChanges` argument. All `noEcho` template parameters must be ignored with the `lifecycle` configuration block `ignoreChanges` argument.
-* `permissionModel` - (Optional) Describes how the IAM roles required for your StackSet are created. Valid values: `selfManaged` (default), `serviceManaged`.
-* `callAs` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `self` (default), `delegatedAdmin`.
-* `tags` - (Optional) Key-value map of tags to associate with this StackSet and the Stacks created from it. AWS CloudFormation also propagates these tags to supported resources that are created in the Stacks. A maximum number of 50 tags can be specified. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `templateBody` - (Optional) String containing the CloudFormation template body. Maximum size: 51,200 bytes. Conflicts with `templateUrl`.
-* `templateUrl` - (Optional) String containing the location of a file containing the CloudFormation template body. The URL must point to a template that is located in an Amazon S3 bucket. Maximum location file size: 460,800 bytes. Conflicts with `templateBody`.
+* `parameters` - (Optional) Key-value map of input parameters for the StackSet template. All template parameters, including those with a `Default`, must be configured or ignored with `lifecycle` configuration block `ignore_changes` argument. All `NoEcho` template parameters must be ignored with the `lifecycle` configuration block `ignore_changes` argument.
+* `permissionModel` - (Optional) Describes how the IAM roles required for your StackSet are created. Valid values: `SELF_MANAGED` (default), `SERVICE_MANAGED`.
+* `callAs` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
+* `tags` - (Optional) Key-value map of tags to associate with this StackSet and the Stacks created from it. AWS CloudFormation also propagates these tags to supported resources that are created in the Stacks. A maximum number of 50 tags can be specified. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `templateBody` - (Optional) String containing the CloudFormation template body. Maximum size: 51,200 bytes. Conflicts with `template_url`.
+* `templateUrl` - (Optional) String containing the location of a file containing the CloudFormation template body. The URL must point to a template that is located in an Amazon S3 bucket. Maximum location file size: 460,800 bytes. Conflicts with `template_body`.
 
 ### `operationPreferences` Argument Reference
 
@@ -174,13 +174,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the StackSet.
 * `id` - Name of the StackSet.
 * `stackSetId` - Unique identifier of the StackSet.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `30M`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -224,4 +224,4 @@ Using `terraform import`, import CloudFormation StackSets when acting a delegate
 % terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-419f928fb2ff9a66818eeeb6e7d41583d5b811405ac256cc0869c14a937c9a2d -->
+<!-- cache-key: cdktf-0.19.0 input-419f928fb2ff9a66818eeeb6e7d41583d5b811405ac256cc0869c14a937c9a2d -->

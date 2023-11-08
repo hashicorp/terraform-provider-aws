@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleRuntimes
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleArchitectures
 
-<!-- cache-key: cdktf-0.18.0 input-69ef06c57b86008a1c6e25d93dabac271b612b904a1a89dbe3fd5507d10e6742 -->
+<!-- cache-key: cdktf-0.19.0 input-69ef06c57b86008a1c6e25d93dabac271b612b904a1a89dbe3fd5507d10e6742 -->

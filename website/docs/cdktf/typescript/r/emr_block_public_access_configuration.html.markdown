@@ -134,7 +134,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `permittedPublicSecurityGroupRuleRange` - (Optional) Configuration block for defining permitted public security group rule port ranges. Can be defined multiple times per resource. Only valid if `blockPublicSecurityGroupRules` is set to `true`.
+* `permittedPublicSecurityGroupRuleRange` - (Optional) Configuration block for defining permitted public security group rule port ranges. Can be defined multiple times per resource. Only valid if `block_public_security_group_rules` is set to `true`.
 
 ### `permittedPublicSecurityGroupRuleRange`
 
@@ -169,4 +169,4 @@ Using `terraform import`, import the current EMR Block Public Access Configurati
 % terraform import aws_emr_block_public_access_configuration.example current
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa7683c154001c04829343267ab3b769046fafe4a515b4091bc80943f1f89917 -->
+<!-- cache-key: cdktf-0.19.0 input-aa7683c154001c04829343267ab3b769046fafe4a515b4091bc80943f1f89917 -->

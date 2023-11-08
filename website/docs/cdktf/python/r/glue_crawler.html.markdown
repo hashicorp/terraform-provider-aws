@@ -201,6 +201,7 @@ This argument supports the following arguments:
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
 * `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
+* `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
 * `mongodb_target` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
 * `hudi_target` (Optional) List of nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
 * `iceberg_target` (Optional) List of nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
@@ -319,4 +320,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa6aaa4c28c3da2b4a760961f15f17a04ceb8fb380ac8fce49211f1c27ef79ba -->
+<!-- cache-key: cdktf-0.19.0 input-2f160a94134902ed274026e5b91be6900343aff33a6ff67e7ca8207f81fa2336 -->

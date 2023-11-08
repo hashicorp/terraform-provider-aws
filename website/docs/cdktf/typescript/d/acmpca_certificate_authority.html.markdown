@@ -52,17 +52,17 @@ This data source exports the following attributes in addition to the arguments a
 * `notAfter` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `notBefore` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `revocationConfiguration` - Nested attribute containing revocation configuration.
-    * `revocationConfiguration0CrlConfiguration` - Nested attribute containing configuration of the certificate revocation list (CRL), if any, maintained by the certificate authority.
-        * `revocationConfiguration0CrlConfiguration0CustomCname` - Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point.
-        * `revocationConfiguration0CrlConfiguration0Enabled` - Boolean value that specifies whether certificate revocation lists (CRLs) are enabled.
-        * `revocationConfiguration0CrlConfiguration0ExpirationInDays` - Number of days until a certificate expires.
-        * `revocationConfiguration0CrlConfiguration0S3BucketName` - Name of the S3 bucket that contains the CRL.
-        * `revocationConfiguration0CrlConfiguration0S3ObjectAcl` - Whether the CRL is publicly readable or privately held in the CRL Amazon S3 bucket.
-        * `revocationConfiguration0OcspConfiguration0Enabled` - Boolean value that specifies whether a custom OCSP responder is enabled.
-        * `revocationConfiguration0OcspConfiguration0OcspCustomCname` - A CNAME specifying a customized OCSP domain.
+    * `revocation_configuration.0.crl_configuration` - Nested attribute containing configuration of the certificate revocation list (CRL), if any, maintained by the certificate authority.
+        * `revocation_configuration.0.crl_configuration.0.custom_cname` - Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point.
+        * `revocation_configuration.0.crl_configuration.0.enabled` - Boolean value that specifies whether certificate revocation lists (CRLs) are enabled.
+        * `revocation_configuration.0.crl_configuration.0.expiration_in_days` - Number of days until a certificate expires.
+        * `revocation_configuration.0.crl_configuration.0.s3_bucket_name` - Name of the S3 bucket that contains the CRL.
+        * `revocation_configuration.0.crl_configuration.0.s3_object_acl` - Whether the CRL is publicly readable or privately held in the CRL Amazon S3 bucket.
+        * `revocation_configuration.0.ocsp_configuration.0.enabled` - Boolean value that specifies whether a custom OCSP responder is enabled.
+        * `revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname` - A CNAME specifying a customized OCSP domain.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
 * `status` - Status of the certificate authority.
 * `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
 * `type` - Type of the certificate authority.
 
-<!-- cache-key: cdktf-0.18.0 input-bc455641e95958e404dd0619abf86e9d1dc1b0604b9b489c29ed39db56a62037 -->
+<!-- cache-key: cdktf-0.19.0 input-bc455641e95958e404dd0619abf86e9d1dc1b0604b9b489c29ed39db56a62037 -->

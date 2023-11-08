@@ -114,11 +114,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options
 
-* `protocol` - (Required) The protocol used for the attachment connection. Possible values are `gre` and `noEncap`.
+* `protocol` - (Required) The protocol used for the attachment connection. Possible values are `GRE` and `NO_ENCAP`.
 
 ## Attribute Reference
 
@@ -135,7 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 - `resourceArn` - The attachment resource ARN.
 - `segmentName` - The name of the segment attachment.
 - `state` - The state of the attachment.
-- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -159,4 +159,4 @@ Using `terraform import`, import `awsNetworkmanagerConnectAttachment` using the 
 % terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2fa317624ffa5a6fd592516211f62a2c5fd04acb1f1cab83fc9a598feab08b2d -->
+<!-- cache-key: cdktf-0.19.0 input-2fa317624ffa5a6fd592516211f62a2c5fd04acb1f1cab83fc9a598feab08b2d -->

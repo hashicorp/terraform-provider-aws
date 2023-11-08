@@ -65,7 +65,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `password` - The plain text password, only available when `pgpKey` is not provided.
+* `password` - The plain text password, only available when `pgp_key` is not provided.
 * `keyFingerprint` - The fingerprint of the PGP key used to encrypt the password. Only available if password was handled on Terraform resource creation, not import.
 * `encryptedPassword` - The encrypted password, base64 encoded. Only available if password was handled on Terraform resource creation, not import.
 
@@ -122,4 +122,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-332beff043f3f89a7086471e863d83e0d7a3e4995b3f2b9abe9a879fd8d3778f -->
+<!-- cache-key: cdktf-0.19.0 input-332beff043f3f89a7086471e863d83e0d7a3e4995b3f2b9abe9a879fd8d3778f -->

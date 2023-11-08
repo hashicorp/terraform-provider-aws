@@ -44,7 +44,7 @@ The following arguments are required:
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 * `clientSubnets` - (Required) The list of subnets in the client VPC to connect to.
 * `securityGroups` - (Required) The security groups to attach to the ENIs for the broker nodes.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targetClusterArn` - (Required) The Amazon Resource Name (ARN) of the cluster.
 * `vpcId` - (Required) The VPC ID of the remote client.
 
@@ -53,15 +53,15 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the VPC connection.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import MSK configurations using the configuration ARN.
 % terraform import aws_msk_vpc_connection.example arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->
+<!-- cache-key: cdktf-0.19.0 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->

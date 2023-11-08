@@ -86,8 +86,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
 
 ## Import
 
@@ -111,4 +111,4 @@ Using `terraform import`, import a Lambda Provisioned Concurrency Configuration 
 % terraform import aws_lambda_provisioned_concurrency_config.example my_function,production
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f3c5baf959ae98fc63cc91293e15ccc2810987cf437f55d4ec7eeaf83152ac9 -->
+<!-- cache-key: cdktf-0.19.0 input-6f3c5baf959ae98fc63cc91293e15ccc2810987cf437f55d4ec7eeaf83152ac9 -->

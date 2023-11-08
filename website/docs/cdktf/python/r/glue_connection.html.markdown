@@ -187,4 +187,4 @@ Using `terraform import`, import Glue Connections using the `CATALOG-ID` (AWS ac
 % terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e5f54a151c81766ea8f354e5241734756142da42a3b5bcc9ad07d0060d066e20 -->
+<!-- cache-key: cdktf-0.19.0 input-e5f54a151c81766ea8f354e5241734756142da42a3b5bcc9ad07d0060d066e20 -->

@@ -63,7 +63,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the distribution configuration.
-* `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### distribution
 
@@ -108,7 +108,7 @@ The following arguments are optional:
 ### target_repository
 
 * `repositoryName` - (Required) The name of the container repository where the output container image is stored. This name is prefixed by the repository location.
-* `service` - (Required) The service in which this image is registered. Valid values: `ecr`.
+* `service` - (Required) The service in which this image is registered. Valid values: `ECR`.
 
 ### fast_launch_configuration
 
@@ -141,7 +141,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
 * `dateCreated` - Date the distribution configuration was created.
 * `dateUpdated` - Date the distribution configuration was updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -165,4 +165,4 @@ Using `terraform import`, import `awsImagebuilderDistributionConfigurations` res
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d8db82ff70fd71c294a27408592fa6427acf20679476b6f735995d9df579444 -->
+<!-- cache-key: cdktf-0.19.0 input-6d8db82ff70fd71c294a27408592fa6427acf20679476b6f735995d9df579444 -->

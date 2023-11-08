@@ -45,7 +45,7 @@ This resource supports the following arguments:
 
 * `transitGatewayAttachmentId` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transitGatewayRouteTableId` - (Required) Identifier of EC2 Transit Gateway Route Table.
-* `replaceExistingAssociation` - (Optional) Boolean whether the Gateway Attachment should remove any current Route Table association before associating with the specified Route Table. Default value: `false`. This argument is intended for use with EC2 Transit Gateways shared into the current account, otherwise the `transitGatewayDefaultRouteTableAssociation` argument of the `awsEc2TransitGatewayVpcAttachment` resource should be used.
+* `replaceExistingAssociation` - (Optional) Boolean whether the Gateway Attachment should remove any current Route Table association before associating with the specified Route Table. Default value: `false`. This argument is intended for use with EC2 Transit Gateways shared into the current account, otherwise the `transit_gateway_default_route_table_association` argument of the `aws_ec2_transit_gateway_vpc_attachment` resource should be used.
 
 ## Attribute Reference
 
@@ -77,4 +77,4 @@ Using `terraform import`, import `awsEc2TransitGatewayRouteTableAssociation` usi
 % terraform import aws_ec2_transit_gateway_route_table_association.example tgw-rtb-12345678_tgw-attach-87654321
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3ac16f5f12533178bcc9006668852009e911e3309377a5bca5cfb4099f491912 -->
+<!-- cache-key: cdktf-0.19.0 input-3ac16f5f12533178bcc9006668852009e911e3309377a5bca5cfb4099f491912 -->

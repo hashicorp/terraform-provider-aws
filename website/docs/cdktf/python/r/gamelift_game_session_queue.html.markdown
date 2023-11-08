@@ -86,4 +86,4 @@ Using `terraform import`, import GameLift Game Session Queues using their `name`
 % terraform import aws_gamelift_game_session_queue.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e69f1135cf583861ec3815dcbcde5d0ca2b5117945e9f7a46b7008c92b6115a -->
+<!-- cache-key: cdktf-0.19.0 input-1e69f1135cf583861ec3815dcbcde5d0ca2b5117945e9f7a46b7008c92b6115a -->

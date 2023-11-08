@@ -70,7 +70,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the Redshift Subnet group.
 * `description` - (Optional) The description of the Redshift Subnet group. Defaults to "Managed by Terraform".
 * `subnetIds` - (Required) An array of VPC subnet IDs.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Subnet group name
 * `id` - The Redshift Subnet group ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -102,4 +102,4 @@ Using `terraform import`, import Redshift subnet groups using the `name`. For ex
 % terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3d603e489c1bb01bdc966a54771f0f1ba11b9496fe058472a61fd0520c9b7c8c -->
+<!-- cache-key: cdktf-0.19.0 input-3d603e489c1bb01bdc966a54771f0f1ba11b9496fe058472a61fd0520c9b7c8c -->

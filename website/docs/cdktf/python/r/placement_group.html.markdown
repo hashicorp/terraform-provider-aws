@@ -74,4 +74,4 @@ Using `terraform import`, import placement groups using the `name`. For example:
 % terraform import aws_placement_group.prod_pg production-placement-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2db42e50344643d73d88a7291c495c78556f7f0f63349d8e602e23a0b1bdb180 -->
+<!-- cache-key: cdktf-0.19.0 input-2db42e50344643d73d88a7291c495c78556f7f0f63349d8e602e23a0b1bdb180 -->

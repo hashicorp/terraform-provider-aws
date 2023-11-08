@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `component` - (Required) Ordered configuration block(s) with components for the container recipe. Detailed below.
-* `containerType` - (Required) The type of the container to create. Valid values: `docker`.
+* `containerType` - (Required) The type of the container to create. Valid values: `DOCKER`.
 * `name` - (Required) The name of the container recipe.
 * `parentImage` (Required) The base image for the container recipe.
 * `targetRepository` (Required) The destination repository for the container image. Detailed below.
@@ -78,7 +78,7 @@ The following attributes are optional:
 * `instanceConfiguration` - (Optional) Configuration block used to configure an instance for building and testing container images. Detailed below.
 * `kmsKeyId` - (Optional) The KMS key used to encrypt the container image.
 * `platformOverride` - (Optional) Specifies the operating system platform when you use a custom base image.
-* `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workingDirectory` - (Optional) The working directory to be used during build and test workflows.
 
 ### component
@@ -100,7 +100,7 @@ The following arguments are required:
 The following arguments are required:
 
 * `repositoryName` - (Required) The name of the container repository where the output container image is stored. This name is prefixed by the repository location.
-* `service` - (Required) The service in which this image is registered. Valid values: `ecr`.
+* `service` - (Required) The service in which this image is registered. Valid values: `ECR`.
 
 ### instance_configuration
 
@@ -140,7 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `encrypted` - A flag that indicates if the target container is encrypted.
 * `owner` - Owner of the container recipe.
 * `platform` - Platform of the container recipe.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -164,4 +164,4 @@ Using `terraform import`, import `awsImagebuilderContainerRecipe` resources usin
 % terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->
+<!-- cache-key: cdktf-0.19.0 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->

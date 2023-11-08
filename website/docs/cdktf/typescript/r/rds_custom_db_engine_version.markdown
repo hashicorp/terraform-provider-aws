@@ -160,15 +160,15 @@ This resource supports the following arguments:
 * `databaseInstallationFilesS3BucketName` - (Required) The name of the Amazon S3 bucket that contains the database installation files.
 * `databaseInstallationFilesS3Prefix` - (Required) The prefix for the Amazon S3 bucket that contains the database installation files.
 * `description` - (Optional) The description of the CEV.
-* `engine` - (Required) The name of the database engine. Valid values are `customOracle*`, `customSqlserver*`.
+* `engine` - (Required) The name of the database engine. Valid values are `custom-oracle*`, `custom-sqlserver*`.
 * `engineVersion` - (Required) The version of the database engine.
 * `filename` - (Optional) The name of the manifest file within the local filesystem. Conflicts with `manifest`.
 * `kmsKeyId` - (Optional) The ARN of the AWS KMS key that is used to encrypt the database installation files. Required for RDS Custom for Oracle.
 * `manifest` - (Optional) The manifest file, in JSON format, that contains the list of database installation files. Conflicts with `filename`.
 * `manifestHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the manifest source specified with `filename`. The usual way to set this is filebase64sha256("manifest.json") where "manifest.json" is the local filename of the manifest source.
-* `status` - (Optional) The status of the CEV. Valid values are `available`, `inactive`, `inactiveExceptRestore`.
+* `status` - (Optional) The status of the CEV. Valid values are `available`, `inactive`, `inactive-except-restore`.
 * `sourceImageId` - (Optional) The ID of the AMI to create the CEV from. Required for RDS Custom for SQL Server. For RDS Custom for Oracle, you can specify an AMI ID that was used in a different Oracle CEV.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -180,15 +180,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `imageId` - The ID of the AMI that was created with the CEV.
 * `majorEngineVersion` - The major version of the database engine.
 * `manifestComputed` - The returned manifest file, in JSON format, service generated and often different from input `manifest`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `240M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `60M`)
+- `create` - (Default `240m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `60m`)
 
 ## Import
 
@@ -212,4 +212,4 @@ Using `terraform import`, import custom engine versions for Amazon RDS custom us
 % terraform import aws_rds_custom_db_engine_version.example custom-oracle-ee-cdb:19.cdb_cev1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dae41bd3880415fe2e096d70a45f580b6bfa6f14fe785ee0edae92bb5abec604 -->
+<!-- cache-key: cdktf-0.19.0 input-dae41bd3880415fe2e096d70a45f580b6bfa6f14fe785ee0edae92bb5abec604 -->

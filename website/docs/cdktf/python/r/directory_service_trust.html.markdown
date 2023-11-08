@@ -163,4 +163,4 @@ Using `terraform import`, import the Trust relationship using the directory ID a
 % terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->
+<!-- cache-key: cdktf-0.19.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->

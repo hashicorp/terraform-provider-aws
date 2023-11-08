@@ -73,10 +73,10 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `roleArn` - (Required) The Amazon Resource Name (ARN) of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `awsShieldDrtAccessPolicy` managed policy to this role.
+* `roleArn` - (Required) The Amazon Resource Name (ARN) of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `AWSShieldDRTAccessPolicy` managed policy to this role.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-87f4a7efb72b32010cf15694804e32b6ba653e7f1593d4f49f88dd39db828bfb -->
+<!-- cache-key: cdktf-0.19.0 input-87f4a7efb72b32010cf15694804e32b6ba653e7f1593d4f49f88dd39db828bfb -->

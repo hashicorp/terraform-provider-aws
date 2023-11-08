@@ -95,12 +95,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the DataSync Agent.
-* `activationKey` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ipAddress`. If an `ipAddress` is provided instead, Terraform will retrieve the `activationKey` as part of the resource creation.
-* `ipAddress` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activationKey`. DataSync Agent must be accessible on port 80 from where Terraform is running.
-* `privateLinkEndpoint` - (Optional) The IP address of the VPC endpoint the agent should connect to when retrieving an activation key during resource creation. Conflicts with `activationKey`.
+* `activationKey` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
+* `ipAddress` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
+* `privateLinkEndpoint` - (Optional) The IP address of the VPC endpoint the agent should connect to when retrieving an activation key during resource creation. Conflicts with `activation_key`.
 * `securityGroupArns` - (Optional) The ARNs of the security groups used to protect your data transfer task subnets.
 * `subnetArns` - (Optional) The Amazon Resource Names (ARNs) of the subnets in which DataSync will create elastic network interfaces for each data transfer task.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcEndpointId` - (Optional) The ID of the VPC (virtual private cloud) endpoint that the agent has access to.
 
 ## Attribute Reference
@@ -109,13 +109,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Agent.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Agent.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
+* `create` - (Default `10m`)
 
 ## Import
 
@@ -139,4 +139,4 @@ Using `terraform import`, import `awsDatasyncAgent` using the DataSync Agent Ama
 % terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0acba5dd129383087553f49e6f95af67ac05fa502cb2be0e9157f77f225a5cfa -->
+<!-- cache-key: cdktf-0.19.0 input-0acba5dd129383087553f49e6f95af67ac05fa502cb2be0e9157f77f225a5cfa -->
