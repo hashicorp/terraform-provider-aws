@@ -23,11 +23,11 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(
-				  resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
-          resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
-          resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
-          resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
+					resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
+					resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
+					resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
 				),
 			},
 			{
