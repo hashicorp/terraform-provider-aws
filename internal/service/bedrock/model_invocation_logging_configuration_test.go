@@ -126,17 +126,17 @@ resource "aws_iam_policy" "bedrock_logging" {
   description = "BedrockCloudWatchPolicy"
 
   policy = jsonencode({
-      "Version": "2012-10-17", 
-      "Statement": [ 
-          {
-              "Effect": "Allow", 
-              "Action": [ 
-                  "logs:CreateLogStream", 
-                  "logs:PutLogEvents" 
-              ], 
-              "Resource": "${aws_cloudwatch_log_group.bedrock_logging.arn}:log-stream:aws/bedrock/modelinvocations" 
-           } 
-      ]
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : "${aws_cloudwatch_log_group.bedrock_logging.arn}:log-stream:aws/bedrock/modelinvocations"
+      }
+    ]
   })
 }
 
@@ -152,7 +152,7 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
     text_data_delivery_enabled      = true
     cloud_watch_config {
       log_group_name = aws_cloudwatch_log_group.bedrock_logging.name
-      role_arn = aws_iam_role.bedrock_logging.arn
+      role_arn       = aws_iam_role.bedrock_logging.arn
     }
     s3_config {
       bucket_name = aws_s3_bucket.bedrock_logging.id
