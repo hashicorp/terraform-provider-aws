@@ -150,10 +150,17 @@ resource "aws_lexv2models_bot" "test" {
   }
 }
 
+resource "aws_lexv2models_bot_locale" "test" {
+  locale_id                        = "en_US"
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  n_lu_intent_confidence_threshold = 0.7
+  }
+
 resource "aws_lexv2models_bot_version" "test" {
-  bot_id                        = aws_lexv2models_bot.test.id
+  bot_id               = aws_lexv2models_bot.test.id
   locale_specification = {
-    "key"= {
+    (aws_lexv2models_bot_locale.test.locale_id) = {
       source_bot_version = "DRAFT"
     }
   }
