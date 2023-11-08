@@ -403,7 +403,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("node_properties"); ok {
 			props, err := expandJobNodeProperties(v.(string))
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+				return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 			}
 
 			for _, node := range props.NodeRangeProperties {
