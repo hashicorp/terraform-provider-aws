@@ -213,7 +213,7 @@ func (r *resourceCustomModel) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	vpcConfig := expandVpcConfig(ctx, vpcConfigs)
+	vpcConfig := expandVPCConfig(ctx, vpcConfigs)
 	if len(vpcConfigs) > 0 {
 		input.VpcConfig = &vpcConfig[0]
 	}

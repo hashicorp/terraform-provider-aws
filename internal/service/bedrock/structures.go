@@ -28,7 +28,7 @@ type validationMetrics struct {
 	ValidationLoss types.Float64 `tfsdk:"validation_loss"`
 }
 
-func expandVpcConfig(ctx context.Context, tfList []vpcConfig) []bedrock_types.VpcConfig {
+func expandVPCConfig(ctx context.Context, tfList []vpcConfig) []bedrock_types.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
