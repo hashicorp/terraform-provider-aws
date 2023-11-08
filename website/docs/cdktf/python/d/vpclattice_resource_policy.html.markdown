@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `policy` - JSON-encoded string representation of the applied resource policy.
 
-<!-- cache-key: cdktf-0.18.0 input-8bbfef254a190e7f80aa5a7e593ea739d64afa50ba608c823c8b66809a5ca7a5 -->
+<!-- cache-key: cdktf-0.19.0 input-8bbfef254a190e7f80aa5a7e593ea739d64afa50ba608c823c8b66809a5ca7a5 -->

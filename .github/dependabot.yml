@@ -36,6 +36,8 @@ updates:
       - dependency-name: "github.com/hashicorp/go-hclog"
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      # config has upstream regressions which must be resolved before updates are included
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/config"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

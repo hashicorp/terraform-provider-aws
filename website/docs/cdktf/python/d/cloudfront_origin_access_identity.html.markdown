@@ -50,9 +50,9 @@ This data source exports the following attributes in addition to the arguments a
    For example: `E2QWRUHAPOMQZL`.
 * `iam_arn` - Pre-generated ARN for use in S3 bucket policies (see below).
    Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
- E2QWRUHAPOMQZL`.
+   E2QWRUHAPOMQZL`.
 * `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
 
-<!-- cache-key: cdktf-0.18.0 input-6ee07d67e88c83135a682bc01ecae9a6413d07992377fed93295e34cd1b0ceec -->
+<!-- cache-key: cdktf-0.19.0 input-6ee07d67e88c83135a682bc01ecae9a6413d07992377fed93295e34cd1b0ceec -->

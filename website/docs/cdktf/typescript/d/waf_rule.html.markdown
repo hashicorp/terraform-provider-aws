@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF rule.
 
-<!-- cache-key: cdktf-0.18.0 input-622f6e79a1da04607bbd486ece4ccfcdc4d3399df37f97810cbcfe6990f9931d -->
+<!-- cache-key: cdktf-0.19.0 input-622f6e79a1da04607bbd486ece4ccfcdc4d3399df37f97810cbcfe6990f9931d -->

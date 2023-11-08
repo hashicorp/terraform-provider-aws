@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `globalNetworkId` - (Required) The ID of the global network.
 * `providerName` - (Optional) The provider of the link.
 * `siteId` - (Required) The ID of the site.
-* `tags` - (Optional) Key-value tags for the link. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) The type of the link.
 
 The `bandwidth` object supports the following:
@@ -62,7 +62,7 @@ The `bandwidth` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Link Amazon Resource Name (ARN).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsNetworkmanagerLink` using the link ARN. For
 % terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b3264437514e087e6c9a780921c3cabb87dacb7cfc4e78ab6211866e572c1219 -->
+<!-- cache-key: cdktf-0.19.0 input-b3264437514e087e6c9a780921c3cabb87dacb7cfc4e78ab6211866e572c1219 -->

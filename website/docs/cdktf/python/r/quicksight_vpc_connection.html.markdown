@@ -119,4 +119,4 @@ Using `terraform import`, import QuickSight VPC connection using the AWS account
 % terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->
+<!-- cache-key: cdktf-0.19.0 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->

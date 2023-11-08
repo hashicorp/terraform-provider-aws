@@ -43,14 +43,14 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `description` - (Optional) The description of the snapshot schedule.
 * `definitions` - (Optional) The definition of the snapshot schedule. The definition is made up of schedule expressions, for example `cron(30 12 *)` or `rate(12 hours)`.
 * `forceDestroy` - (Optional) Whether to destroy all associated clusters with this snapshot schedule on deletion. Must be enabled and applied before attempting deletion.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Snapshot Schedule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -74,4 +74,4 @@ Using `terraform import`, import Redshift Snapshot Schedule using the `identifie
 % terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0efaf47bc050c3417ad21dec274dd17ba88abe8c5b011ce8e99d3a0223fa2ffa -->
+<!-- cache-key: cdktf-0.19.0 input-0efaf47bc050c3417ad21dec274dd17ba88abe8c5b011ce8e99d3a0223fa2ffa -->

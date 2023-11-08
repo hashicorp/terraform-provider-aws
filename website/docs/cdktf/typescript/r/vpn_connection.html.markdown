@@ -194,13 +194,13 @@ This resource supports the following arguments:
 * `vpnGatewayId` - (Optional) The ID of the Virtual Private Gateway.
 * `staticRoutesOnly` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enableAcceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
-* `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `localIpv4NetworkCidr` - (Optional, Default `0000/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `localIpv4NetworkCidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `localIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
-* `outsideIpAddressType` - (Optional, Default `publicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
-* `remoteIpv4NetworkCidr` - (Optional, Default `0000/0`) The IPv4 CIDR on the AWS side of the VPN connection.
+* `outsideIpAddressType` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
+* `remoteIpv4NetworkCidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
 * `remoteIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
-* `transportTransitGatewayAttachmentId` - (Required when outside_ip_address_type is set to `privateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
+* `transportTransitGatewayAttachmentId` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnelInsideIpVersion` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1InsideCidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
 * `tunnel2InsideCidr` - (Optional) The CIDR block of the inside IP addresses for the second VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
@@ -234,10 +234,10 @@ This resource supports the following arguments:
 * `tunnel2Phase2IntegrityAlgorithms` - (Optional) List of one or more integrity algorithms that are permitted for the second VPN tunnel for phase 2 IKE negotiations. Valid values are `SHA1 | SHA2-256 | SHA2-384 | SHA2-512`.
 * `tunnel1Phase2LifetimeSeconds` - (Optional, Default `3600`) The lifetime for phase 2 of the IKE negotiation for the first VPN tunnel, in seconds. Valid value is between `900` and `3600`.
 * `tunnel2Phase2LifetimeSeconds` - (Optional, Default `3600`) The lifetime for phase 2 of the IKE negotiation for the second VPN tunnel, in seconds. Valid value is between `900` and `3600`.
-* `tunnel1RekeyFuzzPercentage` - (Optional, Default `100`) The percentage of the rekey window for the first VPN tunnel (determined by `tunnel1RekeyMarginTimeSeconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
-* `tunnel2RekeyFuzzPercentage` - (Optional, Default `100`) The percentage of the rekey window for the second VPN tunnel (determined by `tunnel2RekeyMarginTimeSeconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
-* `tunnel1RekeyMarginTimeSeconds` - (Optional, Default `540`) The margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the first VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel1RekeyFuzzPercentage`. Valid value is between `60` and half of `tunnel1Phase2LifetimeSeconds`.
-* `tunnel2RekeyMarginTimeSeconds` - (Optional, Default `540`) The margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the second VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel2RekeyFuzzPercentage`. Valid value is between `60` and half of `tunnel2Phase2LifetimeSeconds`.
+* `tunnel1RekeyFuzzPercentage` - (Optional, Default `100`) The percentage of the rekey window for the first VPN tunnel (determined by `tunnel1_rekey_margin_time_seconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
+* `tunnel2RekeyFuzzPercentage` - (Optional, Default `100`) The percentage of the rekey window for the second VPN tunnel (determined by `tunnel2_rekey_margin_time_seconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
+* `tunnel1RekeyMarginTimeSeconds` - (Optional, Default `540`) The margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the first VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel1_rekey_fuzz_percentage`. Valid value is between `60` and half of `tunnel1_phase2_lifetime_seconds`.
+* `tunnel2RekeyMarginTimeSeconds` - (Optional, Default `540`) The margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the second VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel2_rekey_fuzz_percentage`. Valid value is between `60` and half of `tunnel2_phase2_lifetime_seconds`.
 * `tunnel1ReplayWindowSize` - (Optional, Default `1024`) The number of packets in an IKE replay window for the first VPN tunnel. Valid value is between `64` and `2048`.
 * `tunnel2ReplayWindowSize` - (Optional, Default `1024`) The number of packets in an IKE replay window for the second VPN tunnel. Valid value is between `64` and `2048`.
 * `tunnel1StartupAction` - (Optional, Default `add`) The action to take when the establishing the tunnel for the first VPN connection. By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel. Specify start for AWS to initiate the IKE negotiation. Valid values are `add | start`.
@@ -269,8 +269,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `customerGatewayId` - The ID of the customer gateway to which the connection is attached.
 * `routes` - The static routes associated with the VPN connection. Detailed below.
 * `staticRoutesOnly` - Whether the VPN connection uses static routes exclusively.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `transitGatewayAttachmentId` - When associated with an EC2 Transit Gateway (`transitGatewayId` argument), the attachment ID. See also the [`awsEc2Tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `transitGatewayAttachmentId` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1Address` - The public IP address of the first VPN tunnel.
 * `tunnel1CgwInsideAddress` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1VgwInsideAddress` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
@@ -323,4 +323,4 @@ Using `terraform import`, import VPN Connections using the VPN connection `id`. 
 % terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3d90dfa10b9036a076f1ef132a7b8d5011c2699fea5ecbd9ed76a20dc1755eae -->
+<!-- cache-key: cdktf-0.19.0 input-3d90dfa10b9036a076f1ef132a7b8d5011c2699fea5ecbd9ed76a20dc1755eae -->

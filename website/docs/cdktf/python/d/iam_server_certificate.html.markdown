@@ -84,4 +84,4 @@ Using `terraform import`, import an IAM server certificate using `name`. For exa
 
 Import will read in the certificate body, certificate chain (if it exists), ID, name, path, and ARN. It will not retrieve the private key which is not available through the AWS API.
 
-<!-- cache-key: cdktf-0.18.0 input-15f20b097eebaf3145f26a098ba793c65fab18858f84e06d6eb664e0785a5cdd -->
+<!-- cache-key: cdktf-0.19.0 input-15f20b097eebaf3145f26a098ba793c65fab18858f84e06d6eb664e0785a5cdd -->

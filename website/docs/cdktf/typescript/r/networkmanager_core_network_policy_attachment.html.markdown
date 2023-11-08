@@ -54,7 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `createBasePolicy` argument of the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `live` policies (e.g. this is the first `terraform apply` with the core network resource), since a `live` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `live` policy, you may exclude the `createBasePolicy` argument. There are 2 options to implement this:
 
-- Option 1: Use the `basePolicyDocument` argument in the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) that allows the most customizations to a base policy. Use this to customize the `edgeLocations` `asn`. In the example below, `usWest2` and ASN `65500` are used in the base policy.
+- Option 1: Use the `basePolicyDocument` argument in the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) that allows the most customizations to a base policy. Use this to customize the `edge_locations` `asn`. In the example below, `us-west-2` and ASN `65500` are used in the base policy.
 - Option 2: Use the `createBasePolicy` argument only. This creates a base policy in the region specified in the `provider` block.
 
 #### Option 1 - using base_policy_document
@@ -259,8 +259,8 @@ class MyConvertedCode extends TerraformStack {
 
 The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `createBasePolicy` argument of the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `live` policies (e.g. this is the first `terraform apply` with the core network resource), since a `live` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `live` policy, you may exclude the `createBasePolicy` argument. For multi-region in a core network that does not yet have a `live` policy, there are 2 options:
 
-- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edgeLocations` `asn`. In the example below, `usWest2`, `usEast1` and specific ASNs are used in the base policy.
-- Option 2: Pass a list of regions to the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) `basePolicyRegions` argument. In the example below, `usWest2` and `usEast1` are specified in the base policy.
+- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edge_locations` `asn`. In the example below, `us-west-2`, `us-east-1` and specific ASNs are used in the base policy.
+- Option 2: Pass a list of regions to the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) `base_policy_regions` argument. In the example below, `us-west-2` and `us-east-1` are specified in the base policy.
 
 #### Option 1 - using base_policy_document
 
@@ -516,14 +516,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `coreNetworkId` - (Required) The ID of the core network that a policy will be attached to and made `live`.
-* `policyDocument` - (Required) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `latest` and `live` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
+* `coreNetworkId` - (Required) The ID of the core network that a policy will be attached to and made `LIVE`.
+* `policyDocument` - (Required) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `30M`). If this is the first time attaching a policy to a core network then this timeout value is also used as the `create` timeout value.
+* `update` - (Default `30m`). If this is the first time attaching a policy to a core network then this timeout value is also used as the `create` timeout value.
 
 ## Attribute Reference
 
@@ -553,4 +553,4 @@ Using `terraform import`, import `awsNetworkmanagerCoreNetworkPolicyAttachment` 
 % terraform import aws_networkmanager_core_network_policy_attachment.example core-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-34a808698d2a9df593aff61b1eaca0c1844cef8687a30e103f1a946e027e2540 -->
+<!-- cache-key: cdktf-0.19.0 input-34a808698d2a9df593aff61b1eaca0c1844cef8687a30e103f1a946e027e2540 -->

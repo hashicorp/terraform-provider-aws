@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `virtualInterfaceId` - (Required) ID of the Direct Connect Virtual Interface
-* `routerTypeIdentifier` - (Required) ID of the Router Type. For example: `ciscoSystemsInc2900SeriesRoutersIos124`
+* `routerTypeIdentifier` - (Required) ID of the Router Type. For example: `CiscoSystemsInc-2900SeriesRouters-IOS124`
 
 There is currently no AWS API to retrieve the full list of `routerTypeIdentifier` values. Here is a list of known `routerType` objects that can be used:
 
@@ -77,4 +77,4 @@ A `router` block supports the following attributes:
 * `xsltTemplateName` - Router XSLT Template Name
 * `xsltTemplateNameForMac` - Router XSLT Template Name for MacSec
 
-<!-- cache-key: cdktf-0.18.0 input-9678217d6fec10b383267202e6ceb5509d81e5095d37ada2c2523269c07135c5 -->
+<!-- cache-key: cdktf-0.19.0 input-9678217d6fec10b383267202e6ceb5509d81e5095d37ada2c2523269c07135c5 -->

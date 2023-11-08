@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `tags` - Map of key=value pairs for each tag set on the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-9e1e646d2fbb671bf1b3448756c03ac6bb18b017208c1205580374b81a907e14 -->
+<!-- cache-key: cdktf-0.19.0 input-9e1e646d2fbb671bf1b3448756c03ac6bb18b017208c1205580374b81a907e14 -->

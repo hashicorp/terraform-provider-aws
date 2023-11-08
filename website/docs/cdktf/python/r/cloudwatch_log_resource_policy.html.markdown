@@ -119,4 +119,4 @@ Using `terraform import`, import CloudWatch log resource policies using the poli
 % terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e10ada71512fa142d53597fd2949e853332001f8f918abaf19a3f490a6fae621 -->
+<!-- cache-key: cdktf-0.19.0 input-e10ada71512fa142d53597fd2949e853332001f8f918abaf19a3f490a6fae621 -->

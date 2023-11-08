@@ -64,6 +64,7 @@ const (
 	S3EndpointID                         = "s3"
 	S3ControlEndpointID                  = "s3-control"
 	SESV2EndpointID                      = "sesv2"
+	SNSEndpointID                        = "sns"
 	SQSEndpointID                        = "sqs"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"

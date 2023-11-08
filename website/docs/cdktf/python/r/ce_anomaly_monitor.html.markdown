@@ -107,4 +107,4 @@ Using `terraform import`, import `aws_ce_anomaly_monitor` using the `id`. For ex
 % terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->
+<!-- cache-key: cdktf-0.19.0 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->

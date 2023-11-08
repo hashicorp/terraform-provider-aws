@@ -121,4 +121,4 @@ Using `terraform import`, import `aws_imagebuilder_infrastructure_configuration`
 % terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-92ce8940a00b3a6132cb84f5e5797b0c5f3f5546af00335b30802f922e76f2ef -->
+<!-- cache-key: cdktf-0.19.0 input-92ce8940a00b3a6132cb84f5e5797b0c5f3f5546af00335b30802f922e76f2ef -->

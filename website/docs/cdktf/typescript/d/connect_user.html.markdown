@@ -100,6 +100,6 @@ A `phoneConfig` block supports the following attributes:
 * `afterContactWorkTimeLimit` - The After Call Work (ACW) timeout setting, in seconds.
 * `autoAccept` - When Auto-Accept Call is enabled for an available agent, the agent connects to contacts automatically.
 * `deskPhoneNumber` - The phone number for the user's desk phone.
-* `phoneType` - The phone type. Valid values are `deskPhone` and `softPhone`.
+* `phoneType` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.18.0 input-6533a2d44318a8db1711f9e310a73d30328d1503d85cb50973ba8962241bc227 -->
+<!-- cache-key: cdktf-0.19.0 input-6533a2d44318a8db1711f9e310a73d30328d1503d85cb50973ba8962241bc227 -->

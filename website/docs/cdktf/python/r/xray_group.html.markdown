@@ -77,4 +77,4 @@ Using `terraform import`, import XRay Groups using the ARN. For example:
 % terraform import aws_xray_group.example arn:aws:xray:us-west-2:1234567890:group/example-group/TNGX7SW5U6QY36T4ZMOUA3HVLBYCZTWDIOOXY3CJAXTHSS3YCWUA
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9e9af30b9adec288e781cee25a67533fbf3d979628ed12ff8336468434aab2be -->
+<!-- cache-key: cdktf-0.19.0 input-9e9af30b9adec288e781cee25a67533fbf3d979628ed12ff8336468434aab2be -->

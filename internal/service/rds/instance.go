@@ -2822,6 +2822,7 @@ func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
+		InstanceEnginePostgres,
 	}
 }
 

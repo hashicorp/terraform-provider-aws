@@ -96,4 +96,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `assetIds` - List of all the asset ids found. This data source will fail if none are found.
 
-<!-- cache-key: cdktf-0.18.0 input-99ccb47ab4f9ad99dcd20220176ab80d7d2a523ce444c488ada1146d9922821b -->
+<!-- cache-key: cdktf-0.19.0 input-99ccb47ab4f9ad99dcd20220176ab80d7d2a523ce444c488ada1146d9922821b -->

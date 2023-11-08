@@ -151,11 +151,8 @@ import { Token, Fn, TerraformStack } from "cdktf";
 import { NetworkmanagerConnectAttachment } from "./.gen/providers/aws/networkmanager-connect-attachment";
 import { NetworkmanagerConnectPeer } from "./.gen/providers/aws/networkmanager-connect-peer";
 import { NetworkmanagerVpcAttachment } from "./.gen/providers/aws/networkmanager-vpc-attachment";
-interface MyConfig {
-  insideCidrBlocks: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     const example = new NetworkmanagerVpcAttachment(this, "example", {
       coreNetworkId: Token.asString(awsccNetworkmanagerCoreNetworkExample.id),
@@ -184,8 +181,7 @@ class MyConvertedCode extends TerraformStack {
           awsNetworkmanagerConnectAttachmentExample.id
         ),
         peerAddress: "127.0.0.1",
-        subnet_arn: test2.arn,
-        insideCidrBlocks: config.insideCidrBlocks,
+        subnetArn: test2.arn,
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -206,9 +202,9 @@ The following arguments are optional:
 
 - `bgpOptions` (Optional) The Connect peer BGP options.
 - `coreNetworkAddress` (Optional) A Connect peer core network address.
-- `insideCidrBlocks` - (Optional) The inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `gre`. See [`awsNetworkmanagerConnectAttachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
-- `subnetArn` - (Optional) The subnet ARN for the Connect peer. Required when the Connect attachment protocol is `noEncap`. See [`awsNetworkmanagerConnectAttachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
-- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `insideCidrBlocks` - (Optional) The inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
+- `subnetArn` - (Optional) The subnet ARN for the Connect peer. Required when the Connect attachment protocol is `NO_ENCAP`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
+- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -220,7 +216,7 @@ This resource exports the following attributes in addition to the arguments abov
 - `edgeLocation` - The Region where the peer is located.
 - `id` - The ID of the Connect peer.
 - `state` - The state of the Connect peer.
-- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -244,4 +240,4 @@ Using `terraform import`, import `awsNetworkmanagerConnectPeer` using the connec
 % terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-010c7af9870efaa2d4e70fcf20dd0a8279a972e0005dd5005199d0f3752a0ded -->
+<!-- cache-key: cdktf-0.19.0 input-010c7af9870efaa2d4e70fcf20dd0a8279a972e0005dd5005199d0f3752a0ded -->

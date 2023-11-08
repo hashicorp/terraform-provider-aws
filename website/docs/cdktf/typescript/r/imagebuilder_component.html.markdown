@@ -104,7 +104,7 @@ The following attributes are optional:
 * `kmsKeyId` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the component.
 * `skipDestroy` - (Optional) Whether to retain the old version when the resource is destroyed or replacement is necessary. Defaults to `false`.
 * `supportedOsVersions` - (Optional) Set of Operating Systems (OS) supported by the component.
-* `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `uri` - (Optional) S3 URI with data of the component. Exactly one of `data` and `uri` can be specified.
 
 ~> **NOTE:** Updating `data` or `uri` requires specifying a new `version`. This causes replacement of the resource. The `skipDestroy` argument can be used to retain the old version.
@@ -117,7 +117,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `dateCreated` - Date the component was created.
 * `encrypted` - Encryption status of the component.
 * `owner` - Owner of the component.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the component.
 
 ## Import
@@ -144,4 +144,4 @@ Using `terraform import`, import `awsImagebuilderComponents` resources using the
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.18.0 input-7920aa22e67cfcf51eafb7a57251408d3c0e3878496f0aa735aa73051dd90d92 -->
+<!-- cache-key: cdktf-0.19.0 input-7920aa22e67cfcf51eafb7a57251408d3c0e3878496f0aa735aa73051dd90d92 -->

@@ -125,7 +125,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -138,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `600M`)
+* `create` - (Default `600m`)
 
 ## Import
 
@@ -162,4 +162,4 @@ Using `terraform import`, import Transcribe LanguageModel using the `modelName`.
 % terraform import aws_transcribe_language_model.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-85a81f3a3aae68cdb05de1abee14c19e807278023470592c0e052318dc2bff47 -->
+<!-- cache-key: cdktf-0.19.0 input-85a81f3a3aae68cdb05de1abee14c19e807278023470592c0e052318dc2bff47 -->

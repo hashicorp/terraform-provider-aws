@@ -74,4 +74,4 @@ Using `terraform import`, import Existing CIDR reservations using `subnetId:rese
 % terraform import aws_ec2_subnet_cidr_reservation.example subnet-01llsxvsxabqiymcz:scr-4mnvz6wb7otksjcs9
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fc461a33a61b61090347c3aebed74b1fbf423338d6a3082dc4e7dd5963cc132c -->
+<!-- cache-key: cdktf-0.19.0 input-fc461a33a61b61090347c3aebed74b1fbf423338d6a3082dc4e7dd5963cc132c -->

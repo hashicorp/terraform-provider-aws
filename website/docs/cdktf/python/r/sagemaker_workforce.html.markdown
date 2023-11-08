@@ -151,4 +151,4 @@ Using `terraform import`, import SageMaker Workforces using the `workforce_name`
 % terraform import aws_sagemaker_workforce.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b4c9ab9708ddac7777a4511e715674b772e0a778ceb4beb60491fda22462d138 -->
+<!-- cache-key: cdktf-0.19.0 input-b4c9ab9708ddac7777a4511e715674b772e0a778ceb4beb60491fda22462d138 -->

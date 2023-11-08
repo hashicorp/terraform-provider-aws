@@ -55,7 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `arn` - (Optional) ARN of the listener. Required if `loadBalancerArn` and `port` is not set.
+* `arn` - (Optional) ARN of the listener. Required if `load_balancer_arn` and `port` is not set.
 * `loadBalancerArn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) Port of the listener. Required if `arn` is not set.
 
@@ -67,6 +67,6 @@ See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for detai
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-211bbf8f48d3f19292f3ee8b224115fe3e52e8fa4345ea857f3fb1459aff8016 -->
+<!-- cache-key: cdktf-0.19.0 input-211bbf8f48d3f19292f3ee8b224115fe3e52e8fa4345ea857f3fb1459aff8016 -->

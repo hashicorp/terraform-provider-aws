@@ -95,15 +95,15 @@ The following arguments are optional:
 * `capacityProviderStrategy` - (Optional) The capacity provider strategy to use for the service. Can be one or more.  [Defined below](#capacity_provider_strategy).
 * `externalId` - (Optional) The external ID associated with the task set.
 * `forceDelete` - (Optional) Whether to allow deleting the task set without waiting for scaling down to 0. You can force a task set to delete even if it's in the process of scaling a resource. Normally, Terraform drains all the tasks before deleting the task set. This bypasses that behavior and potentially leaves resources dangling.
-* `launchType` - (Optional) The launch type on which to run your service. The valid values are `ec2`, `fargate`, and `external`. Defaults to `ec2`.
+* `launchType` - (Optional) The launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`.
 * `loadBalancer` - (Optional) Details on load balancers that are used with a task set. [Detailed below](#load_balancer).
-* `platformVersion` - (Optional) The platform version on which to run your service. Only applicable for `launchType` set to `fargate`. Defaults to `latest`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
+* `platformVersion` - (Optional) The platform version on which to run your service. Only applicable for `launch_type` set to `FARGATE`. Defaults to `LATEST`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `networkConfiguration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. [Detailed below](#network_configuration).
 * `scale` - (Optional) A floating-point percentage of the desired number of tasks to place and keep running in the task set. [Detailed below](#scale).
-* `serviceRegistries` - (Optional) The service discovery registries for the service. The maximum number of `serviceRegistries` blocks is `1`. [Detailed below](#service_registries).
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copyTagsToBackups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
-* `waitUntilStable` - (Optional) Whether `terraform` should wait until the task set has reached `steadyState`.
-* `waitUntilStableTimeout` - (Optional) Wait timeout for task set to reach `steadyState`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10M`.
+* `serviceRegistries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [Detailed below](#service_registries).
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
+* `waitUntilStable` - (Optional) Whether `terraform` should wait until the task set has reached `STEADY_STATE`.
+* `waitUntilStableTimeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10m`.
 
 ## capacity_provider_strategy
 
@@ -130,7 +130,7 @@ The `networkConfiguration` configuration block supports the following:
 
 * `subnets` - (Required) The subnets associated with the task or service. Maximum of 16.
 * `securityGroups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used. Maximum of 5.
-* `assignPublicIp` - (Optional) Whether to assign a public IP address to the ENI (`fargate` launch type only). Valid values are `true` or `false`. Default `false`.
+* `assignPublicIp` - (Optional) Whether to assign a public IP address to the ENI (`FARGATE` launch type only). Valid values are `true` or `false`. Default `false`.
 
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html).
 
@@ -138,14 +138,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 The `scale` configuration block supports the following:
 
-* `unit` - (Optional) The unit of measure for the scale value. Default: `percent`.
+* `unit` - (Optional) The unit of measure for the scale value. Default: `PERCENT`.
 * `value` - (Optional) The value, specified as a percent total of a service's `desiredCount`, to scale the task set. Defaults to `0` if not specified. Accepted values are numbers between 0.0 and 100.0.
 
 ## service_registries
 
 `serviceRegistries` support the following:
 
-* `registryArn` - (Required) The ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service([`awsServiceDiscoveryService` resource](/docs/providers/aws/r/service_discovery_service.html)). For more information, see [Service](https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
+* `registryArn` - (Required) The ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service([`aws_service_discovery_service` resource](/docs/providers/aws/r/service_discovery_service.html)). For more information, see [Service](https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
 * `port` - (Optional) The port value used if your Service Discovery service specified an SRV record.
 * `containerPort` - (Optional) The port value, already specified in the task definition, to be used for your service discovery service.
 * `containerName` - (Optional) The container name value, already specified in the task definition, to be used for your service discovery service.
@@ -154,11 +154,11 @@ The `scale` configuration block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `taskSetId`, `service` and `cluster` separated by commas (`,`).
+* `id` - The `task_set_id`, `service` and `cluster` separated by commas (`,`).
 * `arn` - The Amazon Resource Name (ARN) that identifies the task set.
 * `stabilityStatus` - The stability status. This indicates whether the task set has reached a steady state.
 * `status` - The status of the task set.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `taskSetId` - The ID of the task set.
 
 ## Import
@@ -183,4 +183,4 @@ Using `terraform import`, import ECS Task Sets using the `taskSetId`, `service`,
 % terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0c23f439c10bf62237c2978dae4ddbb20ffe6a937ff6356657670867f1942259 -->
+<!-- cache-key: cdktf-0.19.0 input-0c23f439c10bf62237c2978dae4ddbb20ffe6a937ff6356657670867f1942259 -->

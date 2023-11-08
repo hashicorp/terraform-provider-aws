@@ -64,7 +64,7 @@ This resource supports the following arguments:
 * `rateKey` - (Required) Valid value is IP.
 * `rateLimit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
 * `predicates` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -75,11 +75,11 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 #### Arguments
 
 * `negated` - (Required) Set this to `false` if you want to allow, block, or count requests
-  based on the settings in the specified `byteMatchSet`, `ipSet`, `sqlInjectionMatchSet`, `xssMatchSet`, or `sizeConstraintSet`.
-  For example, if an IPSet includes the IP address `1920244`, AWS WAF will allow or block requests based on that IP address.
-  If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses _except_ `1920244`.
+  based on the settings in the specified `ByteMatchSet`, `IPSet`, `SqlInjectionMatchSet`, `XssMatchSet`, or `SizeConstraintSet`.
+  For example, if an IPSet includes the IP address `192.0.2.44`, AWS WAF will allow or block requests based on that IP address.
+  If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses _except_ `192.0.2.44`.
 * `dataId` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
-* `type` - (Required) The type of predicate in a rule. Valid values: `byteMatch`, `geoMatch`, `ipMatch`, `regexMatch`, `sizeConstraint`, `sqlInjectionMatch`, or `xssMatch`.
+* `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
 ## Remarks
 
@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the WAF rule.
 * `arn` - Amazon Resource Name (ARN)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -113,4 +113,4 @@ Using `terraform import`, import WAF Rated Based Rule using the id. For example:
 % terraform import aws_waf_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-530aa2bf29dc90170951e958f2fab3eca6770263da54a51c9aba805d25697e07 -->
+<!-- cache-key: cdktf-0.19.0 input-530aa2bf29dc90170951e958f2fab3eca6770263da54a51c9aba805d25697e07 -->

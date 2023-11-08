@@ -106,4 +106,4 @@ Using `terraform import`, import SSO Account Assignments using the `principal_id
 % terraform import aws_ssoadmin_account_assignment.example f81d4fae-7dec-11d0-a765-00a0c91e6bf6,GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8b452aa69c7edc6b5216675cd1c17412026fe86f918609ce3cea201495fc2f0e -->
+<!-- cache-key: cdktf-0.19.0 input-8b452aa69c7edc6b5216675cd1c17412026fe86f918609ce3cea201495fc2f0e -->

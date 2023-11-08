@@ -5,6 +5,7 @@ package eks
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -270,13 +271,11 @@ func ResourceCluster() *schema.Resource {
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -434,9 +433,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
@@ -458,9 +455,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			updateID := aws.StringValue(output.Update.Id)
 
-			_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-			if err != nil {
+			if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return diag.Errorf("waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
 			}
 		}
@@ -480,31 +475,43 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
-
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
-		input := &eks.UpdateClusterConfigInput{
-			Name:               aws.String(d.Id()),
-			ResourcesVpcConfig: expandVPCConfigRequestForUpdate(d.Get("vpc_config").([]interface{})),
+		config := &eks.VpcConfigRequest{
+			EndpointPrivateAccess: aws.Bool(d.Get("vpc_config.0.endpoint_private_access").(bool)),
+			EndpointPublicAccess:  aws.Bool(d.Get("vpc_config.0.endpoint_public_access").(bool)),
 		}
 
-		output, err := conn.UpdateClusterConfigWithContext(ctx, input)
-
-		if err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) VPC config: %s", d.Id(), err)
+		if v, ok := d.GetOk("vpc_config.0.public_access_cidrs"); ok && v.(*schema.Set).Len() > 0 {
+			config.PublicAccessCidrs = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		updateID := aws.StringValue(output.Update.Id)
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+	// API only allows one type of update at at time.
+	if d.HasChange("vpc_config.0.subnet_ids") {
+		config := &eks.VpcConfigRequest{
+			SubnetIds: flex.ExpandStringSet(d.Get("vpc_config.0.subnet_ids").(*schema.Set)),
+		}
 
-		if err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", d.Id(), updateID, err)
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("vpc_config.0.security_group_ids") {
+		config := &eks.VpcConfigRequest{
+			SecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_config.0.security_group_ids").(*schema.Set)),
+		}
+
+		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
@@ -556,7 +563,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
@@ -588,6 +595,27 @@ func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cl
 	}
 
 	return output.Cluster, nil
+}
+
+func updateVPCConfig(ctx context.Context, conn *eks.EKS, name string, config *eks.VpcConfigRequest, timeout time.Duration) error {
+	input := &eks.UpdateClusterConfigInput{
+		Name:               aws.String(name),
+		ResourcesVpcConfig: config,
+	}
+
+	output, err := conn.UpdateClusterConfigWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("updating EKS Cluster (%s) VPC config: %s", name, err)
+	}
+
+	updateID := aws.StringValue(output.Update.Id)
+
+	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
+		return fmt.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", name, updateID, err)
+	}
+
+	return nil
 }
 
 func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id string) (*eks.Update, error) {
@@ -803,25 +831,6 @@ func expandVPCConfigRequestForCreate(l []interface{}) *eks.VpcConfigRequest {
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 		SecurityGroupIds:      flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
 		SubnetIds:             flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
-	}
-
-	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
-	}
-
-	return vpcConfigRequest
-}
-
-func expandVPCConfigRequestForUpdate(l []interface{}) *eks.VpcConfigRequest {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	vpcConfigRequest := &eks.VpcConfigRequest{
-		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
-		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {

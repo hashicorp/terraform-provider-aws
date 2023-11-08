@@ -106,4 +106,4 @@ Using a proposal ID, Direct Connect Gateway ID and associated gateway ID separat
 The latter case is useful when a previous proposal has been accepted and deleted by AWS.
 The `awsDxGatewayAssociationProposal` resource will then represent a pseudo-proposal for the same Direct Connect Gateway and associated gateway. If no previous proposal is available, use a tool like [`uuidgen`](http://manpages.ubuntu.com/manpages/bionic/man1/uuidgen.1.html) to generate a new random pseudo-proposal ID.
 
-<!-- cache-key: cdktf-0.18.0 input-4c6dba02a31331ff74f6b982064aff401065a96d07736b20f32eb5d034a7822f -->
+<!-- cache-key: cdktf-0.19.0 input-4c6dba02a31331ff74f6b982064aff401065a96d07736b20f32eb5d034a7822f -->

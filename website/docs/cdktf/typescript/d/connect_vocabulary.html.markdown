@@ -79,10 +79,10 @@ This data source exports the following attributes in addition to the arguments a
 * `failureReason` - The reason why the custom vocabulary was not created.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the vocabulary
 separated by a colon (`:`).
-* `languageCode` - The language code of the vocabulary entries. For a list of languages and their corresponding language codes, see [What is Amazon Transcribe?](https://docs.aws.amazon.com/transcribe/latest/dg/transcribe-whatis.html). Valid Values are `arAe`, `deCh`, `deDe`, `enAb`, `enAu`, `enGb`, `enIe`, `enIn`, `enUs`, `enWl`, `esEs`, `esUs`, `frCa`, `frFr`, `hiIn`, `itIt`, `jaJp`, `koKr`, `ptBr`, `ptPt`, `zhCn`.
+* `languageCode` - The language code of the vocabulary entries. For a list of languages and their corresponding language codes, see [What is Amazon Transcribe?](https://docs.aws.amazon.com/transcribe/latest/dg/transcribe-whatis.html). Valid Values are `ar-AE`, `de-CH`, `de-DE`, `en-AB`, `en-AU`, `en-GB`, `en-IE`, `en-IN`, `en-US`, `en-WL`, `es-ES`, `es-US`, `fr-CA`, `fr-FR`, `hi-IN`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`, `pt-PT`, `zh-CN`.
 * `lastModifiedTime` - The timestamp when the custom vocabulary was last modified.
-* `state` - The current state of the custom vocabulary. Valid values are `creationInProgress`, `active`, `creationFailed`, `deleteInProgress`.
+* `state` - The current state of the custom vocabulary. Valid values are `CREATION_IN_PROGRESS`, `ACTIVE`, `CREATION_FAILED`, `DELETE_IN_PROGRESS`.
 * `tags` - A map of tags to assign to the Vocabulary.
 * `vocabularyId` - The identifier of the custom vocabulary.
 
-<!-- cache-key: cdktf-0.18.0 input-28dff9533e7ed6f8274af7c06c44ac3737d4ee8b41560fc884b0ffe019a6221f -->
+<!-- cache-key: cdktf-0.19.0 input-28dff9533e7ed6f8274af7c06c44ac3737d4ee8b41560fc884b0ffe019a6221f -->
