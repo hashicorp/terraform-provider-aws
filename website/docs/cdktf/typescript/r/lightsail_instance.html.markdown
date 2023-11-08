@@ -119,19 +119,19 @@ instance (see list below)
 * `blueprintId` - (Required) The ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: `aws lightsail get-blueprints`
 * `bundleId` - (Required) The bundle of specification information (see list below)
 * `keyPairName` - (Optional) The name of your key pair. Created in the
-Lightsail console (cannot use `awsKeyPair` at this time)
+Lightsail console (cannot use `aws_key_pair` at this time)
 * `userData` - (Optional) Single lined launch script as a string to configure server with additional user data
 * `ipAddressType` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
 * `addOn` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `addOn`
 
 Defines the add on configuration for the instance. The `addOn` configuration block supports the following arguments:
 
-* `type` - (Required) The add-on type. There is currently only one valid type `autoSnapshot`.
+* `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
 * `snapshotTime` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
-* `status` - (Required) The status of the add on. Valid Values: `enabled`, `disabled`.
+* `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
 
 ## Availability Zones
 
@@ -199,7 +199,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `publicIpAddress` - The public IP address of the instance.
 * `isStaticIp` - A Boolean value indicating whether this instance has a static IP assigned to it.
 * `username` - The user name for connecting to the instance (e.g., ec2-user).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -223,4 +223,4 @@ Using `terraform import`, import Lightsail Instances using their name. For examp
 % terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e45f06a6953879f3cfd81982aebd4f0e53550836431aaac4a1538503c4509c48 -->
+<!-- cache-key: cdktf-0.19.0 input-e45f06a6953879f3cfd81982aebd4f0e53550836431aaac4a1538503c4509c48 -->

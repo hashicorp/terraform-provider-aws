@@ -71,4 +71,4 @@ Using `terraform import`, import SageMaker Code Images using the `name`. For exa
 % terraform import aws_sagemaker_image.test_image my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-472a9b03f1ba8f793494df35ff1917699a39c258036a86d840cd026d9a0bfc60 -->
+<!-- cache-key: cdktf-0.19.0 input-472a9b03f1ba8f793494df35ff1917699a39c258036a86d840cd026d9a0bfc60 -->

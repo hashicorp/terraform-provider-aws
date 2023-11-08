@@ -100,8 +100,8 @@ The following arguments are optional:
 
 * `accountId` - (Optional) AWS account ID for the owner of the bucket for which you want to create an access point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `bucketAccountId` - (Optional) AWS account ID associated with the S3 bucket associated with this access point.
-* `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `awsS3ControlAccessPointPolicy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
-* `publicAccessBlockConfiguration` - (Optional) Configuration block to manage the `publicAccessBlock` configuration that you want to apply to this Amazon S3 bucket. You can enable the configuration options in any combination. Detailed below.
+* `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
+* `publicAccessBlockConfiguration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this Amazon S3 bucket. You can enable the configuration options in any combination. Detailed below.
 * `vpcConfiguration` - (Optional) Configuration block to restrict access to this access point to requests from the specified Virtual Private Cloud (VPC). Required for S3 on Outposts. Detailed below.
 
 ### public_access_block_configuration Configuration Block
@@ -131,12 +131,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `alias` - Alias of the S3 Access Point.
 * `arn` - ARN of the S3 Access Point.
-* `domainName` - DNS domain name of the S3 Access Point in the format _`name`_-_`accountId`_.s3-accesspoint._region_.amazonaws.com.
+* `domainName` - DNS domain name of the S3 Access Point in the format _`name`_-_`account_id`_.s3-accesspoint._region_.amazonaws.com.
 Note: S3 access points only support secure access by HTTPS. HTTP isn't supported.
 * `endpoints` - VPC endpoints for the S3 Access Point.
 * `hasPublicAccessPolicy` - Indicates whether this access point currently has a policy that allows public access.
 * `id` - For Access Point of an AWS Partition S3 Bucket, the AWS account ID and access point name separated by a colon (`:`). For S3 on Outposts Bucket, the ARN of the Access Point.
-* `networkOrigin` - Indicates whether this access point allows access from the public Internet. Values are `vpc` (the access point doesn't allow access from the public Internet) and `internet` (the access point allows access from the public Internet, subject to the access point and bucket access policies).
+* `networkOrigin` - Indicates whether this access point allows access from the public Internet. Values are `VPC` (the access point doesn't allow access from the public Internet) and `Internet` (the access point allows access from the public Internet, subject to the access point and bucket access policies).
 
 ## Import
 
@@ -184,4 +184,4 @@ Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 % terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62226ef5a5030fd4e742702fe5b17f262b9a0edbc8724a758784c5289d1270af -->
+<!-- cache-key: cdktf-0.19.0 input-62226ef5a5030fd4e742702fe5b17f262b9a0edbc8724a758784c5289d1270af -->

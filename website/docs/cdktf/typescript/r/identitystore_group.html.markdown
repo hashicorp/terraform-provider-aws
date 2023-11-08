@@ -67,9 +67,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import an Identity Store Group using the combination `
 % terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-77081370c526c7da03dc3c3f8a50e4bd16a1ba6cea9abd0f209e0c794a9106bf -->
+<!-- cache-key: cdktf-0.19.0 input-77081370c526c7da03dc3c3f8a50e4bd16a1ba6cea9abd0f209e0c794a9106bf -->

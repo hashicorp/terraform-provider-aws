@@ -103,4 +103,4 @@ Using `terraform import`, import AMP Workspaces using the identifier. For exampl
 % terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94364fd09dc8c162f82df7a4b9553955564416fc93204755b5fec4873553516a -->
+<!-- cache-key: cdktf-0.19.0 input-94364fd09dc8c162f82df7a4b9553955564416fc93204755b5fec4873553516a -->

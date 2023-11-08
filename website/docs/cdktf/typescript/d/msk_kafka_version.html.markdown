@@ -41,13 +41,13 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `preferredVersions` - (Optional) Ordered list of preferred Kafka versions. The first match in this list will be returned. Either `preferredVersions` or `version` must be set.
-* `version` - (Optional) Version of MSK Kafka. For example 2.4.1.1 or "2.2.1" etc. Either `preferredVersions` or `version` must be set.
+* `preferredVersions` - (Optional) Ordered list of preferred Kafka versions. The first match in this list will be returned. Either `preferred_versions` or `version` must be set.
+* `version` - (Optional) Version of MSK Kafka. For example 2.4.1.1 or "2.2.1" etc. Either `preferred_versions` or `version` must be set.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `status` - Status of the MSK Kafka version eg. `active` or `deprecated`.
+* `status` - Status of the MSK Kafka version eg. `ACTIVE` or `DEPRECATED`.
 
-<!-- cache-key: cdktf-0.18.0 input-6852054bc10e6a7e97a90613e2c215b051bd57037bfb23fddf1aebb0c8d4f92d -->
+<!-- cache-key: cdktf-0.19.0 input-6852054bc10e6a7e97a90613e2c215b051bd57037bfb23fddf1aebb0c8d4f92d -->

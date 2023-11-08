@@ -111,8 +111,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `projectName` - (Required) The name of the build project.
-* `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `build`, `buildBatch`.
-* `branchFilter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filterGroup` over `branchFilter`.
+* `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `branchFilter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filterGroup` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 
 `filterGroup` supports the following:
@@ -121,8 +121,8 @@ This resource supports the following arguments:
 
 `filter` supports the following:
 
-* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `event`, `baseRef`, `headRef`, `actorAccountId`, `filePath`, `commitMessage`. At least one filter group must specify `event` as its type.
-* `pattern` - (Required) For a filter that uses `event` type, a comma-separated string that specifies one event: `push`, `pullRequestCreated`, `pullRequestUpdated`, `pullRequestReopened`. `pullRequestMerged` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
+* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`. At least one filter group must specify `EVENT` as its type.
+* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
 * `excludeMatchedPattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
 
 ## Attribute Reference
@@ -158,4 +158,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cf2c7457e01d223f33713530c0bde71a1f3d519e66df2997191b2c29539aab1a -->
+<!-- cache-key: cdktf-0.19.0 input-cf2c7457e01d223f33713530c0bde71a1f3d519e66df2997191b2c29539aab1a -->

@@ -55,11 +55,11 @@ This argument supports the following arguments:
 * `cidrIpv6` - (Optional) The destination IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
 * `fromPort` - (Optional) The start of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 type.
-* `ipProtocol` - (Optional) The IP protocol name or number. Use `1` to specify all protocols. Note that if `ipProtocol` is set to `1`, it translates to all protocols, all port ranges, and `fromPort` and `toPort` values should not be defined.
+* `ipProtocol` - (Optional) The IP protocol name or number. Use `-1` to specify all protocols. Note that if `ip_protocol` is set to `-1`, it translates to all protocols, all port ranges, and `from_port` and `to_port` values should not be defined.
 * `prefixListId` - (Optional) The ID of the destination prefix list.
 * `referencedSecurityGroupId` - (Optional) The destination security group that is referenced in the rule.
 * `securityGroupId` - (Required) The ID of the security group.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
 ## Attribute Reference
@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the security group rule.
 * `securityGroupRuleId` - The ID of the security group rule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import security group egress rules using the `security
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3621cd75bed627759b23d79804e271902694303345d1faee64fd0fa94f65fd5d -->
+<!-- cache-key: cdktf-0.19.0 input-3621cd75bed627759b23d79804e271902694303345d1faee64fd0fa94f65fd5d -->

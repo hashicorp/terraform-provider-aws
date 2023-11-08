@@ -45,7 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) The optional description for the route calculator resource.
-* `tags` - (Optional) Key-value tags for the route calculator. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the route calculator. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -54,15 +54,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `calculatorArn` - The Amazon Resource Name (ARN) for the Route calculator resource. Use the ARN when you specify a resource across AWS.
 * `createTime` - The timestamp for when the route calculator resource was created in ISO 8601 format.
 * `updateTime` - The timestamp for when the route calculator resource was last update in ISO 8601.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsLocationRouteCalculator` using the route ca
 % terraform import aws_location_route_calculator.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f35e811fd2c633c763e78f808cf0b9c4d35fac2d693f5e1526c62049823223eb -->
+<!-- cache-key: cdktf-0.19.0 input-f35e811fd2c633c763e78f808cf0b9c4d35fac2d693f5e1526c62049823223eb -->

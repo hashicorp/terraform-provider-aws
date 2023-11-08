@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 * `subnetMapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
-* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `vpcId` - (Required, Forces new resource) The unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
@@ -76,13 +76,13 @@ This resource supports the following arguments:
 `encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `awsOwnedKmsKey`).
 
 * `keyId` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
-* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `customerKms` and `awsOwnedKmsKey`.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Subnet Mapping
 
 The `subnetMapping` block supports the following arguments:
 
-* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"dualstack"`, `"ipv4"`.
+* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnetId` - (Required) The unique identifier for the subnet.
 
 ## Attribute Reference
@@ -94,13 +94,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
 
 * `firewallStatus` - Nested list of information about the current status of the firewall.
-    * `syncStates` - Set of subnets configured for use by the firewall.
+    * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
-            * `endpointId` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
-            * `subnetId` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
-        * `availabilityZone` - The Availability Zone where the subnet is configured.
+            * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
+            * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
+        * `availability_zone` - The Availability Zone where the subnet is configured.
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `updateToken` - A string token used when updating a firewall.
 
@@ -126,4 +126,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2f79b5ba62479f655245def84991cac49da81f4de5c0c95cba76b91f27bb118b -->
+<!-- cache-key: cdktf-0.19.0 input-2f79b5ba62479f655245def84991cac49da81f4de5c0c95cba76b91f27bb118b -->

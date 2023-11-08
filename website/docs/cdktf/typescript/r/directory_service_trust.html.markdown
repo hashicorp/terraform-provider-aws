@@ -150,17 +150,17 @@ This resource supports the following arguments:
 * `directoryId` - (Required) ID of the Directory.
 * `remoteDomainName` - (Required) Fully qualified domain name of the remote Directory.
 * `selectiveAuth` - (Optional) Whether to enable selective authentication.
-  Valid values are `enabled` and `disabled`.
-  Default value is `disabled`.
+  Valid values are `Enabled` and `Disabled`.
+  Default value is `Disabled`.
 * `trustDirection` - (Required) The direction of the Trust relationship.
-  Valid values are `One-Way: Outgoing`, `One-Way: Incoming`, and `twoWay`.
+  Valid values are `One-Way: Outgoing`, `One-Way: Incoming`, and `Two-Way`.
 * `trustPassword` - (Required) Password for the Trust.
   Does not need to match the passwords for either Directory.
   Can contain upper- and lower-case letters, numbers, and punctuation characters.
   May be up to 128 characters long.
 * `trustType` - (Optional) Type of the Trust relationship.
-  Valid values are `forest` and `external`.
-  Default value is `forest`.
+  Valid values are `Forest` and `External`.
+  Default value is `Forest`.
 
 ## Attribute Reference
 
@@ -169,10 +169,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDateTime` - Date and time when the Trust was created.
 * `id` - The Trust identifier.
 * `lastUpdatedDateTime` - Date and time when the Trust was last updated.
-* `stateLastUpdatedDateTime` - Date and time when the Trust state in `trustState` was last updated.
+* `stateLastUpdatedDateTime` - Date and time when the Trust state in `trust_state` was last updated.
 * `trustState` - State of the Trust relationship.
-  One of `created`, `verifyFailed`,`verified`, `updateFailed`,`updated`,`deleted`, or `failed`.
-* `trustStateReason` - Reason for the Trust state set in `trustState`.
+  One of `Created`, `VerifyFailed`,`Verified`, `UpdateFailed`,`Updated`,`Deleted`, or `Failed`.
+* `trustStateReason` - Reason for the Trust state set in `trust_state`.
 
 ## Import
 
@@ -196,4 +196,4 @@ Using `terraform import`, import the Trust relationship using the directory ID a
 % terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->
+<!-- cache-key: cdktf-0.19.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->

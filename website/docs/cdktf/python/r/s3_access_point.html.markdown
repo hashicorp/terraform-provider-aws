@@ -169,4 +169,4 @@ Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 % terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62226ef5a5030fd4e742702fe5b17f262b9a0edbc8724a758784c5289d1270af -->
+<!-- cache-key: cdktf-0.19.0 input-62226ef5a5030fd4e742702fe5b17f262b9a0edbc8724a758784c5289d1270af -->

@@ -306,4 +306,4 @@ Using `terraform import`, import OpenSearchServerless Security Policy using the 
 % terraform import aws_opensearchserverless_security_policy.example example/encryption
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-becd08ee3f6a3b334c7cc8143eed41d3094a5e44bfbffe39e37ab8c8a317620e -->
+<!-- cache-key: cdktf-0.19.0 input-becd08ee3f6a3b334c7cc8143eed41d3094a5e44bfbffe39e37ab8c8a317620e -->

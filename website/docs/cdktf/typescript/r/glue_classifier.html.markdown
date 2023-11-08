@@ -137,8 +137,8 @@ This resource supports the following arguments:
 
 * `allowSingleColumn` - (Optional) Enables the processing of files that contain only one column.
 * `containsHeader` - (Optional) Indicates whether the CSV file contains a header. This can be one of "ABSENT", "PRESENT", or "UNKNOWN".
-* `customDatatypeConfigured` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
-* `customDatatypes` - (Optional) A list of supported custom datatypes. Valid values are `binary`, `boolean`, `date`, `decimal`, `double`, `float`, `int`, `long`, `short`, `string`, `timestamp`.
+* `customDatatypeConfigured` - (Optional) Enables the custom datatype to be configured.
+* `customDatatypes` - (Optional) A list of supported custom datatypes. Valid values are `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INT`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`.
 * `delimiter` - (Optional) The delimiter used in the Csv to separate columns.
 * `disableValueTrimming` - (Optional) Specifies whether to trim column values.
 * `header` - (Optional) A list of strings representing column names.
@@ -152,7 +152,7 @@ This resource supports the following arguments:
 
 ### json_classifier
 
-* `jsonPath` - (Required) A `jsonPath` string defining the JSON data for the classifier to classify. AWS Glue supports a subset of `jsonPath`, as described in [Writing JsonPath Custom Classifiers](https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html#custom-classifier-json).
+* `jsonPath` - (Required) A `JsonPath` string defining the JSON data for the classifier to classify. AWS Glue supports a subset of `JsonPath`, as described in [Writing JsonPath Custom Classifiers](https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html#custom-classifier-json).
 
 ### xml_classifier
 
@@ -187,4 +187,4 @@ Using `terraform import`, import Glue Classifiers using their name. For example:
 % terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-79f267ac82abd7c066ef5dc22fae51abc346ed566400e78952a79529d3af71bd -->
+<!-- cache-key: cdktf-0.19.0 input-45c5b9dcc31431683f885d5456b092e34a68aaf460831b6201359bdc7708bb7a -->

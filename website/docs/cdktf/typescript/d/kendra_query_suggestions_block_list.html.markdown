@@ -56,7 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the block list.
 * `roleArn` - ARN of a role with permission to access the S3 bucket that contains the block list. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `sourceS3Path` - S3 location of the block list input data. Detailed below.
-* `status` - Current status of the block list. When the value is `active`, the block list is ready for use.
+* `status` - Current status of the block list. When the value is `ACTIVE`, the block list is ready for use.
 * `updatedAt` - Date and time that the block list was last updated.
 * `tags` - Metadata that helps organize the block list you create.
 
@@ -65,4 +65,4 @@ The `sourceS3Path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.18.0 input-58c35b9645175484541533f7e8f00ee84fdfe37d2326bf35c9f952899e44f7a6 -->
+<!-- cache-key: cdktf-0.19.0 input-58c35b9645175484541533f7e8f00ee84fdfe37d2326bf35c9f952899e44f7a6 -->

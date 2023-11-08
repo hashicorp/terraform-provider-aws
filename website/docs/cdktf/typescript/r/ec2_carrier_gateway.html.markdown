@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcId` - (Required) The ID of the VPC to associate with the carrier gateway.
 
 ## Attribute Reference
@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the carrier gateway.
 * `id` - The ID of the carrier gateway.
 * `ownerId` - The AWS account ID of the owner of the carrier gateway.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -75,4 +75,4 @@ Using `terraform import`, import `awsEc2CarrierGateway` using the carrier gatewa
 % terraform import aws_ec2_carrier_gateway.example cgw-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9d4096fc983e6a4fb708311553dddf500634237507ba8f350eee35f1f925e85c -->
+<!-- cache-key: cdktf-0.19.0 input-9d4096fc983e6a4fb708311553dddf500634237507ba8f350eee35f1f925e85c -->

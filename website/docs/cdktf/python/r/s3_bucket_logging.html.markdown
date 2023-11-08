@@ -129,4 +129,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3cba2dd83f76e650304ea09cc4ee162c5bf05b0006a74f1eff49c0cb39bfcded -->
+<!-- cache-key: cdktf-0.19.0 input-3cba2dd83f76e650304ea09cc4ee162c5bf05b0006a74f1eff49c0cb39bfcded -->

@@ -239,14 +239,14 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A description of the pipe. At most 512 characters.
-* `desiredState` - (Optional) The state the pipe should be in. One of: `running`, `stopped`.
+* `desiredState` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichmentParameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
-* `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `sourceParameters` - (Optional) Parameters to configure a source for the pipe. Detailed below.
 * `targetParameters` - (Optional) Parameters to configure a target for your pipe. Detailed below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### enrichment_parameters Configuration Block
 
@@ -585,15 +585,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of this pipe.
 * `id` - Same as `name`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -617,4 +617,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->
+<!-- cache-key: cdktf-0.19.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->

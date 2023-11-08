@@ -59,4 +59,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
 
-<!-- cache-key: cdktf-0.18.0 input-cf513e77c3363383fd47f2e480126cd6439d06b2a5ae773b5b9401ac9b353ec6 -->
+<!-- cache-key: cdktf-0.19.0 input-cf513e77c3363383fd47f2e480126cd6439d06b2a5ae773b5b9401ac9b353ec6 -->

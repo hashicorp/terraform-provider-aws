@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_lightsail_bucket` using the `name` attribu
 % terraform import aws_lightsail_bucket.test example-bucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d78cdd83a8835a614b707d0e291b7c234f89104b66f2a32a7706513d7cce144c -->
+<!-- cache-key: cdktf-0.19.0 input-d78cdd83a8835a614b707d0e291b7c234f89104b66f2a32a7706513d7cce144c -->

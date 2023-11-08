@@ -71,26 +71,26 @@ The `thingGroupIndexingConfiguration` configuration block supports the following
 
 * `customField` - (Optional) A list of thing group fields to index. This list cannot contain any managed fields. See below.
 * `managedField` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
-* `thingGroupIndexingMode` - (Required) Thing group indexing mode. Valid values: `off`, `on`.
+* `thingGroupIndexingMode` - (Required) Thing group indexing mode. Valid values: `OFF`, `ON`.
 
 ### thing_indexing_configuration
 
 The `thingIndexingConfiguration` configuration block supports the following:
 
 * `customField` - (Optional) Contains custom field names and their data type. See below.
-* `deviceDefenderIndexingMode` - (Optional) Device Defender indexing mode. Valid values: `violations`, `off`. Default: `off`.
+* `deviceDefenderIndexingMode` - (Optional) Device Defender indexing mode. Valid values: `VIOLATIONS`, `OFF`. Default: `OFF`.
 * `managedField` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
-* `namedShadowIndexingMode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `on`, `off`. Default: `off`.
-* `filter` - (Optional) Required if `namedShadowIndexingMode` is `on`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
-* `thingConnectivityIndexingMode` - (Optional) Thing connectivity indexing mode. Valid values: `status`, `off`. Default: `off`.
-* `thingIndexingMode` - (Required) Thing indexing mode. Valid values: `registry`, `registryAndShadow`, `off`.
+* `namedShadowIndexingMode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `ON`, `OFF`. Default: `OFF`.
+* `filter` - (Optional) Required if `named_shadow_indexing_mode` is `ON`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
+* `thingConnectivityIndexingMode` - (Optional) Thing connectivity indexing mode. Valid values: `STATUS`, `OFF`. Default: `OFF`.
+* `thingIndexingMode` - (Required) Thing indexing mode. Valid values: `REGISTRY`, `REGISTRY_AND_SHADOW`, `OFF`.
 
 ### field
 
 The `customField` and `managedField` configuration blocks supports the following:
 
 * `name` - (Optional) The name of the field.
-* `type` - (Optional) The data type of the field. Valid values: `number`, `string`, `boolean`.
+* `type` - (Optional) The data type of the field. Valid values: `Number`, `String`, `Boolean`.
 
 ### filter
 
@@ -102,4 +102,4 @@ The `filter` configuration block supports the following:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->
+<!-- cache-key: cdktf-0.19.0 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->
