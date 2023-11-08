@@ -191,9 +191,8 @@ func ResourceJobDefinition() *schema.Resource {
 			},
 
 			"scheduling_priority": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 9999),
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 
 			names.AttrTags:    tftags.TagsSchema(),
