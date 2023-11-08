@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.130.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.19.0
@@ -71,6 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.31.0
@@ -140,7 +142,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.25.0 // indirect
 	github.com/aws/smithy-go v1.16.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect

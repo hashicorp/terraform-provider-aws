@@ -48,7 +48,7 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion := "v1.10.4-eksbuild.1"
+	addonVersion := "v1.15.3-eksbuild.1"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 
 	resource.ParallelTest(t, resource.TestCase{

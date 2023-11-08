@@ -131,7 +131,7 @@ ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,,,aws_ecr_,,ecr_,ECR (Elastic Container Regist
 ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,1,,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,
-eks,eks,eks,eks,,eks,,,EKS,EKS,,1,,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,
+eks,eks,eks,eks,,eks,,,EKS,EKS,,,2,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,
 elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,1,,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,
 elastic-inference,elasticinference,elasticinference,elasticinference,,elasticinference,,,ElasticInference,ElasticInference,,1,,,aws_elasticinference_,,elasticinference_,Elastic Inference,Amazon,,x,,,,
 elastictranscoder,elastictranscoder,elastictranscoder,elastictranscoder,,elastictranscoder,,,ElasticTranscoder,ElasticTranscoder,,1,,,aws_elastictranscoder_,,elastictranscoder_,Elastic Transcoder,Amazon,,,,,,
@@ -342,7 +342,7 @@ sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,,1,,,aws_ssoa
 identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,,,2,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,,
 sso-oidc,ssooidc,ssooidc,ssooidc,,ssooidc,,,SSOOIDC,SSOOIDC,,1,,,aws_ssooidc_,,ssooidc_,SSO OIDC,AWS,,x,,,,
 storagegateway,storagegateway,storagegateway,storagegateway,,storagegateway,,,StorageGateway,StorageGateway,,1,,,aws_storagegateway_,,storagegateway_,Storage Gateway,AWS,,,,,,
-sts,sts,sts,sts,,sts,,,STS,STS,x,1,,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,
+sts,sts,sts,sts,,sts,,,STS,STS,x,1,2,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,
 ,,,,,,,,,,,,,,,,,Sumerian,Amazon,x,,,,,No SDK support
 support,support,support,support,,support,,,Support,Support,,1,,,aws_support_,,support_,Support,AWS,,x,,,,
 swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,,,,,,

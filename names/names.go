@@ -37,6 +37,7 @@ const (
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
+	EKSEndpointID                        = "eks"
 	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
@@ -69,6 +70,7 @@ const (
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
+	STSEndpointID                        = "sts"
 	SWFEndpointID                        = "swf"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
@@ -79,6 +81,7 @@ const (
 // These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
+	ChinaPartitionID      = "aws-cn"     // AWS China partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.
 	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )

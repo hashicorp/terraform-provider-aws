@@ -22,6 +22,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
@@ -65,6 +66,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -133,7 +135,6 @@ import (
 	ecrpublic_sdkv1 "github.com/aws/aws-sdk-go/service/ecrpublic"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
-	eks_sdkv1 "github.com/aws/aws-sdk-go/service/eks"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -527,8 +528,8 @@ func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
 	return errs.Must(conn[*efs_sdkv1.EFS](ctx, c, names.EFS))
 }
 
-func (c *AWSClient) EKSConn(ctx context.Context) *eks_sdkv1.EKS {
-	return errs.Must(conn[*eks_sdkv1.EKS](ctx, c, names.EKS))
+func (c *AWSClient) EKSClient(ctx context.Context) *eks_sdkv2.Client {
+	return errs.Must(client[*eks_sdkv2.Client](ctx, c, names.EKS))
 }
 
 func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
@@ -973,6 +974,10 @@ func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
 
 func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
 	return errs.Must(conn[*sts_sdkv1.STS](ctx, c, names.STS))
+}
+
+func (c *AWSClient) STSClient(ctx context.Context) *sts_sdkv2.Client {
+	return errs.Must(client[*sts_sdkv2.Client](ctx, c, names.STS))
 }
 
 func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
