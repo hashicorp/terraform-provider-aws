@@ -67,6 +67,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
@@ -77,6 +78,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
@@ -104,6 +106,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -111,16 +114,19 @@ func ResourceFeatureGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 									"database": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 									"table_name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -128,26 +134,31 @@ func ResourceFeatureGroup() *schema.Resource {
 						"disable_glue_table_creation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"s3_storage_config": {
 							Type:     schema.TypeList,
 							Required: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 									"resolved_output_s3_uri": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 									"s3_uri": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -155,6 +166,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"table_format": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      sagemaker.TableFormatGlue,
 							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
 						},
@@ -164,6 +176,7 @@ func ResourceFeatureGroup() *schema.Resource {
 			"online_store_config": {
 				Type:         schema.TypeList,
 				Optional:     true,
+				ForceNew:     true,
 				MaxItems:     1,
 				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
@@ -184,6 +197,7 @@ func ResourceFeatureGroup() *schema.Resource {
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
@@ -341,18 +355,20 @@ func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	input := &sagemaker.UpdateFeatureGroupInput{
-		FeatureGroupName: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &sagemaker.UpdateFeatureGroupInput{
+			FeatureGroupName: aws.String(d.Id()),
+		}
 
-	if d.HasChange("online_store_config") {
-		input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]interface{}))
-	}
+		if d.HasChange("online_store_config") {
+			input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]interface{}))
+		}
 
-	_, err := conn.UpdateFeatureGroupWithContext(ctx, input)
+		_, err := conn.UpdateFeatureGroupWithContext(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)

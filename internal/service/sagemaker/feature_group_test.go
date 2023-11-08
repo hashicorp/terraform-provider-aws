@@ -5,9 +5,11 @@ package sagemaker_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -252,7 +254,7 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 
 func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	var featureGroup1, featureGroup2 sagemaker.DescribeFeatureGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_feature_group.test"
 
@@ -265,7 +267,7 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 			{
 				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Seconds"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup1),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Seconds"),
@@ -280,7 +282,13 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 			{
 				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Minutes"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup2),
+					func(*terraform.State) error {
+						if !aws.TimeValue(featureGroup1.CreationTime).Equal(aws.TimeValue(featureGroup1.CreationTime)) {
+							return errors.New("SageMaker Feature Group was recreated")
+						}
+						return nil
+					},
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Minutes"),

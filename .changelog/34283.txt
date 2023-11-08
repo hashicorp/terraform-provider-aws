@@ -3,5 +3,5 @@ resource/aws_sagemaker_feature_group: Add `offline_store_config.s3_storage_confi
 ```
 
 ```release-note:enhancement
-resource/aws_sagemaker_feature_group: Allow `online_store_config` to be updated in-place
+resource/aws_sagemaker_feature_group: Allow `online_store_config.ttl_duration` to be updated in-place
 ```
