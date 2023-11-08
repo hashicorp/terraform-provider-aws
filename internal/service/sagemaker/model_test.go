@@ -307,8 +307,8 @@ func TestAccSageMakerModel_primaryContainerModelDataSource(t *testing.T) {
 				Config: testAccModelConfig_primaryContainerUncompressedModel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source"),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_source.compression_type"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
 				),
 			},
 			{
@@ -790,11 +790,70 @@ resource "aws_sagemaker_model" "test" {
     model_data_source {
       s3_data_source {
         s3_data_type     = "S3Prefix"
-        s3_uri           = "s3://bucket/prefix"
+        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
         compression_type = "None"
       }
     }
   }
+}
+
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  description = "Allow SageMaker to create model"
+  policy      = data.aws_iam_policy_document.policy.json
+}
+
+data "aws_iam_policy_document" "policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.test.arn}",
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "model/inference.py"
+  content = "some-data"
 }
 `, rName))
 }
