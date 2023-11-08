@@ -94,7 +94,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	jobQueueDataV2 := resourceJobQueueData{
 		ComputeEnvironments: jobQueueDataV0.ComputeEnvironments,
 		ID:                  jobQueueDataV0.ID,
-		Name:                jobQueueDataV0.Name,
+		JobQueueName:        jobQueueDataV0.Name,
 		Priority:            jobQueueDataV0.Priority,
 		State:               jobQueueDataV0.State,
 		Tags:                jobQueueDataV0.Tags,
