@@ -342,7 +342,6 @@ func ResourceEndpoint() *schema.Resource {
 			"pause_replication_tasks": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"port": {
 				Type:          schema.TypeInt,
