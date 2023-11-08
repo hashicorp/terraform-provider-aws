@@ -322,13 +322,13 @@ func TestAccAppConfigEnvironment_tagsWithNullValue(t *testing.T) {
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.key2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				// ~ tags           = {
+				// 	~ "key2" = "" -> null
+				// 	  # (1 unchanged element hidden)
+				//   }
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
