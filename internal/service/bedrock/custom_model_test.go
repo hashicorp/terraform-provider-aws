@@ -15,7 +15,7 @@ import (
 func TestAccBedrockCustomModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// customModelResourceName := "aws_bedrock_custom_model.test"
+	customModelResourceName := "aws_bedrock_custom_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -24,20 +24,22 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 			{
 				Config: testAccCustomModelConfig_basic(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-				// testAccCheckAddonExists(ctx, customModelResourceName, &addon),
-				// resource.TestCheckResourceAttr(customModelResourceName, "addon_name", addonName),
+				// testAccCheckAddonExists(ctx, customModelResourceName, &model),
+				  resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
+          resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
+          resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
+          resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
+        // acctest.MatchResourceAttrRegionalARN(customModelResourceName, "arn", "bedrock", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 				// resource.TestCheckResourceAttrSet(customModelResourceName, "addon_version"),
-				// acctest.MatchResourceAttrRegionalARN(customModelResourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
-				// resource.TestCheckResourceAttr(customModelResourceName, "configuration_values", ""),
 				// resource.TestCheckNoResourceAttr(customModelResourceName, "preserve"),
-				// resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
+				  
 				),
 			},
-			// {
-			// 	ResourceName:      customModelResourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      customModelResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
