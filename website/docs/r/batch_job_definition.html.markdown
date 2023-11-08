@@ -202,7 +202,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the job definition, includes revision (`:#`).
-* `arn_prefix` - The ARN without the revision
+* `arn_prefix` - The ARN without the revision number.
 * `revision` - The revision of the job definition.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
