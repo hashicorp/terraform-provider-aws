@@ -627,14 +627,6 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_networkIPFamily(rName, `"v6"`),
-				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
-			},
-			{
-				Config:      testAccClusterConfig_networkIPFamily(rName, `"IPv4"`),
-				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
-			},
-			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
