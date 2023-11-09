@@ -6,17 +6,25 @@ package iot
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	// Maximum amount of time for a just-removed policy attachment to propagate.
+	policyAttachmentTimeout = 5 * time.Minute
 )
 
 // @SDKResource("aws_iot_policy")
@@ -153,10 +161,29 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// Delete all non-default versions of the policy
 	for _, ver := range out.PolicyVersions {
 		if !aws.BoolValue(ver.IsDefaultVersion) {
-			_, err = conn.DeletePolicyVersionWithContext(ctx, &iot.DeletePolicyVersionInput{
-				PolicyName:      aws.String(d.Id()),
-				PolicyVersionId: ver.VersionId,
+			err = retry.RetryContext(ctx, policyAttachmentTimeout, func() *retry.RetryError {
+				_, err := conn.DeletePolicyVersionWithContext(ctx, &iot.DeletePolicyVersionInput{
+					PolicyName:      aws.String(d.Id()),
+					PolicyVersionId: ver.VersionId,
+				})
+
+				if tfawserr.ErrCodeEquals(err, iot.ErrCodeDeleteConflictException) {
+					return retry.RetryableError(err)
+				}
+
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+
+				return nil
 			})
+
+			if tfresource.TimedOut(err) {
+				_, err = conn.DeletePolicyVersionWithContext(ctx, &iot.DeletePolicyVersionInput{
+					PolicyName:      aws.String(d.Id()),
+					PolicyVersionId: ver.VersionId,
+				})
+			}
 
 			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 				continue
@@ -169,9 +196,27 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	//Delete default policy version
-	_, err = conn.DeletePolicyWithContext(ctx, &iot.DeletePolicyInput{
-		PolicyName: aws.String(d.Id()),
+	err = retry.RetryContext(ctx, policyAttachmentTimeout, func() *retry.RetryError {
+		_, err := conn.DeletePolicyWithContext(ctx, &iot.DeletePolicyInput{
+			PolicyName: aws.String(d.Id()),
+		})
+
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeDeleteConflictException) {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeletePolicyWithContext(ctx, &iot.DeletePolicyInput{
+			PolicyName: aws.String(d.Id()),
+		})
+	}
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return diags
