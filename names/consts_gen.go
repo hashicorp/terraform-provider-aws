@@ -178,6 +178,7 @@ const (
 	SSM                          = "ssm"
 	SSMContacts                  = "ssmcontacts"
 	SSMIncidents                 = "ssmincidents"
+	SSO                          = "sso"
 	SSOAdmin                     = "ssoadmin"
 	STS                          = "sts"
 	SWF                          = "swf"
