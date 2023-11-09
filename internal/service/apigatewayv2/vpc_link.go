@@ -100,17 +100,18 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	outputRaw, _, err := StatusVPCLink(ctx, conn, d.Id())()
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	output, err := FindVPCLinkByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*apigatewayv2.GetVpcLinkOutput)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
@@ -119,12 +120,8 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}.String()
 	d.Set("arn", arn)
 	d.Set("name", output.Name)
-	if err := d.Set("security_group_ids", flex.FlattenStringSet(output.SecurityGroupIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_group_ids: %s", err)
-	}
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(output.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
+	d.Set("security_group_ids", aws.StringValueSlice(output.SecurityGroupIds))
+	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
 	setTagsOut(ctx, output.Tags)
 
