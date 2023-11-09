@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,8 +46,8 @@ func ResourceVoiceConnector() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				Default:      chimesdkvoice.VoiceConnectorAwsRegionUsEast1,
-				ValidateFunc: validation.StringInSlice([]string{chimesdkvoice.VoiceConnectorAwsRegionUsEast1, chimesdkvoice.VoiceConnectorAwsRegionUsWest2}, false),
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(chimesdkvoice.VoiceConnectorAwsRegion_Values(), false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -65,8 +66,21 @@ func ResourceVoiceConnector() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			resourceVoiceConnectorDefaultRegion,
+		),
 	}
+}
+
+func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if v, ok := diff.Get("aws_region").(string); !ok || v == "" {
+		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -76,10 +90,13 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 	createInput := &chimesdkvoice.CreateVoiceConnectorInput{
 		Name:              aws.String(d.Get("name").(string)),
 		RequireEncryption: aws.Bool(d.Get("require_encryption").(bool)),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("aws_region"); ok {
 		createInput.AwsRegion = aws.String(v.(string))
+	} else {
+		createInput.AwsRegion = aws.String(meta.(*conns.AWSClient).Region)
 	}
 
 	resp, err := conn.CreateVoiceConnectorWithContext(ctx, createInput)
@@ -89,10 +106,10 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(resp.VoiceConnector.VoiceConnectorId))
 
-	tagsConn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-	if err := createTags(ctx, tagsConn, aws.StringValue(resp.VoiceConnector.VoiceConnectorArn), getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector (%s) tags: %s", d.Id(), err)
-	}
+	//tagsConn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	//if err := createTags(ctx, tagsConn, aws.StringValue(resp.VoiceConnector.VoiceConnectorArn), getTagsIn(ctx)); err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector (%s) tags: %s", d.Id(), err)
+	//}
 
 	return append(diags, resourceVoiceConnectorRead(ctx, d, meta)...)
 }
@@ -101,9 +118,29 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
-		return findVoiceConnectorByID(ctx, conn, d.Id())
-	}, d.IsNewResource())
+	//var resp *chimesdkvoice.VoiceConnector
+	//err := tfresource.Retry(ctx, 1*time.Minute, func() *retry.RetryError {
+	//	var err error
+	//	resp, err = findVoiceConnectorByID(ctx, conn, d.Id())
+	//	if d.IsNewResource() && tfresource.NotFound(err) {
+	//		return retry.RetryableError(err)
+	//	}
+	//
+	//	if err != nil {
+	//		return retry.NonRetryableError(err)
+	//	}
+	//
+	//	return nil
+	//}, tfresource.WithDelay(5*time.Second))
+
+	resp, err := findVoiceConnectorWithRetry(ctx, conn, d.IsNewResource(), d.Id())
+
+	if tfresource.TimedOut(err) {
+		resp, err = findVoiceConnectorByID(ctx, conn, d.Id())
+	}
+	//outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
+	//	return findVoiceConnectorByID(ctx, conn, d.Id())
+	//}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
@@ -115,7 +152,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Voice Connector (%s): %s", d.Id(), err)
 	}
 
-	resp := outputRaw.(*chimesdkvoice.VoiceConnector)
+	// resp := outputRaw.(*chimesdkvoice.VoiceConnector)
 
 	d.Set("arn", resp.VoiceConnectorArn)
 	d.Set("aws_region", resp.AwsRegion)
@@ -187,4 +224,23 @@ func findVoiceConnectorByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoi
 	}
 
 	return resp.VoiceConnector, nil
+}
+
+func findVoiceConnectorWithRetry(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, isNewResource bool, id string) (*chimesdkvoice.VoiceConnector, error) {
+	var resp *chimesdkvoice.VoiceConnector
+	err := tfresource.Retry(ctx, 1*time.Minute, func() *retry.RetryError {
+		var err error
+		resp, err = findVoiceConnectorByID(ctx, conn, id)
+		if isNewResource && tfresource.NotFound(err) {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithDelay(5*time.Second))
+
+	return resp, err
 }

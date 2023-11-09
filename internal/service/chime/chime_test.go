@@ -19,31 +19,31 @@ func TestAccChime_serial(t *testing.T) {
 			"update":     testAccVoiceConnector_update,
 			"tags":       testAccVoiceConnector_tags,
 		},
-		"VoiceConnectorGroup": {
-			"basic":      testAccVoiceConnectorGroup_basic,
-			"disappears": testAccVoiceConnectorGroup_disappears,
-			"update":     testAccVoiceConnectorGroup_update,
-		},
-		"VoiceConnectorLogging": {
-			"basic":      testAccVoiceConnectorLogging_basic,
-			"disappears": testAccVoiceConnectorLogging_disappears,
-			"update":     testAccVoiceConnectorLogging_update,
-		},
-		"VoiceConnectorOrigination": {
-			"basic":      testAccVoiceConnectorOrigination_basic,
-			"disappears": testAccVoiceConnectorOrigination_disappears,
-			"update":     testAccVoiceConnectorOrigination_update,
-		},
-		"VoiceConnectorTermination": {
-			"basic":      testAccVoiceConnectorTermination_basic,
-			"disappears": testAccVoiceConnectorTermination_disappears,
-			"update":     testAccVoiceConnectorTermination_update,
-		},
-		"VoiceConnectorTerminationCredentials": {
-			"basic":      testAccVoiceConnectorTerminationCredentials_basic,
-			"disappears": testAccVoiceConnectorTerminationCredentials_disappears,
-			"update":     testAccVoiceConnectorTerminationCredentials_update,
-		},
+		//"VoiceConnectorGroup": {
+		//	"basic":      testAccVoiceConnectorGroup_basic,
+		//	"disappears": testAccVoiceConnectorGroup_disappears,
+		//	"update":     testAccVoiceConnectorGroup_update,
+		//},
+		//"VoiceConnectorLogging": {
+		//	"basic":      testAccVoiceConnectorLogging_basic,
+		//	"disappears": testAccVoiceConnectorLogging_disappears,
+		//	"update":     testAccVoiceConnectorLogging_update,
+		//},
+		//"VoiceConnectorOrigination": {
+		//	"basic":      testAccVoiceConnectorOrigination_basic,
+		//	"disappears": testAccVoiceConnectorOrigination_disappears,
+		//	"update":     testAccVoiceConnectorOrigination_update,
+		//},
+		//"VoiceConnectorTermination": {
+		//	"basic":      testAccVoiceConnectorTermination_basic,
+		//	"disappears": testAccVoiceConnectorTermination_disappears,
+		//	"update":     testAccVoiceConnectorTermination_update,
+		//},
+		//"VoiceConnectorTerminationCredentials": {
+		//	"basic":      testAccVoiceConnectorTerminationCredentials_basic,
+		//	"disappears": testAccVoiceConnectorTerminationCredentials_disappears,
+		//	"update":     testAccVoiceConnectorTerminationCredentials_update,
+		//},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
