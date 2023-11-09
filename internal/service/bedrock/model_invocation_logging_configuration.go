@@ -40,7 +40,7 @@ type s3ConfigModel struct {
 	KeyPrefix  types.String `tfsdk:"key_prefix"`
 }
 
-// @FrameworkResource
+// @FrameworkResource(name="Model Invocation Logging Configuration")
 func newResourceModelInvocationLoggingConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceModelInvocationLoggingConfiguration{}, nil
 }
