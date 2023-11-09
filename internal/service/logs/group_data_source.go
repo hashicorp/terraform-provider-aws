@@ -6,7 +6,7 @@ package logs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,7 +45,7 @@ func dataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -56,7 +56,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(name)
-	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(logGroup.Arn)))
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
