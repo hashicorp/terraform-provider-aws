@@ -5,6 +5,7 @@ package apigatewayv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -79,7 +80,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.DeploymentId))
 
-	if _, err := WaitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := waitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) create: %s", d.Id(), err)
 	}
 
@@ -127,7 +128,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Deployment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := waitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) update: %s", d.Id(), err)
 	}
 
@@ -197,48 +198,39 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input 
 	return output, nil
 }
 
-// StatusDeployment fetches the Deployment and its Status
-func StatusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID, deploymentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &apigatewayv2.GetDeploymentInput{
-			ApiId:        aws.String(apiId),
-			DeploymentId: aws.String(deploymentId),
-		}
+		output, err := FindDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
-		output, err := conn.GetDeploymentWithContext(ctx, input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, apigatewayv2.DeploymentStatusFailed, err
-		}
-
-		// Error messages can also be contained in the response with FAILED status
-
-		if aws.StringValue(output.DeploymentStatus) == apigatewayv2.DeploymentStatusFailed {
-			return output, apigatewayv2.DeploymentStatusFailed, fmt.Errorf("%s", aws.StringValue(output.DeploymentStatusMessage))
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.DeploymentStatus), nil
 	}
 }
 
-const (
-	// Maximum amount of time to wait for a Deployment to return Deployed
-	DeploymentDeployedTimeout = 5 * time.Minute
-)
-
-// WaitDeploymentDeployed waits for a Deployment to return Deployed
-func WaitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) (*apigatewayv2.GetDeploymentOutput, error) {
+func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.DeploymentStatusPending},
 		Target:  []string{apigatewayv2.DeploymentStatusDeployed},
-		Refresh: StatusDeployment(ctx, conn, apiId, deploymentId),
-		Timeout: DeploymentDeployedTimeout,
+		Refresh: statusDeployment(ctx, conn, apiID, deploymentID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.DeploymentStatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
