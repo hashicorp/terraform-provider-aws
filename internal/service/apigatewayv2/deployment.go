@@ -90,17 +90,18 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	outputRaw, _, err := StatusDeployment(ctx, conn, d.Get("api_id").(string), d.Id())()
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
-		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
+	output, err := FindDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 deployment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Deployment (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*apigatewayv2.GetDeploymentOutput)
 	d.Set("auto_deployed", output.AutoDeployed)
 	d.Set("description", output.Description)
 
