@@ -339,6 +339,10 @@ func ResourceEndpoint() *schema.Resource {
 				Sensitive:     true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"pause_replication_tasks": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"port": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -1304,10 +1308,24 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		_, err := conn.ModifyEndpointWithContext(ctx, input)
+		var tasks []*dms.ReplicationTask
+		if v, ok := d.GetOk("pause_replication_tasks"); ok && v.(bool) {
+			var err error
+			tasks, err = stopEndpointReplicationTasks(ctx, conn, d.Get("endpoint_arn").(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "pausing replication tasks before updating DMS Endpoint (%s): %s", d.Id(), err)
+			}
+		}
 
+		_, err := conn.ModifyEndpointWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("pause_replication_tasks"); ok && v.(bool) && len(tasks) > 0 {
+			if err := startEndpointReplicationTasks(ctx, conn, d.Get("endpoint_arn").(string), tasks); err != nil {
+				return sdkdiag.AppendErrorf(diags, "starting replication tasks after updating DMS Endpoint (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1577,6 +1595,103 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 
 	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
+
+	return nil
+}
+
+func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) error {
+	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		rtID := aws.StringValue(task.ReplicationTaskIdentifier)
+		switch aws.StringValue(task.Status) {
+		case replicationTaskStatusRunning, replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped:
+			continue
+		case replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting:
+			if err := waitReplicationTaskSteady(ctx, conn, rtID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) ([]*dms.ReplicationTask, error) {
+	if err := steadyEndpointReplicationTasks(ctx, conn, arn); err != nil {
+		return nil, err
+	}
+
+	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	if err != nil {
+		return nil, err
+	}
+
+	var stoppedTasks []*dms.ReplicationTask
+	for _, task := range tasks {
+		rtID := aws.StringValue(task.ReplicationTaskIdentifier)
+		switch aws.StringValue(task.Status) {
+		case replicationTaskStatusRunning:
+			err := stopReplicationTask(ctx, rtID, conn)
+			if tfawserr.ErrCodeEquals(err, dms.ErrCodeInvalidResourceStateFault) {
+				continue
+			}
+
+			if err != nil {
+				return stoppedTasks, err
+			}
+			stoppedTasks = append(stoppedTasks, task)
+		default:
+			continue
+		}
+	}
+
+	return stoppedTasks, nil
+}
+
+func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, tasks []*dms.ReplicationTask) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	if err := steadyEndpointReplicationTasks(ctx, conn, arn); err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		_, err := conn.TestConnectionWithContext(ctx, &dms.TestConnectionInput{
+			EndpointArn:            aws.String(arn),
+			ReplicationInstanceArn: task.ReplicationInstanceArn,
+		})
+
+		if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "already being tested") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("testing connection: %w", err)
+		}
+
+		err = conn.WaitUntilTestConnectionSucceedsWithContext(ctx, &dms.DescribeConnectionsInput{
+			Filters: []*dms.Filter{
+				{
+					Name:   aws.String("endpoint-arn"),
+					Values: []*string{aws.String(arn)},
+				},
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("waiting until test connection succeeds: %w", err)
+		}
+
+		if err := startReplicationTask(ctx, conn, aws.StringValue(task.ReplicationTaskIdentifier)); err != nil {
+			return fmt.Errorf("starting replication task: %w", err)
+		}
+	}
 
 	return nil
 }
