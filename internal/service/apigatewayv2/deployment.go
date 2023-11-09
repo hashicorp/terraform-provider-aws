@@ -59,23 +59,24 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	req := &apigatewayv2.CreateDeploymentInput{
+	input := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
 	}
+
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 deployment: %s", req)
-	resp, err := conn.CreateDeploymentWithContext(ctx, req)
+	output, err := conn.CreateDeploymentWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 deployment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 Deployment: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.DeploymentId))
+	d.SetId(aws.StringValue(output.DeploymentId))
 
 	if _, err := WaitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
