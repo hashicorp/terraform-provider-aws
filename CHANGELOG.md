@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_lifecycle_hook: Add plan-time validation of `default_result`, `heartbeat_timeout`, `lifecycle_transition`, `name`, `notification_target_arn` and `role_arn` ([#12145](https://github.com/hashicorp/terraform-provider-aws/issues/12145))
 * resource/aws_datasync_task: Add `task_report_config` argument ([#33861](https://github.com/hashicorp/terraform-provider-aws/issues/33861))
 * resource/aws_db_instance: Add `postgres` as a valid `engine` value for blue/green deployments ([#34216](https://github.com/hashicorp/terraform-provider-aws/issues/34216))
+* resource/aws_dms_endpoint: Add `pause_replication_tasks`, which when set to `true`, pauses associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint (only tasks paused by the resource will be restarted after the modification completes) ([#34316](https://github.com/hashicorp/terraform-provider-aws/issues/34316))
 * resource/aws_eks_cluster: Allow `vpc_config.security_group_ids` and `vpc_config.subnet_ids` to be updated in-place ([#32409](https://github.com/hashicorp/terraform-provider-aws/issues/32409))
 * resource/aws_inspector2_organization_configuration: Add `lambda_code` argument to the `auto_enable` configuration block ([#34261](https://github.com/hashicorp/terraform-provider-aws/issues/34261))
 * resource/aws_route53_record: Allow import of records with an empty record name. ([#34212](https://github.com/hashicorp/terraform-provider-aws/issues/34212))
