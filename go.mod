@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.47.4
+	github.com/aws/aws-sdk-go v1.47.5
 	github.com/aws/aws-sdk-go-v2 v1.22.1
 	github.com/aws/aws-sdk-go-v2/config v1.20.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.2
@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.130.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.19.0
@@ -52,7 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.12.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.18.0
@@ -71,6 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.31.0
@@ -131,8 +133,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.23.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.22.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.1 // indirect
@@ -140,7 +142,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.25.0 // indirect
 	github.com/aws/smithy-go v1.16.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
@@ -207,3 +208,5 @@ exclude ( // Contains INI parsing regression
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.0
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.1
 )
+
+replace github.com/hashicorp/aws-sdk-go-base/v2 => github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.38.0.20231106231929-ee4c6bb6c5c8
