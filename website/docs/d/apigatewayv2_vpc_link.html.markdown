@@ -16,7 +16,7 @@ Terraform data source for managing an AWS API Gateway V2 VPC Link.
 
 ```terraform
 data "aws_apigatewayv2_vpc_link" "example" {
-  id = "example"
+  vpc_link_id = "example"
 }
 ```
 
@@ -24,7 +24,7 @@ data "aws_apigatewayv2_vpc_link" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) VPC Link ID
+* `vpc_link_id` - (Required) VPC Link ID
 
 ## Attribute Reference
 

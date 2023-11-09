@@ -92,7 +92,7 @@ resource "aws_apigatewayv2_vpc_link" "test" {
 }
 
 data "aws_apigatewayv2_vpc_link" "test" {
-  id = aws_apigatewayv2_vpc_link.test.id
+  vpc_link_id = aws_apigatewayv2_vpc_link.test.id
 }
 `, rName)
 }
