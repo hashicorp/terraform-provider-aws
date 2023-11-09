@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Adds SSO API endpoint override parameter `endpoints.sso` ([#34302](https://github.com/hashicorp/terraform-provider-aws/issues/34302))
 * resource/aws_appflow_connector_profile: Add `jwt_token` and `oauth2_grant_type` arguments to the `connector_profile_config.connector_profile_credentials.salesforce` block. ([#34248](https://github.com/hashicorp/terraform-provider-aws/issues/34248))
 * resource/aws_autoscaling_group: Add plan-time validation of `initial_lifecycle_hook.default_result`, `initial_lifecycle_hook.heartbeat_timeout`, `initial_lifecycle_hook.lifecycle_transition`, `initial_lifecycle_hook.name`, `initial_lifecycle_hook.notification_target_arn` and `initial_lifecycle_hook.role_arn` ([#12145](https://github.com/hashicorp/terraform-provider-aws/issues/12145))
 * resource/aws_autoscaling_lifecycle_hook: Add plan-time validation of `default_result`, `heartbeat_timeout`, `lifecycle_transition`, `name`, `notification_target_arn` and `role_arn` ([#12145](https://github.com/hashicorp/terraform-provider-aws/issues/12145))
