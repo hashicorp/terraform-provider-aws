@@ -52,8 +52,9 @@ func expandValidationDataConfig(ctx context.Context, model *validationDataConfig
 
 	apiObject := &bedrock_types.ValidationDataConfig{}
 	for _, validator := range flex.ExpandFrameworkStringValueSet(ctx, model.Validators) {
+		s3uri := validator
 		apiObject.Validators = append(apiObject.Validators, bedrock_types.Validator{
-			S3Uri: &validator,
+			S3Uri: &s3uri,
 		})
 	}
 

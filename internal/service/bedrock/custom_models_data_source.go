@@ -5,14 +5,17 @@ package bedrock
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // @FrameworkDataSource
@@ -84,7 +87,7 @@ func (d *dataSourceCustomModels) Read(ctx context.Context, request datasource.Re
 	}
 
 	data.ID = flex.StringToFramework(ctx, &d.Meta().Region)
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, models)...)
+	data.refreshFromOutput(ctx, models)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -93,37 +96,32 @@ type customModels struct {
 	ModelSummaries types.List   `tfsdk:"model_summaries"`
 }
 
-func (cms *customModels) refreshFromOutput(ctx context.Context, out *bedrock.ListCustomModelsOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (cms *customModels) refreshFromOutput(ctx context.Context, out *bedrock.ListCustomModelsOutput) {
 	if out == nil {
-		return diags
+		return
 	}
-
-	// cms.ModelSummaries = flattenCustomModelSummaries(ctx, out.ModelSummaries)
-
-	return diags
+	cms.ModelSummaries = flattenCustomModelSummaries(ctx, out.ModelSummaries)
 }
 
-// func flattenCustomModelSummaries(ctx context.Context, models []bedrock_types.CustomModelSummary) types.List {
-// 	attributeTypes := flex.AttributeTypesMust[customModels](ctx)
-// 	elemType := types.ObjectType{AttrTypes: attributeTypes}
+func flattenCustomModelSummaries(ctx context.Context, models []bedrock_types.CustomModelSummary) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[customModels](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
-// 	if models == nil {
-// 		return types.ListNull(elemType)
-// 	}
+	if models == nil {
+		return types.ListNull(elemType)
+	}
 
-// 	attrs := make([]attr.Value, 0, len(models))
-// 	for _, model := range models {
-// 		attr := map[string]attr.Value{}
-// 		attr["base_model_arn"] = flex.StringToFramework(ctx, model.BaseModelArn)
-// 		attr["base_model_name"] = flex.StringToFramework(ctx, model.BaseModelName)
-// 		attr["model_arn"] = flex.StringToFramework(ctx, model.ModelArn)
-// 		attr["model_name"] = flex.StringToFramework(ctx, model.ModelName)
-// 		attr["creation_time"] = flex.StringValueToFramework[string](ctx, model.CreationTime.Format(time.RFC3339))
-// 		val := types.ObjectValueMust(attributeTypes, attr)
-// 		attrs = append(attrs, val)
-// 	}
+	attrs := make([]attr.Value, 0, len(models))
+	for _, model := range models {
+		attr := map[string]attr.Value{}
+		attr["base_model_arn"] = flex.StringToFramework(ctx, model.BaseModelArn)
+		attr["base_model_name"] = flex.StringToFramework(ctx, model.BaseModelName)
+		attr["model_arn"] = flex.StringToFramework(ctx, model.ModelArn)
+		attr["model_name"] = flex.StringToFramework(ctx, model.ModelName)
+		attr["creation_time"] = flex.StringValueToFramework[string](ctx, model.CreationTime.Format(time.RFC3339))
+		val := types.ObjectValueMust(attributeTypes, attr)
+		attrs = append(attrs, val)
+	}
 
-// 	return types.ListValueMust(elemType, attrs)
-// }
+	return types.ListValueMust(elemType, attrs)
+}

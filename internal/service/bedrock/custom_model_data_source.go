@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -135,7 +134,7 @@ func (d *dataSourceCustomModel) Read(ctx context.Context, request datasource.Rea
 	}
 	data.JobTags = flex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, model)...)
+	data.refreshFromOutput(ctx, model)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -159,11 +158,9 @@ type customModel struct {
 	Tags                 types.Map             `tfsdk:"tags"`
 }
 
-func (data *customModel) refreshFromOutput(ctx context.Context, model *bedrock.GetCustomModelOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (data *customModel) refreshFromOutput(ctx context.Context, model *bedrock.GetCustomModelOutput) {
 	if model == nil {
-		return diags
+		return
 	}
 
 	data.ID = flex.StringToFramework(ctx, model.ModelArn)
@@ -179,6 +176,4 @@ func (data *customModel) refreshFromOutput(ctx context.Context, model *bedrock.G
 	data.TrainingMetrics = flattenTrainingMetrics(ctx, model.TrainingMetrics)
 	data.ValidationMetrics = flattenValidationMetrics(ctx, model.ValidationMetrics)
 	data.OutputDataConfig = flex.StringToFramework(ctx, model.OutputDataConfig.S3Uri)
-
-	return diags
 }
