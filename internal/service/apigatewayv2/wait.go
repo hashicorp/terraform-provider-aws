@@ -14,12 +14,6 @@ import (
 const (
 	// Maximum amount of time to wait for a Deployment to return Deployed
 	DeploymentDeployedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a VPC Link to return Available
-	VPCLinkAvailableTimeout = 10 * time.Minute
-
-	// Maximum amount of time to wait for a VPC Link to return Deleted
-	VPCLinkDeletedTimeout = 10 * time.Minute
 )
 
 // WaitDeploymentDeployed waits for a Deployment to return Deployed
@@ -34,42 +28,6 @@ func WaitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitVPCLinkAvailable waits for a VPC Link to return Available
-func WaitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusPending},
-		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
-		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
-		Timeout: VPCLinkAvailableTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitVPCLinkDeleted waits for a VPC Link to return Deleted
-func WaitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
-		Target:  []string{apigatewayv2.VpcLinkStatusFailed},
-		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
-		Timeout: VPCLinkDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
 		return v, err
 	}
 

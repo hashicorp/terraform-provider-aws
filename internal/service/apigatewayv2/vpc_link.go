@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -170,4 +172,71 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+// StatusVPCLink fetches the VPC Link and its Status
+func StatusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apigatewayv2.GetVpcLinkInput{
+			VpcLinkId: aws.String(vpcLinkId),
+		}
+
+		output, err := conn.GetVpcLinkWithContext(ctx, input)
+
+		if err != nil {
+			return nil, apigatewayv2.VpcLinkStatusFailed, err
+		}
+
+		// Error messages can also be contained in the response with FAILED status
+
+		if aws.StringValue(output.VpcLinkStatus) == apigatewayv2.VpcLinkStatusFailed {
+			return output, apigatewayv2.VpcLinkStatusFailed, fmt.Errorf("%s", aws.StringValue(output.VpcLinkStatusMessage))
+		}
+
+		return output, aws.StringValue(output.VpcLinkStatus), nil
+	}
+}
+
+const (
+	// Maximum amount of time to wait for a VPC Link to return Available
+	VPCLinkAvailableTimeout = 10 * time.Minute
+
+	// Maximum amount of time to wait for a VPC Link to return Deleted
+	VPCLinkDeletedTimeout = 10 * time.Minute
+)
+
+// WaitVPCLinkAvailable waits for a VPC Link to return Available
+func WaitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{apigatewayv2.VpcLinkStatusPending},
+		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
+		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
+		Timeout: VPCLinkAvailableTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// WaitVPCLinkDeleted waits for a VPC Link to return Deleted
+func WaitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
+		Target:  []string{apigatewayv2.VpcLinkStatusFailed},
+		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
+		Timeout: VPCLinkDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
+		return v, err
+	}
+
+	return nil, err
 }
