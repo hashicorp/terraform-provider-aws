@@ -94,8 +94,6 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("aws_region"); ok {
 		createInput.AwsRegion = aws.String(v.(string))
-	} else {
-		createInput.AwsRegion = aws.String(meta.(*conns.AWSClient).Region)
 	}
 
 	resp, err := conn.CreateVoiceConnectorWithContext(ctx, createInput)
