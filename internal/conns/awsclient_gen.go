@@ -103,7 +103,6 @@ import (
 	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
 	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
 	cloudwatchevidently_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	cloudwatchlogs_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
 	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
@@ -742,10 +741,6 @@ func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
 	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location))
-}
-
-func (c *AWSClient) LogsConn(ctx context.Context) *cloudwatchlogs_sdkv1.CloudWatchLogs {
-	return errs.Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](ctx, c, names.Logs))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
