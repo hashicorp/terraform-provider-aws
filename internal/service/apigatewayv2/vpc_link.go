@@ -246,7 +246,7 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vp
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
-		Target:  []string{apigatewayv2.VpcLinkStatusFailed},
+		Target:  []string{},
 		Refresh: statusVPCLink(ctx, conn, vpcLinkId),
 		Timeout: timeout,
 	}
