@@ -6,7 +6,6 @@ package chime
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
@@ -113,7 +112,9 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	resp, err := findVoiceConnectorWithRetry(ctx, conn, d.IsNewResource(), d.Id())
+	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.VoiceConnector, error) {
+		return findVoiceConnectorByID(ctx, conn, d.Id())
+	})
 
 	if tfresource.TimedOut(err) {
 		resp, err = findVoiceConnectorByID(ctx, conn, d.Id())
@@ -199,23 +200,4 @@ func findVoiceConnectorByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoi
 	}
 
 	return resp.VoiceConnector, nil
-}
-
-func findVoiceConnectorWithRetry(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, isNewResource bool, id string) (*chimesdkvoice.VoiceConnector, error) {
-	var resp *chimesdkvoice.VoiceConnector
-	err := tfresource.Retry(ctx, 1*time.Minute, func() *retry.RetryError {
-		var err error
-		resp, err = findVoiceConnectorByID(ctx, conn, id)
-		if isNewResource && tfresource.NotFound(err) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	}, tfresource.WithDelay(5*time.Second))
-
-	return resp, err
 }

@@ -5,5 +5,6 @@ package chime
 
 // Exports for use in tests only.
 var (
-	FindVoiceConnectorWithRetry = findVoiceConnectorWithRetry
+	FindVoiceConnectorByID            = findVoiceConnectorByID
+	FindVoiceConnectorTerminationByID = findVoiceConnectorTerminationByID
 )

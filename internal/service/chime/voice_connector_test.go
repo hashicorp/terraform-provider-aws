@@ -256,7 +256,9 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-			_, err := tfchime.FindVoiceConnectorWithRetry(ctx, conn, false, rs.Primary.ID)
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnector, error) {
+				return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+			})
 
 			if tfresource.NotFound(err) {
 				continue
