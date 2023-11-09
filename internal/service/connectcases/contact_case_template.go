@@ -23,7 +23,7 @@ func ResourceTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTemplateCreate,
 		ReadWithoutTimeout:   resourceTemplateRead,
-		//UpdateWithoutTimeout: resourceTemplateUpdate,
+		UpdateWithoutTimeout: resourceTemplateUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -107,7 +107,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("status"); ok {
-		params.Status = types.TemplateStatus(v.(types.TemplateStatus))
+		params.Status = types.TemplateStatus(v.(string))
 	}
 
 	output, err := conn.CreateTemplate(ctx, params)
@@ -118,7 +118,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.ToString(output.TemplateId))
 	d.Set("template_arn", aws.ToString(output.TemplateArn))
 
-	return append(diags, resourceDomainRead(ctx, d, meta)...)
+	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -145,6 +145,47 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("status", output.Status)
 
 	return diags
+}
+
+func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
+
+	input := &connectcases.UpdateTemplateInput{
+		TemplateId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("name") {
+		input.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("layout_configuration") {
+		input.LayoutConfiguration = expandLayoutConfiguration(d.Get("layout_configuration").([]interface{}))
+	}
+
+	if d.HasChange("required_fields") {
+		input.RequiredFields = expandRequiredFields(d.Get("required_fields").([]interface{}))
+	}
+
+	if d.HasChange("status") {
+		input.Status = types.TemplateStatus(d.Get("status").(string))
+	}
+
+	_, err := conn.UpdateTemplate(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Connect Cases Template (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
 func flattenLayoutConfiguration(apiObject *types.LayoutConfiguration) []interface{} {

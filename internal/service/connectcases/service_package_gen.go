@@ -53,6 +53,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_connectcases_related_item",
 			Name:     "Connect Cases Related Item",
 		},
+		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_connectcases_template",
+			Name:     "Connect Cases Template",
+		},
 	}
 }
 
