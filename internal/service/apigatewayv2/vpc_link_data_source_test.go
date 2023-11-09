@@ -4,7 +4,6 @@
 package apigatewayv2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -28,13 +27,13 @@ func TestAccAPIGatewayV2VPCLinkDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -42,57 +41,9 @@ func TestAccAPIGatewayV2VPCLinkDataSource_basic(t *testing.T) {
 }
 
 func testAccVPCLinkDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_apigatewayv2_vpc_link" "test" {
-  name               = %[1]q
-  security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id
-
-  tags = {
-    Key1 = "Value1"
-    Key2 = "Value2"
-  }
-}
-
+	return acctest.ConfigCompose(testAccVPCLinkConfig_basic(rName), `
 data "aws_apigatewayv2_vpc_link" "test" {
   vpc_link_id = aws_apigatewayv2_vpc_link.test.id
 }
-`, rName)
+`)
 }
