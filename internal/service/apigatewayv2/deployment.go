@@ -110,22 +110,23 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	req := &apigatewayv2.UpdateDeploymentInput{
+	input := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
 	}
+
 	if d.HasChange("description") {
-		req.Description = aws.String(d.Get("description").(string))
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 deployment: %s", req)
-	_, err := conn.UpdateDeploymentWithContext(ctx, req)
+	_, err := conn.UpdateDeploymentWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 deployment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Deployment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
