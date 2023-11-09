@@ -214,7 +214,7 @@ func statusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiI
 	}
 }
 
-func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) {
+func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) { //nolint:unparam
 	const (
 		timeout = 5 * time.Minute
 	)
