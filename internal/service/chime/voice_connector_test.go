@@ -29,7 +29,6 @@ func testAccVoiceConnector_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -64,7 +63,6 @@ func testAccVoiceConnector_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -93,7 +91,6 @@ func testAccVoiceConnector_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -269,15 +266,6 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			//input := &chimesdkvoice.GetVoiceConnectorInput{
-			//	VoiceConnectorId: aws.String(rs.Primary.ID),
-			//}
-			//resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
-			//if err == nil {
-			//	if resp.VoiceConnector != nil && aws.StringValue(resp.VoiceConnector.Name) != "" {
-			//		return fmt.Errorf("error Chime Voice Connector still exists")
-			//	}
-			//}
 			return fmt.Errorf("voice connector still exists: (%s)", rs.Primary.ID)
 		}
 
