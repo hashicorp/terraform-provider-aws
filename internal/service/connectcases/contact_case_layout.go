@@ -331,13 +331,13 @@ func expandFieldGroupFields(tfList []interface{}) []types.FieldItem {
 
 	apiResult := make([]types.FieldItem, 0, len(tfList))
 
-	for i := 0; i < len(tfList); i++ {
-		field, ok := tfList[i].(map[string]interface{})["fields"].([]interface{})
-		if !ok {
-			return nil
+	for _, object := range tfList {
+		if object == nil {
+			continue
 		}
 
-		if v, ok := field[i].(map[string]interface{}); ok && len(v) > 0 {
+		field := object.(map[string]interface{})["fields"].([]interface{})
+		if v, ok := field[0].(map[string]interface{}); ok && len(v) > 0 {
 			apiObject := types.FieldItem{
 				Id: aws.String(v["id"].(string)),
 			}

@@ -133,3 +133,29 @@ func FindRelatedItemByID(ctx context.Context, conn *connectcases.Client, caseID,
 
 	return nil, nil
 }
+
+func FindTemplateByDomainAndId(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetTemplateOutput, error) {
+	input := &connectcases.GetTemplateInput{
+		DomainId:   aws.String(domainId),
+		TemplateId: aws.String(id),
+	}
+
+	output, err := conn.GetTemplate(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
