@@ -644,7 +644,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
