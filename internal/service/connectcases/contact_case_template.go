@@ -34,7 +34,6 @@ func ResourceTemplate() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -159,8 +158,8 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange("domain_id") {
+		input.DomainId = aws.String(d.Get("domain_id").(string))
 	}
 
 	if d.HasChange("description") {

@@ -22,6 +22,7 @@ func ResourceLayout() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayoutCreate,
 		ReadWithoutTimeout:   resourceLayoutRead,
+		UpdateWithoutTimeout: resourceLayoutUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -32,7 +33,6 @@ func ResourceLayout() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"layout_arn": {
 				Type:     schema.TypeString,
@@ -41,12 +41,10 @@ func ResourceLayout() *schema.Resource {
 			"domain_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"content": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -186,6 +184,35 @@ func resourceLayoutRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("content", flattenLayoutContent(output.Content))
 
 	return diags
+}
+
+func resourceLayoutUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
+
+	input := &connectcases.UpdateLayoutInput{
+		LayoutId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("name") {
+		input.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("domain_id") {
+		input.Name = aws.String(d.Get("domain_id").(string))
+	}
+
+	if d.HasChange("content") {
+		input.Content = expandLayoutContent(d.Get("content").([]interface{}))
+	}
+
+	_, err := conn.UpdateLayout(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Connect Cases Layout (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceLayoutRead(ctx, d, meta)...)
 }
 
 func flattenLayoutContent(apiObject types.LayoutContent) []interface{} {
