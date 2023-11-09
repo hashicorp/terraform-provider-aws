@@ -34,6 +34,7 @@ func ResourceVPCLink() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCLinkRead,
 		UpdateWithoutTimeout: resourceVPCLinkUpdate,
 		DeleteWithoutTimeout: resourceVPCLinkDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -72,23 +73,24 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
+	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateVpcLinkInput{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(name),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", input)
-	resp, err := conn.CreateVpcLinkWithContext(ctx, input)
+	output, err := conn.CreateVpcLinkWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 VPC Link: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 VPC Link (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.VpcLinkId))
+	d.SetId(aws.StringValue(output.VpcLinkId))
 
 	if _, err := WaitVPCLinkAvailable(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 deployment (%s) availability: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCLinkRead(ctx, d, meta)...)
