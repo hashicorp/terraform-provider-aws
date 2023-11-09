@@ -28,6 +28,7 @@ func ResourceDeployment() *schema.Resource {
 		ReadWithoutTimeout:   resourceDeploymentRead,
 		UpdateWithoutTimeout: resourceDeploymentUpdate,
 		DeleteWithoutTimeout: resourceDeploymentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDeploymentImport,
 		},
@@ -134,16 +135,18 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 Deployment (%s)", d.Id())
 	_, err := conn.DeleteDeploymentWithContext(ctx, &apigatewayv2.DeleteDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 deployment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 Deployment (%s): %s", d.Id(), err)
 	}
 
 	return diags
