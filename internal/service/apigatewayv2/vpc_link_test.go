@@ -9,15 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
@@ -80,7 +79,7 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-					testAccCheckVPCLinkDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,39 +138,17 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetVpcLinkWithContext(ctx, &apigatewayv2.GetVpcLinkInput{
-				VpcLinkId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
 			return fmt.Errorf("API Gateway v2 VPC Link %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVPCLinkDisappears(ctx context.Context, v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
-
-		if _, err := conn.DeleteVpcLinkWithContext(ctx, &apigatewayv2.DeleteVpcLinkInput{
-			VpcLinkId: v.VpcLinkId,
-		}); err != nil {
-			return err
-		}
-
-		_, err := tfapigatewayv2.WaitVPCLinkDeleted(ctx, conn, aws.StringValue(v.VpcLinkId))
-		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %s", aws.StringValue(v.VpcLinkId), err)
 		}
 
 		return nil
@@ -185,20 +162,15 @@ func testAccCheckVPCLinkExists(ctx context.Context, n string, v *apigatewayv2.Ge
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 VPC Link ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-		resp, err := conn.GetVpcLinkWithContext(ctx, &apigatewayv2.GetVpcLinkInput{
-			VpcLinkId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}

@@ -5,6 +5,7 @@ package apigatewayv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -89,7 +90,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.VpcLinkId))
 
-	if _, err := WaitVPCLinkAvailable(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPCLinkAvailable(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) create: %s", d.Id(), err)
 	}
 
@@ -165,11 +166,7 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitVPCLinkDeleted(ctx, conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return diags
-	}
-	if err != nil {
+	if _, err := waitVPCLinkDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) delete: %s", d.Id(), err)
 	}
 
@@ -205,67 +202,61 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *ap
 	return output, nil
 }
 
-func StatusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) retry.StateRefreshFunc {
+func statusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &apigatewayv2.GetVpcLinkInput{
-			VpcLinkId: aws.String(vpcLinkId),
-		}
+		output, err := FindVPCLinkByID(ctx, conn, id)
 
-		output, err := conn.GetVpcLinkWithContext(ctx, input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, apigatewayv2.VpcLinkStatusFailed, err
-		}
-
-		// Error messages can also be contained in the response with FAILED status
-
-		if aws.StringValue(output.VpcLinkStatus) == apigatewayv2.VpcLinkStatusFailed {
-			return output, apigatewayv2.VpcLinkStatusFailed, fmt.Errorf("%s", aws.StringValue(output.VpcLinkStatusMessage))
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.VpcLinkStatus), nil
 	}
 }
 
-const (
-	// Maximum amount of time to wait for a VPC Link to return Available
-	VPCLinkAvailableTimeout = 10 * time.Minute
-
-	// Maximum amount of time to wait for a VPC Link to return Deleted
-	VPCLinkDeletedTimeout = 10 * time.Minute
-)
-
-// WaitVPCLinkAvailable waits for a VPC Link to return Available
-func WaitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusPending},
 		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
-		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
-		Timeout: VPCLinkAvailableTimeout,
+		Refresh: statusVPCLink(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.VpcLinkStatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-// WaitVPCLinkDeleted waits for a VPC Link to return Deleted
-func WaitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
 		Target:  []string{apigatewayv2.VpcLinkStatusFailed},
-		Refresh: StatusVPCLink(ctx, conn, vpcLinkId),
-		Timeout: VPCLinkDeletedTimeout,
+		Refresh: statusVPCLink(ctx, conn, vpcLinkId),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.VpcLinkStatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
