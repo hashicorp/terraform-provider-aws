@@ -241,10 +241,10 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotVersionDeleted(ctx, conn, state.BotID.ValueString(), deleteTimeout)
+	_, err = waitBotVersionDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.BotID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.BotVersion.String(), err),
 			err.Error(),
 		)
 		return
