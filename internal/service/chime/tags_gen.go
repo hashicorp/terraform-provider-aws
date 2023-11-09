@@ -97,15 +97,6 @@ func setTagsOut(ctx context.Context, tags []*chimesdkvoice.Tag) {
 	}
 }
 
-// createTags creates chime service tags for new resources.
-func createTags(ctx context.Context, conn chimesdkvoiceiface.ChimeSDKVoiceAPI, identifier string, tags []*chimesdkvoice.Tag) error {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
-}
-
 // updateTags updates chime service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
