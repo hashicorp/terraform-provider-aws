@@ -118,6 +118,7 @@ func ResourceModel() *schema.Resource {
 						"model_data_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -264,6 +265,7 @@ func ResourceModel() *schema.Resource {
 						"model_data_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
