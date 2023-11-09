@@ -73,7 +73,7 @@ This resource supports the following arguments:
 * `defaultRunProperties` – (Optional) A map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
 * `description` – (Optional) Description of the workflow.
 * `maxConcurrentRuns` - (Optional) Prevents exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of Glue Workflow
 * `id` - Workflow name
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -105,4 +105,4 @@ Using `terraform import`, import Glue Workflows using `name`. For example:
 % terraform import aws_glue_workflow.MyWorkflow MyWorkflow
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7df9adc6f57f0dd25966f803f616a0d5ba6f246209f657e6b2508d999ef81f32 -->
+<!-- cache-key: cdktf-0.19.0 input-7df9adc6f57f0dd25966f803f616a0d5ba6f246209f657e6b2508d999ef81f32 -->

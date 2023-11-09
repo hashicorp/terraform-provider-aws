@@ -107,4 +107,4 @@ Using `terraform import`, import S3 bucket metric configurations using `bucket:m
 % terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1091c69fa9fb93d148c9ff3885128f11e533b402052266873576f08369f6d546 -->
+<!-- cache-key: cdktf-0.19.0 input-1091c69fa9fb93d148c9ff3885128f11e533b402052266873576f08369f6d546 -->

@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_type` - Name of the external provider where your third-party code repository is configured. Possible values are `Bitbucket` and `GitHub`. For connections to a GitHub Enterprise Server instance, you must create an [aws_codestarconnections_host](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codestarconnections_host) resource and use `host_arn` instead.
 * `tags` - Map of key-value resource tags to associate with the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-ab1b1d204990cc42834998f3ea8aaf072f9c3accf6d33f73782ae59f7304b4b6 -->
+<!-- cache-key: cdktf-0.19.0 input-ab1b1d204990cc42834998f3ea8aaf072f9c3accf6d33f73782ae59f7304b4b6 -->

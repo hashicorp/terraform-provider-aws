@@ -111,4 +111,4 @@ Using `terraform import`, import AMI Launch Permissions using `[ACCOUNT-ID|GROUP
 % terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a0902093918e0a418db9b2fc23c95e8777db95ce86c83b3b547f718d788c6648 -->
+<!-- cache-key: cdktf-0.19.0 input-a0902093918e0a418db9b2fc23c95e8777db95ce86c83b3b547f718d788c6648 -->

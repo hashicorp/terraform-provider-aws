@@ -96,4 +96,4 @@ Using `terraform import`, import the `aws_kendra_query_suggestions_block_list` r
 % terraform import aws_kendra_query_suggestions_block_list.example blocklist-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6163688d652d44086864869ca5678b9e49c9f4dfd42ccb33a1b997d4692a3df0 -->
+<!-- cache-key: cdktf-0.19.0 input-6163688d652d44086864869ca5678b9e49c9f4dfd42ccb33a1b997d4692a3df0 -->

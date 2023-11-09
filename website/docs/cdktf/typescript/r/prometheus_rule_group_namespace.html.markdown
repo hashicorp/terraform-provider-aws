@@ -75,4 +75,4 @@ Using `terraform import`, import the prometheus rule group namespace using the a
 % terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4744fbde8b8a0aa11fdd4a09abcef647630425256c23ba232641a4e6fbd803ac -->
+<!-- cache-key: cdktf-0.19.0 input-4744fbde8b8a0aa11fdd4a09abcef647630425256c23ba232641a4e6fbd803ac -->

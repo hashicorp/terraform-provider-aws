@@ -74,4 +74,4 @@ Using `terraform import`, import the Pinpoint SMS Channel using the `application
 % terraform import aws_pinpoint_sms_channel.sms application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ea56c3123c88d22610a676fad9316e38ebe652689672bf9c9b82ddae2c457e61 -->
+<!-- cache-key: cdktf-0.19.0 input-ea56c3123c88d22610a676fad9316e38ebe652689672bf9c9b82ddae2c457e61 -->

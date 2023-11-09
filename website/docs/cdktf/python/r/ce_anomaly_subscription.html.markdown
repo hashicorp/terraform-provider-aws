@@ -42,8 +42,7 @@ class MyConvertedCode(TerraformStack):
                 address="abc@example.com",
                 type="EMAIL"
             )
-            ],
-            threshold=100
+            ]
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_ce_anomaly_subscription_test.override_logical_id("test")
@@ -197,8 +196,7 @@ class MyConvertedCode(TerraformStack):
                 address=cost_anomaly_updates.arn,
                 type="SNS"
             )
-            ],
-            threshold=0
+            ]
         )
 ```
 
@@ -213,7 +211,6 @@ The following arguments are required:
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
     * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
     * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
-* `threshold` - (Optional) The dollar value that triggers a notification if the threshold is exceeded. Depracated, use `threshold_expression` instead.
 * `threshold_expression` - (Optional) An Expression object used to specify the anomalies that you want to generate alerts for. See [Threshold Expression](#threshold-expression).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -271,4 +268,4 @@ Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. F
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8e7a0801298f69044c659554617a5baf1372b080e7b8c8feed89f9dfbbaac302 -->
+<!-- cache-key: cdktf-0.19.0 input-a5b785ffa278b065243da40d1d5af1821002775fa1e69440478be7d749ef9cfd -->

@@ -107,49 +107,43 @@ func testAccCheckNamedQueryExists(ctx context.Context, n string) resource.TestCh
 	}
 }
 
-func testAccNamedQueryConfig_basic(rInt int, rName string) string {
+func testAccNamedQueryConfig_base(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-athena-db-%s-%d"
+  bucket        = "%[3]s-%[1]s-%[2]d"
   force_destroy = true
 }
 
 resource "aws_athena_database" "test" {
-  name   = "%s"
+  name   = %[1]q
   bucket = aws_s3_bucket.test.bucket
 }
+`, rName, rInt, acctest.ResourcePrefix)
+}
 
+func testAccNamedQueryConfig_basic(rInt int, rName string) string {
+	return acctest.ConfigCompose(testAccNamedQueryConfig_base(rInt, rName), fmt.Sprintf(`
 resource "aws_athena_named_query" "test" {
-  name        = "tf-athena-named-query-%s"
+  name        = "%[2]s-%[1]s"
   database    = aws_athena_database.test.name
   query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }
-`, rName, rInt, rName, rName)
+`, rName, acctest.ResourcePrefix))
 }
 
 func testAccNamedQueryConfig_workGroup(rInt int, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-athena-db-%s-%d"
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccNamedQueryConfig_base(rInt, rName), fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-  name = "tf-athena-workgroup-%s-%d"
-}
-
-resource "aws_athena_database" "test" {
-  name   = "%s"
-  bucket = aws_s3_bucket.test.bucket
+  name = "%[3]s-%[1]s-%[2]d"
 }
 
 resource "aws_athena_named_query" "test" {
-  name        = "tf-athena-named-query-%s"
+  name        = "%[3]s-%[1]s"
   workgroup   = aws_athena_workgroup.test.id
   database    = aws_athena_database.test.name
   query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }
-`, rName, rInt, rName, rInt, rName, rName)
+`, rName, rInt, acctest.ResourcePrefix))
 }

@@ -106,7 +106,7 @@ This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
-* `includedObjectVersions` - (Required) Object versions to include in the inventory list. Valid values: `all`, `current`.
+* `includedObjectVersions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
 * `schedule` - (Required) Specifies the schedule for generating inventory results (documented below).
 * `destination` - (Required) Contains information about where to publish the inventory results (documented below).
 * `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
@@ -119,7 +119,7 @@ The `filter` configuration supports the following:
 
 The `schedule` configuration supports the following:
 
-* `frequency` - (Required) Specifies how frequently inventory results are produced. Valid values: `daily`, `weekly`.
+* `frequency` - (Required) Specifies how frequently inventory results are produced. Valid values: `Daily`, `Weekly`.
 
 The `destination` configuration supports the following:
 
@@ -128,7 +128,7 @@ The `destination` configuration supports the following:
 The `bucket` configuration supports the following:
 
 * `bucketArn` - (Required) Amazon S3 bucket ARN of the destination.
-* `format` - (Required) Specifies the output format of the inventory results. Can be `csv`, [`orc`](https://orc.apache.org/) or [`parquet`](https://parquet.apache.org/).
+* `format` - (Required) Specifies the output format of the inventory results. Can be `CSV`, [`ORC`](https://orc.apache.org/) or [`Parquet`](https://parquet.apache.org/).
 * `accountId` - (Optional) ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
 * `prefix` - (Optional) Prefix that is prepended to all inventory results.
 * `encryption` - (Optional) Contains the type of server-side encryption to use to encrypt the inventory (documented below).
@@ -168,4 +168,4 @@ Using `terraform import`, import S3 bucket inventory configurations using `bucke
 % terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b32aad34f97db0c4f5b57fbaab467ab8861aa26c814563550d6c606734ebbc3c -->
+<!-- cache-key: cdktf-0.19.0 input-b32aad34f97db0c4f5b57fbaab467ab8861aa26c814563550d6c606734ebbc3c -->

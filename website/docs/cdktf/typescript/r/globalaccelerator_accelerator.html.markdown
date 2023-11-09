@@ -47,30 +47,30 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the accelerator.
-* `ipAddressType` - (Optional) The value for the address type. Defaults to `ipv4`. Valid values: `ipv4`, `dualStack`.
+* `ipAddressType` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`, `DUAL_STACK`.
 * `ipAddresses` - (Optional) The IP addresses to use for BYOIP accelerators. If not specified, the service assigns IP addresses. Valid values: 1 or 2 IPv4 addresses.
 * `enabled` - (Optional) Indicates whether the accelerator is enabled. Defaults to `true`. Valid values: `true`, `false`.
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `attributes` supports the following arguments:
 
 * `flowLogsEnabled` - (Optional) Indicates whether flow logs are enabled. Defaults to `false`. Valid values: `true`, `false`.
-* `flowLogsS3Bucket` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flowLogsEnabled` is `true`.
-* `flowLogsS3Prefix` - (Optional) The prefix for the location in the Amazon S3 bucket for the flow logs. Required if `flowLogsEnabled` is `true`.
+* `flowLogsS3Bucket` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
+* `flowLogsS3Prefix` - (Optional) The prefix for the location in the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the accelerator.
-* `dnsName` - The DNS name of the accelerator. For example, `a5D53Ff5Ee6Bca4CeAwsglobalacceleratorCom`.
-* `dualStackDnsName` - The Domain Name System (DNS) name that Global Accelerator creates that points to a dual-stack accelerator's four static IP addresses: two IPv4 addresses and two IPv6 addresses. For example, `a1234567890AbcdefDualstackAwsglobalacceleratorCom`.
+* `dnsName` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
+* `dualStackDnsName` - The Domain Name System (DNS) name that Global Accelerator creates that points to a dual-stack accelerator's four static IP addresses: two IPv4 addresses and two IPv6 addresses. For example, `a1234567890abcdef.dualstack.awsglobalaccelerator.com`.
 * `hostedZoneId` --  The Global Accelerator Route 53 zone ID that can be used to
   route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
-  is simply an alias for the zone ID `z2Bj6Xq5Fk7U4H`.
+  is simply an alias for the zone ID `Z2BJ6XQ5FK7U4H`.
 * `ipSets` - IP address set associated with the accelerator.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 **ip_sets** exports the following attributes:
 
@@ -83,8 +83,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import Global Accelerator accelerators using the `arn`
 % terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7f5b36602f0875f89018a31aa91d4a8e5d30b8b26a613494ca2259ff9749c761 -->
+<!-- cache-key: cdktf-0.19.0 input-7f5b36602f0875f89018a31aa91d4a8e5d30b8b26a613494ca2259ff9749c761 -->

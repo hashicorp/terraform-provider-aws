@@ -748,4 +748,4 @@ We removed the `aws_subnet_ids` data source. Use the [`aws_subnets`](/docs/provi
 
 Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
-<!-- cache-key: cdktf-0.18.0 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->
+<!-- cache-key: cdktf-0.19.0 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->

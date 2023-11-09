@@ -109,10 +109,10 @@ This resource supports the following arguments:
 
 * `databaseName` – (Required) The name of the Timestream database.
 * `magneticStoreWriteProperties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.
-* `retentionProperties` - (Optional) The retention duration for the memory store and magnetic store. See [Retention Properties](#retention-properties) below for more details. If not provided, `magneticStoreRetentionPeriodInDays` default to 73000 and `memoryStoreRetentionPeriodInHours` defaults to 6.
+* `retentionProperties` - (Optional) The retention duration for the memory store and magnetic store. See [Retention Properties](#retention-properties) below for more details. If not provided, `magnetic_store_retention_period_in_days` default to 73000 and `memory_store_retention_period_in_hours` defaults to 6.
 * `schema` - (Optional) The schema of the table. See [Schema](#schema) below for more details.
 * `tableName` - (Required) The name of the Timestream table.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Magnetic Store Write Properties
 
@@ -132,7 +132,7 @@ The `magneticStoreRejectedDataLocation` block supports the following arguments:
 The `s3Configuration` block supports the following arguments:
 
 * `bucketName` - (Optional) Bucket name of the customer S3 bucket.
-* `encryptionOption` - (Optional) Encryption option for the customer s3 location. Options are S3 server side encryption with an S3-managed key or KMS managed key. Valid values are `sseKms` and `sseS3`.
+* `encryptionOption` - (Optional) Encryption option for the customer s3 location. Options are S3 server side encryption with an S3-managed key or KMS managed key. Valid values are `SSE_KMS` and `SSE_S3`.
 * `kmsKeyId` - (Optional) KMS key arn for the customer s3 location when encrypting with a KMS managed key.
 * `objectKeyPrefix` - (Optional) Object key prefix for the customer S3 location.
 
@@ -153,17 +153,17 @@ The `schema` block supports the following arguments:
 
 The `compositePartitionKey` block supports the following arguments:
 
-* `enforcementInRecord` - (Optional) The level of enforcement for the specification of a dimension key in ingested records. Valid values: `required`, `optional`.
+* `enforcementInRecord` - (Optional) The level of enforcement for the specification of a dimension key in ingested records. Valid values: `REQUIRED`, `OPTIONAL`.
 * `name` - (Optional) The name of the attribute used for a dimension key.
-* `type` - (Required) The type of the partition key. Valid values: `dimension`, `measure`.
+* `type` - (Required) The type of the partition key. Valid values: `DIMENSION`, `MEASURE`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `tableName` and `databaseName` separated by a colon (`:`).
+* `id` - The `table_name` and `database_name` separated by a colon (`:`).
 * `arn` - The ARN that uniquely identifies this table.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -187,4 +187,4 @@ Using `terraform import`, import Timestream tables using the `tableName` and `da
 % terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f3b0a12c378c166ac42527e7ddfa6ae43b71b326a2b2a3f2abcf892be6820171 -->
+<!-- cache-key: cdktf-0.19.0 input-f3b0a12c378c166ac42527e7ddfa6ae43b71b326a2b2a3f2abcf892be6820171 -->

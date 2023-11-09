@@ -51,9 +51,9 @@ There are no arguments available for this data source.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `dnsSuffix` - Base DNS domain name for the current partition (e.g., `amazonawsCom` in AWS Commercial, `amazonawsComCn` in AWS China).
-* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `awsCn` in AWS China).
-* `partition` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `awsCn` in AWS China).
-* `reverseDnsPrefix` - Prefix of service names (e.g., `comAmazonaws` in AWS Commercial, `cnComAmazonaws` in AWS China).
+* `dnsSuffix` - Base DNS domain name for the current partition (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
+* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
+* `partition` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
+* `reverseDnsPrefix` - Prefix of service names (e.g., `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
 
-<!-- cache-key: cdktf-0.18.0 input-c447a01a61c27aee6e9e0f866a2c423555ed2688482ef36f154476b5b7d14505 -->
+<!-- cache-key: cdktf-0.19.0 input-c447a01a61c27aee6e9e0f866a2c423555ed2688482ef36f154476b5b7d14505 -->

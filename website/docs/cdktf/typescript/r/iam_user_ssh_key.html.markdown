@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `username` - (Required) The name of the IAM user to associate the SSH public key with.
-* `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `ssh`. To retrieve the public key in PEM format, use `pem`.
+* `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
 * `publicKey` - (Required) The SSH public key. The public key must be encoded in ssh-rsa format or PEM format.
 * `status` - (Optional) The status to assign to the SSH public key. Active means the key can be used for authentication with an AWS CodeCommit repository. Inactive means the key cannot be used. Default is `active`.
 
@@ -82,4 +82,4 @@ Using `terraform import`, import SSH public keys using the `username`, `sshPubli
 % terraform import aws_iam_user_ssh_key.user user:APKAJNCNNJICVN7CFKCA:SSH
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4cbd112ce4d145630ce699ef62acae06fbe7da8a55f9e6ceccda5f739cb8e1fe -->
+<!-- cache-key: cdktf-0.19.0 input-4cbd112ce4d145630ce699ef62acae06fbe7da8a55f9e6ceccda5f739cb8e1fe -->

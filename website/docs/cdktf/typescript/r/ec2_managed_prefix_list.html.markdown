@@ -67,11 +67,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `addressFamily` - (Required, Forces new resource) Address family (`iPv4` or `iPv6`) of this prefix list.
+* `addressFamily` - (Required, Forces new resource) Address family (`IPv4` or `IPv6`) of this prefix list.
 * `entry` - (Optional) Configuration block for prefix list entry. Detailed below. Different entries may have overlapping CIDR blocks, but a particular CIDR should not be duplicated.
 * `maxEntries` - (Required) Maximum number of entries that this prefix list can contain.
-* `name` - (Required) Name of this resource. The name must not start with `comAmazonaws`.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name of this resource. The name must not start with `com.amazonaws`.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `entry`
 
@@ -85,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the prefix list.
 * `id` - ID of the prefix list.
 * `ownerId` - ID of the AWS account that owns this prefix list.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest version of this prefix list.
 
 ## Import
@@ -110,4 +110,4 @@ Using `terraform import`, import Prefix Lists using the `id`. For example:
 % terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f31ae5e52895be9c6e214e756efedf3f324fec164272531bc7a2c04e0cb5b0ae -->
+<!-- cache-key: cdktf-0.19.0 input-f31ae5e52895be9c6e214e756efedf3f324fec164272531bc7a2c04e0cb5b0ae -->

@@ -47,9 +47,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `agentVersion` - (Optional) OpsWorks agent to install. Default is `inherit`.
-* `amiId` - (Optional) AMI to use for the instance.  If an AMI is specified, `os` must be `custom`.
-* `architecture` - (Optional) Machine architecture for created instances.  Valid values are `x8664` or `i386`. The default is `x8664`.
+* `agentVersion` - (Optional) OpsWorks agent to install. Default is `INHERIT`.
+* `amiId` - (Optional) AMI to use for the instance.  If an AMI is specified, `os` must be `Custom`.
+* `architecture` - (Optional) Machine architecture for created instances.  Valid values are `x86_64` or `i386`. The default is `x86_64`.
 * `autoScalingType` - (Optional) Creates load-based or time-based instances.  Valid values are `load`, `timer`.
 * `availabilityZone` - (Optional) Name of the availability zone where instances will be created by default.
 * `deleteEbs` - (Optional) Whether to delete EBS volume on deletion. Default is `true`.
@@ -66,7 +66,7 @@ The following arguments are optional:
 * `instanceType` - (Optional) Type of instance to start.
 * `os` - (Optional) Name of operating system that will be installed.
 * `rootBlockDevice` - (Optional) Configuration block for the root block device of the instance. See [Block Devices](#block-devices) below.
-* `rootDeviceType` - (Optional) Name of the type of root device instances will have by default. Valid values are `ebs` or `instanceStore`.
+* `rootDeviceType` - (Optional) Name of the type of root device instances will have by default. Valid values are `ebs` or `instance-store`.
 * `sshKeyName` - (Optional) Name of the SSH keypair that instances will have by default.
 * `state` - (Optional) Desired state of the instance. Valid values are `running` or `stopped`.
 * `subnetId` - (Optional) Subnet ID to attach to.
@@ -84,7 +84,7 @@ to understand the implications of using these attributes.
 
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
 * `deviceName` - (Required) Name of the device to mount.
-* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volumeType` of `io1`.
+* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `snapshotId` - (Optional) Snapshot ID to mount.
 * `volumeSize` - (Optional) Size of the volume in gigabytes.
 * `volumeType` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
@@ -105,7 +105,7 @@ identified by the `virtualName` in the format `ephemeral{0N}`.
 ### `rootBlockDevice`
 
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
-* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volumeType` of `io1`.
+* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `volumeSize` - (Optional) Size of the volume in gigabytes.
 * `volumeType` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
 
@@ -139,15 +139,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `securityGroupIds` - Associated security groups.
 * `sshHostDsaKeyFingerprint` - SSH key's Deep Security Agent (DSA) fingerprint.
 * `sshHostRsaKeyFingerprint` - SSH key's RSA fingerprint.
-* `status` - Instance status. Will be one of `booting`, `connectionLost`, `online`, `pending`, `rebooting`, `requested`, `runningSetup`, `setupFailed`, `shuttingDown`, `startFailed`, `stopFailed`, `stopped`, `stopping`, `terminated`, or `terminating`.
+* `status` - Instance status. Will be one of `booting`, `connection_lost`, `online`, `pending`, `rebooting`, `requested`, `running_setup`, `setup_failed`, `shutting_down`, `start_failed`, `stop_failed`, `stopped`, `stopping`, `terminated`, or `terminating`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
-- `update` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+- `update` - (Default `10m`)
 
 ## Import
 
@@ -171,4 +171,4 @@ Using `terraform import`, import Opsworks Instances using the instance `id`. For
 % terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-760182d76d218ceaf2aa97bf60861140665a51f7861d5210b509e78e8f84b58d -->
+<!-- cache-key: cdktf-0.19.0 input-760182d76d218ceaf2aa97bf60861140665a51f7861d5210b509e78e8f84b58d -->

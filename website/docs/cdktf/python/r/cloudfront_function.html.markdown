@@ -82,4 +82,4 @@ Using `terraform import`, import CloudFront Functions using the `name`. For exam
 % terraform import aws_cloudfront_function.test my_test_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4dbd0fc63d6063c2f79ef92be1f7d40dedd1c366a0fddb227942d78a1ac1a21c -->
+<!-- cache-key: cdktf-0.19.0 input-4dbd0fc63d6063c2f79ef92be1f7d40dedd1c366a0fddb227942d78a1ac1a21c -->

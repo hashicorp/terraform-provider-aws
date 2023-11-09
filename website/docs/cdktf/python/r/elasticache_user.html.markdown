@@ -139,4 +139,4 @@ Using `terraform import`, import ElastiCache users using the `user_id`. For exam
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c37a7a3d6865b0708a24bc5e37568bc382a09c2d006a5a45f7b5eac613f84ed1 -->
+<!-- cache-key: cdktf-0.19.0 input-c37a7a3d6865b0708a24bc5e37568bc382a09c2d006a5a45f7b5eac613f84ed1 -->

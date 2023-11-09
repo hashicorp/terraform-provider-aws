@@ -66,8 +66,8 @@ This resource supports the following arguments:
 * `name` - (Required) The name of your filter.
 * `description` - (Optional) Description of the filter.
 * `rank` - (Required) Specifies the position of the filter in the list of current filters. Also specifies the order in which this filter is applied to the findings.
-* `action` - (Required) Specifies the action that is to be applied to the findings that match the filter. Can be one of `archive` or `noop`.
-* `tags` (Optional) - The tags that you want to add to the Filter resource. A tag consists of a key and a value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `action` - (Required) Specifies the action that is to be applied to the findings that match the filter. Can be one of `ARCHIVE` or `NOOP`.
+* `tags` (Optional) - The tags that you want to add to the Filter resource. A tag consists of a key and a value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `findingCriteria` (Required) - Represents the criteria to be used in the filter for querying findings. Contains one or more `criterion` blocks, documented [below](#criterion).
 
 ### criterion
@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the GuardDuty filter.
 * `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -112,4 +112,4 @@ Using `terraform import`, import GuardDuty filters using the detector ID and fil
 % terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e606d1888ce4c1d9fc3a9cf0b4de2053e508ab6db3e76bc7736c3226909e127 -->
+<!-- cache-key: cdktf-0.19.0 input-1e606d1888ce4c1d9fc3a9cf0b4de2053e508ab6db3e76bc7736c3226909e127 -->

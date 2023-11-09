@@ -667,7 +667,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* `coreInstanceFleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the core node type. Cannot be specified if any `coreInstanceGroup` configuration blocks are set. Detailed below.
+* `coreInstanceFleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the core node type. Cannot be specified if any `core_instance_group` configuration blocks are set. Detailed below.
 * `coreInstanceGroup` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core).
 * `customAmiId` - (Optional) Custom Amazon Linux AMI for the cluster (instead of an EMR-owned AMI). Available in Amazon EMR version 5.7.0 and later.
 * `ebsRootVolumeSize` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
@@ -677,14 +677,14 @@ class MyConvertedCode extends TerraformStack {
 * `listStepsStates` - (Optional) List of [step states](https://docs.aws.amazon.com/emr/latest/APIReference/API_StepStatus.html) used to filter returned steps
 * `logEncryptionKmsKeyId` - (Optional) AWS KMS customer master key (CMK) key ID or arn used for encrypting log files. This attribute is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
 * `logUri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
-* `masterInstanceFleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `masterInstanceGroup` configuration blocks are set. Detailed below.
+* `masterInstanceFleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `masterInstanceGroup` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
 * `placementGroupConfig` - (Optional) The specified placement group configuration for an Amazon EMR cluster.
 * `scaleDownBehavior` - (Optional) Way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
-* `securityConfiguration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `releaseLabel` 4.8.0 or greater.
-* `step` - (Optional) List of steps to run when creating the cluster. See below. It is highly recommended to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignoreChanges` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
-* `stepConcurrencyLevel` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `releaseLabel` 5.28.0 or greater (default is 1).
-* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `securityConfiguration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater.
+* `step` - (Optional) List of steps to run when creating the cluster. See below. It is highly recommended to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+* `stepConcurrencyLevel` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `release_label` 5.28.0 or greater (default is 1).
+* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminationProtection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `visibleToAllUsers` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
@@ -715,12 +715,12 @@ A configuration classification that applies when provisioning cluster instances,
 
 #### instance_type_configs
 
-* `bidPrice` - (Optional) Bid price for each EC2 Spot instance type as defined by `instanceType`. Expressed in USD. If neither `bidPrice` nor `bidPriceAsPercentageOfOnDemandPrice` is provided, `bidPriceAsPercentageOfOnDemandPrice` defaults to 100%.
-* `bidPriceAsPercentageOfOnDemandPrice` - (Optional) Bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instanceType`. Expressed as a number (for example, 20 specifies 20%). If neither `bidPrice` nor `bidPriceAsPercentageOfOnDemandPrice` is provided, `bidPriceAsPercentageOfOnDemandPrice` defaults to 100%.
+* `bidPrice` - (Optional) Bid price for each EC2 Spot instance type as defined by `instance_type`. Expressed in USD. If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `bidPriceAsPercentageOfOnDemandPrice` - (Optional) Bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instance_type`. Expressed as a number (for example, 20 specifies 20%). If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
 * `configurations` - (Optional) Configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. List of `configuration` blocks.
 * `ebsConfig` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
 * `instanceType` - (Required) EC2 instance type, such as m4.xlarge.
-* `weightedCapacity` - (Optional) Number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `awsEmrInstanceFleet`.
+* `weightedCapacity` - (Optional) Number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
 
 #### launch_specifications
 
@@ -732,15 +732,15 @@ A configuration classification that applies when provisioning cluster instances,
 The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy.
 The instance fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation strategy is available in Amazon EMR version 5.12.1 and later.
 
-* `allocationStrategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowestPrice` (the default), which launches the lowest price first.
+* `allocationStrategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowest-price` (the default), which launches the lowest price first.
 
 ##### spot_specification
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 
-* `allocationStrategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Valid values include `capacityOptimized`, `diversified`, `lowestPrice`, `priceCapacityOptimized`. See the [AWS documentation](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html#emr-instance-fleet-allocation-strategy) for details on each strategy type.
+* `allocationStrategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Valid values include `capacity-optimized`, `diversified`, `lowest-price`, `price-capacity-optimized`. See the [AWS documentation](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html#emr-instance-fleet-allocation-strategy) for details on each strategy type.
 * `blockDurationMinutes` - (Optional) Defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240, 300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
-* `timeoutAction` - (Required) Action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `terminateCluster` and `switchToOnDemand`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
+* `timeoutAction` - (Required) Action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
 * `timeoutDurationMinutes` - (Required) Spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
 
 ### core_instance_group
@@ -771,18 +771,18 @@ Attributes for the Amazon EC2 instances running the job flow:
 * `instanceProfile` - (Required) Instance Profile for EC2 instances of the cluster assume this role.
 * `keyName` - (Optional) Amazon EC2 key pair that can be used to ssh to the master node as the user called `hadoop`.
 * `serviceAccessSecurityGroup` - (Optional) Identifier of the Amazon EC2 service-access security group - required when the cluster runs on a private subnet.
-* `subnetId` - (Optional) VPC subnet id where you want the job flow to launch. Cannot specify the `cc14Xlarge` instance type for nodes of a job flow launched in an Amazon VPC.
+* `subnetId` - (Optional) VPC subnet id where you want the job flow to launch. Cannot specify the `cc1.4xlarge` instance type for nodes of a job flow launched in an Amazon VPC.
 * `subnetIds` - (Optional) List of VPC subnet id-s where you want the job flow to launch.  Amazon EMR identifies the best Availability Zone to launch instances according to your fleet specifications.
 
 ~> **NOTE on EMR-Managed security groups:** These security groups will have any missing inbound or outbound access rules added and maintained by AWS, to ensure proper communication between instances in a cluster. The EMR service will maintain these rules for groups provided in `emrManagedMasterSecurityGroup` and `emrManagedSlaveSecurityGroup`; attempts to remove the required rules may succeed, only for the EMR service to re-add them in a matter of minutes. This may cause Terraform to fail to destroy an environment that contains an EMR cluster, because the EMR service does not revoke rules added on deletion, leaving a cyclic dependency between the security groups that prevents their deletion. To avoid this, use the `revokeRulesOnDelete` optional attribute for any Security Group used in `emrManagedMasterSecurityGroup` and `emrManagedSlaveSecurityGroup`. See [Amazon EMR-Managed Security Groups](http://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html) for more information about the EMR-managed security group rules.
 
 ### kerberos_attributes
 
-* `adDomainJoinPassword` - (Optional) Active Directory password for `adDomainJoinUser`. Terraform cannot perform drift detection of this configuration.
+* `adDomainJoinPassword` - (Optional) Active Directory password for `ad_domain_join_user`. Terraform cannot perform drift detection of this configuration.
 * `adDomainJoinUser` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain. Terraform cannot perform drift detection of this configuration.
 * `crossRealmTrustPrincipalPassword` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms. Terraform cannot perform drift detection of this configuration.
 * `kdcAdminPassword` - (Required) Password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster. Terraform cannot perform drift detection of this configuration.
-* `realm` - (Required) Name of the Kerberos realm to which all nodes in a cluster belong. For example, `ec2Internal`
+* `realm` - (Required) Name of the Kerberos realm to which all nodes in a cluster belong. For example, `EC2.INTERNAL`
 
 ### master_instance_fleet
 
@@ -806,7 +806,7 @@ Supported nested arguments for the `masterInstanceGroup` configuration block:
 
 * `bidPrice` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebsConfig` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
-* `instanceCount` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `coreInstanceGroup` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
+* `instanceCount` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `core_instance_group` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
 * `instanceType` - (Required) EC2 instance type for all instances in the instance group.
 * `name` - (Optional) Friendly name given to the instance group.
 
@@ -818,7 +818,7 @@ See `ebsConfig` under `coreInstanceGroup` above.
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
-* `actionOnFailure` - (Required) Action to take if the step fails. Valid values: `terminateJobFlow`, `terminateCluster`, `cancelAndWait`, and `continue`
+* `actionOnFailure` - (Required) Action to take if the step fails. Valid values: `TERMINATE_JOB_FLOW`, `TERMINATE_CLUSTER`, `CANCEL_AND_WAIT`, and `CONTINUE`
 * `hadoopJarStep` - (Required) JAR file used for the step. See below.
 * `name` - (Required) Name of the step.
 
@@ -833,8 +833,8 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 
 ### placement_group_config
 
-* `instanceRole` - (Required) Role of the instance in the cluster. Valid Values: `master`, `core`, `task`.
-* `placementStrategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `spread`, `partition`, `cluster`, `none`.
+* `instanceRole` - (Required) Role of the instance in the cluster. Valid Values: `MASTER`, `CORE`, `TASK`.
+* `placementStrategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `SPREAD`, `PARTITION`, `CLUSTER`, `NONE`.
 
 ## Attribute Reference
 
@@ -853,7 +853,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - Name of the cluster.
 * `releaseLabel` - Release label for the Amazon EMR release.
 * `serviceRole` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `visibleToAllUsers` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 
 ## Import
@@ -910,4 +910,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b9d18b24d38c79ee9f688a74547cdb740e2cd654a3d3dc2a431681dd4a66d46c -->
+<!-- cache-key: cdktf-0.19.0 input-b9d18b24d38c79ee9f688a74547cdb740e2cd654a3d3dc2a431681dd4a66d46c -->

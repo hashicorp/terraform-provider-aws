@@ -94,4 +94,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - VPC ID associated with the DB cluster snapshot.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-a5847b6b7894b8bc81d561012d77e63802b11d4802ee1f24e4c51067e98ce60e -->
+<!-- cache-key: cdktf-0.19.0 input-a5847b6b7894b8bc81d561012d77e63802b11d4802ee1f24e4c51067e98ce60e -->

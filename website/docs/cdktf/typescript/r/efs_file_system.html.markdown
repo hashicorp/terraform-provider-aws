@@ -78,17 +78,17 @@ user guide for more information.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying kms_key_id, encrypted needs to be set to true.
 * `lifecyclePolicy` - (Optional) A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object (documented below).
-* `performanceMode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIo"` (Default: `"generalPurpose"`).
-* `provisionedThroughputInMibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughputMode` set to `provisioned`.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `throughputMode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisionedThroughputInMibps`.
+* `performanceMode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIO"` (Default: `"generalPurpose"`).
+* `provisionedThroughputInMibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughput_mode` set to `provisioned`.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `throughputMode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
 
 ### Lifecycle Policy Arguments
 
 `lifecyclePolicy` supports the following arguments:
 
-* `transitionToIa` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `after1Day`, `after7Days`, `after14Days`, `after30Days`, `after60Days`, or `after90Days`.
-* `transitionToPrimaryStorageClass` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `after1Access`.
+* `transitionToIa` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
+* `transitionToPrimaryStorageClass` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `AFTER_1_ACCESS`.
 
 ## Attribute Reference
 
@@ -98,11 +98,11 @@ This resource exports the following attributes in addition to the arguments abov
 * `availabilityZoneId` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `dnsName` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
-* `name` - The value of the file system's `name` tag.
+* `name` - The value of the file system's `Name` tag.
 * `numberOfMountTargets` - The current number of mount targets that the file system has.
 * `ownerId` - The AWS account that created the file system. If the file system was createdby an IAM user, the parent account to which the user belongs is the owner.
 * `sizeInBytes` - The latest known metered size (in bytes) of data stored in the file system, the value is not the exact size that the file system was at any point in time. See [Size In Bytes](#size-in-bytes).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Size In Bytes
 
@@ -132,4 +132,4 @@ Using `terraform import`, import the EFS file systems using the `id`. For exampl
 % terraform import aws_efs_file_system.foo fs-6fa144c6
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b61c944770ac6802dbeb15c2afb8f175aaffd7b4d47e45eb8ac4c3b58d546d0b -->
+<!-- cache-key: cdktf-0.19.0 input-b61c944770ac6802dbeb15c2afb8f175aaffd7b4d47e45eb8ac4c3b58d546d0b -->

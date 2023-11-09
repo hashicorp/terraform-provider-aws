@@ -100,7 +100,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `accessString` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported value is `redis`.
+* `engine` - (Required) The current supported value is `REDIS`.
 * `userId` - (Required) The ID of the user.
 * `userName` - (Required) The username of the user.
 
@@ -114,7 +114,7 @@ The following arguments are optional:
 ### authentication_mode Configuration Block
 
 * `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
-* `type` - (Required) Specifies the authentication type. Possible options are: `password`, `noPasswordRequired` or `iam`.
+* `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
 
 ## Attribute Reference
 
@@ -126,9 +126,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `5M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -152,4 +152,4 @@ Using `terraform import`, import ElastiCache users using the `userId`. For examp
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c37a7a3d6865b0708a24bc5e37568bc382a09c2d006a5a45f7b5eac613f84ed1 -->
+<!-- cache-key: cdktf-0.19.0 input-c37a7a3d6865b0708a24bc5e37568bc382a09c2d006a5a45f7b5eac613f84ed1 -->

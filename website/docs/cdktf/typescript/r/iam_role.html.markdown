@@ -283,7 +283,7 @@ The following arguments are optional:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissionsBoundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
@@ -302,7 +302,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createDate` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uniqueId` - Stable and unique string identifying the role.
 
 ## Import
@@ -327,4 +327,4 @@ Using `terraform import`, import IAM Roles using the `name`. For example:
 % terraform import aws_iam_role.developer developer_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd6124ae737c542517c52e9bbb2eb3419c7ff3714d8593c811602ba81fff4809 -->
+<!-- cache-key: cdktf-0.19.0 input-bd6124ae737c542517c52e9bbb2eb3419c7ff3714d8593c811602ba81fff4809 -->

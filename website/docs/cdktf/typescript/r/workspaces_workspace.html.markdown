@@ -69,14 +69,14 @@ This resource supports the following arguments:
 * `rootVolumeEncryptionEnabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
 * `userVolumeEncryptionEnabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
 * `volumeEncryptionKey` – (Optional) The symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
-* `tags` - (Optional) The tags for the WorkSpace. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) The tags for the WorkSpace. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workspaceProperties` – (Optional) The WorkSpace properties.
 
 `workspaceProperties` supports the following:
 
-* `computeTypeName` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `value`, `standard`, `performance`, `power`, `graphics`, `powerpro`, `graphicspro`, `graphicsG4Dn`, and `graphicsproG4Dn`.
+* `computeTypeName` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
 * `rootVolumeSizeGib` – (Optional) The size of the root volume.
-* `runningMode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `autoStop` and `alwaysOn`.
+* `runningMode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `runningModeAutoStopTimeoutInMinutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `userVolumeSizeGib` – (Optional) The size of the user storage.
 
@@ -88,15 +88,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `ipAddress` - The IP address of the WorkSpace.
 * `computerName` - The name of the WorkSpace, as seen by the operating system.
 * `state` - The operational state of the WorkSpace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `30m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -120,4 +120,4 @@ Using `terraform import`, import Workspaces using their ID. For example:
 % terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-574adeff5bd705e5554426bab9884c262aeb7fe0041d5694569aac9e50fca556 -->
+<!-- cache-key: cdktf-0.19.0 input-574adeff5bd705e5554426bab9884c262aeb7fe0041d5694569aac9e50fca556 -->

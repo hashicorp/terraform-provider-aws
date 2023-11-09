@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `hsmClientCertificateIdentifier` - (Required, Forces new resource) The identifier of the HSM client certificate.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Hsm Client Certificate.
 * `hsmClientCertificatePublicKey` - The public key that the Amazon Redshift cluster will use to connect to the HSM. You must register the public key in the HSM.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -71,4 +71,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsmClie
 % terraform import aws_redshift_hsm_client_certificate.test example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5c66db327c1839116bd09ae2b35aec09129f16566c516184eda37641b0d7234e -->
+<!-- cache-key: cdktf-0.19.0 input-5c66db327c1839116bd09ae2b35aec09129f16566c516184eda37641b0d7234e -->

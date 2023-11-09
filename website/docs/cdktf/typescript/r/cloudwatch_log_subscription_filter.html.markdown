@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `destinationArn` - (Required) The ARN of the destination to deliver matching log events to. Kinesis stream or Lambda function ARN.
 * `filterPattern` - (Required) A valid CloudWatch Logs filter pattern for subscribing to a filtered stream of log events. Use empty string `""` to match everything. For more information, see the [Amazon CloudWatch Logs User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
 * `logGroupName` - (Required) The name of the log group to associate the subscription filter with
-* `roleArn` - (Optional) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to deliver ingested log events to the destination. If you use Lambda as a destination, you should skip this argument and use `awsLambdaPermission` resource for granting access from CloudWatch logs to the destination Lambda function.
+* `roleArn` - (Optional) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to deliver ingested log events to the destination. If you use Lambda as a destination, you should skip this argument and use `aws_lambda_permission` resource for granting access from CloudWatch logs to the destination Lambda function.
 * `distribution` - (Optional) The method used to distribute log data to the destination. By default log data is grouped by log stream, but the grouping can be set to random for a more even distribution. This property is only applicable when the destination is an Amazon Kinesis stream. Valid values are "Random" and "ByLogStream".
 
 ## Attribute Reference
@@ -76,4 +76,4 @@ Using `terraform import`, import CloudWatch Logs subscription filter using the l
 % terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6fe4a3f3f90f50bfb6b67e46b6ceeb3cbceaaa24c09559152a030888d8e3104b -->
+<!-- cache-key: cdktf-0.19.0 input-6fe4a3f3f90f50bfb6b67e46b6ceeb3cbceaaa24c09559152a030888d8e3104b -->

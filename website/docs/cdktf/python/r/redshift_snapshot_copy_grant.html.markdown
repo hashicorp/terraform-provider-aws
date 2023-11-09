@@ -78,4 +78,4 @@ Using `terraform import`, import Redshift Snapshot Copy Grants by name. For exam
 % terraform import aws_redshift_snapshot_copy_grant.test my-grant
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7132ffb13bb997106c250daca68bcc8d4f28e5d2bd7fcb63ef1d3441a64c72d3 -->
+<!-- cache-key: cdktf-0.19.0 input-7132ffb13bb997106c250daca68bcc8d4f28e5d2bd7fcb63ef1d3441a64c72d3 -->

@@ -47,4 +47,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `ip_address` - The allocated static IP address
 * `support_code` - The support code.
 
-<!-- cache-key: cdktf-0.18.0 input-ceefb04cc23d9c3d23bf8796be65f2fc424fa275759d495af1748286debe2c54 -->
+<!-- cache-key: cdktf-0.19.0 input-ceefb04cc23d9c3d23bf8796be65f2fc424fa275759d495af1748286debe2c54 -->

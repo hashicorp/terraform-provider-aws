@@ -93,4 +93,4 @@ Using `terraform import`, import Config Organization Managed Rules using the nam
 % terraform import aws_config_organization_managed_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-29a5f024d0a4952e4ef689b372b4e88a2023404e9e31631bc6e865b75a8f3733 -->
+<!-- cache-key: cdktf-0.19.0 input-29a5f024d0a4952e4ef689b372b4e88a2023404e9e31631bc6e865b75a8f3733 -->

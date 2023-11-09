@@ -64,7 +64,7 @@ This resource supports the following arguments:
 * `serverCertificateArn` - (Required) The ARN of the ACM server certificate.
 * `sessionTimeoutHours` - (Optional) The maximum session duration is a trigger by which end-users are required to re-authenticate prior to establishing a VPN session. Default value is `24` - Valid values: `8 | 10 | 12 | 24`
 * `splitTunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transportProtocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `vpcId` - (Optional) The ID of the VPC to associate with the Client VPN endpoint. If no security group IDs are specified in the request, the default security group for the VPC is applied.
 * `vpnPort` - (Optional) The port number for the Client VPN endpoint. Valid values are `443` and `1194`. Default value is `443`.
@@ -73,11 +73,11 @@ This resource supports the following arguments:
 
 One of the following arguments must be supplied:
 
-* `activeDirectoryId` - (Optional) The ID of the Active Directory to be used for authentication if type is `directoryServiceAuthentication`.
-* `rootCertificateChainArn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificateAuthentication`.
-* `samlProviderArn` - (Optional) The ARN of the IAM SAML identity provider if type is `federatedAuthentication`.
-* `selfServiceSamlProviderArn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federatedAuthentication`.
-* `type` - (Required) The type of client authentication to be used. Specify `certificateAuthentication` to use certificate-based authentication, `directoryServiceAuthentication` to use Active Directory authentication, or `federatedAuthentication` to use Federated Authentication via SAML 2.0.
+* `activeDirectoryId` - (Optional) The ID of the Active Directory to be used for authentication if type is `directory-service-authentication`.
+* `rootCertificateChainArn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificate-authentication`.
+* `samlProviderArn` - (Optional) The ARN of the IAM SAML identity provider if type is `federated-authentication`.
+* `selfServiceSamlProviderArn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
+* `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
 
 ### `clientConnectOptions` Argument reference
 
@@ -105,7 +105,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `dnsName` - The DNS name to be used by clients when establishing their VPN session.
 * `id` - The ID of the Client VPN endpoint.
 * `selfServicePortalUrl` - The URL of the self-service portal.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -129,4 +129,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-668469ff889101884cb8259cd8c05b2008ff8bae928811357f2cfcabe260d50a -->
+<!-- cache-key: cdktf-0.19.0 input-668469ff889101884cb8259cd8c05b2008ff8bae928811357f2cfcabe260d50a -->

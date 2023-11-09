@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of state machine alias.
 * `routingConfiguration` - Routing Configuration of state machine alias
 
-<!-- cache-key: cdktf-0.18.0 input-74bb5c065bedebe96a1f1604459cc4b92ef1bc40588d2a1e6918a9e59b8ae39b -->
+<!-- cache-key: cdktf-0.19.0 input-74bb5c065bedebe96a1f1604459cc4b92ef1bc40588d2a1e6918a9e59b8ae39b -->

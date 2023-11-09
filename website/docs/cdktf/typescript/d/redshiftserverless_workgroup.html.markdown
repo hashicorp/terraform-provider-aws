@@ -50,7 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.
-* `endpoint` - The endpoint that is created from the workgroup. See `endpoint` below.
+* `endpoint` - The endpoint that is created from the workgroup. See `Endpoint` below.
 * `enhancedVpcRouting` - The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `publiclyAccessible` - A value that specifies whether the workgroup can be accessed from a public network.
 * `securityGroupIds` - An array of security group IDs to associate with the workgroup.
@@ -76,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `privateIpAddress` - The IPv4 address of the network interface within the subnet.
 * `subnetId` - The unique identifier of the subnet.
 
-<!-- cache-key: cdktf-0.18.0 input-374d27f8fbd13cb2f6821046b5a1fe85a8500dfa779b30e1ffd4cad3110ce132 -->
+<!-- cache-key: cdktf-0.19.0 input-374d27f8fbd13cb2f6821046b5a1fe85a8500dfa779b30e1ffd4cad3110ce132 -->
