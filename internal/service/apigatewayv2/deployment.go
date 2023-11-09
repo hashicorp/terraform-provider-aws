@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_apigatewayv2_deployment")
@@ -163,6 +164,36 @@ func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("api_id", parts[0])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindDeploymentByTwoPartKey(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) {
+	input := &apigatewayv2.GetDeploymentInput{
+		ApiId:        aws.String(apiID),
+		DeploymentId: aws.String(deploymentID),
+	}
+
+	return findDeployment(ctx, conn, input)
+}
+
+func findDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDeploymentInput) (*apigatewayv2.GetDeploymentOutput, error) {
+	output, err := conn.GetDeploymentWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 // StatusDeployment fetches the Deployment and its Status
