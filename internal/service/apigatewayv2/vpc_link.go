@@ -135,14 +135,14 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	if d.HasChange("name") {
-		req := &apigatewayv2.UpdateVpcLinkInput{
-			VpcLinkId: aws.String(d.Id()),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &apigatewayv2.UpdateVpcLinkInput{
 			Name:      aws.String(d.Get("name").(string)),
+			VpcLinkId: aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 VPC Link: %s", req)
-		_, err := conn.UpdateVpcLinkWithContext(ctx, req)
+		_, err := conn.UpdateVpcLinkWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 		}
@@ -159,9 +159,11 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.DeleteVpcLinkWithContext(ctx, &apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
@@ -171,7 +173,7 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
