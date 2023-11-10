@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type resourceModelInvocationLoggingConfigurationModel struct {
@@ -39,6 +41,8 @@ type s3ConfigModel struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 	KeyPrefix  types.String `tfsdk:"key_prefix"`
 }
+
+const ResourceNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
 
 // @FrameworkResource(name="Model Invocation Logging Configuration")
 func newResourceModelInvocationLoggingConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
@@ -111,72 +115,74 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 }
 
 func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceModelInvocationLoggingConfigurationModel
+	conn := r.Meta().BedrockClient(ctx)
 
+	var data resourceModelInvocationLoggingConfigurationModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
 
-	lc := expandLoggingConfig(data.LoggingConfig)
-
-	conn := r.Meta().BedrockClient(ctx)
 	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: lc,
+		LoggingConfig: expandLoggingConfig(data.LoggingConfig),
 	}
 
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to put model invocation logging configuration", err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
-
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().BedrockClient(ctx)
+
 	var state resourceModelInvocationLoggingConfigurationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().BedrockClient(ctx)
 	output, err := conn.GetModelInvocationLoggingConfiguration(ctx, &bedrock.GetModelInvocationLoggingConfigurationInput{})
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get model invocation logging configuration", err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, ResourceNameModelInvocationLoggingConfiguration, state.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
 	state.LoggingConfig = flattenLoggingConfig(ctx, output.LoggingConfig)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().BedrockClient(ctx)
+
 	var data resourceModelInvocationLoggingConfigurationModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	lc := expandLoggingConfig(data.LoggingConfig)
-
-	conn := r.Meta().BedrockClient(ctx)
 	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: lc,
+		LoggingConfig: expandLoggingConfig(data.LoggingConfig),
 	}
 
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to put model invocation logging configuration", err.Error())
-		return
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			err.Error(),
+		)
 	}
-
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -184,10 +190,18 @@ func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context
 func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
+	var data resourceModelInvocationLoggingConfigurationModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete model invocation logging configuration", err.Error())
-		return
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			err.Error(),
+		)
 	}
 }
 
