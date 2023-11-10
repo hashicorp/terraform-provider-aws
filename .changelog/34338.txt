@@ -1,3 +1,0 @@
-```release-note:docs
-aws_codecommit_trigger: Updated docs to correctly cover trigger argument
-```
