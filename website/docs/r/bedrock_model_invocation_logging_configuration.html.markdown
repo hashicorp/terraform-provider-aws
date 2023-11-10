@@ -14,11 +14,13 @@ Manages Bedrock model invocation logging configuration.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 data "aws_caller_identity" "current" {}
 
-resource aws_s3_bucket bedrock_logging {
-  bucket        = "bedrock-logging-%[1]s"
+resource aws_s3_bucket example {
+  bucket        = "example"
   force_destroy = true
   lifecycle {
     ignore_changes = [
@@ -27,8 +29,8 @@ resource aws_s3_bucket bedrock_logging {
   }
 }
 
-resource "aws_s3_bucket_policy" "bedrock_logging" {
-  bucket = aws_s3_bucket.bedrock_logging.bucket
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.bucket
 
   policy = <<EOF
 {
@@ -43,7 +45,7 @@ resource "aws_s3_bucket_policy" "bedrock_logging" {
         "s3:*"
       ],
       "Resource": [
-        "${aws_s3_bucket.bedrock_logging.arn}/*"
+        "${aws_s3_bucket.example.arn}/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -59,19 +61,20 @@ resource "aws_s3_bucket_policy" "bedrock_logging" {
 EOF
 }
 
-resource "aws_bedrock_model_invocation_logging_configuration" "test" {
+resource "aws_bedrock_model_invocation_logging_configuration" "example" {
+  depends_on = [
+    aws_s3_bucket_policy.example
+  ]
+
   logging_config {
     embedding_data_delivery_enabled = true
     image_data_delivery_enabled     = true
     text_data_delivery_enabled      = true
     s3_config {
-      bucket_name = aws_s3_bucket.bedrock_logging.id
+      bucket_name = aws_s3_bucket.example.id
       key_prefix  = "bedrock"
     }
   }
-  depends_on = [
-    aws_s3_bucket_policy.bedrock_logging
-  ]
 }
 ```
 
