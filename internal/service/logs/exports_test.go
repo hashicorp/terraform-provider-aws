@@ -17,7 +17,7 @@ var (
 
 	FindDestinationByName              = findDestinationByName
 	FindLogGroupByName                 = findLogGroupByName
-	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey
+	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
 	FindMetricFilterByTwoPartKey       = findMetricFilterByTwoPartKey
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
