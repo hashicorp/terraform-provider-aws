@@ -314,6 +314,10 @@ func ResourceTable() *schema.Resource {
 				ConflictsWith: []string{"restore_source_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"client_token": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"input_compression_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -2162,6 +2166,10 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 	a := &dynamodb.ImportTableInput{
 		ClientToken: aws.String(id.UniqueId()),
+	}
+
+	if v, ok := data["client_token"].(string); ok {
+		a.ClientToken = aws.String(v)
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
