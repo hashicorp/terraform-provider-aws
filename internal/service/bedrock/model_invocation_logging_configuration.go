@@ -7,40 +7,20 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-type resourceModelInvocationLoggingConfigurationModel struct {
-	ID            types.String        `tfsdk:"id"`
-	LoggingConfig *loggingConfigModel `tfsdk:"logging_config"`
-}
-
-type loggingConfigModel struct {
-	EmbeddingDataDeliveryEnabled types.Bool             `tfsdk:"embedding_data_delivery_enabled"`
-	ImageDataDeliveryEnabled     types.Bool             `tfsdk:"image_data_delivery_enabled"`
-	TextDataDeliveryEnabled      types.Bool             `tfsdk:"text_data_delivery_enabled"`
-	CloudWatchConfig             *cloudWatchConfigModel `tfsdk:"cloud_watch_config"`
-	S3Config                     *s3ConfigModel         `tfsdk:"s3_config"`
-}
-
-type cloudWatchConfigModel struct {
-	LogGroupName              types.String   `tfsdk:"log_group_name"`
-	RoleArn                   types.String   `tfsdk:"role_arn"`
-	LargeDataDeliveryS3Config *s3ConfigModel `tfsdk:"large_data_delivery_s3_config"`
-}
-
-type s3ConfigModel struct {
-	BucketName types.String `tfsdk:"bucket_name"`
-	KeyPrefix  types.String `tfsdk:"key_prefix"`
-}
 
 const ResourceNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
 
@@ -76,7 +56,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"cloud_watch_config": schema.SingleNestedBlock{
+					"cloudwatch_config": schema.SingleNestedBlock{
 						Attributes: map[string]schema.Attribute{
 							"log_group_name": schema.StringAttribute{
 								Optional: true,
@@ -124,8 +104,13 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 	}
 	data.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
 
+	loggingConfig := expandLoggingConfig(ctx, data.LoggingConfig, resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: expandLoggingConfig(data.LoggingConfig),
+		LoggingConfig: loggingConfig,
 	}
 
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
@@ -172,8 +157,13 @@ func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context
 		return
 	}
 
+	loggingConfig := expandLoggingConfig(ctx, data.LoggingConfig, resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: expandLoggingConfig(data.LoggingConfig),
+		LoggingConfig: loggingConfig,
 	}
 
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
@@ -209,86 +199,139 @@ func (r *resourceModelInvocationLoggingConfiguration) ImportState(ctx context.Co
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func flattenLoggingConfig(ctx context.Context, apiObject *bedrock_types.LoggingConfig) *loggingConfigModel {
-	if apiObject == nil {
-		return nil
-	}
-
-	return &loggingConfigModel{
-		EmbeddingDataDeliveryEnabled: flex.BoolToFramework(ctx, apiObject.EmbeddingDataDeliveryEnabled),
-		ImageDataDeliveryEnabled:     flex.BoolToFramework(ctx, apiObject.ImageDataDeliveryEnabled),
-		TextDataDeliveryEnabled:      flex.BoolToFramework(ctx, apiObject.TextDataDeliveryEnabled),
-		CloudWatchConfig:             flattenCloudWatchConfig(ctx, apiObject.CloudWatchConfig),
-		S3Config:                     flattenS3Config(ctx, apiObject.S3Config),
-	}
+type resourceModelInvocationLoggingConfigurationModel struct {
+	ID            types.String `tfsdk:"id"`
+	LoggingConfig types.Object `tfsdk:"logging_config"`
 }
 
-func flattenCloudWatchConfig(ctx context.Context, apiObject *bedrock_types.CloudWatchConfig) *cloudWatchConfigModel {
-	if apiObject == nil {
-		return nil
-	}
-
-	return &cloudWatchConfigModel{
-		LogGroupName:              flex.StringToFramework(ctx, apiObject.LogGroupName),
-		RoleArn:                   flex.StringToFramework(ctx, apiObject.RoleArn),
-		LargeDataDeliveryS3Config: flattenS3Config(ctx, apiObject.LargeDataDeliveryS3Config),
-	}
+type loggingConfigModel struct {
+	EmbeddingDataDeliveryEnabled types.Bool   `tfsdk:"embedding_data_delivery_enabled"`
+	ImageDataDeliveryEnabled     types.Bool   `tfsdk:"image_data_delivery_enabled"`
+	TextDataDeliveryEnabled      types.Bool   `tfsdk:"text_data_delivery_enabled"`
+	CloudWatchConfig             types.Object `tfsdk:"cloudwatch_config"`
+	S3Config                     types.Object `tfsdk:"s3_config"`
 }
 
-func flattenS3Config(ctx context.Context, apiObject *bedrock_types.S3Config) *s3ConfigModel {
-	if apiObject == nil {
-		return nil
-	}
-
-	return &s3ConfigModel{
-		BucketName: flex.StringToFramework(ctx, apiObject.BucketName),
-		KeyPrefix:  flex.StringToFramework(ctx, apiObject.KeyPrefix),
-	}
+type cloudWatchConfigModel struct {
+	LogGroupName              types.String `tfsdk:"log_group_name"`
+	RoleArn                   types.String `tfsdk:"role_arn"`
+	LargeDataDeliveryS3Config types.Object `tfsdk:"large_data_delivery_s3_config"`
 }
 
-func expandLoggingConfig(model *loggingConfigModel) *bedrock_types.LoggingConfig {
-	if model == nil {
+type s3ConfigModel struct {
+	BucketName types.String `tfsdk:"bucket_name"`
+	KeyPrefix  types.String `tfsdk:"key_prefix"`
+}
+
+func flattenLoggingConfig(ctx context.Context, apiObject *awstypes.LoggingConfig) types.Object {
+	attributeTypes := fwtypes.AttributeTypesMust[loggingConfigModel](ctx)
+	// Reflection above cannot determine the nested object attribute types
+	cwAttrTypes := fwtypes.AttributeTypesMust[cloudWatchConfigModel](ctx)
+	cwAttrTypes["large_data_delivery_s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
+	attributeTypes["cloudwatch_config"] = types.ObjectType{AttrTypes: cwAttrTypes}
+	attributeTypes["s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
+
+	if apiObject == nil {
+		return types.ObjectNull(attributeTypes)
+
+	}
+
+	attrs := map[string]attr.Value{
+		"embedding_data_delivery_enabled": flex.BoolToFramework(ctx, apiObject.EmbeddingDataDeliveryEnabled),
+		"image_data_delivery_enabled":     flex.BoolToFramework(ctx, apiObject.ImageDataDeliveryEnabled),
+		"text_data_delivery_enabled":      flex.BoolToFramework(ctx, apiObject.TextDataDeliveryEnabled),
+		"cloudwatch_config":               flattenCloudWatchConfig(ctx, apiObject.CloudWatchConfig),
+		"s3_config":                       flattenS3Config(ctx, apiObject.S3Config),
+	}
+
+	return types.ObjectValueMust(attributeTypes, attrs)
+}
+
+func flattenCloudWatchConfig(ctx context.Context, apiObject *awstypes.CloudWatchConfig) types.Object {
+	attributeTypes := fwtypes.AttributeTypesMust[cloudWatchConfigModel](ctx)
+	// Reflection above cannot determine the nested object attribute types
+	attributeTypes["large_data_delivery_s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
+
+	if apiObject == nil {
+		return types.ObjectNull(attributeTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"log_group_name":                flex.StringToFramework(ctx, apiObject.LogGroupName),
+		"role_arn":                      flex.StringToFramework(ctx, apiObject.RoleArn),
+		"large_data_delivery_s3_config": flattenS3Config(ctx, apiObject.LargeDataDeliveryS3Config),
+	}
+
+	return types.ObjectValueMust(attributeTypes, attrs)
+}
+
+func flattenS3Config(ctx context.Context, apiObject *awstypes.S3Config) types.Object {
+	attributeTypes := fwtypes.AttributeTypesMust[s3ConfigModel](ctx)
+	if apiObject == nil {
+		return types.ObjectNull(attributeTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"bucket_name": flex.StringToFramework(ctx, apiObject.BucketName),
+		"key_prefix":  flex.StringToFramework(ctx, apiObject.KeyPrefix),
+	}
+
+	return types.ObjectValueMust(attributeTypes, attrs)
+}
+
+func expandLoggingConfig(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.LoggingConfig {
+	if object.IsNull() {
 		return nil
 	}
 
-	apiObject := &bedrock_types.LoggingConfig{
-		EmbeddingDataDeliveryEnabled: model.EmbeddingDataDeliveryEnabled.ValueBoolPointer(),
-		ImageDataDeliveryEnabled:     model.ImageDataDeliveryEnabled.ValueBoolPointer(),
-		TextDataDeliveryEnabled:      model.TextDataDeliveryEnabled.ValueBoolPointer(),
+	var conf loggingConfigModel
+	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
 	}
-	if model.CloudWatchConfig != nil {
-		apiObject.CloudWatchConfig = expandCloudWatchConfig(model.CloudWatchConfig)
-	}
-	if model.S3Config != nil {
-		apiObject.S3Config = expandS3Config(model.S3Config)
+
+	apiObject := &awstypes.LoggingConfig{
+		EmbeddingDataDeliveryEnabled: conf.EmbeddingDataDeliveryEnabled.ValueBoolPointer(),
+		ImageDataDeliveryEnabled:     conf.ImageDataDeliveryEnabled.ValueBoolPointer(),
+		TextDataDeliveryEnabled:      conf.TextDataDeliveryEnabled.ValueBoolPointer(),
+		CloudWatchConfig:             expandCloudWatchConfig(ctx, conf.CloudWatchConfig, diags),
+		S3Config:                     expandS3Config(ctx, conf.S3Config, diags),
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchConfig(model *cloudWatchConfigModel) *bedrock_types.CloudWatchConfig {
-	if model == nil {
+func expandCloudWatchConfig(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.CloudWatchConfig {
+	if object.IsNull() {
 		return nil
 	}
 
-	apiObject := &bedrock_types.CloudWatchConfig{
-		LogGroupName:              model.LogGroupName.ValueStringPointer(),
-		RoleArn:                   model.RoleArn.ValueStringPointer(),
-		LargeDataDeliveryS3Config: expandS3Config(model.LargeDataDeliveryS3Config),
+	var conf cloudWatchConfigModel
+	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
 	}
 
-	return apiObject
+	return &awstypes.CloudWatchConfig{
+		LogGroupName:              conf.LogGroupName.ValueStringPointer(),
+		RoleArn:                   conf.RoleArn.ValueStringPointer(),
+		LargeDataDeliveryS3Config: expandS3Config(ctx, conf.LargeDataDeliveryS3Config, diags),
+	}
 }
 
-func expandS3Config(model *s3ConfigModel) *bedrock_types.S3Config {
-	if model == nil {
+func expandS3Config(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.S3Config {
+	if object.IsNull() {
 		return nil
 	}
 
-	apiObject := &bedrock_types.S3Config{
-		BucketName: model.BucketName.ValueStringPointer(),
-		KeyPrefix:  model.KeyPrefix.ValueStringPointer(),
+	var conf s3ConfigModel
+	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
 	}
 
-	return apiObject
+	return &awstypes.S3Config{
+		BucketName: conf.BucketName.ValueStringPointer(),
+		KeyPrefix:  conf.KeyPrefix.ValueStringPointer(),
+	}
 }
