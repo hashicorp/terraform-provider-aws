@@ -97,7 +97,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	result, err := FindQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
+	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
@@ -157,7 +157,7 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*types.QueryDefinition, error) {
+func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*types.QueryDefinition, error) {
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	if name != "" {
 		input.QueryDefinitionNamePrefix = aws.String(name)

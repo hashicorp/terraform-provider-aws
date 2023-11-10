@@ -105,7 +105,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	destination, err := FindDestinationByName(ctx, conn, d.Id())
+	destination, err := findDestinationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination (%s) not found, removing from state", d.Id())
@@ -166,7 +166,7 @@ func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func FindDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.Destination, error) {
+func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.Destination, error) {
 	input := &cloudwatchlogs.DescribeDestinationsInput{
 		DestinationNamePrefix: aws.String(name),
 	}

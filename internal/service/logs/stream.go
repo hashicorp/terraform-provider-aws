@@ -70,7 +70,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+		return findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 	})
 
 	if err != nil {
@@ -83,7 +83,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	ls, err := FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
@@ -136,7 +136,7 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	input := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),

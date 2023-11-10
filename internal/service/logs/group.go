@@ -122,7 +122,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	lg, err := FindLogGroupByName(ctx, conn, d.Id())
+	lg, err := findLogGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Group (%s) not found, removing from state", d.Id())
@@ -237,7 +237,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func FindLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.LogGroup, error) {
+func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.LogGroup, error) {
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(name),
 	}

@@ -84,7 +84,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	resourcePolicy, err := FindResourcePolicyByName(ctx, conn, d.Id())
+	resourcePolicy, err := findResourcePolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
@@ -132,7 +132,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func FindResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.ResourcePolicy, error) {
+func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.ResourcePolicy, error) {
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	var output *types.ResourcePolicy
 

@@ -141,7 +141,7 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta i
 func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	mf, err := FindMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	mf, err := findMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Metric Filter (%s) not found, removing from state", d.Id())
@@ -203,7 +203,7 @@ func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.MetricFilter, error) {
+func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.MetricFilter, error) {
 	input := &cloudwatchlogs.DescribeMetricFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),

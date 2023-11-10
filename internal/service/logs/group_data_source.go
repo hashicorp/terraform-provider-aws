@@ -49,7 +49,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	logGroup, err := FindLogGroupByName(ctx, conn, name)
+	logGroup, err := findLogGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("reading CloudWatch Logs Log Group (%s): %s", name, err)

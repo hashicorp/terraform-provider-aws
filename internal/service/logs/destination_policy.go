@@ -83,7 +83,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	destination, err := FindDestinationByName(ctx, conn, d.Id())
+	destination, err := findDestinationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination Policy (%s) not found, removing from state", d.Id())

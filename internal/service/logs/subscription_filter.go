@@ -129,7 +129,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	subscriptionFilter, err := FindSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
+	subscriptionFilter, err := findSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
@@ -195,7 +195,7 @@ func subscriptionFilterID(log_group_name string) string {
 	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }
 
-func FindSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.SubscriptionFilter, error) {
+func findSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.SubscriptionFilter, error) {
 	input := &cloudwatchlogs.DescribeSubscriptionFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),
