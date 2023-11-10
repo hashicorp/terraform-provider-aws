@@ -87,6 +87,10 @@ func ResourceServerlessCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
@@ -133,7 +137,6 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 		Tags: getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating MSK Serverless Cluster: %s", input)
 	output, err := conn.CreateClusterV2WithContext(ctx, input)
 
 	if err != nil {
@@ -142,9 +145,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.ClusterArn))
 
-	_, err = waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for MSK Serverless Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -166,7 +167,8 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("reading MSK Serverless Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", cluster.ClusterArn)
+	clusterARN := aws.StringValue(cluster.ClusterArn)
+	d.Set("arn", clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
 			return diag.Errorf("setting client_authentication: %s", err)
@@ -175,6 +177,8 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("client_authentication", nil)
 	}
 	d.Set("cluster_name", cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
 	if err := d.Set("vpc_config", flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
 		return diag.Errorf("setting vpc_config: %s", err)
 	}

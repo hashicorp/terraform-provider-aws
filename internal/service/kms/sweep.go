@@ -75,7 +75,7 @@ func sweepKeys(region string) error {
 			d := r.Data(nil)
 			d.SetId(keyID)
 			d.Set("key_id", keyID)
-			d.Set("deletion_window_in_days", "7")
+			d.Set("deletion_window_in_days", 7)
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}

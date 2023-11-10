@@ -48,6 +48,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceDetectorFeature,
+			TypeName: "aws_guardduty_detector_feature",
+			Name:     "Detector Feature",
+		},
+		{
 			Factory:  ResourceFilter,
 			TypeName: "aws_guardduty_filter",
 			Name:     "Filter",

@@ -330,7 +330,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -343,7 +343,6 @@ func ResourceCluster() *schema.Resource {
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
-			CustomizeDiffValidateTransitEncryptionEnabled,
 			verify.SetTagsDiff,
 		),
 	}

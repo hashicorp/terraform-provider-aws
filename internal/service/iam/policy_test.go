@@ -338,6 +338,24 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyConfig_policyDuplicateKeys(rName),
+				ExpectError: regexache.MustCompile(`"policy" contains duplicate JSON keys: duplicate key "Statement.0.Condition.StringEquals"`),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -615,4 +633,33 @@ resource "aws_iam_policy" "test" {
   %[2]s
 }
 `, rName, tags)
+}
+
+func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": ["one/", "two/"]
+        },
+        "StringEquals": {
+          "s3:versionid": "abc123"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+`, rName)
 }

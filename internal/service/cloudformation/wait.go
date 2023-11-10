@@ -41,15 +41,6 @@ func WaitChangeSetCreated(ctx context.Context, conn *cloudformation.CloudFormati
 }
 
 const (
-	// Default maximum amount of time to wait for a StackSetInstance to be Created
-	StackSetInstanceCreatedDefaultTimeout = 30 * time.Minute
-
-	// Default maximum amount of time to wait for a StackSetInstance to be Updated
-	StackSetInstanceUpdatedDefaultTimeout = 30 * time.Minute
-
-	// Default maximum amount of time to wait for a StackSetInstance to be Deleted
-	StackSetInstanceDeletedDefaultTimeout = 30 * time.Minute
-
 	stackSetOperationDelay = 5 * time.Second
 )
 

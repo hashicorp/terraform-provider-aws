@@ -35,6 +35,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
@@ -52,6 +53,7 @@ import (
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -82,6 +84,7 @@ import (
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
+	bedrock_sdkv1 "github.com/aws/aws-sdk-go/service/bedrock"
 	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	chimesdkmediapipelines_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
@@ -165,7 +168,6 @@ import (
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
-	mediaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconnect"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
@@ -201,7 +203,6 @@ import (
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
-	servicequotas_sdkv1 "github.com/aws/aws-sdk-go/service/servicequotas"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
@@ -316,6 +317,10 @@ func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
 
 func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
 	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch))
+}
+
+func (c *AWSClient) BedrockConn(ctx context.Context) *bedrock_sdkv1.Bedrock {
+	return errs.Must(conn[*bedrock_sdkv1.Bedrock](ctx, c, names.Bedrock))
 }
 
 func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
@@ -722,8 +727,8 @@ func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_
 	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
 }
 
-func (c *AWSClient) LexModelsV2Client(ctx context.Context) *lexmodelsv2_sdkv2.Client {
-	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexModelsV2))
+func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Client {
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
@@ -758,8 +763,8 @@ func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
 	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2))
 }
 
-func (c *AWSClient) MediaConnectConn(ctx context.Context) *mediaconnect_sdkv1.MediaConnect {
-	return errs.Must(conn[*mediaconnect_sdkv1.MediaConnect](ctx, c, names.MediaConnect))
+func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {
+	return errs.Must(client[*mediaconnect_sdkv2.Client](ctx, c, names.MediaConnect))
 }
 
 func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
@@ -1010,8 +1015,8 @@ func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_
 	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
 }
 
-func (c *AWSClient) ServiceQuotasConn(ctx context.Context) *servicequotas_sdkv1.ServiceQuotas {
-	return errs.Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
+func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
+	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas))
 }
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {

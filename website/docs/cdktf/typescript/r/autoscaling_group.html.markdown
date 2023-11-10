@@ -810,8 +810,8 @@ This configuration block supports the following:
     - `minHealthyPercentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skipMatching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `autoRollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launchTemplate` or `mixedInstancesPolicy`.
-    - `scaleInProtectedInstances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `refresh`, `ignore`, and `wait`. Default is `wait`.
-    - `standbyInstances` - (Optional) Behavior when encountering instances in the `standby` state in are found. Available behaviors are `terminate`, `ignore`, and `wait`. Default is `wait`.
+    - `scaleInProtectedInstances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `refresh`, `ignore`, and `wait`. Default is `ignore`.
+    - `standbyInstances` - (Optional) Behavior when encountering instances in the `standby` state in are found. Available behaviors are `terminate`, `ignore`, and `wait`. Default is `ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launchConfiguration`, `launchTemplate`, or `mixedInstancesPolicy`.
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launchConfiguration`, `launchTemplate`, `mixedInstancesPolicy`. Additional properties can be specified in the `triggers` property of `instanceRefresh`.
@@ -969,4 +969,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-04be499d130039fb1278ed28386ecbffc182ee1a24420b763aeb2c4281f8d937 -->
+<!-- cache-key: cdktf-0.18.0 input-6123f1ad176783c4aeeb8809e50b4e73d7842b1025fac3b7c66ab4860931dd4c -->

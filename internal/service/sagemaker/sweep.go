@@ -120,7 +120,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_sagemaker_space", &resource.Sweeper{
 		Name: "aws_sagemaker_space",
-		F:    sweepUserProfiles,
+		F:    sweepSpaces,
 		Dependencies: []string{
 			"aws_sagemaker_app",
 		},

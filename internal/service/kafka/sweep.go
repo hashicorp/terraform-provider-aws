@@ -50,9 +50,16 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.ClusterInfoList {
+			arn := aws.StringValue(v.ClusterArn)
+
+			if state := aws.StringValue(v.State); state == kafka.ClusterStateDeleting {
+				log.Printf("[INFO] Skipping MSK Cluster %s: State=%s", arn, state)
+				continue
+			}
+
 			r := ResourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ClusterArn))
+			d.SetId(arn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -85,19 +92,25 @@ func sweepConfigurations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.KafkaConn(ctx)
-
+	input := &kafka.ListConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &kafka.ListConfigurationsInput{}
 	err = conn.ListConfigurationsPagesWithContext(ctx, input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.Configurations {
+			arn := aws.StringValue(v.Arn)
+
+			if state := aws.StringValue(v.State); state == kafka.ConfigurationStateDeleting {
+				log.Printf("[INFO] Skipping MSK Configuration %s: State=%s", arn, state)
+				continue
+			}
+
 			r := ResourceConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Arn))
+			d.SetId(arn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

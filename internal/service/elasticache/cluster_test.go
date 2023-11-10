@@ -839,6 +839,37 @@ func TestAccElastiCacheCluster_ReplicationGroupID_availabilityZone(t *testing.T)
 	})
 }
 
+func TestAccElastiCacheCluster_ReplicationGroupID_transitEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cluster elasticache.CacheCluster
+	var replicationGroup elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterResourceName := "aws_elasticache_cluster.test"
+	replicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_replicationGroupIDTransitEncryption(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, replicationGroupResourceName, &replicationGroup),
+					testAccCheckClusterExists(ctx, clusterResourceName, &cluster),
+					testAccCheckClusterReplicationGroupIDAttribute(&cluster, &replicationGroup),
+					resource.TestCheckResourceAttr(clusterResourceName, "transit_encryption_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_ReplicationGroupID_singleReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1244,12 +1275,12 @@ func TestAccElastiCacheCluster_TransitEncryption(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.11"),
-				ExpectError: regexache.MustCompile(`Transit encryption is not supported for memcached version 1.6.11`),
+				Config:      testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.6"),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: Encryption features are not supported for engine version 1.6.6. Please use engine version 1.6.12`),
 			},
 			{
 				Config:      testAccClusterConfig_transitEncryption(rName, "redis", "6.2"),
-				ExpectError: regexache.MustCompile(`aws_elasticache_cluster does not support transit encryption using the redis engine, use aws_elasticache_replication_group instead`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: Encryption feature is not supported for engine REDIS.`),
 			},
 			{
 				Config: testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.12"),
@@ -1955,10 +1986,33 @@ resource "aws_elasticache_replication_group" "test" {
 
 resource "aws_elasticache_cluster" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
-  cluster_id           = "%[1]s1"
+  cluster_id           = "%[1]s-1"
   replication_group_id = aws_elasticache_replication_group.test.id
 }
 `, rName))
+}
+
+func testAccClusterConfig_replicationGroupIDTransitEncryption(rName string, enabled bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  description                = "Terraform Acceptance Testing"
+  replication_group_id       = %[1]q
+  node_type                  = "cache.t3.medium"
+  num_cache_clusters         = 1
+  port                       = 6379
+  transit_encryption_enabled = %[2]t
+
+  lifecycle {
+    ignore_changes = [num_cache_clusters]
+  }
+}
+
+resource "aws_elasticache_cluster" "test" {
+  availability_zone    = data.aws_availability_zones.available.names[0]
+  cluster_id           = "%[1]s-1"
+  replication_group_id = aws_elasticache_replication_group.test.id
+}
+`, rName, enabled))
 }
 
 func testAccClusterConfig_replicationGroupIDReplica(rName string, count int) string {
@@ -1977,7 +2031,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 resource "aws_elasticache_cluster" "test" {
   count                = %[2]d
-  cluster_id           = "%[1]s${count.index}"
+  cluster_id           = "%[1]s-${count.index}"
   replication_group_id = aws_elasticache_replication_group.test.id
 }
 `, rName, count)

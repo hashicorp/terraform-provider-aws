@@ -73,7 +73,7 @@ data "aws_rds_orderable_db_instance" "custom-oracle" {
   engine_version             = "19.c.ee.002"      # CEV engine version to be used
   license_model              = "bring-your-own-license"
   storage_type               = "gp3"
-  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
 }
 
 # The RDS instance resource requires an ARN. Look up the ARN of the KMS key associated with the CEV.
@@ -132,9 +132,9 @@ resource "aws_db_instance" "test-replica" {
 # Lookup the available instance classes for the custom engine for the region being operated in
 data "aws_rds_orderable_db_instance" "custom-sqlserver" {
   engine                     = "custom-sqlserver-se" # CEV engine to be used
-  engine_version             = "115.00.4249.2.cev1"  # CEV engine version to be used
+  engine_version             = "15.00.4249.2.v1"     # CEV engine version to be used
   storage_type               = "gp3"
-  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
 }
 
 # The RDS instance resource requires an ARN. Look up the ARN of the KMS key.
@@ -147,14 +147,15 @@ resource "aws_db_instance" "example" {
   auto_minor_version_upgrade  = false                               # Custom for SQL Server does not support minor version upgrades
   custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
   backup_retention_period     = 7
-  db_subnet_group_name        = local.db_subnet_group_name
+  db_subnet_group_name        = local.db_subnet_group_name # Copy the subnet group from the RDS Console
   engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine
   engine_version              = data.aws_rds_orderable_db_instance.custom-sqlserver.engine_version
   identifier                  = "sql-instance-demo"
   instance_class              = data.aws_rds_orderable_db_instance.custom-sqlserver.instance_class
   kms_key_id                  = data.aws_kms_key.by_id.arn
-  multi_az                    = false # Custom for SQL Server does not support multi-az
+  multi_az                    = false # Custom for SQL Server does support multi-az
   password                    = "avoid-plaintext-passwords"
+  storage_encrypted           = true
   username                    = "test"
 
   timeouts {
@@ -265,7 +266,7 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.

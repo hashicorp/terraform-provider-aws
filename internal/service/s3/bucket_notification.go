@@ -9,9 +9,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -29,6 +30,7 @@ func ResourceBucketNotification() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
 		UpdateWithoutTimeout: resourceBucketNotificationPut,
 		DeleteWithoutTimeout: resourceBucketNotificationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -39,86 +41,20 @@ func ResourceBucketNotification() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"eventbridge": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"topic": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"filter_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"filter_suffix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"topic_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-					},
-				},
-			},
-
-			"queue": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"filter_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"filter_suffix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-					},
-				},
-			},
-
 			"lambda_function": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+						"events": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"filter_prefix": {
 							Type:     schema.TypeString,
@@ -128,15 +64,74 @@ func ResourceBucketNotification() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"lambda_function_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+					},
+				},
+			},
+			"queue": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
 						"events": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+						},
+						"filter_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"filter_suffix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"queue_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"topic": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"events": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"filter_suffix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"topic_arn": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -147,168 +142,51 @@ func ResourceBucketNotification() *schema.Resource {
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	bucket := d.Get("bucket").(string)
 
-	// EventBridge
-	eventbridgeNotifications := d.Get("eventbridge").(bool)
-	var eventbridgeConfig *s3.EventBridgeConfiguration
-	if eventbridgeNotifications {
-		eventbridgeConfig = &s3.EventBridgeConfiguration{}
+	var eventbridgeConfig *types.EventBridgeConfiguration
+	if d.Get("eventbridge").(bool) {
+		eventbridgeConfig = &types.EventBridgeConfiguration{}
 	}
 
-	// TopicNotifications
-	topicNotifications := d.Get("topic").([]interface{})
-	topicConfigs := make([]*s3.TopicConfiguration, 0, len(topicNotifications))
-	for i, c := range topicNotifications {
-		tc := &s3.TopicConfiguration{}
-
-		c := c.(map[string]interface{})
-
-		// Id
-		if val, ok := c["id"].(string); ok && val != "" {
-			tc.Id = aws.String(val)
-		} else {
-			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
-		}
-
-		// TopicArn
-		if val, ok := c["topic_arn"].(string); ok {
-			tc.TopicArn = aws.String(val)
-		}
-
-		// Events
-		events := d.Get(fmt.Sprintf("topic.%d.events", i)).(*schema.Set).List()
-		tc.Events = make([]*string, 0, len(events))
-		for _, e := range events {
-			tc.Events = append(tc.Events, aws.String(e.(string)))
-		}
-
-		// Filter
-		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
-		if val, ok := c["filter_prefix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("prefix"),
-				Value: aws.String(val),
-			}
-			filterRules = append(filterRules, filterRule)
-		}
-		if val, ok := c["filter_suffix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("suffix"),
-				Value: aws.String(val),
-			}
-			filterRules = append(filterRules, filterRule)
-		}
-		if len(filterRules) > 0 {
-			tc.Filter = &s3.NotificationConfigurationFilter{
-				Key: &s3.KeyFilter{
-					FilterRules: filterRules,
-				},
-			}
-		}
-		topicConfigs = append(topicConfigs, tc)
-	}
-
-	// SQS
-	queueNotifications := d.Get("queue").([]interface{})
-	queueConfigs := make([]*s3.QueueConfiguration, 0, len(queueNotifications))
-	for i, c := range queueNotifications {
-		qc := &s3.QueueConfiguration{}
-
-		c := c.(map[string]interface{})
-
-		// Id
-		if val, ok := c["id"].(string); ok && val != "" {
-			qc.Id = aws.String(val)
-		} else {
-			qc.Id = aws.String(id.PrefixedUniqueId("tf-s3-queue-"))
-		}
-
-		// QueueArn
-		if val, ok := c["queue_arn"].(string); ok {
-			qc.QueueArn = aws.String(val)
-		}
-
-		// Events
-		events := d.Get(fmt.Sprintf("queue.%d.events", i)).(*schema.Set).List()
-		qc.Events = make([]*string, 0, len(events))
-		for _, e := range events {
-			qc.Events = append(qc.Events, aws.String(e.(string)))
-		}
-
-		// Filter
-		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
-		if val, ok := c["filter_prefix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("prefix"),
-				Value: aws.String(val),
-			}
-			filterRules = append(filterRules, filterRule)
-		}
-		if val, ok := c["filter_suffix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("suffix"),
-				Value: aws.String(val),
-			}
-			filterRules = append(filterRules, filterRule)
-		}
-		if len(filterRules) > 0 {
-			qc.Filter = &s3.NotificationConfigurationFilter{
-				Key: &s3.KeyFilter{
-					FilterRules: filterRules,
-				},
-			}
-		}
-		queueConfigs = append(queueConfigs, qc)
-	}
-
-	// Lambda
 	lambdaFunctionNotifications := d.Get("lambda_function").([]interface{})
-	lambdaConfigs := make([]*s3.LambdaFunctionConfiguration, 0, len(lambdaFunctionNotifications))
+	lambdaConfigs := make([]types.LambdaFunctionConfiguration, 0, len(lambdaFunctionNotifications))
 	for i, c := range lambdaFunctionNotifications {
-		lc := &s3.LambdaFunctionConfiguration{}
+		lc := types.LambdaFunctionConfiguration{}
 
 		c := c.(map[string]interface{})
 
-		// Id
 		if val, ok := c["id"].(string); ok && val != "" {
 			lc.Id = aws.String(val)
 		} else {
 			lc.Id = aws.String(id.PrefixedUniqueId("tf-s3-lambda-"))
 		}
 
-		// LambdaFunctionArn
 		if val, ok := c["lambda_function_arn"].(string); ok {
 			lc.LambdaFunctionArn = aws.String(val)
 		}
 
-		// Events
-		events := d.Get(fmt.Sprintf("lambda_function.%d.events", i)).(*schema.Set).List()
-		lc.Events = make([]*string, 0, len(events))
-		for _, e := range events {
-			lc.Events = append(lc.Events, aws.String(e.(string)))
-		}
+		lc.Events = flex.ExpandStringyValueSet[types.Event](d.Get(fmt.Sprintf("lambda_function.%d.events", i)).(*schema.Set))
 
-		// Filter
-		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
+		filterRules := make([]types.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("prefix"),
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNamePrefix,
 				Value: aws.String(val),
 			}
 			filterRules = append(filterRules, filterRule)
 		}
 		if val, ok := c["filter_suffix"].(string); ok && val != "" {
-			filterRule := &s3.FilterRule{
-				Name:  aws.String("suffix"),
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNameSuffix,
 				Value: aws.String(val),
 			}
 			filterRules = append(filterRules, filterRule)
 		}
 		if len(filterRules) > 0 {
-			lc.Filter = &s3.NotificationConfigurationFilter{
-				Key: &s3.KeyFilter{
+			lc.Filter = &types.NotificationConfigurationFilter{
+				Key: &types.S3KeyFilter{
 					FilterRules: filterRules,
 				},
 			}
@@ -316,7 +194,95 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		lambdaConfigs = append(lambdaConfigs, lc)
 	}
 
-	notificationConfiguration := &s3.NotificationConfiguration{}
+	queueNotifications := d.Get("queue").([]interface{})
+	queueConfigs := make([]types.QueueConfiguration, 0, len(queueNotifications))
+	for i, c := range queueNotifications {
+		qc := types.QueueConfiguration{}
+
+		c := c.(map[string]interface{})
+
+		if val, ok := c["id"].(string); ok && val != "" {
+			qc.Id = aws.String(val)
+		} else {
+			qc.Id = aws.String(id.PrefixedUniqueId("tf-s3-queue-"))
+		}
+
+		if val, ok := c["queue_arn"].(string); ok {
+			qc.QueueArn = aws.String(val)
+		}
+
+		qc.Events = flex.ExpandStringyValueSet[types.Event](d.Get(fmt.Sprintf("queue.%d.events", i)).(*schema.Set))
+
+		filterRules := make([]types.FilterRule, 0, filterRulesSliceStartLen)
+		if val, ok := c["filter_prefix"].(string); ok && val != "" {
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNamePrefix,
+				Value: aws.String(val),
+			}
+			filterRules = append(filterRules, filterRule)
+		}
+		if val, ok := c["filter_suffix"].(string); ok && val != "" {
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNameSuffix,
+				Value: aws.String(val),
+			}
+			filterRules = append(filterRules, filterRule)
+		}
+		if len(filterRules) > 0 {
+			qc.Filter = &types.NotificationConfigurationFilter{
+				Key: &types.S3KeyFilter{
+					FilterRules: filterRules,
+				},
+			}
+		}
+		queueConfigs = append(queueConfigs, qc)
+	}
+
+	topicNotifications := d.Get("topic").([]interface{})
+	topicConfigs := make([]types.TopicConfiguration, 0, len(topicNotifications))
+	for i, c := range topicNotifications {
+		tc := types.TopicConfiguration{}
+
+		c := c.(map[string]interface{})
+
+		if val, ok := c["id"].(string); ok && val != "" {
+			tc.Id = aws.String(val)
+		} else {
+			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
+		}
+
+		if val, ok := c["topic_arn"].(string); ok {
+			tc.TopicArn = aws.String(val)
+		}
+
+		tc.Events = flex.ExpandStringyValueSet[types.Event](d.Get(fmt.Sprintf("topic.%d.events", i)).(*schema.Set))
+
+		filterRules := make([]types.FilterRule, 0, filterRulesSliceStartLen)
+		if val, ok := c["filter_prefix"].(string); ok && val != "" {
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNamePrefix,
+				Value: aws.String(val),
+			}
+			filterRules = append(filterRules, filterRule)
+		}
+		if val, ok := c["filter_suffix"].(string); ok && val != "" {
+			filterRule := types.FilterRule{
+				Name:  types.FilterRuleNameSuffix,
+				Value: aws.String(val),
+			}
+			filterRules = append(filterRules, filterRule)
+		}
+		if len(filterRules) > 0 {
+			tc.Filter = &types.NotificationConfigurationFilter{
+				Key: &types.S3KeyFilter{
+					FilterRules: filterRules,
+				},
+			}
+		}
+		topicConfigs = append(topicConfigs, tc)
+	}
+
+	notificationConfiguration := &types.NotificationConfiguration{}
 	if eventbridgeConfig != nil {
 		notificationConfiguration.EventBridgeConfiguration = eventbridgeConfig
 	}
@@ -329,123 +295,108 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	if len(topicConfigs) > 0 {
 		notificationConfiguration.TopicConfigurations = topicConfigs
 	}
-	i := &s3.PutBucketNotificationConfigurationInput{
+	input := &s3.PutBucketNotificationConfigurationInput{
 		Bucket:                    aws.String(bucket),
 		NotificationConfiguration: notificationConfiguration,
 	}
 
-	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
-	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.PutBucketNotificationConfigurationWithContext(ctx, i)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketNotificationConfigurationWithContext(ctx, i)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return conn.PutBucketNotificationConfiguration(ctx, input)
+	}, errCodeNoSuchBucket)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting S3 Bucket Notification Configuration: %s", err)
+		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
 	}
 
-	d.SetId(bucket)
+	if d.IsNewResource() {
+		d.SetId(bucket)
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
+		})
+
+		if err != nil {
+			return diag.Errorf("waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceBucketNotificationRead(ctx, d, meta)...)
 }
 
-func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-
-	i := &s3.PutBucketNotificationConfigurationInput{
-		Bucket:                    aws.String(d.Id()),
-		NotificationConfiguration: &s3.NotificationConfiguration{},
-	}
-
-	log.Printf("[DEBUG] S3 bucket: %s, Deleting notification: %v", d.Id(), i)
-	_, err := conn.PutBucketNotificationConfigurationWithContext(ctx, i)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Notification Configuration (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
 func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	notificationConfigs, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
-		Bucket: aws.String(d.Id()),
-	})
+	output, err := findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket Notification Configuration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Bucket Notification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
-
-	if notificationConfigs == nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification Configuration (%s): empty response", d.Id())
-	}
-
-	log.Printf("[DEBUG] S3 Bucket: %s, get notification: %v", d.Id(), notificationConfigs)
 
 	d.Set("bucket", d.Id())
-
-	// EventBridge Notification
-	d.Set("eventbridge", notificationConfigs.EventBridgeConfiguration != nil)
-
-	// Topic Notification
-	if err := d.Set("topic", flattenTopicConfigurations(notificationConfigs.TopicConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 bucket \"%s\" topic notification: %s", d.Id(), err)
+	d.Set("eventbridge", output.EventBridgeConfiguration != nil)
+	if err := d.Set("lambda_function", flattenLambdaFunctionConfigurations(output.LambdaFunctionConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lambda_function: %s", err)
 	}
-
-	// SQS Notification
-	if err := d.Set("queue", flattenQueueConfigurations(notificationConfigs.QueueConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 bucket \"%s\" queue notification: %s", d.Id(), err)
+	if err := d.Set("queue", flattenQueueConfigurations(output.QueueConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting queue: %s", err)
 	}
-
-	// Lambda Notification
-	if err := d.Set("lambda_function", flattenLambdaFunctionConfigurations(notificationConfigs.LambdaFunctionConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 bucket \"%s\" lambda function notification: %s", d.Id(), err)
+	if err := d.Set("topic", flattenTopicConfigurations(output.TopicConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting queue: %s", err)
 	}
 
 	return diags
 }
 
-func flattenNotificationConfigurationFilter(filter *s3.NotificationConfigurationFilter) map[string]interface{} {
+func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	input := &s3.PutBucketNotificationConfigurationInput{
+		Bucket:                    aws.String(d.Id()),
+		NotificationConfiguration: &types.NotificationConfiguration{},
+	}
+
+	log.Printf("[DEBUG] Deleting S3 Bucket Notification: %s", d.Id())
+	_, err := conn.PutBucketNotificationConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting S3 Bucket Notification (%s): %s", d.Id(), err)
+	}
+
+	// Don't wait for the notification configuration to disappear as it still exists after update.
+
+	return diags
+}
+
+func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurationFilter) map[string]interface{} {
 	filterRules := map[string]interface{}{}
 	if filter.Key == nil || filter.Key.FilterRules == nil {
 		return filterRules
 	}
 
 	for _, f := range filter.Key.FilterRules {
-		if strings.ToLower(*f.Name) == s3.FilterRuleNamePrefix {
-			filterRules["filter_prefix"] = aws.StringValue(f.Value)
-		}
-		if strings.ToLower(*f.Name) == s3.FilterRuleNameSuffix {
-			filterRules["filter_suffix"] = aws.StringValue(f.Value)
+		name := strings.ToLower(string(f.Name))
+		if name == string(types.FilterRuleNamePrefix) {
+			filterRules["filter_prefix"] = aws.ToString(f.Value)
+		} else if name == string(types.FilterRuleNameSuffix) {
+			filterRules["filter_suffix"] = aws.ToString(f.Value)
 		}
 	}
 	return filterRules
 }
 
-func flattenTopicConfigurations(configs []*s3.TopicConfiguration) []map[string]interface{} {
+func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string]interface{} {
 	topicNotifications := make([]map[string]interface{}, 0, len(configs))
 	for _, notification := range configs {
 		var conf map[string]interface{}
@@ -455,16 +406,16 @@ func flattenTopicConfigurations(configs []*s3.TopicConfiguration) []map[string]i
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.StringValue(notification.Id)
-		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["topic_arn"] = aws.StringValue(notification.TopicArn)
+		conf["id"] = aws.ToString(notification.Id)
+		conf["events"] = notification.Events
+		conf["topic_arn"] = aws.ToString(notification.TopicArn)
 		topicNotifications = append(topicNotifications, conf)
 	}
 
 	return topicNotifications
 }
 
-func flattenQueueConfigurations(configs []*s3.QueueConfiguration) []map[string]interface{} {
+func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string]interface{} {
 	queueNotifications := make([]map[string]interface{}, 0, len(configs))
 	for _, notification := range configs {
 		var conf map[string]interface{}
@@ -474,16 +425,16 @@ func flattenQueueConfigurations(configs []*s3.QueueConfiguration) []map[string]i
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.StringValue(notification.Id)
-		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["queue_arn"] = aws.StringValue(notification.QueueArn)
+		conf["id"] = aws.ToString(notification.Id)
+		conf["events"] = notification.Events
+		conf["queue_arn"] = aws.ToString(notification.QueueArn)
 		queueNotifications = append(queueNotifications, conf)
 	}
 
 	return queueNotifications
 }
 
-func flattenLambdaFunctionConfigurations(configs []*s3.LambdaFunctionConfiguration) []map[string]interface{} {
+func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfiguration) []map[string]interface{} {
 	lambdaFunctionNotifications := make([]map[string]interface{}, 0, len(configs))
 	for _, notification := range configs {
 		var conf map[string]interface{}
@@ -493,11 +444,39 @@ func flattenLambdaFunctionConfigurations(configs []*s3.LambdaFunctionConfigurati
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.StringValue(notification.Id)
-		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["lambda_function_arn"] = aws.StringValue(notification.LambdaFunctionArn)
+		conf["id"] = aws.ToString(notification.Id)
+		conf["events"] = notification.Events
+		conf["lambda_function_arn"] = aws.ToString(notification.LambdaFunctionArn)
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)
 	}
 
 	return lambdaFunctionNotifications
+}
+
+func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketNotificationConfigurationOutput, error) {
+	input := &s3.GetBucketNotificationConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
