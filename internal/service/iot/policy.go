@@ -152,7 +152,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	policyVersions, err := findPolicyVersionsByName(ctx, conn, d.Id())
+	policyVersions, err := FindPolicyVersionsByName(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		return diags
@@ -206,7 +206,7 @@ func FindPolicyByName(ctx context.Context, conn *iot.IoT, name string) (*iot.Get
 	return output, nil
 }
 
-func findPolicyVersionsByName(ctx context.Context, conn *iot.IoT, name string) ([]*iot.PolicyVersion, error) {
+func FindPolicyVersionsByName(ctx context.Context, conn *iot.IoT, name string) ([]*iot.PolicyVersion, error) {
 	input := &iot.ListPolicyVersionsInput{
 		PolicyName: aws.String(name),
 	}
