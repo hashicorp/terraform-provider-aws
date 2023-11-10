@@ -42,11 +42,11 @@ class MyConvertedCode extends TerraformStack {
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 The given filters must match exactly one resolver rule whose data will be exported as attributes.
 
-* `domainName` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolverRuleId`.
-* `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolverRuleId`.
-* `resolverEndpointId` (Optional) ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolverRuleId`.
-* `resolverRuleId` (Optional) ID of the desired resolver rule. Conflicts with `domainName`, `name`, `resolverEndpointId` and `ruleType`.
-* `ruleType` - (Optional) Rule type of the desired resolver rule. Valid values are `forward`, `system` and `recursive`. Conflicts with `resolverRuleId`.
+* `domainName` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolver_rule_id`.
+* `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolver_rule_id`.
+* `resolverEndpointId` (Optional) ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolver_rule_id`.
+* `resolverRuleId` (Optional) ID of the desired resolver rule. Conflicts with `domain_name`, `name`, `resolver_endpoint_id` and `rule_type`.
+* `ruleType` - (Optional) Rule type of the desired resolver rule. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`. Conflicts with `resolver_rule_id`.
 
 ## Attribute Reference
 
@@ -56,7 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN (Amazon Resource Name) for the resolver rule.
 * `ownerId` - When a rule is shared with another AWS account, the account ID of the account that the rule is shared with.
 * `shareStatus` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
-Values are `notShared`, `sharedByMe` or `sharedWithMe`
+Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
 
-<!-- cache-key: cdktf-0.18.0 input-18fb35f097987b8d14e261d381f5a10359f2716b6cb0f20fc2d80f0c0da22650 -->
+<!-- cache-key: cdktf-0.19.0 input-18fb35f097987b8d14e261d381f5a10359f2716b6cb0f20fc2d80f0c0da22650 -->

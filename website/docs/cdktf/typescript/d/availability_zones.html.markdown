@@ -137,7 +137,7 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `groupNames` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `usWest2Lax1`.
+* `groupNames` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `id` - Region of the Availability Zones.
 * `names` - List of the Availability Zone names available to the account.
 * `zoneIds` - List of the Availability Zone IDs available to the account.
@@ -148,6 +148,6 @@ Note that the indexes of Availability Zone names and IDs correspond.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->
+<!-- cache-key: cdktf-0.19.0 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->

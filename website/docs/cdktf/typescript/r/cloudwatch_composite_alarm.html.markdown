@@ -55,23 +55,23 @@ class MyConvertedCode extends TerraformStack {
 * `actionsEnabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
 * `actionsSuppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
     * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.
-    * `extensionPeriod` - (Required) The maximum time in seconds that the composite alarm waits after suppressor alarm goes out of the `alarm` state. After this time, the composite alarm performs its actions.
-    * `waitPeriod` - (Required) The maximum time in seconds that the composite alarm waits for the suppressor alarm to go into the `alarm` state. After this time, the composite alarm performs its actions.
-* `alarmActions` - (Optional) The set of actions to execute when this alarm transitions to the `alarm` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+    * `extension_period` - (Required) The maximum time in seconds that the composite alarm waits after suppressor alarm goes out of the `ALARM` state. After this time, the composite alarm performs its actions.
+    * `wait_period` - (Required) The maximum time in seconds that the composite alarm waits for the suppressor alarm to go into the `ALARM` state. After this time, the composite alarm performs its actions.
+* `alarmActions` - (Optional) The set of actions to execute when this alarm transitions to the `ALARM` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `alarmDescription` - (Optional) The description for the composite alarm.
 * `alarmName` - (Required) The name for the composite alarm. This name must be unique within the region.
 * `alarmRule` - (Required) An expression that specifies which other alarms are to be evaluated to determine this composite alarm's state. For syntax, see [Creating a Composite Alarm](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Create_Composite_Alarm.html). The maximum length is 10240 characters.
-* `insufficientDataActions` - (Optional) The set of actions to execute when this alarm transitions to the `insufficientData` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
-* `okActions` - (Optional) The set of actions to execute when this alarm transitions to an `ok` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
-* `tags` - (Optional) A map of tags to associate with the alarm. Up to 50 tags are allowed. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `insufficientDataActions` - (Optional) The set of actions to execute when this alarm transitions to the `INSUFFICIENT_DATA` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+* `okActions` - (Optional) The set of actions to execute when this alarm transitions to an `OK` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+* `tags` - (Optional) A map of tags to associate with the alarm. Up to 50 tags are allowed. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the composite alarm.
-* `id` - The ID of the composite alarm resource, which is equivalent to its `alarmName`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - The ID of the composite alarm resource, which is equivalent to its `alarm_name`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import a CloudWatch Composite Alarm using the `alarmNa
 % terraform import aws_cloudwatch_composite_alarm.test my-alarm
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc5f81d668dc98cce89e801ef7bbb869b647ded82d35c20f03ae8298b2d50282 -->
+<!-- cache-key: cdktf-0.19.0 input-bc5f81d668dc98cce89e801ef7bbb869b647ded82d35c20f03ae8298b2d50282 -->

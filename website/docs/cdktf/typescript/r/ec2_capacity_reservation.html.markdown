@@ -43,16 +43,16 @@ This resource supports the following arguments:
 
 * `availabilityZone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebsOptimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
-* `endDate` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`yyyyMmDdthh:mm:ssz`)
+* `endDate` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 * `endDateType` - (Optional) Indicates the way in which the Capacity Reservation ends. Specify either `unlimited` or `limited`.
 * `ephemeralStorage` - (Optional) Indicates whether the Capacity Reservation supports instances with temporary, block-level storage.
 * `instanceCount` - (Required) The number of instances for which to reserve capacity.
 * `instanceMatchCriteria` - (Optional) Indicates the type of instance launches that the Capacity Reservation accepts. Specify either `open` or `targeted`.
-* `instancePlatform` - (Required) The type of operating system for which to reserve capacity. Valid options are `linux/unix`, `Red Hat Enterprise Linux`, `SUSE Linux`, `windows`, `Windows with SQL Server`, `Windows with SQL Server Enterprise`, `Windows with SQL Server Standard` or `Windows with SQL Server Web`.
+* `instancePlatform` - (Required) The type of operating system for which to reserve capacity. Valid options are `Linux/UNIX`, `Red Hat Enterprise Linux`, `SUSE Linux`, `Windows`, `Windows with SQL Server`, `Windows with SQL Server Enterprise`, `Windows with SQL Server Standard` or `Windows with SQL Server Web`.
 * `instanceType` - (Required) The instance type for which to reserve capacity.
 * `outpostArn` - (Optional) The Amazon Resource Name (ARN) of the Outpost on which to create the Capacity Reservation.
 * `placementGroupArn` - (Optional) The Amazon Resource Name (ARN) of the cluster placement group in which to create the Capacity Reservation.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Indicates the tenancy of the Capacity Reservation. Specify either `default` or `dedicated`.
 
 ## Attribute Reference
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Capacity Reservation ID.
 * `ownerId` - The ID of the AWS account that owns the Capacity Reservation.
 * `arn` - The ARN of the Capacity Reservation.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import Capacity Reservations using the `id`. For examp
 % terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-93a356c14077d7db2f6957607bc33725d67bfe6e53d726dbffcc5d0f5f8dea86 -->
+<!-- cache-key: cdktf-0.19.0 input-93a356c14077d7db2f6957607bc33725d67bfe6e53d726dbffcc5d0f5f8dea86 -->

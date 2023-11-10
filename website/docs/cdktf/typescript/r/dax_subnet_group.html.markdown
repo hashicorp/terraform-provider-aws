@@ -72,4 +72,4 @@ Using `terraform import`, import DAX Subnet Group using the `name`. For example:
 % terraform import aws_dax_subnet_group.example my_dax_sg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7e0b85bfae073f3145aed1d3f2658b614702a6a6a2bc2cf27086e92f41fc07d8 -->
+<!-- cache-key: cdktf-0.19.0 input-7e0b85bfae073f3145aed1d3f2658b614702a6a6a2bc2cf27086e92f41fc07d8 -->

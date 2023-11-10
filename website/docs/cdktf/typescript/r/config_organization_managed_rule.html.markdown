@@ -57,10 +57,10 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the rule
 * `excludedAccounts` - (Optional) List of AWS account identifiers to exclude from the rule
 * `inputParameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function
-* `maximumExecutionFrequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule, if the rule is triggered at a periodic frequency. Defaults to `twentyFourHours` for periodic frequency triggered rules. Valid values: `oneHour`, `threeHours`, `sixHours`, `twelveHours`, or `twentyFourHours`.
+* `maximumExecutionFrequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule, if the rule is triggered at a periodic frequency. Defaults to `TwentyFour_Hours` for periodic frequency triggered rules. Valid values: `One_Hour`, `Three_Hours`, `Six_Hours`, `Twelve_Hours`, or `TwentyFour_Hours`.
 * `resourceIdScope` - (Optional) Identifier of the AWS resource to evaluate
 * `resourceTypesScope` - (Optional) List of types of AWS resources to evaluate
-* `tagKeyScope` - (Optional, Required if `tagValueScope` is configured) Tag key of AWS resources to evaluate
+* `tagKeyScope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tagValueScope` - (Optional) Tag value of AWS resources to evaluate
 
 ## Attribute Reference
@@ -73,9 +73,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
-* `update` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
@@ -99,4 +99,4 @@ Using `terraform import`, import Config Organization Managed Rules using the nam
 % terraform import aws_config_organization_managed_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-29a5f024d0a4952e4ef689b372b4e88a2023404e9e31631bc6e865b75a8f3733 -->
+<!-- cache-key: cdktf-0.19.0 input-29a5f024d0a4952e4ef689b372b4e88a2023404e9e31631bc6e865b75a8f3733 -->

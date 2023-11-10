@@ -125,7 +125,7 @@ This resource supports the following arguments:
 
 * `allow_single_column` - (Optional) Enables the processing of files that contain only one column.
 * `contains_header` - (Optional) Indicates whether the CSV file contains a header. This can be one of "ABSENT", "PRESENT", or "UNKNOWN".
-* `custom_datatype_configured` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
+* `custom_datatype_configured` - (Optional) Enables the custom datatype to be configured.
 * `custom_datatypes` - (Optional) A list of supported custom datatypes. Valid values are `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INT`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`.
 * `delimiter` - (Optional) The delimiter used in the Csv to separate columns.
 * `disable_value_trimming` - (Optional) Specifies whether to trim column values.
@@ -172,4 +172,4 @@ Using `terraform import`, import Glue Classifiers using their name. For example:
 % terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-79f267ac82abd7c066ef5dc22fae51abc346ed566400e78952a79529d3af71bd -->
+<!-- cache-key: cdktf-0.19.0 input-45c5b9dcc31431683f885d5456b092e34a68aaf460831b6201359bdc7708bb7a -->

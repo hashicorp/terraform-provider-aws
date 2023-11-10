@@ -195,4 +195,4 @@ Using `terraform import`, import `aws_networkmanager_site_to_site_vpn_attachment
 % terraform import aws_networkmanager_site_to_site_vpn_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8d596e286a25ca280c4219b11ff4ee7e96e1f115294bc53f7b30dbfae1998f54 -->
+<!-- cache-key: cdktf-0.19.0 input-8d596e286a25ca280c4219b11ff4ee7e96e1f115294bc53f7b30dbfae1998f54 -->

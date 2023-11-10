@@ -70,4 +70,4 @@ Using `terraform import`, import CloudWatch Synthetics Group using the `name`. F
 % terraform import aws_synthetics_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a60f694e7f99a87c98a47c4127d04528abd45230d213848a0dd79453012e6e75 -->
+<!-- cache-key: cdktf-0.19.0 input-a60f694e7f99a87c98a47c4127d04528abd45230d213848a0dd79453012e6e75 -->

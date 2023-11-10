@@ -239,4 +239,4 @@ Using `terraform import`, import CloudWatch metric streams using the `name`. For
 % terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c784099071593ee0e42cd9f39aed6e0e5231d53ebec38c6f6c7bc696081f0d87 -->
+<!-- cache-key: cdktf-0.19.0 input-c784099071593ee0e42cd9f39aed6e0e5231d53ebec38c6f6c7bc696081f0d87 -->

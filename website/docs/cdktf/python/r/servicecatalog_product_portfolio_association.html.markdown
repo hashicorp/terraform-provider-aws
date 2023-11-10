@@ -77,4 +77,4 @@ Using `terraform import`, import `aws_servicecatalog_product_portfolio_associati
 % terraform import aws_servicecatalog_product_portfolio_association.example en:port-68656c6c6f:prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a3af1254e2031bb30383dd299c3aac7b7de830390f5b4d5f6d57c3f44312464e -->
+<!-- cache-key: cdktf-0.19.0 input-a3af1254e2031bb30383dd299c3aac7b7de830390f5b4d5f6d57c3f44312464e -->

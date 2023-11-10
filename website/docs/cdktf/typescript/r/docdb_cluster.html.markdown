@@ -65,7 +65,7 @@ This argument supports the following arguments:
 * `availabilityZones` - (Optional) A list of EC2 Availability Zones that
   instances in the DB cluster can be created in.
 * `backupRetentionPeriod` - (Optional) The days to retain backups for. Default `1`
-* `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
+* `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `dbSubnetGroupName` - (Optional) A DB subnet group to associate with this DB instance.
 * `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
@@ -77,19 +77,19 @@ This argument supports the following arguments:
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
-* `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`awsDocdbGlobalCluster`](/docs/providers/aws/r/docdb_global_cluster.html).
-* `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyId`, `storageEncrypted` needs to be set to true.
-* `masterPassword` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
+* `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
+* `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
+* `masterPassword` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints.
-* `masterUsername` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
+* `masterUsername` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
-* `skipFinalSnapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `finalSnapshotIdentifier`. Default is `false`.
+* `skipFinalSnapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshotIdentifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 * `storageEncrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
-* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate
   with the Cluster
 
@@ -104,15 +104,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `hostedZoneId` - The Route53 Hosted Zone ID of the endpoint
 * `id` - The DocumentDB Cluster Identifier
 * `readerEndpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120M`)
-- `update` - (Default `120M`)
-- `delete` - (Default `120M`)
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 any cleanup task during the destroying process.
 
 ## Import
@@ -137,4 +137,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7cf348aecf73384b6129a72828575287fcb17575843e5c9cf838a6b1a7e65009 -->
+<!-- cache-key: cdktf-0.19.0 input-7cf348aecf73384b6129a72828575287fcb17575843e5c9cf838a6b1a7e65009 -->

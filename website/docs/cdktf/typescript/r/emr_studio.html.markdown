@@ -46,21 +46,21 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `authMode`- (Required) Specifies whether the Studio authenticates users using IAM or Amazon Web Services SSO. Valid values are `sso` or `iam`.
+* `authMode`- (Required) Specifies whether the Studio authenticates users using IAM or Amazon Web Services SSO. Valid values are `SSO` or `IAM`.
 * `defaultS3Location` - (Required) The Amazon S3 location to back up Amazon EMR Studio Workspaces and notebook files.
 * `name` - (Required) A descriptive name for the Amazon EMR Studio.
-* `engineSecurityGroupId` - (Required) The ID of the Amazon EMR Studio Engine security group. The Engine security group allows inbound network traffic from the Workspace security group, and it must be in the same VPC specified by `vpcId`.
+* `engineSecurityGroupId` - (Required) The ID of the Amazon EMR Studio Engine security group. The Engine security group allows inbound network traffic from the Workspace security group, and it must be in the same VPC specified by `vpc_id`.
 * `serviceRole` - (Required) The IAM role that the Amazon EMR Studio assumes. The service role provides a way for Amazon EMR Studio to interoperate with other Amazon Web Services services.
-* `subnetIds` - (Required) A list of subnet IDs to associate with the Amazon EMR Studio. A Studio can have a maximum of 5 subnets. The subnets must belong to the VPC specified by `vpcId`. Studio users can create a Workspace in any of the specified subnets.
+* `subnetIds` - (Required) A list of subnet IDs to associate with the Amazon EMR Studio. A Studio can have a maximum of 5 subnets. The subnets must belong to the VPC specified by `vpc_id`. Studio users can create a Workspace in any of the specified subnets.
 * `vpcId` - (Required) The ID of the Amazon Virtual Private Cloud (Amazon VPC) to associate with the Studio.
-* `workspaceSecurityGroupId` - (Required) The ID of the Amazon EMR Studio Workspace security group. The Workspace security group allows outbound network traffic to resources in the Engine security group, and it must be in the same VPC specified by `vpcId`.
+* `workspaceSecurityGroupId` - (Required) The ID of the Amazon EMR Studio Workspace security group. The Workspace security group allows outbound network traffic to resources in the Engine security group, and it must be in the same VPC specified by `vpc_id`.
 
 The following arguments are optional:
 
 * `description` - (Optional) A detailed description of the Amazon EMR Studio.
 * `idpAuthUrl` - (Optional) The authentication endpoint of your identity provider (IdP). Specify this value when you use IAM authentication and want to let federated users log in to a Studio with the Studio URL and credentials from your IdP. Amazon EMR Studio redirects users to this endpoint to enter credentials.
 * `idpRelayStateParameterName` - (Optional) The name that your identity provider (IdP) uses for its RelayState parameter. For example, RelayState or TargetSource. Specify this value when you use IAM authentication and want to let federated users log in to a Studio using the Studio URL. The RelayState parameter differs by IdP.
-* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userRole` - (Optional) - The IAM user role that users and groups assume when logged in to an Amazon EMR Studio. Only specify a User Role when you use Amazon Web Services SSO authentication. The permissions attached to the User Role can be scoped down for each user or group using session policies.
 
 ## Attribute Reference
@@ -92,4 +92,4 @@ Using `terraform import`, import EMR studios using the `id`. For example:
 % terraform import aws_emr_studio.studio es-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->
+<!-- cache-key: cdktf-0.19.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->

@@ -62,7 +62,7 @@ The `sourceS3Path` configuration block supports the following arguments:
 The following arguments are optional:
 
 * `description` - (Optional) Description for a block list.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -76,9 +76,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 Configuration options for operation timeouts can be found [here](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts).
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -102,4 +102,4 @@ Using `terraform import`, import the `awsKendraQuerySuggestionsBlockList` resour
 % terraform import aws_kendra_query_suggestions_block_list.example blocklist-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6163688d652d44086864869ca5678b9e49c9f4dfd42ccb33a1b997d4692a3df0 -->
+<!-- cache-key: cdktf-0.19.0 input-6163688d652d44086864869ca5678b9e49c9f4dfd42ccb33a1b997d4692a3df0 -->

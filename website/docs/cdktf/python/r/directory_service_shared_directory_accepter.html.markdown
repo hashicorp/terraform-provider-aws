@@ -87,4 +87,4 @@ Using `terraform import`, import Directory Service Shared Directories using the 
 % terraform import aws_directory_service_shared_directory_accepter.example d-9267633ece
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-63416097ef145afd37784c7610985af402f18b723a7a423cc37dfe1e13007046 -->
+<!-- cache-key: cdktf-0.19.0 input-63416097ef145afd37784c7610985af402f18b723a7a423cc37dfe1e13007046 -->

@@ -178,7 +178,7 @@ func ResourceDomain() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
@@ -225,6 +225,58 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"direct_deploy_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"identity_provider_oauth_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 20,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"data_source_name": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.DataSourceName_Values(), false),
+												},
+												"secret_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"kendra_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
 									"model_register_settings": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -393,7 +445,7 @@ func ResourceDomain() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
@@ -478,7 +530,7 @@ func ResourceDomain() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
@@ -1003,10 +1055,12 @@ func expandRStudioServerProAppSettings(l []interface{}) *sagemaker.RStudioServer
 
 	if v, ok := m["access_status"].(string); ok && v != "" {
 		config.AccessStatus = aws.String(v)
-	}
 
-	if v, ok := m["user_group"].(string); ok && v != "" {
-		config.UserGroup = aws.String(v)
+		if v == sagemaker.RStudioServerProAccessStatusEnabled {
+			if g, ok := m["user_group"].(string); ok && g != "" {
+				config.UserGroup = aws.String(g)
+			}
+		}
 	}
 
 	return config
@@ -1154,12 +1208,73 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CanvasAppSettings{
+		IdentityProviderOAuthSettings: expandIdentityProviderOAuthSettings(m["identity_provider_oauth_settings"].([]interface{})),
+		DirectDeploySettings:          expandDirectDeploySettings(m["direct_deploy_settings"].([]interface{})),
+		KendraSettings:                expandKendraSettings(m["kendra_settings"].([]interface{})),
 		ModelRegisterSettings:         expandModelRegisterSettings(m["model_register_settings"].([]interface{})),
 		TimeSeriesForecastingSettings: expandTimeSeriesForecastingSettings(m["time_series_forecasting_settings"].([]interface{})),
 		WorkspaceSettings:             expandWorkspaceSettings(m["workspace_settings"].([]interface{})),
 	}
 
 	return config
+}
+
+func expandKendraSettings(l []interface{}) *sagemaker.KendraSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.KendraSettings{}
+
+	if v, ok := m["status"].(string); ok && v != "" {
+		config.Status = aws.String(v)
+	}
+
+	return config
+}
+
+func expandDirectDeploySettings(l []interface{}) *sagemaker.DirectDeploySettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.DirectDeploySettings{}
+
+	if v, ok := m["status"].(string); ok && v != "" {
+		config.Status = aws.String(v)
+	}
+
+	return config
+}
+
+func expandIdentityProviderOAuthSettings(l []interface{}) []*sagemaker.IdentityProviderOAuthSetting {
+	providers := make([]*sagemaker.IdentityProviderOAuthSetting, 0, len(l))
+
+	for _, eRaw := range l {
+		data := eRaw.(map[string]interface{})
+
+		provider := &sagemaker.IdentityProviderOAuthSetting{}
+
+		if v, ok := data["data_source_name"].(string); ok && v != "" {
+			provider.DataSourceName = aws.String(v)
+		}
+
+		if v, ok := data["secret_arn"].(string); ok && v != "" {
+			provider.SecretArn = aws.String(v)
+		}
+
+		if v, ok := data["status"].(string); ok && v != "" {
+			provider.Status = aws.String(v)
+		}
+
+		providers = append(providers, provider)
+	}
+
+	return providers
 }
 
 func expandModelRegisterSettings(l []interface{}) *sagemaker.ModelRegisterSettings {
@@ -1435,12 +1550,63 @@ func flattenCanvasAppSettings(config *sagemaker.CanvasAppSettings) []map[string]
 	}
 
 	m := map[string]interface{}{
+		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
+		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
+		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
 		"time_series_forecasting_settings": flattenTimeSeriesForecastingSettings(config.TimeSeriesForecastingSettings),
 		"model_register_settings":          flattenModelRegisterSettings(config.ModelRegisterSettings),
 		"workspace_settings":               flattenWorkspaceSettings(config.WorkspaceSettings),
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenDirectDeploySettings(config *sagemaker.DirectDeploySettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"status": aws.StringValue(config.Status),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenKendraSettings(config *sagemaker.KendraSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"status": aws.StringValue(config.Status),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenIdentityProviderOAuthSettings(config []*sagemaker.IdentityProviderOAuthSetting) []map[string]interface{} {
+	providers := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		provider := make(map[string]interface{})
+
+		if raw.DataSourceName != nil {
+			provider["data_source_name"] = aws.StringValue(raw.DataSourceName)
+		}
+
+		if raw.SecretArn != nil {
+			provider["secret_arn"] = aws.StringValue(raw.SecretArn)
+		}
+
+		if raw.Status != nil {
+			provider["status"] = aws.StringValue(raw.Status)
+		}
+
+		providers = append(providers, provider)
+	}
+
+	return providers
 }
 
 func flattenModelRegisterSettings(config *sagemaker.ModelRegisterSettings) []map[string]interface{} {

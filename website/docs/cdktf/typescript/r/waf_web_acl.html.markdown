@@ -130,12 +130,12 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the web ACL.
 * `rules` - (Optional) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
 * `loggingConfiguration` - (Optional) Configuration block to enable WAF logging. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `defaultAction` Configuration Block
 
 * `type` - (Required) Specifies how you want AWS WAF to respond to requests that don't match the criteria in any of the `rules`.
-  e.g., `allow` or `block`
+  e.g., `ALLOW` or `BLOCK`
 
 ### `loggingConfiguration` Configuration Block
 
@@ -150,21 +150,21 @@ This resource supports the following arguments:
 
 -> Additional information about this configuration can be found in the [AWS WAF Regional API Reference](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html).
 
-* `data` - (Optional) When the value of `type` is `header`, enter the name of the header that you want the WAF to search, for example, `userAgent` or `referer`. If the value of `type` is any other value, omit `data`.
-* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `header` or `method`
+* `data` - (Optional) When the value of `type` is `HEADER`, enter the name of the header that you want the WAF to search, for example, `User-Agent` or `Referer`. If the value of `type` is any other value, omit `data`.
+* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `HEADER` or `METHOD`
 
 ### `rules` Configuration Block
 
 See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.html) for all details and supported values.
 
-* `action` - (Optional) The action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule. Not used if `type` is `group`.
-    * `type` - (Required) valid values are: `block`, `allow`, or `count`
-* `overrideAction` - (Optional) Override the action that a group requests CloudFront or AWS WAF takes when a web request matches the conditions in the rule. Only used if `type` is `group`.
-    * `type` - (Required) valid values are: `none` or `count`
+* `action` - (Optional) The action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule. Not used if `type` is `GROUP`.
+    * `type` - (Required) valid values are: `BLOCK`, `ALLOW`, or `COUNT`
+* `overrideAction` - (Optional) Override the action that a group requests CloudFront or AWS WAF takes when a web request matches the conditions in the rule. Only used if `type` is `GROUP`.
+    * `type` - (Required) valid values are: `NONE` or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
-* `ruleId` - (Required) ID of the associated WAF (Global) rule (e.g., [`awsWafRule`](/docs/providers/aws/r/waf_rule.html)). WAF (Regional) rules cannot be used.
-* `type` - (Optional) The rule type, either `regular`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), `rateBased`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html), or `group`, as defined by [RuleGroup](https://docs.aws.amazon.com/waf/latest/APIReference/API_RuleGroup.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `rateBased`. If you add a GROUP rule, you need to set `type` as `group`.
+* `ruleId` - (Required) ID of the associated WAF (Global) rule (e.g., [`aws_waf_rule`](/docs/providers/aws/r/waf_rule.html)). WAF (Regional) rules cannot be used.
+* `type` - (Optional) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html), or `GROUP`, as defined by [RuleGroup](https://docs.aws.amazon.com/waf/latest/APIReference/API_RuleGroup.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `RATE_BASED`. If you add a GROUP rule, you need to set `type` as `GROUP`.
 
 ## Attribute Reference
 
@@ -172,7 +172,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the WAF WebACL.
 * `arn` - The ARN of the WAF WebACL.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -196,4 +196,4 @@ Using `terraform import`, import WAF Web ACL using the `id`. For example:
 % terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef78a6170a502ab8d3c2771bf4b7f7c113cf688e0a9d2aa577e013e90b14709a -->
+<!-- cache-key: cdktf-0.19.0 input-ef78a6170a502ab8d3c2771bf4b7f7c113cf688e0a9d2aa577e013e90b14709a -->

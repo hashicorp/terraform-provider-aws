@@ -47,7 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `amiType` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
 * `arn` - ARN of the EKS Node Group.
-* `capacityType` - Type of capacity associated with the EKS Node Group. Valid values: `onDemand`, `spot`.
+* `capacityType` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `diskSize` - Disk size in GiB for worker nodes.
 * `instanceTypes` - Set of instance types associated with the EKS Node Group.
 * `labels` - Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
@@ -58,16 +58,16 @@ This data source exports the following attributes in addition to the arguments a
 * `nodeRoleArn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
 * `releaseVersion` – AMI version of the EKS Node Group.
 * `remoteAccess` - Configuration block with remote access settings.
-    * `ec2SshKey` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
-    * `sourceSecurityGroupIds` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
+    * `ec2_ssh_key` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
+    * `source_security_group_ids` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
 * `resources` - List of objects containing information about underlying resources.
-    * `autoscalingGroups` - List of objects containing information about AutoScaling Groups.
+    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
-    * `remoteAccessSecurityGroupId` - Identifier of the remote access EC2 Security Group.
+    * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `scalingConfig` - Configuration block with scaling settings.
-    * `desiredSize` - Desired number of worker nodes.
-    * `maxSize` - Maximum number of worker nodes.
-    * `minSize` - Minimum number of worker nodes.
+    * `desired_size` - Desired number of worker nodes.
+    * `max_size` - Maximum number of worker nodes.
+    * `min_size` - Minimum number of worker nodes.
 * `status` - Status of the EKS Node Group.
 * `subnetIds` – Identifiers of EC2 Subnets to associate with the EKS Node Group.
 * `taints` - List of objects containing information about taints applied to the nodes in the EKS Node Group.
@@ -77,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.
 
-<!-- cache-key: cdktf-0.18.0 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->
+<!-- cache-key: cdktf-0.19.0 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->

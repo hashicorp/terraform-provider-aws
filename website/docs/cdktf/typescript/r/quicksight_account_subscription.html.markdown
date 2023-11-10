@@ -42,21 +42,21 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `accountName` - (Required) Name of your Amazon QuickSight account. This name is unique over all of AWS, and it appears only when users sign in.
-* `authenticationMethod` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `iamAndQuicksight`, `iamOnly`, and `activeDirectory`.
-* `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `standard`, `enterprise` or `enterpriseAndQ`.
+* `authenticationMethod` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, and `ACTIVE_DIRECTORY`.
+* `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `STANDARD`, `ENTERPRISE` or `ENTERPRISE_AND_Q`.
 * `notificationEmail` - (Required) Email address that you want Amazon QuickSight to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.
 
 The following arguments are optional:
 
-* `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `activeDirectory` is the selected authentication method of the new Amazon QuickSight account.
-* `adminGroup` - (Optional) Admin group associated with your Active Directory. This field is required if `activeDirectory` is the selected authentication method of the new Amazon QuickSight account.
+* `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
+* `adminGroup` - (Optional) Admin group associated with your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `authorGroup` - (Optional) Author group associated with your Active Directory.
 * `awsAccountId` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
-* `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
+* `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directoryId` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
-* `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
-* `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
-* `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
+* `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `readerGroup` - (Optional) Reader group associated with your Active Direcrtory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
@@ -70,11 +70,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.18.0 input-875d75585da05795e23c019e0ffaab500682447eb4464a05a6d4c3ae31219bd9 -->
+<!-- cache-key: cdktf-0.19.0 input-875d75585da05795e23c019e0ffaab500682447eb4464a05a6d4c3ae31219bd9 -->

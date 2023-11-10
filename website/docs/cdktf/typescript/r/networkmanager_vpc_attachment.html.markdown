@@ -49,7 +49,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `options` - (Optional) Options for the VPC attachment.
-* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options
 
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resourceArn` - The attachment resource ARN.
 * `segmentName` - The name of the segment attachment.
 * `state` - The state of the attachment.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import `awsNetworkmanagerVpcAttachment` using the atta
 % terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-51496cec261cc73e7833584a7c4c9acbbf6b57c40ae69eab70820ff738d73283 -->
+<!-- cache-key: cdktf-0.19.0 input-51496cec261cc73e7833584a7c4c9acbbf6b57c40ae69eab70820ff738d73283 -->

@@ -139,7 +139,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `detectorId` - (Required) The detector ID of the GuardDuty.
-* `destinationArn` - (Required) The bucket arn and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `awsLogs/[accountId]/guardDuty/[region]/` if not provided
+* `destinationArn` - (Required) The bucket arn and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `AWSLogs/[Account-ID]/GuardDuty/[Region]/` if not provided
 * `kmsKeyArn` - (Required) The ARN of the KMS key used to encrypt GuardDuty findings. GuardDuty enforces this to be encrypted.
 * `destinationType`- (Optional) Currently there is only "S3" available as destination type which is also the default value
 
@@ -173,4 +173,4 @@ Using `terraform import`, import GuardDuty PublishingDestination using the maste
 % terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62a290b6c0d879190b7ab5d6098de0abf59abd632ca625aa1c6a6b8f48e6ac47 -->
+<!-- cache-key: cdktf-0.19.0 input-62a290b6c0d879190b7ab5d6098de0abf59abd632ca625aa1c6a6b8f48e6ac47 -->

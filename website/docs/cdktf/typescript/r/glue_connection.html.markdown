@@ -164,16 +164,16 @@ This resource supports the following arguments:
 
 * `catalogId` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connectionProperties` – (Optional) A map of key-value pairs used as parameters for this connection.
-* `connectionType` – (Optional) The type of the connection. Supported are: `custom`, `jdbc`, `kafka`, `marketplace`, `mongodb`, and `network`. Defaults to `jbdc`.
+* `connectionType` – (Optional) The type of the connection. Supported are: `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, and `NETWORK`. Defaults to `JBDC`.
 * `description` – (Optional) Description of the connection.
 * `matchCriteria` – (Optional) A list of criteria that can be used in selecting this connection.
 * `name` – (Required) The name of the connection.
 * `physicalConnectionRequirements` - (Optional) A map of physical connection requirements, such as VPC and SecurityGroup. Defined below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### physical_connection_requirements
 
-* `availabilityZone` - (Optional) The availability zone of the connection. This field is redundant and implied by `subnetId`, but is currently an api requirement.
+* `availabilityZone` - (Optional) The availability zone of the connection. This field is redundant and implied by `subnet_id`, but is currently an api requirement.
 * `securityGroupIdList` - (Optional) The security group ID list used by the connection.
 * `subnetId` - (Optional) The subnet ID used by the connection.
 
@@ -183,7 +183,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Catalog ID and name of the connection
 * `arn` - The ARN of the Glue Connection.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -207,4 +207,4 @@ Using `terraform import`, import Glue Connections using the `catalogId` (AWS acc
 % terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e5f54a151c81766ea8f354e5241734756142da42a3b5bcc9ad07d0060d066e20 -->
+<!-- cache-key: cdktf-0.19.0 input-e5f54a151c81766ea8f354e5241734756142da42a3b5bcc9ad07d0060d066e20 -->

@@ -56,9 +56,9 @@ This resource supports the following arguments:
 
 * `executionRoleArn` - (Optional) Amazon Resource Name (ARN) of the IAM Role for CloudFormation to assume when invoking the extension. If your extension calls AWS APIs in any of its handlers, you must create an IAM execution role that includes the necessary permissions to call those AWS APIs, and provision that execution role in your account. When CloudFormation needs to invoke the extension handler, CloudFormation assumes this execution role to create a temporary session token, which it then passes to the extension handler, thereby supplying your extension with the appropriate credentials.
 * `loggingConfig` - (Optional) Configuration block containing logging configuration.
-* `schemaHandlerPackage` - (Required) URL to the S3 bucket containing the extension project package that contains the necessary files for the extension you want to register. Must begin with `s3://` or `https://`. For example, `s3://exampleBucket/exampleObject`.
-* `type` - (Optional) CloudFormation Registry Type. For example, `resource` or `module`.
-* `typeName` - (Optional) CloudFormation Type name. For example, `exampleCompany::exampleService::exampleResource`.
+* `schemaHandlerPackage` - (Required) URL to the S3 bucket containing the extension project package that contains the necessary files for the extension you want to register. Must begin with `s3://` or `https://`. For example, `s3://example-bucket/example-object`.
+* `type` - (Optional) CloudFormation Registry Type. For example, `RESOURCE` or `MODULE`.
+* `typeName` - (Optional) CloudFormation Type name. For example, `ExampleCompany::ExampleService::ExampleResource`.
 
 ### logging_config
 
@@ -71,7 +71,7 @@ The `loggingConfig` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - (Optional) Amazon Resource Name (ARN) of the CloudFormation Type version. See also `typeArn`.
+* `arn` - (Optional) Amazon Resource Name (ARN) of the CloudFormation Type version. See also `type_arn`.
 * `defaultVersionId` - Identifier of the CloudFormation Type default version.
 * `deprecatedStatus` - Deprecation status of the version.
 * `description` - Description of the version.
@@ -106,4 +106,4 @@ Using `terraform import`, import `awsCloudformationType` using the type version 
 % terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4738423c73768d212dce00b4674e015861f2836ad18ef9b55653e2e9fd2462e5 -->
+<!-- cache-key: cdktf-0.19.0 input-4738423c73768d212dce00b4674e015861f2836ad18ef9b55653e2e9fd2462e5 -->

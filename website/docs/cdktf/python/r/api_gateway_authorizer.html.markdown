@@ -141,4 +141,4 @@ Using `terraform import`, import AWS API Gateway Authorizer using the `REST-API-
 % terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2079e78abb2de34b252c2d1829bd6d6c7b5e8eea6a54c81a845e12111109c59f -->
+<!-- cache-key: cdktf-0.19.0 input-2079e78abb2de34b252c2d1829bd6d6c7b5e8eea6a54c81a845e12111109c59f -->

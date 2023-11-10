@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `resource_types` - Types of data that the source account shares with the monitoring account.
 * `sink_arn` - ARN of the sink that is used for this link.
 
-<!-- cache-key: cdktf-0.18.0 input-26fcd6d6196bf524f0cfb96d5f07e971f686ef152091f112f43b672b61693a13 -->
+<!-- cache-key: cdktf-0.19.0 input-26fcd6d6196bf524f0cfb96d5f07e971f686ef152091f112f43b672b61693a13 -->

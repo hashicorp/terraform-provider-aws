@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The received license ARN (Same as: `licenseArn`).
+* `id` - The received license ARN (Same as: `license_arn`).
 * `beneficiary` - Granted license beneficiary. This is in the form of the ARN of the root user of the account.
 * `consumptionConfiguration` - Configuration for consumption of the license. [Detailed below](#consumption_configuration)
 * `createTime` - Creation time of the granted license in RFC 3339 format.
@@ -122,4 +122,4 @@ A list with a single map.
 * `begin` - Start of the validity time range.
 * `end` - End of the validity time range.
 
-<!-- cache-key: cdktf-0.18.0 input-8e7789e1a13e838a8446f36566c96cb32c65c9068530cd596b7f17f7e9d88382 -->
+<!-- cache-key: cdktf-0.19.0 input-8e7789e1a13e838a8446f36566c96cb32c65c9068530cd596b7f17f7e9d88382 -->

@@ -44,14 +44,14 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `functionName` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$latest`, `myAlias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `architectures` - Instruction set architecture for the Lambda function.
-* `arn` - Unqualified (no `:qualifier` or `:version` suffix) ARN identifying your Lambda Function. See also `qualifiedArn`.
+* `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
 * `codeSigningConfigArn` - ARN for a Code Signing Configuration.
 * `deadLetterConfig` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
@@ -60,14 +60,14 @@ This data source exports the following attributes in addition to the arguments a
 * `fileSystemConfig` - Connection settings for an Amazon EFS file system.
 * `handler` - Function entrypoint in your code.
 * `imageUri` - URI of the container image.
-* `invokeArn` - ARN to be used for invoking Lambda Function from API Gateway. **NOTE:** Starting with `v4510` of the provider, this will *not* include the qualifier.
+* `invokeArn` - ARN to be used for invoking Lambda Function from API Gateway. **NOTE:** Starting with `v4.51.0` of the provider, this will *not* include the qualifier.
 * `kmsKeyArn` - ARN for the KMS encryption key.
 * `lastModified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
 * `memorySize` - Amount of memory in MB your Lambda Function can use at runtime.
-* `qualifiedArn` - Qualified (`:qualifier` or `:version` suffix) ARN identifying your Lambda Function. See also `arn`.
-* `qualifiedInvokeArn` - Qualified (`:qualifier` or `:version` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invokeArn`.
-* `reservedConcurrentExecutions` - The amount of reserved concurrent executions for this lambda function or `1` if unreserved.
+* `qualifiedArn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
+* `qualifiedInvokeArn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
+* `reservedConcurrentExecutions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - Runtime environment for the Lambda function.
 * `signingJobArn` - ARN of a signing job.
@@ -76,7 +76,7 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceCodeSize` - Size in bytes of the function .zip file.
 * `timeout` - Function execution time at which Lambda should terminate the function.
 * `tracingConfig` - Tracing settings of the function.
-* `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$latest`.
+* `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpcConfig` - VPC configuration associated with your Lambda function.
 
-<!-- cache-key: cdktf-0.18.0 input-aa23743032adbbcb3971ecbe81f2b393d5995f92cb64512014ac1d8c97a94023 -->
+<!-- cache-key: cdktf-0.19.0 input-aa23743032adbbcb3971ecbe81f2b393d5995f92cb64512014ac1d8c97a94023 -->

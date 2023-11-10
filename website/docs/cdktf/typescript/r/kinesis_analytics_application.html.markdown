@@ -189,9 +189,9 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `referenceDataSources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
-* `startApplication` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `startingPosition` must be configured.
-To modify an application's starting position, first stop the application by setting `start_application = false`, then update `startingPosition` and set `start_application = true`.
-* `tags` - Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `startApplication` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured.
+To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+* `tags` - Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### CloudWatch Logging Options
 
@@ -210,9 +210,9 @@ The `inputs` block supports the following:
 
 * `namePrefix` - (Required) The Name Prefix to use when creating an in-application stream.
 * `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
-* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesisStream`.
+* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`.
 See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesisStream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesisFirehose`.
+* `kinesisStream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`.
 See [Kinesis Stream](#kinesis-stream) below for more details.
 * `parallelism` - (Optional) The number of Parallel in-application streams to create.
 See [Parallelism](#parallelism) below for more details.
@@ -229,9 +229,9 @@ The `outputs` block supports the following:
 
 * `name` - (Required) The Name of the in-application stream.
 * `schema` - (Required) The Schema format of the data written to the destination. See [Destination Schema](#destination-schema) below for more details.
-* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the destination stream. Conflicts with `kinesisStream`.
+* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the destination stream. Conflicts with `kinesis_stream`.
 See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesisStream` - (Optional) The Kinesis Stream configuration for the destination stream. Conflicts with `kinesisFirehose`.
+* `kinesisStream` - (Optional) The Kinesis Stream configuration for the destination stream. Conflicts with `kinesis_firehose`.
 See [Kinesis Stream](#kinesis-stream) below for more details.
 * `lambda` - (Optional) The Lambda function destination. See [Lambda](#lambda) below for more details.
 
@@ -269,7 +269,7 @@ The Schema format of the data in the destination.
 
 The `schema` block supports the following:
 
-* `recordFormatType` - (Required) The Format Type of the records on the output stream. Can be `csv` or `json`.
+* `recordFormatType` - (Required) The Format Type of the records on the output stream. Can be `CSV` or `JSON`.
 
 #### Source Schema
 
@@ -314,7 +314,7 @@ The point at which the application reads from the streaming source.
 
 The `startingPositionConfiguration` block supports the following:
 
-* `startingPosition` - (Required) The starting position on the stream. Valid values: `lastStoppedPoint`, `now`, `trimHorizon`.
+* `startingPosition` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
 #### Record Columns
 
@@ -332,7 +332,7 @@ The Record Format and relevant mapping information that should be applied to sch
 
 The `recordFormat` block supports the following:
 
-* `recordFormatType` - (Required) The type of Record Format. Can be `csv` or `json`.
+* `recordFormatType` - (Required) The type of Record Format. Can be `CSV` or `JSON`.
 * `mappingParameters` - (Optional) The Mapping Information for the record format.
 See [Mapping Parameters](#mapping-parameters) below for more details.
 
@@ -384,7 +384,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `lastUpdateTimestamp` - The Timestamp when the application was last updated.
 * `status` - The Status of the application.
 * `version` - The Version of the application.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/kinesisanalytics/latest/dev/what-is.html
 
@@ -410,4 +410,4 @@ Using `terraform import`, import Kinesis Analytics Application using ARN. For ex
 % terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-14782ea879b9f73b5ee5ad2ef9ec8d20965c88da8a7cb0cb2534adfe79bb7ca6 -->
+<!-- cache-key: cdktf-0.19.0 input-14782ea879b9f73b5ee5ad2ef9ec8d20965c88da8a7cb0cb2534adfe79bb7ca6 -->

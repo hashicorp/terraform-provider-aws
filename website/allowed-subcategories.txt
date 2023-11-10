@@ -144,6 +144,7 @@ Neptune
 Network Firewall
 Network Manager
 OpenSearch
+OpenSearch Ingestion
 OpenSearch Serverless
 OpsWorks
 Organizations

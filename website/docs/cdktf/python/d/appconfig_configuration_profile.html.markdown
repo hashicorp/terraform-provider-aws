@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
     * `content` - Either the JSON Schema content or the ARN of an AWS Lambda function.
     * `type` - Type of validator. Valid values: JSON_SCHEMA and LAMBDA.
 
-<!-- cache-key: cdktf-0.18.0 input-812d16f674999964ab6b67e20ad1395ac161f98caaa88682a62205246057f321 -->
+<!-- cache-key: cdktf-0.19.0 input-812d16f674999964ab6b67e20ad1395ac161f98caaa88682a62205246057f321 -->
