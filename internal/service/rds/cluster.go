@@ -56,6 +56,15 @@ func ResourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceClusterResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: clusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"allocated_storage": {
 				Type:     schema.TypeInt,
@@ -1474,11 +1483,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	deleteAutomatedBackups := d.Get("delete_automated_backups").(bool)
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &rds.DeleteDBClusterInput{
 		DBClusterIdentifier:    aws.String(d.Id()),
-		DeleteAutomatedBackups: aws.Bool(deleteAutomatedBackups),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
 		SkipFinalSnapshot:      aws.Bool(skipFinalSnapshot),
 	}
 
