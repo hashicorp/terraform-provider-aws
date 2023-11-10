@@ -112,6 +112,7 @@ provider "aws" {
   <li><code>codebuild</code></li>
   <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
+  <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarconnections</code></li>
