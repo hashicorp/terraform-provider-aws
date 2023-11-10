@@ -77,16 +77,19 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	out, err := conn.CreatePolicyWithContext(ctx, &iot.CreatePolicyInput{
-		PolicyName:     aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &iot.CreatePolicyInput{
+		PolicyName:     aws.String(name),
 		PolicyDocument: aws.String(policy),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IoT Policy: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.PolicyName))
+	output, err := conn.CreatePolicyWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating IoT Policy (%s): %s", name, err)
+	}
+
+	d.SetId(aws.StringValue(output.PolicyName))
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
