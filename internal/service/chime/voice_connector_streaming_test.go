@@ -79,7 +79,7 @@ func testAccVoiceConnectorStreaming_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVoiceConnectorStreaming_update(t *testing.T) {
+func testAccVoiceConnectorStreaming_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
