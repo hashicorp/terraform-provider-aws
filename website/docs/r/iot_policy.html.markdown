@@ -49,6 +49,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `default_version_id` - The default version of this policy.
 * `policy` - The policy document.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT policies using the `name`. For example:

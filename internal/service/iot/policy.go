@@ -23,11 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// Maximum amount of time for a just-removed policy attachment to propagate.
-	policyAttachmentTimeout = 5 * time.Minute
-)
-
 // @SDKResource("aws_iot_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
@@ -38,6 +33,10 @@ func ResourcePolicy() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -169,13 +168,13 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			continue
 		}
 
-		if err := deletePolicyVersion(ctx, conn, d.Id(), aws.StringValue(v.VersionId)); err != nil {
+		if err := deletePolicyVersion(ctx, conn, d.Id(), aws.StringValue(v.VersionId), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	// Delete default policy version.
-	if err := deletePolicy(ctx, conn, d.Id()); err != nil {
+	if err := deletePolicy(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -232,12 +231,12 @@ func findPolicyVersionsByName(ctx context.Context, conn *iot.IoT, name string) (
 	return output.PolicyVersions, nil
 }
 
-func deletePolicy(ctx context.Context, conn *iot.IoT, name string) error {
+func deletePolicy(ctx context.Context, conn *iot.IoT, name string, timeout time.Duration) error {
 	input := &iot.DeletePolicyInput{
 		PolicyName: aws.String(name),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, policyAttachmentTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeletePolicyWithContext(ctx, input)
 	}, iot.ErrCodeDeleteConflictException)
 
@@ -252,13 +251,13 @@ func deletePolicy(ctx context.Context, conn *iot.IoT, name string) error {
 	return nil
 }
 
-func deletePolicyVersion(ctx context.Context, conn *iot.IoT, name, versionID string) error {
+func deletePolicyVersion(ctx context.Context, conn *iot.IoT, name, versionID string, timeout time.Duration) error {
 	input := &iot.DeletePolicyVersionInput{
 		PolicyName:      aws.String(name),
 		PolicyVersionId: aws.String(versionID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, policyAttachmentTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeletePolicyVersionWithContext(ctx, input)
 	}, iot.ErrCodeDeleteConflictException)
 
