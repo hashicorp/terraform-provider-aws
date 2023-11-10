@@ -21,12 +21,12 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
+func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -53,12 +53,12 @@ func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
+func testAccVoiceConnectorStreaming_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -79,12 +79,12 @@ func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
+func TestAccVoiceConnectorStreaming_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
