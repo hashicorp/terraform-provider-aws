@@ -79,8 +79,8 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get("name").(string)
 	input := &iot.CreatePolicyInput{
-		PolicyName:     aws.String(name),
 		PolicyDocument: aws.String(policy),
+		PolicyName:     aws.String(name),
 	}
 
 	output, err := conn.CreatePolicyWithContext(ctx, input)
@@ -130,21 +130,21 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
-		}
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+	}
 
-		_, err = conn.CreatePolicyVersionWithContext(ctx, &iot.CreatePolicyVersionInput{
-			PolicyName:     aws.String(d.Id()),
-			PolicyDocument: aws.String(policy),
-			SetAsDefault:   aws.Bool(true),
-		})
+	input := &iot.CreatePolicyVersionInput{
+		PolicyDocument: aws.String(policy),
+		PolicyName:     aws.String(d.Id()),
+		SetAsDefault:   aws.Bool(true),
+	}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), err)
-		}
+	_, err = conn.CreatePolicyVersionWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
