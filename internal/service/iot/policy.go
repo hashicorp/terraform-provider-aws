@@ -34,11 +34,20 @@ func ResourcePolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default_version_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -54,14 +63,6 @@ func ResourcePolicy() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
