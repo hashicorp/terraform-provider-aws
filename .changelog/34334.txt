@@ -9,3 +9,7 @@ resource/aws_chime_voice_connector_termination: Fix `read` error when resource i
 ```release-note:bug
 resource/aws_chime_voice_connector_group: Fix `read` error when resource is not created in `us-east-1`
 ```
+
+```release-note:bug
+resource/aws_chime_voice_connector_logging: Fix `read` error when resource is not created in `us-east-1`
+```
