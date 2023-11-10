@@ -124,11 +124,7 @@ func testAccCheckVoiceConnectorTerminationCredentialsExists(ctx context.Context,
 			return tfchime.FindVoiceConnectorTerminationCredentialsByID(ctx, conn, rs.Primary.ID)
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
