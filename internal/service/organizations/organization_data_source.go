@@ -195,15 +195,11 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 
 		// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 		if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-			enabledServicePrincipals, err := findEnabledServicePrincipals(ctx, conn)
+			awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 			}
-
-			awsServiceAccessPrincipals = tfslices.ApplyToAll(enabledServicePrincipals, func(v *organizations.EnabledServicePrincipal) string {
-				return aws.StringValue(v.ServicePrincipal)
-			})
 		}
 
 		var enabledPolicyTypes []string

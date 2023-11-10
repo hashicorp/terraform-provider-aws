@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
@@ -160,7 +160,7 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+					regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
 					"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
@@ -197,7 +197,7 @@ func resourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
@@ -219,7 +219,7 @@ func resourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
@@ -227,7 +227,7 @@ func resourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9]+(\<[a-z0-9]+(, *[a-z0-9]+){0,1}\>)?$`),
+											regexache.MustCompile(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`),
 											"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
 										),
 									},
@@ -245,7 +245,7 @@ func resourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
@@ -263,7 +263,7 @@ func resourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
@@ -278,7 +278,7 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
+					regexache.MustCompile(`^[0-9A-Za-z_]{1,48}$`),
 					"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
 				),
 			},

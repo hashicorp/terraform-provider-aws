@@ -6,6 +6,7 @@ package appconfig
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -144,6 +145,7 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
+	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
 	_, err := conn.DeleteExtensionAssociationWithContext(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	})

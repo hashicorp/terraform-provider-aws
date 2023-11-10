@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -48,7 +48,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
@@ -73,8 +73,8 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexp.MustCompile(`^default:mysql-\d`)),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql\d`)),
+					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexache.MustCompile(`^default:mysql-\d`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -126,7 +126,7 @@ func TestAccRDSInstance_manage_password(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
@@ -151,8 +151,8 @@ func TestAccRDSInstance_manage_password(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexp.MustCompile(`^default:mysql-\d`)),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql\d`)),
+					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexache.MustCompile(`^default:mysql-\d`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -919,7 +919,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v1, v2 rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -932,12 +932,12 @@ func TestAccRDSInstance_password(t *testing.T) {
 			// Password should not be shown in error message
 			{
 				Config:      testAccInstanceConfig_password(rName, "invalid"),
-				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
+				ExpectError: regexache.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
 				),
 			},
@@ -955,7 +955,8 @@ func TestAccRDSInstance_password(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
 				),
 			},
@@ -2292,6 +2293,56 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", sourceDbResourceName, "parameter_group_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "port", sourceDbResourceName, "port"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_ManagedMasterPasswordKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"manage_master_user_password",
+					"master_user_secret_kms_key_id",
+					"snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -4345,6 +4396,54 @@ func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_RestoreToPointInTime_ManagedMasterPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	sourceName := "aws_db_instance.test"
+	resourceName := "aws_db_instance.restore"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"delete_automated_backups",
+					"final_snapshot_identifier",
+					"latest_restorable_time", // dynamic value of a DBInstance
+					"manage_master_user_password",
+					"password",
+					"restore_to_point_in_time",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4718,6 +4817,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4748,7 +4848,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					// TODO: This should be a TestCheckResourceAttrPair against a parameter group data source.
 					// https://github.com/hashicorp/terraform-provider-aws/pull/13718
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql`)),
 				),
 			},
 			{
@@ -4823,6 +4923,7 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4873,6 +4974,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
@@ -4977,14 +5079,14 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 		},
 	})
 }
 
-// TODO: When the only change is to disable deletion_protection, bypass Blue/Green
-func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
+func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -5019,14 +5121,14 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					// TODO: This should bypass Blue/Green Deployment
-					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
@@ -5042,7 +5144,43 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+				),
 			},
 		},
 	})
@@ -5084,6 +5222,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
@@ -5107,14 +5246,14 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
+					"latest_restorable_time",
 				},
 			},
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_updateInstanceClassWithDeletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
-					// TODO: This should bypass Blue/Green Deployment
-					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					testAccCheckDBInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
@@ -5282,7 +5421,8 @@ func TestAccRDSInstance_gp3SQLServer(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_storageThroughput(t *testing.T) {
+// // https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -5308,24 +5448,128 @@ func TestAccRDSInstance_storageThroughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"final_snapshot_identifier",
-					"password",
-					"skip_final_snapshot",
-					"delete_automated_backups",
-					"blue_green_update",
-				},
-			},
-			{
-				Config: testAccInstanceConfig_storageThroughput(rName, 14000, 600),
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeIOPSThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 13000, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeIOPS(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 13000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageThroughputSSE(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughputSSE(rName, 4201, 125),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughputSSE(rName, 4201, 126),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "126"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
 			},
@@ -6585,6 +6829,25 @@ resource "aws_db_instance" "restore" {
 `, rName, monitoringInterval))
 }
 
+func testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseForPITR(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "restore" {
+  identifier     = "%[1]s-restore"
+  instance_class = aws_db_instance.test.instance_class
+
+  restore_to_point_in_time {
+    source_db_instance_identifier = aws_db_instance.test.identifier
+    use_latest_restorable_time    = true
+  }
+
+  skip_final_snapshot         = true
+  manage_master_user_password = true
+}
+`, rName))
+}
+
 func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -7422,7 +7685,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_password(rName, password string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -8818,6 +9083,62 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_snapshotID_ManagedMasterPasswordKMSKey(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = "%[1]s-source"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.identifier
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  identifier                    = %[1]q
+  instance_class                = aws_db_instance.source.instance_class
+  snapshot_identifier           = aws_db_snapshot.test.id
+  skip_final_snapshot           = true
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = aws_kms_key.example.arn
+}
+`, rName))
+}
+
 func testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
@@ -8969,7 +9290,7 @@ func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, all
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "postgres13" {
   engine         = "postgres"
-  engine_version = "13.5"
+  engine_version = "13.12"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
@@ -8994,7 +9315,7 @@ resource "aws_db_snapshot" "test" {
 
 data "aws_rds_orderable_db_instance" "postgres14" {
   engine         = "postgres"
-  engine_version = "14.1"
+  engine_version = "14.9"
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
@@ -10522,6 +10843,30 @@ data "aws_rds_orderable_db_instance" "updated" {
 `, rName, deletionProtection))
 }
 
+func testAccInstanceConfig_BlueGreenDeployment_password(rName, password string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = %[2]q
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled = true
+  }
+}
+`, rName, password))
+}
+
 func testAccInstanceConfig_gp3(rName string, orderableClassConfig func() string, allocatedStorage int) string {
 	return acctest.ConfigCompose(
 		orderableClassConfig(),
@@ -10569,6 +10914,40 @@ resource "aws_db_instance" "test" {
   storage_throughput = %[3]d
 }
 `, rName, iops, throughput))
+}
+
+func testAccInstanceConfig_storageThroughputSSE(rName string, iops, throughput int) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "sqlserver-se"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "license-included"
+  storage_type   = "gp3"
+
+  preferred_instance_classes = ["db.m5.medium", "db.m5.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 400
+  apply_immediately    = true
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  identifier           = %[1]q
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  iops                 = %[2]d
+  license_model        = data.aws_rds_orderable_db_instance.test.license_model
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  password             = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  storage_throughput   = %[3]d
+  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
+  username             = "tfacctest"
+}
+`, rName, iops, throughput)
 }
 
 func testAccInstanceConfig_storageTypePostgres(rName string, storageType string, allocatedStorage int) string {

@@ -2170,7 +2170,7 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.RouteOrigin; v != nil {
-		tfMap["route_orign"] = aws.StringValue(v)
+		tfMap["route_origin"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.State; v != nil {

@@ -190,7 +190,6 @@ func testAccCheckCustomerManagedPolicyAttachmentDestroy(ctx context.Context) res
 			}
 
 			policyName, policyPath, permissionSetARN, instanceARN, err := tfssoadmin.CustomerManagedPolicyAttachmentParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -224,7 +223,6 @@ func testAccCheckCustomerManagedPolicyAttachmentExists(ctx context.Context, n st
 		}
 
 		policyName, policyPath, permissionSetARN, instanceARN, err := tfssoadmin.CustomerManagedPolicyAttachmentParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

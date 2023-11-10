@@ -5,9 +5,9 @@ package ecr_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -80,7 +80,7 @@ func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRepositoryDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`couldn't find resource`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 		},
 	})

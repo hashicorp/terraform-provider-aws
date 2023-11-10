@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -41,7 +41,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -256,17 +256,15 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appconfig.DeleteConfigurationProfileInput{
+	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
+	_, err = conn.DeleteConfigurationProfileWithContext(ctx, &appconfig.DeleteConfigurationProfileInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-	}
-
-	_, err = conn.DeleteConfigurationProfileWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

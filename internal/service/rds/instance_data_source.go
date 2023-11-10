@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -244,16 +243,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instance = output
 	} else {
 		input := &rds.DescribeDBInstancesInput{}
-		instances, err := findDBInstancesSDKv1(ctx, conn, input, filter)
+		output, err := findDBInstanceSDKv1(ctx, conn, input, filter)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instances: %s", err)
-		}
-
-		output, err := tfresource.AssertSinglePtrResult(instances)
-
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Instance", err))
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance: %s", err)
 		}
 
 		instance = output

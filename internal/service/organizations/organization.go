@@ -5,6 +5,7 @@ package organizations
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -32,7 +33,7 @@ func ResourceOrganization() *schema.Resource {
 		DeleteWithoutTimeout: resourceOrganizationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceOrganizationImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -185,7 +186,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateOrganizationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organization: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Organization.Id))
@@ -199,7 +200,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling service principal (%s) in Organization (%s): %s", principal, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -211,16 +212,16 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) default root: %s", d.Id(), err)
 		}
 
+		defaultRootID := aws.StringValue(defaultRoot.Id)
+
 		for _, policyType := range flex.ExpandStringValueSet(v.(*schema.Set)) {
 			input := &organizations.EnablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
-				RootId:     defaultRoot.Id,
+				RootId:     aws.String(defaultRootID),
 			}
 
-			_, err := conn.EnablePolicyTypeWithContext(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s): %s", policyType, d.Id(), err)
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 
 			if err := waitDefaultRootPolicyTypeEnabled(ctx, conn, policyType); err != nil {
@@ -246,11 +247,6 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organization: %s", err)
-	}
-
-	// Check that any Org ID specified for import matches the current Org ID.
-	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
-		return sdkdiag.AppendErrorf(diags, "current Organization ID (%s) does not match (%s)", got, want)
 	}
 
 	accounts, err := findAccounts(ctx, conn)
@@ -289,15 +285,11 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 	if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		enabledServicePrincipals, err := findEnabledServicePrincipals(ctx, conn)
+		awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 		}
-
-		awsServiceAccessPrincipals = tfslices.ApplyToAll(enabledServicePrincipals, func(v *organizations.EnabledServicePrincipal) string {
-			return aws.StringValue(v.ServicePrincipal)
-		})
 	}
 
 	d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
@@ -320,35 +312,25 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
-		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
-		oldSet := oldRaw.(*schema.Set)
-		newSet := newRaw.(*schema.Set)
+		o, n := d.GetChange("aws_service_access_principals")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, disablePrincipalRaw := range oldSet.Difference(newSet).List() {
-			principal := disablePrincipalRaw.(string)
-			input := &organizations.DisableAWSServiceAccessInput{
-				ServicePrincipal: aws.String(principal),
-			}
-
-			log.Printf("[DEBUG] Disabling AWS Service Access in Organization: %s", input)
-			_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization: %s", principal, err)
+		for _, principal := range del {
+			if err := DisableServicePrincipal(ctx, conn, principal); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 
-		for _, enablePrincipalRaw := range newSet.Difference(oldSet).List() {
-			principal := enablePrincipalRaw.(string)
+		for _, principal := range add {
 			input := &organizations.EnableAWSServiceAccessInput{
 				ServicePrincipal: aws.String(principal),
 			}
 
-			log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
 			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization: %s", principal, err)
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -356,17 +338,15 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("enabled_policy_types") {
 		defaultRootID := d.Get("roots.0.id").(string)
 		o, n := d.GetChange("enabled_policy_types")
-		oldSet := o.(*schema.Set)
-		newSet := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, v := range oldSet.Difference(newSet).List() {
-			policyType := v.(string)
+		for _, policyType := range del {
 			input := &organizations.DisablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
 				RootId:     aws.String(defaultRootID),
 			}
 
-			log.Printf("[DEBUG] Disabling Policy Type in Organization: %s", input)
 			if _, err := conn.DisablePolicyTypeWithContext(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
@@ -376,14 +356,12 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		for _, v := range newSet.Difference(oldSet).List() {
-			policyType := v.(string)
+		for _, policyType := range add {
 			input := &organizations.EnablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
 				RootId:     aws.String(defaultRootID),
 			}
 
-			log.Printf("[DEBUG] Enabling Policy Type in Organization: %s", input)
 			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
@@ -415,6 +393,23 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+
+	org, err := FindOrganization(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Check that any Org ID specified for import matches the current Org ID.
+	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
+		return nil, fmt.Errorf("current Organization ID (%s) does not match (%s)", got, want)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // FindOrganization is called from the acctest package and so can't be made private and exported as "test-only".
@@ -460,6 +455,19 @@ func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*or
 	}
 
 	return output, nil
+}
+
+// FindEnabledServicePrincipalNames is called from the service/ram package.
+func FindEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Organizations) ([]string, error) {
+	output, err := findEnabledServicePrincipals(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfslices.ApplyToAll(output, func(v *organizations.EnabledServicePrincipal) string {
+		return aws.StringValue(v.ServicePrincipal)
+	}), nil
 }
 
 func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Organizations) ([]*organizations.EnabledServicePrincipal, error) {
@@ -607,6 +615,17 @@ func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.O
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// DisableServicePrincipal is called from the service/ram package.
+func DisableServicePrincipal(ctx context.Context, conn *organizations.Organizations, servicePrincipal string) error {
+	input := &organizations.DisableAWSServiceAccessInput{
+		ServicePrincipal: aws.String(servicePrincipal),
+	}
+
+	_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
 
 	return err
 }

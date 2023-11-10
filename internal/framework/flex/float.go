@@ -12,12 +12,12 @@ import (
 
 // Float64ToFramework converts a float64 pointer to a Framework Float64 value.
 // A nil float64 pointer is converted to a null Float64.
-func Float64ToFramework(_ context.Context, v *float64) types.Float64 {
-	if v == nil {
-		return types.Float64Null()
-	}
+func Float64ToFramework(ctx context.Context, v *float64) types.Float64 {
+	var output types.Float64
 
-	return types.Float64Value(aws.ToFloat64(v))
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
 }
 
 // Float64ToFrameworkLegacy converts a float64 pointer to a Framework Float64 value.

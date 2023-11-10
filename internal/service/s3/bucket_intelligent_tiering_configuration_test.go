@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,18 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var itc s3.IntelligentTieringConfiguration
+	var itc types.IntelligentTieringConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,13 +56,13 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 
 func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var itc s3.IntelligentTieringConfiguration
+	var itc types.IntelligentTieringConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,14 +80,14 @@ func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 
 func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var itc s3.IntelligentTieringConfiguration
+	var itc types.IntelligentTieringConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,6 +193,63 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context, n string, v *types.IntelligentTieringConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		bucket, name, err := tfs3.BucketIntelligentTieringConfigurationParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		output, err := tfs3.FindIntelligentTieringConfiguration(ctx, conn, bucket, name)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_intelligent_tiering_configuration" {
+				continue
+			}
+
+			bucket, name, err := tfs3.BucketIntelligentTieringConfigurationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfs3.FindIntelligentTieringConfiguration(ctx, conn, bucket, name)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Intelligent-Tiering Configuration %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 func testAccBucketIntelligentTieringConfigurationConfig_basic(rName string) string {
@@ -345,67 +403,4 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, rName)
-}
-
-func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context, n string, v *s3.IntelligentTieringConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Intelligent-Tiering Configuration ID is set")
-		}
-
-		bucketName, configurationName, err := tfs3.BucketIntelligentTieringConfigurationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		output, err := tfs3.FindBucketIntelligentTieringConfiguration(ctx, conn, bucketName, configurationName)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3_bucket_intelligent_tiering_configuration" {
-				continue
-			}
-
-			bucketName, configurationName, err := tfs3.BucketIntelligentTieringConfigurationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfs3.FindBucketIntelligentTieringConfiguration(ctx, conn, bucketName, configurationName)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("S3 Intelligent-Tiering Configuration %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
 }

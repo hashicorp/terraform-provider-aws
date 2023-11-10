@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -112,7 +114,7 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 		},
 		{
 			val:         "threeve",
-			expectedErr: regexp.MustCompile(`cannot parse`),
+			expectedErr: regexache.MustCompile(`cannot parse`),
 		},
 	}
 
@@ -408,6 +410,10 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		{
 			Value:     `[{}]`,
 			WantError: `"json" contains an invalid JSON policy: contains a JSON array, not a JSON object`,
+		},
+		{
+			Value:     `{"a":"foo","a":"bar"}`,
+			WantError: `"json" contains duplicate JSON keys: duplicate key "a"`,
 		},
 	}
 	for _, test := range tests {
@@ -773,5 +779,53 @@ func TestValidServicePrincipal(t *testing.T) {
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Service Principal", v)
 		}
+	}
+}
+
+func TestMapLenBetween(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "too short",
+			value: map[string]interface{}{
+				"K1": "V1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapLenBetween(2, 4)
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
 	}
 }

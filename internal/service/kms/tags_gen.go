@@ -10,8 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -25,8 +27,21 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
+	var output []*kms.Tag
 
-	output, err := conn.ListResourceTagsWithContext(ctx, input)
+	err := conn.ListResourceTagsPagesWithContext(ctx, input, func(page *kms.ListResourceTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, "NotFoundException") {
 		return nil, &retry.NotFoundError{
@@ -39,7 +54,7 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists kms service tags and set them in Context.
@@ -113,6 +128,8 @@ func updateTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string, ol
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.KMS)
 	if len(removedTags) > 0 {
@@ -162,6 +179,10 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier st
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, tags tftags.KeyValueTags) error {
+	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
+		"tags": tags,
+	})
+
 	checkFunc := func() (bool, error) {
 		output, err := listTags(ctx, conn, id)
 
@@ -171,6 +192,10 @@ func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, ta
 
 		if err != nil {
 			return false, err
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 
 		return output.Equal(tags), nil

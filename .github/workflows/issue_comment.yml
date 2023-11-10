@@ -16,6 +16,8 @@ jobs:
     name: 'Automation Labeler'
     needs: community_check
     runs-on: ubuntu-latest
+    # Since the only step in this job requires non-maintainer, skip the job entirely if that's not met.
+    if: needs.community_check.outputs.maintainer == 'false'
     env:
       # This is a ternary that sets the variable to the assigned user's login on assigned events,
       # and otherwise sets it to the username of the pull request's author. For more information:

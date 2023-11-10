@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccKxEnvironment_basic(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -33,7 +33,7 @@ func testAccKxEnvironment_basic(t *testing.T) {
 	resourceName := "aws_finspace_kx_environment.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -59,7 +59,7 @@ func testAccKxEnvironment_basic(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_disappears(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func testAccKxEnvironment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -90,7 +90,7 @@ func testAccKxEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_updateName(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,7 +101,7 @@ func testAccKxEnvironment_updateName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -128,7 +128,7 @@ func testAccKxEnvironment_updateName(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_description(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -138,7 +138,7 @@ func testAccKxEnvironment_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -165,7 +165,7 @@ func testAccKxEnvironment_description(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_customDNS(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -175,7 +175,7 @@ func testAccKxEnvironment_customDNS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -208,7 +208,7 @@ func testAccKxEnvironment_customDNS(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_transitGateway(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,7 +218,7 @@ func testAccKxEnvironment_transitGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -240,7 +240,7 @@ func testAccKxEnvironment_transitGateway(t *testing.T) {
 	})
 }
 
-func testAccKxEnvironment_tags(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -250,7 +250,84 @@ func testAccKxEnvironment_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
+					}),
+				),
+			},
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig2(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "4",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "20",
+					}),
+				),
+			},
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxenvironment finspace.GetKxEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -390,6 +467,88 @@ resource "aws_finspace_kx_environment" "test" {
   transit_gateway_configuration {
     transit_gateway_id  = aws_ec2_transit_gateway.test.id
     routable_cidr_space = %[2]q
+  }
+}
+`, rName, cidr))
+}
+
+func testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, cidr string) string {
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = "test"
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+
+  transit_gateway_configuration {
+    transit_gateway_id  = aws_ec2_transit_gateway.test.id
+    routable_cidr_space = %[2]q
+    attachment_network_acl_configuration {
+      rule_number = 1
+      protocol    = "6"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 53
+        to   = 53
+      }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
+    }
+  }
+}
+`, rName, cidr))
+}
+
+func testAccKxEnvironmentConfig_attachmentNetworkACLConfig2(rName, cidr string) string {
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = "test"
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+
+  transit_gateway_configuration {
+    transit_gateway_id  = aws_ec2_transit_gateway.test.id
+    routable_cidr_space = %[2]q
+    attachment_network_acl_configuration {
+      rule_number = 1
+      protocol    = "6"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 53
+        to   = 53
+      }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
+    }
+    attachment_network_acl_configuration {
+      rule_number = 20
+      protocol    = "4"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 51
+        to   = 51
+      }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
+    }
   }
 }
 `, rName, cidr))

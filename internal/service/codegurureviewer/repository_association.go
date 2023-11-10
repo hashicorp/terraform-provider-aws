@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codegurureviewer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -85,7 +85,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 2048),
-								validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z-]+`), ""),
 							),
 						},
 					},
@@ -127,7 +127,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S[\w.-]*$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
 									"owner": {
@@ -135,7 +135,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S(.*\S)?$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
 										),
 									},
 								},
@@ -153,7 +153,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S[\w.-]*$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
 								},
@@ -176,7 +176,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S[\w.-]*$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
 									"owner": {
@@ -184,7 +184,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S(.*\S)?$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
 										),
 									},
 								},
@@ -202,7 +202,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 63),
-											validation.StringMatch(regexp.MustCompile(`^\S(.*\S)?$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
 										),
 									},
 									"name": {
@@ -210,7 +210,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`^\S[\w.-]*$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
 								},

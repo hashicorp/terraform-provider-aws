@@ -68,12 +68,16 @@ func resourceClusterPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	clusterARN := d.Get("cluster_arn").(string)
-	in := &kafka.PutClusterPolicyInput{
+	input := &kafka.PutClusterPolicyInput{
 		ClusterArn: aws.String(clusterARN),
 		Policy:     aws.String(policy),
 	}
 
-	_, err = conn.PutClusterPolicy(ctx, in)
+	if !d.IsNewResource() {
+		input.CurrentVersion = aws.String(d.Get("current_version").(string))
+	}
+
+	_, err = conn.PutClusterPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting MSK Cluster Policy (%s): %s", clusterARN, err)

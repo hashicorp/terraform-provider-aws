@@ -7,21 +7,21 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -56,6 +56,15 @@ func ResourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceClusterResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: clusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"allocated_storage": {
 				Type:     schema.TypeInt,
@@ -87,7 +96,7 @@ func ResourceCluster() *schema.Resource {
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1,
+				Computed:     true,
 				ValidateFunc: validation.IntAtMost(35),
 			},
 			"backtrack_window": {
@@ -157,6 +166,11 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -188,7 +202,7 @@ func ResourceCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
 					validation.StringInSlice(ClusterEngine_Values(), false),
 				),
 			},
@@ -213,14 +227,14 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
 							"only alphanumeric characters and hyphens allowed in %q", k))
 					}
-					if regexp.MustCompile(`--`).MatchString(value) {
+					if regexache.MustCompile(`--`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
 					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
+					if regexache.MustCompile(`-$`).MatchString(value) {
 						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
 					}
 					return
@@ -548,6 +562,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
+	identifier := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
 	// parameters or unsupported configurations, we may need to call
@@ -556,15 +576,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var requiresModifyDbCluster bool
 	modifyDbClusterInput := &rds.ModifyDBClusterInput{
 		ApplyImmediately: aws.Bool(true),
-	}
-
-	var identifier string
-	if v, ok := d.GetOk("cluster_identifier"); ok {
-		identifier = v.(string)
-	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-		identifier = id.PrefixedUniqueId(v.(string))
-	} else {
-		identifier = id.PrefixedUniqueId("tf-")
 	}
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
@@ -1113,6 +1124,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
 		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
@@ -1221,6 +1233,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
+		"delete_automated_backups",
 		"final_snapshot_identifier",
 		"global_cluster_identifier",
 		"iam_roles",
@@ -1472,8 +1485,9 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &rds.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
+		DBClusterIdentifier:    aws.String(d.Id()),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+		SkipFinalSnapshot:      aws.Bool(skipFinalSnapshot),
 	}
 
 	if !skipFinalSnapshot {
@@ -1556,6 +1570,7 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -1601,7 +1616,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input)
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -1623,8 +1638,8 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	return output, nil
 }
 
-func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput) (*rds.DBCluster, error) {
-	output, err := findDBClusters(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
+func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*rds.DBCluster]) (*rds.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -1741,6 +1756,8 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusBackingUp,
 			ClusterStatusDeleting,
 			ClusterStatusModifying,
+			ClusterStatusPromoting,
+			ClusterStatusScalingCompute,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),

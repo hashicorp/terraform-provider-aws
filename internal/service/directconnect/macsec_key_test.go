@@ -8,9 +8,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -38,7 +38,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 				Config: testAccMacSecConfig_withCkn(ckn, cak, connectionId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
-					resource.TestMatchResourceAttr(resourceName, "ckn", regexp.MustCompile(ckn)),
+					resource.TestMatchResourceAttr(resourceName, "ckn", regexache.MustCompile(ckn)),
 				),
 			},
 			{

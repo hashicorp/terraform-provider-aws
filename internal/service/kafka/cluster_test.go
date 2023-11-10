@@ -6,12 +6,12 @@ package kafka_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -39,13 +39,13 @@ const (
 )
 
 var (
-	clusterBoostrapBrokersRegexp              = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortPlaintext))
-	clusterBoostrapBrokersSASLIAMRegexp       = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLIAM))
-	clusterBoostrapBrokersSASLIAMPublicRegexp = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLIAMPublic))
-	clusterBoostrapBrokersSASLScramRegexp     = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLScram))
-	clusterBoostrapBrokersTLSRegexp           = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortTLS))
+	clusterBoostrapBrokersRegexp              = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortPlaintext))
+	clusterBoostrapBrokersSASLIAMRegexp       = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLIAM))
+	clusterBoostrapBrokersSASLIAMPublicRegexp = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLIAMPublic))
+	clusterBoostrapBrokersSASLScramRegexp     = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortSASLScram))
+	clusterBoostrapBrokersTLSRegexp           = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortTLS))
 
-	clusterZookeeperConnectStringRegexp = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortZookeeper))
+	clusterZookeeperConnectStringRegexp = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortZookeeper))
 )
 
 func TestAccKafkaCluster_basic(t *testing.T) {
@@ -64,7 +64,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
@@ -100,9 +100,10 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
@@ -991,7 +992,7 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_mode", "TIERED"),
 				),
 			},

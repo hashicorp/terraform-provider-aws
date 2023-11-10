@@ -6,10 +6,10 @@ package redshiftserverless
 import (
 	"context"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -259,7 +259,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 var (
-	reIAMRole = regexp.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
 )
 
 func flattenNamespaceIAMRoles(iamRoles []*string) []string {

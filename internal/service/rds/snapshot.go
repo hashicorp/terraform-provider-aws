@@ -277,7 +277,7 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 	input := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(id),
 	}
-	output, err := findDBSnapshot(ctx, conn, input)
+	output, err := findDBSnapshot(ctx, conn, input, tfslices.PredicateTrue[*rds.DBSnapshot]())
 
 	if err != nil {
 		return nil, err
@@ -293,8 +293,8 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 	return output, nil
 }
 
-func findDBSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput) (*rds.DBSnapshot, error) {
-	output, err := findDBSnapshots(ctx, conn, input, tfslices.PredicateTrue[*rds.DBSnapshot]())
+func findDBSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput, filter tfslices.Predicate[*rds.DBSnapshot]) (*rds.DBSnapshot, error) {
+	output, err := findDBSnapshots(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err

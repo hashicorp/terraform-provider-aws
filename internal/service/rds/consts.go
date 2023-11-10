@@ -22,6 +22,7 @@ const (
 	ClusterStatusMigrating                  = "migrating"
 	ClusterStatusModifying                  = "modifying"
 	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusPromoting                  = "promoting"
 	ClusterStatusRebooting                  = "rebooting"
 	ClusterStatusRenaming                   = "renaming"
 	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
@@ -103,6 +104,14 @@ const (
 )
 
 const (
+	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
+	GlobalClusterStatusDeleting  = "deleting"
+	GlobalClusterStatusModifying = "modifying"
+	GlobalClusterStatusUpgrading = "upgrading"
+)
+
+const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"
@@ -128,6 +137,20 @@ func ClusterEngine_Values() []string {
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
 		ClusterEnginePostgres,
+	}
+}
+
+const (
+	GlobalClusterEngineAurora           = "aurora"
+	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
+	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+)
+
+func GlobalClusterEngine_Values() []string {
+	return []string{
+		GlobalClusterEngineAurora,
+		GlobalClusterEngineAuroraMySQL,
+		GlobalClusterEngineAuroraPostgreSQL,
 	}
 }
 

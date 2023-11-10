@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -259,7 +259,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	var filteredImages []*ec2.Image
 	if v, ok := d.GetOk("name_regex"); ok {
-		r := regexp.MustCompile(v.(string))
+		r := regexache.MustCompile(v.(string))
 		for _, image := range images {
 			name := aws.StringValue(image.Name)
 

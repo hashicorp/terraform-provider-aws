@@ -55,6 +55,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceResourceShareAccepter,
 			TypeName: "aws_ram_resource_share_accepter",
 		},
+		{
+			Factory:  ResourceSharingWithOrganization,
+			TypeName: "aws_ram_sharing_with_organization",
+		},
 	}
 }
 

@@ -7,9 +7,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +36,7 @@ func testAccBranch_basic(t *testing.T) {
 				Config: testAccBranchConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
@@ -278,7 +278,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname2"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "true"),
 					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
@@ -512,7 +512,7 @@ resource "aws_amplify_branch" "test" {
   display_name                  = "testdisplayname2"
   enable_auto_build             = true
   enable_notification           = false
-  enable_performance_mode       = true
+  enable_performance_mode       = false
   enable_pull_request_preview   = true
   framework                     = "Angular"
   pull_request_environment_name = "testpr2"

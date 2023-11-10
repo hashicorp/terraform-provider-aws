@@ -146,7 +146,7 @@ func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 }
 
 func testAccListenerDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -202,7 +202,7 @@ data "aws_lb_listener" "from_lb_and_port" {
 }
 
 func testAccListenerDataSourceConfig_backwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
   protocol          = "HTTP"
@@ -258,7 +258,7 @@ data "aws_alb_listener" "from_lb_and_port" {
 }
 
 func testAccListenerDataSourceConfig_https(rName, certificate, key string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"

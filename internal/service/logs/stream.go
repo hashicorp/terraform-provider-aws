@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -178,7 +178,7 @@ func FindLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWa
 
 func validStreamName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if regexp.MustCompile(`:`).MatchString(value) {
+	if regexache.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"colons not allowed in %q:", k))
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -132,7 +133,10 @@ func ResourceStack() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			customdiff.ComputedIf("outputs", stackHasActualChanges),
+		),
 	}
 }
 
@@ -328,7 +332,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No updates are to be performed") {
-		return diags
+		return append(diags, resourceStackRead(ctx, d, meta)...)
 	}
 
 	if err != nil {
@@ -689,4 +693,32 @@ func isStackDeletionEvent(event *cloudformation.StackEvent) bool {
 
 func reasonFromEvent(event *cloudformation.StackEvent) string {
 	return aws.StringValue(event.ResourceStatusReason)
+}
+
+func stackHasActualChanges(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+	if d.Id() == "" {
+		return false
+	}
+
+	for k, attr := range ResourceStack().Schema {
+		if attr.ForceNew {
+			continue
+		}
+		if attr.Computed && !attr.Optional {
+			continue
+		}
+
+		if d.HasChange(k) {
+			if attr.StateFunc == nil {
+				return true
+			}
+			o, n := d.GetChange(k)
+			on := attr.StateFunc(o)
+			nn := attr.StateFunc(n)
+			if on != nn {
+				return true
+			}
+		}
+	}
+	return false
 }
