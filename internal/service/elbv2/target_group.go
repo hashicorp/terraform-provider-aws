@@ -35,6 +35,14 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+func healthCheckProtocolEnumValues() []string {
+	return []string{
+		elbv2.ProtocolEnumHttp,
+		elbv2.ProtocolEnumHttps,
+		elbv2.ProtocolEnumTcp,
+	}
+}
+
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")
@@ -94,9 +102,10 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(2, 10),
 						},
 						"interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  30,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      30,
+							ValidateFunc: validation.IntBetween(5, 300),
 						},
 						"matcher": {
 							Type:     schema.TypeString,
@@ -104,10 +113,14 @@ func ResourceTargetGroup() *schema.Resource {
 							Optional: true,
 						},
 						"path": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validTargetGroupHealthCheckPath,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 1024),
+								validTargetGroupHealthCheckPath,
+							),
+							// TODO: needs cross-param validator
 						},
 						"port": {
 							Type:             schema.TypeString,
@@ -123,12 +136,9 @@ func ResourceTargetGroup() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ProtocolEnumHttp,
-								elbv2.ProtocolEnumHttps,
-								elbv2.ProtocolEnumTcp,
-							}, true),
+							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
+							// TODO: needs cross-param validator
 						},
 						"timeout": {
 							Type:         schema.TypeInt,
@@ -210,6 +220,7 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+				// TODO: Cannot be set when `target_type` is `lambda`. Should warn
 			},
 			"protocol_version": {
 				Type:     schema.TypeString,
@@ -1001,13 +1012,9 @@ func FindTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descri
 
 func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if len(value) > 1024 {
+	if !strings.HasPrefix(value, "/") {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 1024 characters: %q", k, value))
-	}
-	if len(value) > 0 && !strings.HasPrefix(value, "/") {
-		errors = append(errors, fmt.Errorf(
-			"%q must begin with a '/' character: %q", k, value))
+			"%q must begin with a '/' character, got %q", k, value))
 	}
 	return
 }
@@ -1246,15 +1253,13 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 }
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	protocol := diff.Get("protocol").(string)
-
 	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
-		protocol := healthCheck["protocol"].(string)
+		healthCheckProtocol := healthCheck["protocol"].(string)
 
-		if protocol == elbv2.ProtocolEnumTcp {
+		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
@@ -1266,6 +1271,7 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		}
 	}
 
+	protocol := diff.Get("protocol").(string)
 	if strings.Contains(protocol, elbv2.ProtocolEnumHttp) {
 		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
