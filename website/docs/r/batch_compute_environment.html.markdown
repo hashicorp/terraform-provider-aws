@@ -167,7 +167,7 @@ resource "aws_batch_compute_environment" "sample" {
     instance_type       = ["optimal"]
     max_vcpus           = 4
     min_vcpus           = 0
-    security_group_ids  = [
+    security_group_ids = [
       aws_security_group.sample.id
     ]
     subnets = [
@@ -176,12 +176,12 @@ resource "aws_batch_compute_environment" "sample" {
     type = "EC2"
   }
 
-	update_policy {
-		job_execution_timeout_minutes = 30
-		terminate_jobs_on_update      = false
-	}
+  update_policy {
+    job_execution_timeout_minutes = 30
+    terminate_jobs_on_update      = false
+  }
 
-  type       = "MANAGED"
+  type = "MANAGED"
 }
 ```
 

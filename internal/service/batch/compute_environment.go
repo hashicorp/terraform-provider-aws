@@ -329,7 +329,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "Create Batch Compute Environment extra arguments through UpdateComputeEnvironment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Create waiting for Batch Compute Environment (%s) extra arguments through UpdateComputeEnvironment: %s", d.Id(), err)
 		}
 	}
@@ -521,7 +521,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -796,7 +796,7 @@ func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name
 	return nil, err
 }
 
-func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
@@ -806,11 +806,11 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
-		return v, err
+	if _, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func isFargateType(computeResourceType string) bool {
@@ -1265,7 +1265,7 @@ func expandComputeEnvironmentUpdatePolicy(l []interface{}) *batch.UpdatePolicy {
 
 	up := &batch.UpdatePolicy{
 		JobExecutionTimeoutMinutes: aws.Int64(int64(m["job_execution_timeout_minutes"].(int))),
-		TerminateJobsOnUpdate:      aws.Bool(bool(m["terminate_jobs_on_update"].(bool))),
+		TerminateJobsOnUpdate:      aws.Bool(m["terminate_jobs_on_update"].(bool)),
 	}
 
 	return up

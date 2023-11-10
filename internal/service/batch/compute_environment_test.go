@@ -428,7 +428,7 @@ func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyUpdate(rName),
+				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -2488,11 +2488,11 @@ resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
   compute_resources {
-		allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
     instance_role       = aws_iam_instance_profile.ecs_instance.arn
-		instance_type       = ["optimal"]
+    instance_type       = ["optimal"]
     max_vcpus           = 4
-		min_vcpus           = 0
+    min_vcpus           = 0
     security_group_ids  = [
       aws_security_group.test.id
     ]
@@ -2501,39 +2501,15 @@ resource "aws_batch_compute_environment" "test" {
     ]
     type = "EC2"
   }
-	update_policy {
-		job_execution_timeout_minutes = %[2]d
-		terminate_jobs_on_update      = %[3]v
-	}
 
-  type         = "MANAGED"
+  update_policy {
+    job_execution_timeout_minutes = %[2]d
+    terminate_jobs_on_update      = %[3]v
+  }
+
+  type = "MANAGED"
 }
 `, rName, timeout, terminate))
-}
-
-func testAccComputeEnvironmentConfig_ec2UpdatePolicyUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-
-  compute_resources {
-		allocation_strategy = "BEST_FIT_PROGRESSIVE"
-    instance_role       = aws_iam_instance_profile.ecs_instance.arn
-		instance_type       = ["optimal"]
-    max_vcpus           = 4
-		min_vcpus           = 0
-    security_group_ids  = [
-      aws_security_group.test.id
-    ]
-    subnets = [
-      aws_subnet.test.id
-    ]
-    type = "EC2"
-  }
-
-  type         = "MANAGED"
-}
-`, rName))
 }
 
 func testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName string) string {
@@ -2542,12 +2518,12 @@ resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
   compute_resources {
-		allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
     instance_role       = aws_iam_instance_profile.ecs_instance.arn
-		instance_type       = ["optimal"]
+    instance_type       = ["optimal"]
     max_vcpus           = 4
-		min_vcpus           = 0
-    security_group_ids  = [
+    min_vcpus           = 0
+    security_group_ids = [
       aws_security_group.test.id
     ]
     subnets = [
@@ -2556,7 +2532,7 @@ resource "aws_batch_compute_environment" "test" {
     type = "EC2"
   }
 
-  type         = "MANAGED"
+  type = "MANAGED"
 }
 `, rName))
 }

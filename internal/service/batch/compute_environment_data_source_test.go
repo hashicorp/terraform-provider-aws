@@ -136,7 +136,7 @@ resource "aws_batch_compute_environment" "test" {
     type = "EC2"
   }
 
-  type         = "MANAGED"
+  type = "MANAGED"
 }
 
 data "aws_batch_compute_environment" "by_name" {
