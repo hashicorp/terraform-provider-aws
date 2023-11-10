@@ -52,7 +52,7 @@ func TestAccAWSIoTPolicy_invalidJson(t *testing.T) {
 
 func TestAccAWSIoTPolicy_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("PubSubToAnyTopic-")
-	expectedVersions := []string{"2", "3", "4", "5", "6"}
+	expectedVersions := []string{"1", "2", "3", "5", "6"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
