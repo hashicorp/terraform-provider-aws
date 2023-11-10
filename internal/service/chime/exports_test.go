@@ -7,5 +7,6 @@ package chime
 var (
 	FindVoiceConnectorByID            = findVoiceConnectorByID
 	FindVoiceConnectorGroupByID       = findVoiceConnectorGroupByID
+	FindVoiceConnectorLoggingByID     = findVoiceConnectorLoggingByID
 	FindVoiceConnectorTerminationByID = findVoiceConnectorTerminationByID
 )
