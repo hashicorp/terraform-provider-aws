@@ -98,11 +98,9 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	out, err := conn.GetPolicyWithContext(ctx, &iot.GetPolicyInput{
-		PolicyName: aws.String(d.Id()),
-	})
+	output, err := FindPolicyByName(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -112,13 +110,13 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.PolicyArn)
-	d.Set("default_version_id", out.DefaultVersionId)
-	d.Set("name", out.PolicyName)
+	d.Set("arn", output.PolicyArn)
+	d.Set("default_version_id", output.DefaultVersionId)
+	d.Set("name", output.PolicyName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(out.PolicyDocument))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.PolicyDocument))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -231,4 +229,29 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func FindPolicyByName(ctx context.Context, conn *iot.IoT, name string) (*iot.GetPolicyOutput, error) {
+	input := &iot.GetPolicyInput{
+		PolicyName: aws.String(name),
+	}
+
+	output, err := conn.GetPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
