@@ -135,8 +135,12 @@ type testCaseDriver struct {
 	config configurer
 }
 
-func (d *testCaseDriver) Configuration() configtesting.Configurer {
-	return d.configuration()
+func (d *testCaseDriver) Configuration(fs []configtesting.ConfigFunc) configtesting.Configurer {
+	conf := d.configuration()
+	for _, f := range fs {
+		f(conf)
+	}
+	return conf
 }
 
 func (d *testCaseDriver) configuration() *configurer {
@@ -232,8 +236,24 @@ func (c configurer) AddSharedConfigFile(f string) {
 	}
 }
 
+func (c configurer) SetAccessKey(s string) {
+	c["access_key"] = s
+}
+
+func (c configurer) SetSecretKey(s string) {
+	c["secret_key"] = s
+}
+
+func (c configurer) SetProfile(s string) {
+	c["profile"] = s
+}
+
 func (c configurer) SetRegion(s string) {
 	c["region"] = s
+}
+
+func (c configurer) SetUseFIPSEndpoint(b bool) {
+	c["use_fips_endpoint"] = b
 }
 
 func (c configurer) SetSkipCredsValidation(b bool) {
@@ -252,6 +272,10 @@ type thing struct {
 
 func (t thing) GetCredentials() aws.CredentialsProvider {
 	return t
+}
+
+func (t thing) GetRegion() string {
+	panic("not implemented")
 }
 
 func TestProviderConfig_Authentication_SSO(t *testing.T) { //nolint:paralleltest
