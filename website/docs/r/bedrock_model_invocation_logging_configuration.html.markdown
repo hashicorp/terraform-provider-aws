@@ -77,46 +77,46 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
 
 The following arguments are required:
 
-* `logging_config` - The logging configuration values to set. Type: LoggingConfig object.
+* `logging_config` - The logging configuration values to set. See [`logging_config`](#logging_config-argument-reference).
+
+### `logging_config` Argument Reference
+
+The following arguments are optional:
+
+* `cloudwatch_config` – CloudWatch logging configuration. See [`cloudwatch_config`](#cloudwatch_config-argument-reference).
+* `embedding_data_delivery_enabled` – Set to include embeddings data in the log delivery.
+* `image_data_delivery_enabled` – Set to include image data in the log delivery.
+* `s3_config` – S3 configuration for storing log data. See [`s3_config`](#s3_config-argument-reference).
+* `text_data_delivery_enabled` – Set to include text data in the log delivery.
+
+### `cloudwatch_config` Argument Reference
+
+The following arguments are required:
+
+* `log_group_name` – Log group name.
+* `role_arn` – IAM Role ARN.
+
+The following arguments are optional:
+
+* `large_data_delivery_s3_config` – S3 configuration for delivering a large amount of data. See [`s3_config`](#s3_config-argument-reference).
+
+### `s3_config` Argument Reference
+
+The following arguments are required:
+
+* `bucket_name` – S3 bucket name.
+
+The following arguments are optional:
+
+* `key_prefix` – S3 object key prefix.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
-
-### LoggingConfig Object
-
-The following arguments are optional:
-
-* `cloud_watch_config` – CloudWatch logging configuration. Type: CloudWatchConfig object.
-* `embedding_data_delivery_enabled` – Set to include embeddings data in the log delivery. Type: Boolean. Default: True
-* `image_data_delivery_enabled` – Set to include image data in the log delivery. Type: Boolean. Default: True
-* `textDataDeliveryEnabled` – Set to include text data in the log delivery. Type: Boolean. Default: True
-* `s3_config` – S3 configuration for storing log data. Type: S3Config object.
-
-### CloudWatchConfig Object
-
-The following arguments are required:
-
-* `log_group_name` – The log group name. Type: String. Length Constraints: Minimum length of 1. Maximum length of 512.
-* `role_arn` – The role ARN.. Type: String. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$`
-
-The following arguments are optional:
-
-* `large_data_delivery_s3_config` – S3 configuration for delivering a large amount of data. Type: S3Config.
-
-### S3Config Object
-
-The following arguments are required:
-
-* `bucket_name` – S3 bucket name. Type: String. Length Constraints: Minimum length of 3. Maximum length of 63.
-
-The following arguments are optional:
-
-* `key_prefix` – S3 prefix. Type: String. Length Constraints: Minimum length of 0. Maximum length of 1024.
+* `id` - AWS region in which logging is configured.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Invocation Logging Configuration using the `id` set to the aws region. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Invocation Logging Configuration using the `id` set to the AWS region. For example:
 
 ```terraform
 import {
@@ -125,7 +125,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock custom model using the `id` set to the region. For example:
+Using `terraform import`, import Bedrock custom model using the `id` set to the AWS region. For example:
 
 ```console
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
