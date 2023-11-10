@@ -275,7 +275,7 @@ func (t thing) GetCredentials() aws.CredentialsProvider {
 }
 
 func (t thing) GetRegion() string {
-	panic("not implemented")
+	panic("not implemented") // lintignore:R009
 }
 
 func TestProviderConfig_Authentication_SSO(t *testing.T) { //nolint:paralleltest
