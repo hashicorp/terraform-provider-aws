@@ -43,6 +43,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
@@ -806,6 +807,10 @@ func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_s
 
 func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
 	return errs.Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch))
+}
+
+func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis_sdkv2.Client {
+	return errs.Must(client[*osis_sdkv2.Client](ctx, c, names.OpenSearchIngestion))
 }
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless_sdkv2.Client {
