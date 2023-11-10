@@ -72,7 +72,7 @@ This resource supports the following arguments:
 * `expirationDate` - (Optional) UTC timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time. Terraform will only perform drift detection of its value when present in a configuration.
 * `iamRole` - (Required) The IAM Role to attach to the managed instance.
 * `registrationLimit` - (Optional) The maximum number of managed instances you want to register. The default value is 1 instance.
-* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `iamRole` - The IAM Role attached to the managed instance.
 * `registrationLimit` - The maximum number of managed instances you want to be registered. The default value is 1 instance.
 * `registrationCount` - The number of managed instances that are currently registered using this activation.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -113,4 +113,4 @@ Using `terraform import`, import AWS SSM Activation using the `id`. For example:
 
 -> **Note:** The `activationCode` attribute cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-e0dcbe52e67919de9e8b8b10107faae656e18b0e36f4833aba51256613ff37fd -->
+<!-- cache-key: cdktf-0.19.0 input-e0dcbe52e67919de9e8b8b10107faae656e18b0e36f4833aba51256613ff37fd -->

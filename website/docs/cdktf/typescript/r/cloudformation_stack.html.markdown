@@ -73,20 +73,20 @@ This resource supports the following arguments:
 * `templateBody` - (Optional) Structure containing the template body (max size: 51,200 bytes).
 * `templateUrl` - (Optional) Location of a file containing the template body (max size: 460,800 bytes).
 * `capabilities` - (Optional) A list of capabilities.
-  Valid values: `capabilityIam`, `capabilityNamedIam`, or `capabilityAutoExpand`
+  Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, or `CAPABILITY_AUTO_EXPAND`
 * `disableRollback` - (Optional) Set to true to disable rollback of the stack if stack creation failed.
-  Conflicts with `onFailure`.
+  Conflicts with `on_failure`.
 * `notificationArns` - (Optional) A list of SNS topic ARNs to publish stack related events.
 * `onFailure` - (Optional) Action to be taken if stack creation fails. This must be
-  one of: `doNothing`, `rollback`, or `delete`. Conflicts with `disableRollback`.
+  one of: `DO_NOTHING`, `ROLLBACK`, or `DELETE`. Conflicts with `disable_rollback`.
 * `parameters` - (Optional) A map of Parameter structures that specify input parameters for the stack.
 * `policyBody` - (Optional) Structure containing the stack policy body.
-  Conflicts w/ `policyUrl`.
+  Conflicts w/ `policy_url`.
 * `policyUrl` - (Optional) Location of a file containing the stack policy.
-  Conflicts w/ `policyBody`.
-* `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  Conflicts w/ `policy_body`.
+* `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `iamRoleArn` - (Optional) The ARN of an IAM role that AWS CloudFormation assumes to create the stack. If you don't specify a value, AWS CloudFormation uses the role that was previously associated with the stack. If no role is available, AWS CloudFormation uses a temporary session that is generated from your user credentials.
-* `timeoutInMinutes` - (Optional) The amount of time that can pass before the stack status becomes `createFailed`.
+* `timeoutInMinutes` - (Optional) The amount of time that can pass before the stack status becomes `CREATE_FAILED`.
 
 ## Attribute Reference
 
@@ -94,15 +94,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -126,4 +126,4 @@ Using `terraform import`, import Cloudformation Stacks using the `name`. For exa
 % terraform import aws_cloudformation_stack.stack networking-stack
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c53bfbdca12c0eaf80e8a2eed58d9aa3dfa199b8365b1dbcd91c0ab7688d53d5 -->
+<!-- cache-key: cdktf-0.19.0 input-c53bfbdca12c0eaf80e8a2eed58d9aa3dfa199b8365b1dbcd91c0ab7688d53d5 -->

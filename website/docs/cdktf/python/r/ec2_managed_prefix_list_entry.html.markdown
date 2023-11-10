@@ -81,4 +81,4 @@ Using `terraform import`, import prefix list entries using `prefix_list_id` and 
 % terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a95730eacb673234acf87d5fadae62c50b9ab8fba39c257ae0b77d4dc4586a17 -->
+<!-- cache-key: cdktf-0.19.0 input-a95730eacb673234acf87d5fadae62c50b9ab8fba39c257ae0b77d4dc4586a17 -->

@@ -256,17 +256,15 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appconfig.DeleteConfigurationProfileInput{
+	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
+	_, err = conn.DeleteConfigurationProfileWithContext(ctx, &appconfig.DeleteConfigurationProfileInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-	}
-
-	_, err = conn.DeleteConfigurationProfileWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

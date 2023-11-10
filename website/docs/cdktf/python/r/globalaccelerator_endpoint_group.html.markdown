@@ -98,4 +98,4 @@ Using `terraform import`, import Global Accelerator endpoint groups using the `i
 % terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a99822bb8d802bdee38671c5875d85175be0aff6331a6b380641cb861eac7402 -->
+<!-- cache-key: cdktf-0.19.0 input-a99822bb8d802bdee38671c5875d85175be0aff6331a6b380641cb861eac7402 -->

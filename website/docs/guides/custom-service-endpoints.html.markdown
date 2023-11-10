@@ -213,6 +213,7 @@ provider "aws" {
   <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -259,6 +260,7 @@ provider "aws" {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>

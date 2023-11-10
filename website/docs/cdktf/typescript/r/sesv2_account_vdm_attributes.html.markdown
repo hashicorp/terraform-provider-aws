@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `vdmEnabled` - (Required) Specifies the status of your VDM configuration. Valid values: `enabled`, `disabled`.
+* `vdmEnabled` - (Required) Specifies the status of your VDM configuration. Valid values: `ENABLED`, `DISABLED`.
 
 The following arguments are optional:
 
@@ -55,11 +55,11 @@ The following arguments are optional:
 
 ### dashboard_attributes
 
-* `engagementMetrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `enabled`, `disabled`.
+* `engagementMetrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
 ### guardian_attributes
 
-* `optimizedSharedDelivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `enabled`, `disabled`.
+* `optimizedSharedDelivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
@@ -87,4 +87,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Account VDM Attributes 
 % terraform import aws_sesv2_account_vdm_attributes.example ses-account-vdm-attributes
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b4d0b06f4304f2a2394a2efa012918dd4528d7fc4bfc11ed8de9b1f68d2751e1 -->
+<!-- cache-key: cdktf-0.19.0 input-b4d0b06f4304f2a2394a2efa012918dd4528d7fc4bfc11ed8de9b1f68d2751e1 -->

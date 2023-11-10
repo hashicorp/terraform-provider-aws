@@ -344,12 +344,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alpnPolicy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `tls`. Valid values are `http1Only`, `http2Only`, `http2Optional`, `http2Preferred`, and `none`.
-* `certificateArn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`awsLbListenerCertificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
+* `alpnPolicy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
+* `certificateArn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
 * `port` - (Optional) Port on which the load balancer is listening. Not valid for Gateway Load Balancers.
-* `protocol` - (Optional) Protocol for connections from clients to the load balancer. For Application Load Balancers, valid values are `http` and `https`, with a default of `http`. For Network Load Balancers, valid values are `tcp`, `tls`, `udp`, and `tcpUdp`. Not valid to use `udp` or `tcpUdp` if dual-stack mode is enabled. Not valid for Gateway Load Balancers.
-* `sslPolicy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `https` or `tls`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `protocol` - (Optional) Protocol for connections from clients to the load balancer. For Application Load Balancers, valid values are `HTTP` and `HTTPS`, with a default of `HTTP`. For Network Load Balancers, valid values are `TCP`, `TLS`, `UDP`, and `TCP_UDP`. Not valid to use `UDP` or `TCP_UDP` if dual-stack mode is enabled. Not valid for Gateway Load Balancers.
+* `sslPolicy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `HTTPS` or `TLS`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE::** Please note that listeners that are attached to Application Load Balancers must use either `http` or `https` protocols while listeners that are attached to Network Load Balancers must use the `tcp` protocol.
 
@@ -357,14 +357,14 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixedResponse`, `authenticateCognito` and `authenticateOidc`.
+* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
 
 The following arguments are optional:
 
-* `authenticateCognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticateCognito`. Detailed below.
-* `authenticateOidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticateOidc`. Detailed below.
-* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixedResponse`.
-* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `targetGroupArn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `targetGroupArn`. Detailed below.
+* `authenticateCognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. Detailed below.
+* `authenticateOidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. Detailed below.
+* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `target_group_arn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `target_group_arn`. Detailed below.
 * `order` - (Optional) Order for the action. This value is required for rules with multiple actions. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`.
 * `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. Detailed below.
 * `targetGroupArn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
@@ -418,7 +418,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `messageBody` - (Optional) Message body.
-* `statusCode` - (Optional) HTTP response code. Valid values are `2Xx`, `4Xx`, or `5Xx`.
+* `statusCode` - (Optional) HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
 #### forward
 
@@ -456,14 +456,14 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `statusCode` - (Required) HTTP redirect code. The redirect is either permanent (`http301`) or temporary (`http302`).
+* `statusCode` - (Required) HTTP redirect code. The redirect is either permanent (`HTTP_301`) or temporary (`HTTP_302`).
 
 The following arguments are optional:
 
 * `host` - (Optional) Hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
 * `path` - (Optional) Absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
 * `port` - (Optional) Port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
-* `protocol` - (Optional) Protocol. Valid values are `http`, `https`, or `#{protocol}`. Defaults to `#{protocol}`.
+* `protocol` - (Optional) Protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
 * `query` - (Optional) Query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
 
 ## Attribute Reference
@@ -472,7 +472,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the listener (matches `id`).
 * `id` - ARN of the listener (matches `arn`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -496,4 +496,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b6c6fd51a4ec9b7cab514ce3099f9bf1c4efc96f7baaabe14176ce01751b5a09 -->
+<!-- cache-key: cdktf-0.19.0 input-b6c6fd51a4ec9b7cab514ce3099f9bf1c4efc96f7baaabe14176ce01751b5a09 -->

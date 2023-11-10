@@ -44,7 +44,7 @@ The following arguments are required:
 
 * `folderId` - (Required, Forces new resource) Identifier for the folder.
 * `memberId` - (Required, Forces new resource) ID of the asset (the dashboard, analysis, or dataset).
-* `memberType` - (Required, Forces new resource) Type of the member. Valid values are `analysis`, `dashboard`, and `dataset`.
+* `memberType` - (Required, Forces new resource) Type of the member. Valid values are `ANALYSIS`, `DASHBOARD`, and `DATASET`.
 
 The following arguments are optional:
 
@@ -78,4 +78,4 @@ Using `terraform import`, import QuickSight Folder Membership using the AWS acco
 % terraform import aws_quicksight_folder_membership.example 123456789012,example-folder,DATASET,example-dataset
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d86c3016c2fb02ce6bbff475bfb57b5c2ef1344603d2a5e1e68e88605800f66c -->
+<!-- cache-key: cdktf-0.19.0 input-d86c3016c2fb02ce6bbff475bfb57b5c2ef1344603d2a5e1e68e88605800f66c -->

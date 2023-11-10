@@ -60,7 +60,7 @@ This resource supports the following arguments:
 * `deploymentStrategyId` - (Required, Forces new resource) Deployment strategy ID or name of a predefined deployment strategy. See [Predefined Deployment Strategies](https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-creating-deployment-strategy.html#appconfig-creating-deployment-strategy-predefined) for more details.
 * `description` - (Optional, Forces new resource) Description of the deployment. Can be at most 1024 characters.
 * `environmentId` - (Required, Forces new resource) Environment ID. Must be between 4 and 7 characters in length.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the AppConfig Deployment.
 * `deploymentNumber` - Deployment number.
 * `state` - State of the deployment.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import AppConfig Deployments using the application ID,
 % terraform import aws_appconfig_deployment.example 71abcde/11xxxxx/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-39d098aa9ae0c1f1d4eeeee8bc2060587e9cc2e856acbf07eef391aa67bc2054 -->
+<!-- cache-key: cdktf-0.19.0 input-39d098aa9ae0c1f1d4eeeee8bc2060587e9cc2e856acbf07eef391aa67bc2054 -->

@@ -174,7 +174,7 @@ This resource supports the following arguments:
 * `desiredNumberOfDomainControllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directoryId` - (Required) The identifier of the directory to which you want to add Region replication.
 * `regionName` - (Required) The name of the Region where you want to add domain controllers for replication.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSettings` - (Required) VPC information in the replicated Region. Detailed below.
 
 ### `vpcSettings`
@@ -186,7 +186,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -218,4 +218,4 @@ Using `terraform import`, import Replicated Regions using directory ID,Region na
 % terraform import aws_directory_service_region.example d-9267651497,us-east-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20d7af9911cb4ea2ab9c63d5899325921c11d1438c0a0bd4b54c4be7952b8fff -->
+<!-- cache-key: cdktf-0.19.0 input-20d7af9911cb4ea2ab9c63d5899325921c11d1438c0a0bd4b54c4be7952b8fff -->

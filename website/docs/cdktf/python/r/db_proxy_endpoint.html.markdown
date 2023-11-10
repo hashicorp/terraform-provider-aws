@@ -82,4 +82,4 @@ Using `terraform import`, import DB proxy endpoints using the `DB-PROXY-NAME/DB-
 % terraform import aws_db_proxy_endpoint.example example/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-350a8a6ad58a9a637252ca5d1e91e374fee3e01e2e35b79ea8ea63a3a00e8a4d -->
+<!-- cache-key: cdktf-0.19.0 input-350a8a6ad58a9a637252ca5d1e91e374fee3e01e2e35b79ea8ea63a3a00e8a4d -->

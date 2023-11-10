@@ -112,6 +112,7 @@ func TestParseRecordId(t *testing.T) {
 		{"ABCDEF_prefix._underscore.example.com_A", "ABCDEF", "prefix._underscore.example.com", "A", ""},
 		{"ABCDEF_prefix._underscore.example.com_A_set", "ABCDEF", "prefix._underscore.example.com", "A", "set"},
 		{"ABCDEF_prefix._underscore.example.com_A_set_underscore", "ABCDEF", "prefix._underscore.example.com", "A", "set_underscore"},
+		{"ABCDEF__A", "ABCDEF", "", "A", ""},
 	}
 
 	for _, tc := range cases {
@@ -1403,6 +1404,12 @@ func TestAccRoute53Record_empty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})

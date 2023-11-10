@@ -47,7 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the verified access group.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `policyDocment` - (Optional) The policy document that is associated with this resource.
 
 ## Attribute Reference
@@ -65,8 +65,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-74642a11cfb0cd052c78234e7ffeb2b3744dcc462e3e42eceff666725d831322 -->
+<!-- cache-key: cdktf-0.19.0 input-74642a11cfb0cd052c78234e7ffeb2b3744dcc462e3e42eceff666725d831322 -->

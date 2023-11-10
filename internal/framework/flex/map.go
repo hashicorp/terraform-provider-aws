@@ -8,9 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func ExpandFrameworkStringMap(ctx context.Context, v types.Map) map[string]*string {
+func ExpandFrameworkStringMap(ctx context.Context, v basetypes.MapValuable) map[string]*string {
 	var output map[string]*string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -18,7 +19,7 @@ func ExpandFrameworkStringMap(ctx context.Context, v types.Map) map[string]*stri
 	return output
 }
 
-func ExpandFrameworkStringValueMap(ctx context.Context, v types.Map) map[string]string {
+func ExpandFrameworkStringValueMap(ctx context.Context, v basetypes.MapValuable) map[string]string {
 	var output map[string]string
 
 	panicOnError(Expand(ctx, v, &output))

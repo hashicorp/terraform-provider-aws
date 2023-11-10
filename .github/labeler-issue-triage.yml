@@ -473,6 +473,8 @@ service/opsworkscm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworkscm_'
 service/organizations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_organizations_'
+service/osis:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_osis_'
 service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:

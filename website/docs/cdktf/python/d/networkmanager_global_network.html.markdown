@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the global network.
 * `tags` - Map of resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-2beedb9058cb6af0278a82e6f6239295f59bb32ff22d4cf013144823c528e416 -->
+<!-- cache-key: cdktf-0.19.0 input-2beedb9058cb6af0278a82e6f6239295f59bb32ff22d4cf013144823c528e416 -->

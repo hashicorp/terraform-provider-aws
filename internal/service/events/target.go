@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -245,7 +244,7 @@ func ResourceTarget() *schema.Resource {
 						"header_parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
+							ValidateDiagFunc: validation.AllDiag(
 								validation.MapKeyLenBetween(0, 512),
 								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
 								validation.MapValueLenBetween(0, 512),
@@ -261,7 +260,7 @@ func ResourceTarget() *schema.Resource {
 						"query_string_parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
+							ValidateDiagFunc: validation.AllDiag(
 								validation.MapKeyLenBetween(0, 512),
 								validation.MapKeyMatch(regexache.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
 								validation.MapValueLenBetween(0, 512),
@@ -1391,14 +1390,4 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("event_bus_name", busName)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
 }

@@ -48,19 +48,19 @@ This resource supports the following arguments:
 * `keyMaterialBase64` - (Optional) Base64 encoded 256-bit symmetric encryption key material to import. The CMK is permanently associated with this key material. The same key material can be reimported, but you cannot import different key material.
 * `multiRegion` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `policy` - (Optional) A key policy JSON document. If you do not provide a key policy, AWS KMS attaches a default key policy to the CMK.
-* `tags` - (Optional) A key-value map of tags to assign to the key. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `validTo` - (Optional) Time at which the imported key material expires. When the key material expires, AWS KMS deletes the key material and the CMK becomes unusable. If not specified, key material does not expire. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`yyyyMmDdthh:mm:ssz`)
+* `tags` - (Optional) A key-value map of tags to assign to the key. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `validTo` - (Optional) Time at which the imported key material expires. When the key material expires, AWS KMS deletes the key material and the CMK becomes unusable. If not specified, key material does not expire. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
-* `expirationModel` - Whether the key material expires. Empty when pending key material import, otherwise `keyMaterialExpires` or `keyMaterialDoesNotExpire`.
+* `expirationModel` - Whether the key material expires. Empty when pending key material import, otherwise `KEY_MATERIAL_EXPIRES` or `KEY_MATERIAL_DOES_NOT_EXPIRE`.
 * `id` - The unique identifier for the key.
 * `keyState` - The state of the CMK.
 * `keyUsage` - The cryptographic operations for which you can use the CMK.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import KMS External Keys using the `id`. For example:
 % terraform import aws_kms_external_key.a arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0484ec46a723c1a6dff8e9bc90b1793826fc146b89008eced5df42a79df9f3c2 -->
+<!-- cache-key: cdktf-0.19.0 input-0484ec46a723c1a6dff8e9bc90b1793826fc146b89008eced5df42a79df9f3c2 -->

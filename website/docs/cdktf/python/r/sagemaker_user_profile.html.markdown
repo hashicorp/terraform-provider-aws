@@ -155,4 +155,4 @@ Using `terraform import`, import SageMaker User Profiles using the `arn`. For ex
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1492833bb8413e9155281273553ca4896e7889971ba95eee58026c164fc0fdb7 -->
+<!-- cache-key: cdktf-0.19.0 input-1492833bb8413e9155281273553ca4896e7889971ba95eee58026c164fc0fdb7 -->

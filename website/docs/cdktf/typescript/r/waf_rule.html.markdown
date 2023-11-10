@@ -60,7 +60,7 @@ This resource supports the following arguments:
 * `metricName` - (Required) The name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) The name or description of the rule.
 * `predicates` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -72,10 +72,10 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 
 * `negated` - (Required) Set this to `false` if you want to allow, block, or count requests
   based on the settings in the specified [waf_byte_match_set](/docs/providers/aws/r/waf_byte_match_set.html), [waf_ipset](/docs/providers/aws/r/waf_ipset.html), [aws_waf_size_constraint_set](/docs/providers/aws/r/waf_size_constraint_set.html), [aws_waf_sql_injection_match_set](/docs/providers/aws/r/waf_sql_injection_match_set.html) or [aws_waf_xss_match_set](/docs/providers/aws/r/waf_xss_match_set.html).
-  For example, if an IPSet includes the IP address `1920244`, AWS WAF will allow or block requests based on that IP address.
-  If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses except `1920244`.
+  For example, if an IPSet includes the IP address `192.0.2.44`, AWS WAF will allow or block requests based on that IP address.
+  If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses except `192.0.2.44`.
 * `dataId` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
-* `type` - (Required) The type of predicate in a rule. Valid values: `byteMatch`, `geoMatch`, `ipMatch`, `regexMatch`, `sizeConstraint`, `sqlInjectionMatch`, or `xssMatch`.
+* `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
 ## Attribute Reference
 
@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the WAF rule.
 * `arn` - The ARN of the WAF rule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -107,4 +107,4 @@ Using `terraform import`, import WAF rules using the id. For example:
 % terraform import aws_waf_rule.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2c43340a2d06e3942756017a4add4fafed5cbb5d7c4a714075fea348a36c1c0b -->
+<!-- cache-key: cdktf-0.19.0 input-2c43340a2d06e3942756017a4add4fafed5cbb5d7c4a714075fea348a36c1c0b -->

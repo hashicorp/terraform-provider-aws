@@ -48,13 +48,13 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - Name of the bot. The bot name must be unique in the account that creates the bot. Type String. Length Constraints: Minimum length of 1. Maximum length of 100.
-* `dataPrivacy` - Provides information on additional privacy protections Amazon Lex should use with the bot's data. See [`dataPrivacy`](#data-privacy)
+* `dataPrivacy` - Provides information on additional privacy protections Amazon Lex should use with the bot's data. See [`data_privacy`](#data-privacy)
 * `idleSessionTtlInSeconds` - Time, in seconds, that Amazon Lex should keep information about a user's conversation with the bot. You can specify between 60 (1 minute) and 86,400 (24 hours) seconds.
 * `roleArn` - ARN of an IAM role that has permission to access the bot.
 
 The following arguments are optional:
 
-* `members` - List of bot members in a network to be created. See [`botMembers`](#bot-members).
+* `members` - List of bot members in a network to be created. See [`bot_members`](#bot-members).
 * `botTags` - List of tags to add to the bot. You can only add tags when you create a bot.
 * `botType` - Type of a bot to create.
 * `description` - Description of the bot. It appears in lists to help you identify a particular bot.
@@ -82,9 +82,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import Lex V2 Models Bot using the `exampleIdArg`. For
 % terraform import aws_lexv2models_bot.example bot-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7e4e7c49f1d8375bbd057208e9ba1b16a7f2a964f4ba619719401e55ba5eb370 -->
+<!-- cache-key: cdktf-0.19.0 input-7e4e7c49f1d8375bbd057208e9ba1b16a7f2a964f4ba619719401e55ba5eb370 -->

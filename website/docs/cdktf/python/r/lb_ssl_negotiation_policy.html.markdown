@@ -98,4 +98,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `lb_port` - The load balancer port to which the policy is applied.
 * `attribute` - The SSL Negotiation policy attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-594ecbf0ae1086664299c0bd8eab81534e805963be3a73733449f7041f731403 -->
+<!-- cache-key: cdktf-0.19.0 input-594ecbf0ae1086664299c0bd8eab81534e805963be3a73733449f7041f731403 -->

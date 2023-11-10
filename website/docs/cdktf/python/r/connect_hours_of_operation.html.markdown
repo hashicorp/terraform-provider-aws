@@ -115,4 +115,4 @@ Using `terraform import`, import Amazon Connect Hours of Operations using the `i
 % terraform import aws_connect_hours_of_operation.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e685961316f9f34f8486d7fd79d05b0468f7a89263abaaf59ddd74e65a685a9c -->
+<!-- cache-key: cdktf-0.19.0 input-e685961316f9f34f8486d7fd79d05b0468f7a89263abaaf59ddd74e65a685a9c -->

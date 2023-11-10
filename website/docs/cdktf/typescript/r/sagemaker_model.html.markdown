@@ -72,15 +72,15 @@ This resource supports the following arguments:
 * `primaryContainer` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
 * `executionRoleArn` - (Required) A role that SageMaker can assume to access model artifacts and docker images for deployment.
 * `inferenceExecutionConfig` - (Optional) Specifies details of how containers in a multi-container endpoint are called. see [Inference Execution Config](#inference-execution-config).
-* `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primaryContainer` argument is required. Fields are documented below.
+* `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primary_container` argument is required. Fields are documented below.
 * `enableNetworkIsolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
 * `vpcConfig` (Optional) - Specifies the VPC that you want your model to connect to. VpcConfig is used in hosting services and in batch transform.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `primaryContainer` and `container` block both support:
 
 * `image` - (Optional) The registry path where the inference code image is stored in Amazon ECR.
-* `mode` - (Optional) The container hosts value `singleModel/multiModel`. The default value is `singleModel`.
+* `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `modelDataUrl` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `modelPackageName` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
 * `containerHostname` - (Optional) The DNS host name for the container.
@@ -90,7 +90,7 @@ The `primaryContainer` and `container` block both support:
 
 ### Image Config
 
-* `repositoryAccessMode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `platform` and `vpc`.
+* `repositoryAccessMode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
 * `repositoryAuthConfig` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
@@ -99,7 +99,7 @@ The `primaryContainer` and `container` block both support:
 
 ## Inference Execution Config
 
-* `mode` - (Required) How containers in a multi-container are run. The following values are valid `serial` and `direct`.
+* `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
 ## Attribute Reference
 
@@ -107,7 +107,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `name` - The name of the model.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this model.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -131,4 +131,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-53d6c468eddd1f29a98ecc8fc36ce24bea38081a6d6c05a93d9d1f563dbc5e78 -->
+<!-- cache-key: cdktf-0.19.0 input-53d6c468eddd1f29a98ecc8fc36ce24bea38081a6d6c05a93d9d1f563dbc5e78 -->

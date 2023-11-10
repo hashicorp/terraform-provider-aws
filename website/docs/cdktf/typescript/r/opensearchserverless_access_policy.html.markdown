@@ -190,4 +190,4 @@ Using `terraform import`, import OpenSearchServerless Access Policy using the `n
 % terraform import aws_opensearchserverless_access_policy.example example/data
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-025702799f46af465a8f782db7f780da1b73dd0220b3ff605a2cb05cd1fc3137 -->
+<!-- cache-key: cdktf-0.19.0 input-025702799f46af465a8f782db7f780da1b73dd0220b3ff605a2cb05cd1fc3137 -->

@@ -798,6 +798,46 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_taskReportConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.output_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_level", "SUCCESSES_AND_ERRORS"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_object_versioning", "INCLUDE"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.0.subdirectory", "test/"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.deleted_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.skipped_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.transferred_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.verified_override", "ERRORS_ONLY"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.bucket_access_role_arn", "aws_iam_role.report_test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.s3_bucket_arn", "aws_s3_bucket.report_test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDataSyncTask_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1, task2, task3 datasync.DescribeTaskOutput
@@ -1462,4 +1502,76 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, key1, value1, key2, value2))
+}
+
+func testAccTaskConfig_taskReportConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationNFS(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "report_test" {
+  bucket        = "%[1]s-report-test"
+  force_destroy = true
+}
+
+resource "aws_iam_role" "report_test" {
+  name               = "%[1]s-report-test"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "datasync.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "report_test" {
+  role   = aws_iam_role.report_test.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+	"Action": [
+	  "s3:*"
+	],
+	"Effect": "Allow",
+	"Resource": [
+	  "${aws_s3_bucket.report_test.arn}",
+	  "${aws_s3_bucket.report_test.arn}/*"
+	]
+  }]
+}
+POLICY
+}
+
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.test.arn
+
+  task_report_config {
+    s3_destination {
+      bucket_access_role_arn = aws_iam_role.report_test.arn
+      s3_bucket_arn          = aws_s3_bucket.report_test.arn
+      subdirectory           = "test/"
+    }
+    report_overrides {
+      deleted_override     = "ERRORS_ONLY"
+      skipped_override     = "ERRORS_ONLY"
+      transferred_override = "ERRORS_ONLY"
+      verified_override    = "ERRORS_ONLY"
+    }
+    s3_object_versioning = "INCLUDE"
+    output_type          = "STANDARD"
+    report_level         = "SUCCESSES_AND_ERRORS"
+  }
+}
+`, rName))
 }

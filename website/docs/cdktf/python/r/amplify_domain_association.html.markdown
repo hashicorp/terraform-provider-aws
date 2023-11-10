@@ -103,4 +103,4 @@ Using `terraform import`, import Amplify domain association using `app_id` and `
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10844d85ea1b0809e4b08cd8168c429bf0c742ec4760985072b9f61b55e19893 -->
+<!-- cache-key: cdktf-0.19.0 input-10844d85ea1b0809e4b08cd8168c429bf0c742ec4760985072b9f61b55e19893 -->

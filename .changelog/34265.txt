@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_user_settings.canvas_app_settings.direct_deploy_settings`, `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` and `default_user_settings.canvas_app_settings.kendra_settings` arguments
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_user_profile: Add `default_user_settings.canvas_app_settings.direct_deploy_settings`, `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` and `default_user_settings.canvas_app_settings.kendra_settings` arguments
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Change `default_space_settings.kernel_gateway_app_settings.custom_image`, `default_user_settings.kernel_gateway_app_settings.custom_image` and `default_user_settings.r_session_app_settings.custom_image` `MaxItems` from `30` to `200`
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_space: Change `space_settings.kernel_gateway_app_settings.custom_image` `MaxItems` from `30` to `200`
+```
+
+```release-note:bug
+resource/aws_sagemaker_domain: Fix updating `default_space_settings.r_studio_server_pro_app_settings.access_status` from `ENABLED` to `DISABLED`
+```

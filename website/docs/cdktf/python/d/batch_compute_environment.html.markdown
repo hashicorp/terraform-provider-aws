@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.18.0 input-40ea513f9e96b190b76debe79cd7a41eb8991b1bc0efea47e7c5e257dd7f3f34 -->
+<!-- cache-key: cdktf-0.19.0 input-40ea513f9e96b190b76debe79cd7a41eb8991b1bc0efea47e7c5e257dd7f3f34 -->

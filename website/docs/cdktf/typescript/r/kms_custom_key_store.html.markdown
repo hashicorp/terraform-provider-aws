@@ -58,9 +58,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import KMS (Key Management) Custom Key Store using the
 % terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9dcae02bd36df2fce9d93db2f8a904b6e54954716a7c73cfb8a2f6513817a111 -->
+<!-- cache-key: cdktf-0.19.0 input-9dcae02bd36df2fce9d93db2f8a904b6e54954716a7c73cfb8a2f6513817a111 -->

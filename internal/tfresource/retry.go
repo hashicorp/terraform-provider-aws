@@ -57,7 +57,7 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}
 	return output, nil
 }
 
-// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
+// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
 func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) || tfawserr_sdkv2.ErrCodeEquals(err, codes...) {
@@ -133,6 +133,17 @@ func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t
 	}
 
 	return output, nil
+}
+
+// RetryWhenHTTPStatusCodeEquals retries the specified function when it returns one of the specified HTTP status codes.
+func RetryWhenHTTPStatusCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), statusCodes ...int) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, statusCodes...) {
+			return true, err
+		}
+
+		return false, err
+	})
 }
 
 var ErrFoundResource = errors.New(`found resource`)

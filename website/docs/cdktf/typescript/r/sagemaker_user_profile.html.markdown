@@ -43,10 +43,10 @@ This resource supports the following arguments:
 
 * `userProfileName` - (Required) The name for the User Profile.
 * `domainId` - (Required) The ID of the associated Domain.
-* `singleSignOnUserIdentifier` - (Optional) A specifier for the type of value specified in `singleSignOnUserValue`. Currently, the only supported value is `userName`. If the Domain's AuthMode is SSO, this field is required. If the Domain's AuthMode is not SSO, this field cannot be specified.
+* `singleSignOnUserIdentifier` - (Optional) A specifier for the type of value specified in `single_sign_on_user_value`. Currently, the only supported value is `UserName`. If the Domain's AuthMode is SSO, this field is required. If the Domain's AuthMode is not SSO, this field cannot be specified.
 * `singleSignOnUserValue` - (Required) The username of the associated AWS Single Sign-On User for this User Profile. If the Domain's AuthMode is SSO, this field is required, and must match a valid username of a user in your directory. If the Domain's AuthMode is not SSO, this field cannot be specified.
 * `userSettings` - (Required) The user settings. See [User Settings](#user-settings) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### User Settings
 
@@ -68,9 +68,9 @@ This resource supports the following arguments:
 
 #### Sharing Settings
 
-* `notebookOutputOption` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `disabled`. Valid values are `allowed` and `disabled`.
-* `s3KmsKeyId` - (Optional) When `notebookOutputOption` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
-* `s3OutputPath` - (Optional) When `notebookOutputOption` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
+* `notebookOutputOption` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `Disabled`. Valid values are `Allowed` and `Disabled`.
+* `s3KmsKeyId` - (Optional) When `notebook_output_option` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
+* `s3OutputPath` - (Optional) When `notebook_output_option` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
 
 #### TensorBoard App Settings
 
@@ -95,8 +95,8 @@ This resource supports the following arguments:
 
 #### RStudio Server Pro App Settings
 
-* `accessStatus` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `enabled` and `disabled`.
-* `userGroup` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `rStudioUser`. The `rStudioAdmin` value allows the user access to the RStudio Administrative Dashboard. Valid values are `rStudioUser` and `rStudioAdmin`.
+* `accessStatus` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
+* `userGroup` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
 
 ##### Code Repository
 
@@ -118,12 +118,12 @@ This resource supports the following arguments:
 ##### Time Series Forecasting Settings
 
 * `amazonForecastRoleArn` - (Optional)  The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
-* `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `ENABLED` and `DISABLED`.
 
 ##### Model Register Settings
 
 * `crossAccountModelRegisterRoleArn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas AWS account than the AWS account in which SageMaker model registry is set up.
-* `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### Workspace Settings
 
@@ -137,7 +137,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The user profile Amazon Resource Name (ARN).
 * `arn` - The user profile Amazon Resource Name (ARN).
 * `homeEfsFileSystemUid` - The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -161,4 +161,4 @@ Using `terraform import`, import SageMaker User Profiles using the `arn`. For ex
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1492833bb8413e9155281273553ca4896e7889971ba95eee58026c164fc0fdb7 -->
+<!-- cache-key: cdktf-0.19.0 input-1492833bb8413e9155281273553ca4896e7889971ba95eee58026c164fc0fdb7 -->

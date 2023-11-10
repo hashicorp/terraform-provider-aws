@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -705,13 +706,13 @@ func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 	disable := make([]interface{}, 0)
 
 	for _, n := range new {
-		if _, contains := verify.SliceContainsString(old, n.(string)); !contains {
+		if idx := tfslices.IndexOf(old, n.(string)); idx == -1 {
 			add = append(add, n)
 		}
 	}
 
 	for _, o := range old {
-		if _, contains := verify.SliceContainsString(new, o.(string)); !contains {
+		if idx := tfslices.IndexOf(new, o.(string)); idx == -1 {
 			disable = append(disable, o)
 		}
 	}

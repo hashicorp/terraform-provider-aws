@@ -309,4 +309,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-956f61f5814a7a2fe0cddeef5fa9d4a645f79dd8c9a568695d52c319ef5ea5d4 -->
+<!-- cache-key: cdktf-0.19.0 input-956f61f5814a7a2fe0cddeef5fa9d4a645f79dd8c9a568695d52c319ef5ea5d4 -->

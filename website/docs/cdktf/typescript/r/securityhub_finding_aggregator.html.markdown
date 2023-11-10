@@ -110,8 +110,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-- `linkingMode` - (Required) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are `allRegions`, `allRegionsExceptSpecified` or `specifiedRegions`. When `allRegions` or `allRegionsExceptSpecified` are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them.
-- `specifiedRegions` - (Optional) List of regions to include or exclude (required if `linkingMode` is set to `allRegionsExceptSpecified` or `specifiedRegions`)
+- `linkingMode` - (Required) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are `ALL_REGIONS`, `ALL_REGIONS_EXCEPT_SPECIFIED` or `SPECIFIED_REGIONS`. When `ALL_REGIONS` or `ALL_REGIONS_EXCEPT_SPECIFIED` are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them.
+- `specifiedRegions` - (Optional) List of regions to include or exclude (required if `linking_mode` is set to `ALL_REGIONS_EXCEPT_SPECIFIED` or `SPECIFIED_REGIONS`)
 
 ## Attribute Reference
 
@@ -141,4 +141,4 @@ Using `terraform import`, import an existing Security Hub finding aggregator usi
 % terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b0a0cef9ae9a2e4ba102b890bdf1e0083eb9b71a497b601f823d3d520dd935aa -->
+<!-- cache-key: cdktf-0.19.0 input-b0a0cef9ae9a2e4ba102b890bdf1e0083eb9b71a497b601f823d3d520dd935aa -->
