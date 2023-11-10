@@ -35,7 +35,7 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "default_version_id"),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -68,6 +68,41 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIoTPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v iot.GetPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
+				),
 			},
 		},
 	})
@@ -143,4 +178,29 @@ resource "aws_iot_policy" "test" {
 EOF
 }
 `, rName)
+}
+
+func testAccPolicyConfig_resourceName(rName, resourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        %[2]q
+      ]
+    }
+  ]
+}
+EOF
+}
+`, rName, resourceName)
 }
