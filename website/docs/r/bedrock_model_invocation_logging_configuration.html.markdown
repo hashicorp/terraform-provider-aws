@@ -10,6 +10,8 @@ description: |-
 
 Manages Bedrock model invocation logging configuration.
 
+~> Model invocation logging is configured per AWS region. To avoid overwriting settings, this resource should not be defined in multiple configurations.
+
 ## Example Usage
 
 ```terraform
