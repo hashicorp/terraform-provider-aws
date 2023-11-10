@@ -67,6 +67,150 @@ func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessEndpoint_policy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDocument := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policy(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), policyDocument),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument),
+					resource.TestCheckResourceAttr(resourceName, "policy_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessEndpoint_policyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDocumentA := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+	policyDocumentB := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"POST\"\n};"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policy(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), policyDocumentA),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocumentA),
+					resource.TestCheckResourceAttr(resourceName, "policy_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policy(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), policyDocumentB),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocumentB),
+					resource.TestCheckResourceAttr(resourceName, "policy_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "policy_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
@@ -368,6 +512,37 @@ resource "aws_verifiedaccess_endpoint" "test" {
   }
 }
 `, rName, key, certificate))
+}
+
+func testAccVerifiedAccessEndpointConfig_policy(rName, key, certificate, policy_document string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_base(rName, key, certificate), fmt.Sprintf(`
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  attachment_type        = "vpc"
+  description            = "example"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  endpoint_type          = "load-balancer"
+  policy_document        = %[4]q
+  policy_enabled         = true
+  sse_specification {
+    customer_managed_key_enabled = false
+  }
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test.arn
+    port              = 443
+    protocol          = "https"
+    subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
+  }
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate, policy_document))
 }
 
 func testAccVerifiedAccessEndpointConfig_networkInterface(rName, key, certificate string) string {

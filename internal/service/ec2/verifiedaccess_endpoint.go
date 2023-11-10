@@ -138,6 +138,14 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"policy_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"policy_document": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -196,6 +204,10 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("policy_document"); ok {
+		input.PolicyDocument = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -266,6 +278,14 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
+	ep_policy, err := FindVerifiedAccessEndpointPolicyByEndpointId(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) Policy: %s", d.Id(), err)
+	}
+	d.Set("policy_enabled", ep_policy.PolicyEnabled)
+	d.Set("policy_document", ep_policy.PolicyDocument)
+
 	return diags
 }
 
@@ -306,6 +326,20 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 		if _, err := WaitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("policy_document", "policy_enabled") {
+		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
+			VerifiedAccessEndpointId: aws.String(d.Id()),
+			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
+			PolicyEnabled:            aws.Bool(d.Get("policy_enabled").(bool)),
+		}
+
+		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s) Policy: %s", d.Id(), err)
 		}
 	}
 

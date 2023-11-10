@@ -7329,6 +7329,20 @@ func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, in
 	return output, nil
 }
 
+func FindVerifiedAccessEndpointPolicyByEndpointId(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessEndpointPolicyOutput, error) {
+	input := &ec2_sdkv2.GetVerifiedAccessEndpointPolicyInput{
+		VerifiedAccessEndpointId: &id,
+	}
+
+	out, err := conn.GetVerifiedAccessEndpointPolicy(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessEndpoint, error) {
 	input := &ec2_sdkv2.DescribeVerifiedAccessEndpointsInput{
 		VerifiedAccessEndpointIds: []string{id},
