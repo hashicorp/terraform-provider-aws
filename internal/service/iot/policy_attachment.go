@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -45,17 +46,20 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
-
-	_, err := conn.AttachPolicyWithContext(ctx, &iot.AttachPolicyInput{
+	id := policyAttachmentCreateResourceID(policyName, target)
+	input := &iot.AttachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching policy %s to target %s: %s", policyName, target, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
+	_, err := conn.AttachPolicyWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating IoT Policy Attachment (%s): %s", id, err)
+	}
+
+	d.SetId(id)
+
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
@@ -147,4 +151,23 @@ func GetPolicyAttachment(ctx context.Context, conn *iot.IoT, target, policyName 
 	})
 
 	return policy, err
+}
+
+const policyAttachmentResourceIDSeparator = "|"
+
+func policyAttachmentCreateResourceID(policyName, target string) string {
+	parts := []string{policyName, target}
+	id := strings.Join(parts, policyAttachmentResourceIDSeparator)
+
+	return id
+}
+
+func policyAttachmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected policy-name%[2]starget", id, policyAttachmentResourceIDSeparator)
 }
