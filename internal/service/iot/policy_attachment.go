@@ -91,10 +91,13 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	policyName := d.Get("policy").(string)
-	target := d.Get("target").(string)
+	policyName, target, err := policyAttachmentParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	_, err := conn.DetachPolicyWithContext(ctx, &iot.DetachPolicyInput{
+	log.Printf("[DEBUG] Deleting IoT Policy Attachment: %s", d.Id())
+	_, err = conn.DetachPolicyWithContext(ctx, &iot.DetachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
 	})
@@ -102,12 +105,11 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	// DetachPolicy doesn't return an error if the policy doesn't exist,
 	// but it returns an error if the Target is not found.
 	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
-		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "detaching policy %s from target %s: %s", policyName, target, err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	return diags
