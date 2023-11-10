@@ -8,5 +8,6 @@ var (
 	FindVoiceConnectorByID            = findVoiceConnectorByID
 	FindVoiceConnectorGroupByID       = findVoiceConnectorGroupByID
 	FindVoiceConnectorLoggingByID     = findVoiceConnectorLoggingByID
+	FindVoiceConnectorOriginationByID = findVoiceConnectorOriginationByID
 	FindVoiceConnectorTerminationByID = findVoiceConnectorTerminationByID
 )

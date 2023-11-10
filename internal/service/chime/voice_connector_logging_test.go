@@ -158,10 +158,6 @@ func testAccCheckVoiceConnectorLoggingExists(ctx context.Context, name string) r
 			return tfchime.FindVoiceConnectorLoggingByID(ctx, conn, rs.Primary.ID)
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
