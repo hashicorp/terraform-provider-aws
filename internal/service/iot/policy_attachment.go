@@ -23,6 +23,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
+
 		Schema: map[string]*schema.Schema{
 			"policy": {
 				Type:     schema.TypeString,
@@ -56,46 +57,6 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
-}
-
-func ListPolicyAttachmentPages(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
-	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
-	for {
-		page, err := conn.ListAttachedPoliciesWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
-	return nil
-}
-
-func GetPolicyAttachment(ctx context.Context, conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
-	var policy *iot.Policy
-
-	input := &iot.ListAttachedPoliciesInput{
-		PageSize:  aws.Int64(250),
-		Recursive: aws.Bool(false),
-		Target:    aws.String(target),
-	}
-
-	err := ListPolicyAttachmentPages(ctx, conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
-		for _, att := range out.Policies {
-			if policyName == aws.StringValue(att.PolicyName) {
-				policy = att
-				return false
-			}
-		}
-		return true
-	})
-
-	return policy, err
 }
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -146,4 +107,44 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
+}
+
+func ListPolicyAttachmentPages(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
+	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
+	for {
+		page, err := conn.ListAttachedPoliciesWithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+		lastPage := page.NextMarker == nil
+
+		shouldContinue := fn(page, lastPage)
+		if !shouldContinue || lastPage {
+			break
+		}
+		input.Marker = page.NextMarker
+	}
+	return nil
+}
+
+func GetPolicyAttachment(ctx context.Context, conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
+	var policy *iot.Policy
+
+	input := &iot.ListAttachedPoliciesInput{
+		PageSize:  aws.Int64(250),
+		Recursive: aws.Bool(false),
+		Target:    aws.String(target),
+	}
+
+	err := ListPolicyAttachmentPages(ctx, conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+		for _, att := range out.Policies {
+			if policyName == aws.StringValue(att.PolicyName) {
+				policy = att
+				return false
+			}
+		}
+		return true
+	})
+
+	return policy, err
 }
