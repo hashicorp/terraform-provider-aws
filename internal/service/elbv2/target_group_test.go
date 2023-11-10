@@ -3273,6 +3273,228 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 	}
 }
 
+func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "port"),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol"),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+					resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Lambda_vpc(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_vpc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"), // Silent failure, bad read
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Lambda_protocol(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	t.Parallel()
+
+	for _, protocol := range elbv2.ProtocolEnum_Values() { //nolint:paralleltest // false positive
+		protocol := protocol
+
+		t.Run(protocol, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var targetGroup elbv2.TargetGroup
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccTargetGroupConfig_Lambda_protocol(protocol),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+							resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+							resource.TestCheckResourceAttr(resourceName, "protocol", protocol), // Silent failure, bad read
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_port("443"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+					resource.TestCheckResourceAttr(resourceName, "port", "443"), // Silent failure, bad read
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		invalidHealthCheckProtocol bool
+		silentFailure              bool // Currently silently fails, but doesn't set the parameter on read
+	}{
+		elbv2.ProtocolEnumHttp: {
+			silentFailure: true,
+		},
+		elbv2.ProtocolEnumHttps: {
+			silentFailure: true,
+		},
+		elbv2.ProtocolEnumTcp: {
+			invalidHealthCheckProtocol: true, // Break-fixable
+		},
+	}
+
+	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
+		healthCheckProtocol := healthCheckProtocol
+
+		t.Run(healthCheckProtocol, func(t *testing.T) {
+			tc, ok := testcases[healthCheckProtocol]
+			if !ok {
+				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
+			}
+
+			ctx := acctest.Context(t)
+			var targetGroup elbv2.TargetGroup
+
+			step := resource.TestStep{
+				Config: testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol),
+			}
+			if tc.invalidHealthCheckProtocol {
+				// This one is wild: Lambda health checks don't take a protocol, but are effectively an HTTP check.
+				// So, they return a `matcher` on read. When Terraform validates the diff, the (incorrectly stored) protocol
+				// `TCP` is checked against the `matcher`, and returns an error.
+				step.ExpectError = regexache.MustCompile(`health_check.matcher is not supported for target_groups with TCP protocol`)
+			} else if tc.silentFailure {
+				step.Check = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
+				)
+			} else {
+				t.Fatal("invalid test case")
+			}
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					step,
+				},
+			})
+		})
+	}
+}
+
+func TestAccELBV2TargetGroup_Lambda_HealthCheck_matcherOutOfRange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_HealthCheck_matcher("999"),
+				// TODO: plan-time validation
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '200-499' inclusive`, "999")),
+			},
+		},
+	})
+}
+
 func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
@@ -5102,4 +5324,87 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 `, protocol, healthCheckProtocol, matcher)
+}
+
+func testAccTargetGroupConfig_Lambda_basic() string {
+	return `
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+}
+`
+}
+
+func testAccTargetGroupConfig_Lambda_vpc() string {
+	return `
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+`
+}
+
+func testAccTargetGroupConfig_Lambda_protocol(protocol string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  protocol = %[1]q
+}
+`, protocol)
+}
+
+func testAccTargetGroupConfig_Lambda_port(port string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  port = %[1]q
+}
+`, port)
+}
+
+func testAccTargetGroupConfig_Lambda_HealthCheck_basic() string {
+	return `
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  health_check {
+    timeout  = 35 # The Terraform default (30) is too short for Lambda.
+    interval = 40 # Must be > timeout
+  }
+}
+`
+}
+
+func testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  health_check {
+    protocol = %[1]q
+    timeout  = 35 # The Terraform default (30) is too short for Lambda.
+    interval = 40 # Must be > timeout
+  }
+}
+`, healthCheckProtocol)
+}
+
+func testAccTargetGroupConfig_Lambda_HealthCheck_matcher(matcher string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  health_check {
+    matcher  = %[1]q
+    timeout  = 35 # The Terraform default (30) is too short for Lambda.
+    interval = 40 # Must be > timeout
+  }
+}
+`, matcher)
 }
