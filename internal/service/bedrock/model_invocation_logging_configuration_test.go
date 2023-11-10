@@ -16,6 +16,9 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,9 +31,9 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "logging_config.cloudwatch_config.log_group_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "logging_config.cloudwatch_config.role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "logging_config.s3_config.bucket_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.s3_config.key_prefix", "bedrock"),
 				),
 			},
@@ -49,16 +52,16 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-resource aws_s3_bucket bedrock_logging {
-  bucket        = "bedrock-logging-%[1]s"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   force_destroy = true
   lifecycle {
     ignore_changes = ["tags", "tags_all"]
   }
 }
 
-resource "aws_s3_bucket_policy" "bedrock_logging" {
-  bucket = aws_s3_bucket.bedrock_logging.bucket
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
 
   policy = <<EOF
 {
@@ -73,7 +76,7 @@ resource "aws_s3_bucket_policy" "bedrock_logging" {
         "s3:*"
       ],
       "Resource": [
-        "${aws_s3_bucket.bedrock_logging.arn}/*"
+        "${aws_s3_bucket.test.arn}/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -89,12 +92,12 @@ resource "aws_s3_bucket_policy" "bedrock_logging" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "bedrock_logging" {
-  name = "Bedrock-%[1]s"
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
 }
 
-resource "aws_iam_role" "bedrock_logging" {
-  name = "bedrock_logging-%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -120,8 +123,8 @@ resource "aws_iam_role" "bedrock_logging" {
 EOF
 }
 
-resource "aws_iam_policy" "bedrock_logging" {
-  name        = "bedrock_logging_%[1]s"
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
   path        = "/"
   description = "BedrockCloudWatchPolicy"
 
@@ -134,34 +137,33 @@ resource "aws_iam_policy" "bedrock_logging" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        "Resource" : "${aws_cloudwatch_log_group.bedrock_logging.arn}:log-stream:aws/bedrock/modelinvocations"
+        "Resource" : "${aws_cloudwatch_log_group.test.arn}:log-stream:aws/bedrock/modelinvocations"
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "bedrock_logging" {
-  role       = aws_iam_role.bedrock_logging.name
-  policy_arn = aws_iam_policy.bedrock_logging.arn
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_bedrock_model_invocation_logging_configuration" "test" {
+  depends_on = [aws_s3_bucket_policy.test]
+
   logging_config {
     embedding_data_delivery_enabled = true
     image_data_delivery_enabled     = true
     text_data_delivery_enabled      = true
     cloudwatch_config {
-      log_group_name = aws_cloudwatch_log_group.bedrock_logging.name
-      role_arn       = aws_iam_role.bedrock_logging.arn
+      log_group_name = aws_cloudwatch_log_group.test.name
+      role_arn       = aws_iam_role.test.arn
     }
     s3_config {
-      bucket_name = aws_s3_bucket.bedrock_logging.id
+      bucket_name = aws_s3_bucket.test.id
       key_prefix  = "bedrock"
     }
   }
-  depends_on = [
-    aws_s3_bucket_policy.bedrock_logging
-  ]
 }
 `, rName)
 }
