@@ -125,7 +125,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
@@ -133,7 +133,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
@@ -141,7 +141,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "3"),
@@ -149,7 +149,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "4"),
@@ -157,7 +157,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "5"),
@@ -165,7 +165,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "6"),
@@ -173,7 +173,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))), // lintignore:AWSAT005
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "7"),
