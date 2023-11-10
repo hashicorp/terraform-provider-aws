@@ -775,6 +775,9 @@ service/opsworkscm:
 service/organizations:
   - 'internal/service/organizations/**/*'
   - 'website/**/organizations_*'
+service/osis:
+  - 'internal/service/osis/**/*'
+  - 'website/**/osis_*'
 service/outposts:
   - 'internal/service/outposts/**/*'
   - 'website/**/outposts_*'

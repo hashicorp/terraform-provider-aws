@@ -49,6 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.8.1
+	github.com/aws/aws-sdk-go-v2/service/osis v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.1

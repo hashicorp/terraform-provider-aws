@@ -142,6 +142,7 @@ const (
 	NetworkManager               = "networkmanager"
 	ObservabilityAccessManager   = "oam"
 	OpenSearch                   = "opensearch"
+	OpenSearchIngestion          = "osis"
 	OpenSearchServerless         = "opensearchserverless"
 	OpsWorks                     = "opsworks"
 	Organizations                = "organizations"

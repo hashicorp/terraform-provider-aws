@@ -224,6 +224,7 @@ variable "service_labels" {
     "opsworks",
     "opsworkscm",
     "organizations",
+    "osis",
     "outposts",
     "panorama",
     "personalize",
