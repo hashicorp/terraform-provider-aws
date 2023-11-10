@@ -656,4 +656,11 @@ object Performance : BuildType({
             }
         }
     }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+    }
 })
