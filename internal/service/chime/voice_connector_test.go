@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -234,15 +233,16 @@ func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *chim
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetVoiceConnectorInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
+
+		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnector, error) {
+			return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+		})
+
 		if err != nil {
 			return err
 		}
 
-		vc = resp.VoiceConnector
+		vc = resp
 
 		return nil
 	}

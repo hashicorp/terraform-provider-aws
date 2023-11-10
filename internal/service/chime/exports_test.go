@@ -6,5 +6,6 @@ package chime
 // Exports for use in tests only.
 var (
 	FindVoiceConnectorByID            = findVoiceConnectorByID
+	FindVoiceConnectorGroupByID       = findVoiceConnectorGroupByID
 	FindVoiceConnectorTerminationByID = findVoiceConnectorTerminationByID
 )

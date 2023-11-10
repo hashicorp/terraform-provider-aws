@@ -11,9 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_chime_voice_connector_group")
@@ -79,27 +82,33 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	getInput := &chimesdkvoice.GetVoiceConnectorGroupInput{
-		VoiceConnectorGroupId: aws.String(d.Id()),
+	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.VoiceConnectorGroup, error) {
+		return findVoiceConnectorGroupByID(ctx, conn, d.Id())
+	})
+
+	if tfresource.TimedOut(err) {
+		resp, err = findVoiceConnectorGroupByID(ctx, conn, d.Id())
 	}
 
-	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil || resp.VoiceConnectorGroup == nil {
-		return diag.Errorf("getting Chime Voice Connector group (%s): %s", d.Id(), err)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Voice Connector Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", resp.VoiceConnectorGroup.Name)
+	d.Set("name", resp.Name)
 
-	if err := d.Set("connector", flattenVoiceConnectorItems(resp.VoiceConnectorGroup.VoiceConnectorItems)); err != nil {
-		return diag.Errorf("setting Chime Voice Connector group items (%s): %s", d.Id(), err)
+	if err := d.Set("connector", flattenVoiceConnectorItems(resp.VoiceConnectorItems)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector group items (%s): %s", d.Id(), err)
 	}
+
 	return nil
 }
 
@@ -175,4 +184,29 @@ func flattenVoiceConnectorItems(connectors []*chimesdkvoice.VoiceConnectorItem) 
 		rawConnectors = append(rawConnectors, rawC)
 	}
 	return rawConnectors
+}
+
+func findVoiceConnectorGroupByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.VoiceConnectorGroup, error) {
+	in := &chimesdkvoice.GetVoiceConnectorGroupInput{
+		VoiceConnectorGroupId: aws.String(id),
+	}
+
+	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if resp == nil || resp.VoiceConnectorGroup == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.VoiceConnectorGroup, nil
 }
