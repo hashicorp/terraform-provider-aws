@@ -142,6 +142,8 @@ func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, 
 		}
 
 		for _, v := range page.ResourcePolicies {
+			v := v
+
 			if aws.ToString(v.PolicyName) == name {
 				output = &v
 
