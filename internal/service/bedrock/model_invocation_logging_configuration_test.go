@@ -4,12 +4,21 @@
 package bedrock_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
@@ -21,12 +30,18 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelInvocationLoggingConfiguration_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", "true"),
@@ -44,6 +59,55 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckModelInvocationLoggingConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameModelInvocationLoggingConfiguration, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameModelInvocationLoggingConfiguration, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+
+		_, err := tfbedrock.FindModelInvocationLoggingConfigurationByID(ctx, conn)
+		if err != nil {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameModelInvocationLoggingConfiguration, name, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_bedrock_model_invocation_logging_configuration" {
+				continue
+			}
+
+			output, err := tfbedrock.FindModelInvocationLoggingConfigurationByID(ctx, conn)
+			if err != nil {
+				var nfe *retry.NotFoundError
+				var ere *tfresource.EmptyResultError
+				if errors.As(err, &nfe) || errors.As(err, &ere) {
+					return nil
+				}
+				return err
+			}
+
+			if output != nil {
+				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameModelInvocationLoggingConfiguration, rs.Primary.ID, err)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccModelInvocationLoggingConfiguration_basic(rName string) string {
