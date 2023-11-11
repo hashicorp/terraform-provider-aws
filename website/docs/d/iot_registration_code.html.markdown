@@ -30,5 +30,4 @@ resource "tls_cert_request" "verification" {
 ```
 
 ## Attributes Reference
-
 * `code` - The code required to be set in a verification common name.
