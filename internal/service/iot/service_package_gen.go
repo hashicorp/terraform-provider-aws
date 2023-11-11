@@ -29,6 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceEndpoint,
 			TypeName: "aws_iot_endpoint",
 		},
+		{
+			Factory:  DataSourceRegistrationCode,
+			TypeName: "aws_iot_registration_code",
+			Name:     "Registration Code",
+		},
 	}
 }
 
