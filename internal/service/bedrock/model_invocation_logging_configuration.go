@@ -5,6 +5,7 @@ package bedrock
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -15,14 +16,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const ResourceNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
+const ResNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
 
 // @FrameworkResource(name="Model Invocation Logging Configuration")
 func newResourceModelInvocationLoggingConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
@@ -116,7 +119,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -134,16 +137,22 @@ func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, 
 		return
 	}
 
-	output, err := conn.GetModelInvocationLoggingConfiguration(ctx, &bedrock.GetModelInvocationLoggingConfigurationInput{})
+	output, err := FindModelInvocationLoggingConfigurationByID(ctx, conn)
+	var nfe *retry.NotFoundError
+	var ere *tfresource.EmptyResultError
+	if errors.As(err, &nfe) || errors.As(err, &ere) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, ResourceNameModelInvocationLoggingConfiguration, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, ResNameModelInvocationLoggingConfiguration, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.LoggingConfig = flattenLoggingConfig(ctx, output.LoggingConfig)
+	state.LoggingConfig = flattenLoggingConfig(ctx, output)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -169,7 +178,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context
 	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
 			err.Error(),
 		)
 	}
@@ -189,7 +198,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResourceNameModelInvocationLoggingConfiguration, data.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
 			err.Error(),
 		)
 	}
@@ -197,6 +206,28 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 
 func (r *resourceModelInvocationLoggingConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func FindModelInvocationLoggingConfigurationByID(ctx context.Context, conn *bedrock.Client) (*awstypes.LoggingConfig, error) {
+	in := &bedrock.GetModelInvocationLoggingConfigurationInput{}
+	out, err := conn.GetModelInvocationLoggingConfiguration(ctx, in)
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.LoggingConfig == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LoggingConfig, nil
 }
 
 type resourceModelInvocationLoggingConfigurationModel struct {
@@ -233,7 +264,6 @@ func flattenLoggingConfig(ctx context.Context, apiObject *awstypes.LoggingConfig
 
 	if apiObject == nil {
 		return types.ObjectNull(attributeTypes)
-
 	}
 
 	attrs := map[string]attr.Value{
