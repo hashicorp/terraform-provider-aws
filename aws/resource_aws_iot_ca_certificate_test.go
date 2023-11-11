@@ -18,7 +18,7 @@ func TestAccAWSIoTCACertificate_certificate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSIoTCACertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIoTCACertificate,
+				Config: testAccAWSIoTCertificate_keys_certificate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_ca_certificate.foo", "arn"),
 					resource.TestCheckResourceAttrSet("aws_iot_ca_certificate.foo", "id"),
