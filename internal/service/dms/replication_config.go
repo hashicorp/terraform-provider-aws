@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -112,9 +113,11 @@ func ResourceReplicationConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"replication_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"replication_type": {
 				Type:         schema.TypeString,
@@ -230,12 +233,18 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
-	d.Set("replication_settings", replicationConfig.ReplicationSettings)
 	d.Set("replication_type", replicationConfig.ReplicationType)
 	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
 	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)
 	d.Set("table_mappings", replicationConfig.TableMappings)
 	d.Set("target_endpoint_arn", replicationConfig.TargetEndpointArn)
+
+	settings, err := replicationConfigRemoveReadOnlySettings(aws.StringValue(replicationConfig.ReplicationSettings))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Config (%s): %s", d.Id(), err)
+	}
+
+	d.Set("replication_settings", settings)
 
 	return diags
 }
@@ -654,4 +663,31 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 	}
 
 	return apiObject
+}
+
+func replicationConfigRemoveReadOnlySettings(settings string) (*string, error) {
+	var settingsData map[string]interface{}
+	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
+		return nil, err
+	}
+
+	controlTablesSettings, ok := settingsData["ControlTablesSettings"].(map[string]interface{})
+	if ok {
+		delete(controlTablesSettings, "historyTimeslotInMinutes")
+	}
+
+	logging, ok := settingsData["Logging"].(map[string]interface{})
+	if ok {
+		delete(logging, "EnableLogContext")
+		delete(logging, "CloudWatchLogGroup")
+		delete(logging, "CloudWatchLogStream")
+	}
+
+	cleanedSettings, err := json.Marshal(settingsData)
+	if err != nil {
+		return nil, err
+	}
+
+	cleanedSettingsString := string(cleanedSettings)
+	return &cleanedSettingsString, nil
 }
