@@ -34,6 +34,7 @@ import (
 func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotVersion{}
 
+	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -112,6 +113,7 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
 				Delete: true,
 			}),
 		},
@@ -176,6 +178,16 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	state.Id = types.StringValue(id)
 	state.BotVersion = flex.StringToFramework(ctx, out.BotVersion)
 
+	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	_, err = waitBotVersionCreated(ctx, conn, state.Id.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, state.Id.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -195,7 +207,7 @@ func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotVersion, state.BotID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotVersion, state.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -234,7 +246,7 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotVersion, state.BotID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotVersion, state.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -244,7 +256,7 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 	_, err = waitBotVersionDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.BotVersion.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -253,6 +265,24 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *resourceBotVersion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotStatusVersioning),
+		Target:                    enum.Slice(awstypes.BotStatusAvailable),
+		Refresh:                   statusBotVersion(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
 
 func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
