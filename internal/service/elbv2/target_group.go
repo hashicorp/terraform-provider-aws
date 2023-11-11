@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -60,6 +61,7 @@ func ResourceTargetGroup() *schema.Resource {
 		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
+			lambdaTargetHealthCheckProtocolCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -138,7 +140,6 @@ func ResourceTargetGroup() *schema.Resource {
 							},
 							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
-							// TODO: needs cross-param validator
 						},
 						"timeout": {
 							Type:         schema.TypeInt,
@@ -203,10 +204,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc:  validTargetGroupNamePrefix,
 			},
 			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 65535),
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.IntBetween(1, 65535),
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 			"preserve_client_ip": {
 				Type:             nullable.TypeNullableBool,
@@ -216,11 +218,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"protocol": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
-				// TODO: Cannot be set when `target_type` is `lambda`. Should warn
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 			"protocol_version": {
 				Type:     schema.TypeString,
@@ -348,9 +350,10 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elbv2.TargetTypeEnum_Values(), false),
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 		},
 	}
@@ -381,6 +384,47 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
 	}
 
+	targetType := d.Get("target_type").(string)
+	if targetType == elbv2.TargetTypeEnumLambda {
+		if _, ok := d.GetOk("protocol"); ok {
+			path := cty.GetAttrPath("protocol")
+			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("port"); ok {
+			path := cty.GetAttrPath("port")
+			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("vpc_id"); ok {
+			path := cty.GetAttrPath("vpc_id")
+			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+			healthCheck := healthChecks[0].(map[string]interface{})
+			path := cty.GetAttrPath("health_check")
+
+			if healthCheckProtocol := healthCheck["protocol"].(string); healthCheckProtocol != "" {
+				path := path.GetAttr("protocol")
+				diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
+					"Invalid Attribute Combination",
+					fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+				))
+
+			}
+		}
+	}
+
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -389,14 +433,17 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 		if _, ok := d.GetOk("port"); !ok {
+			// TODO: plan-time validate
 			return sdkdiag.AppendErrorf(diags, "port should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("protocol"); !ok {
+			// TODO: plan-time validate
 			return sdkdiag.AppendErrorf(diags, "protocol should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("vpc_id"); !ok {
+			// TODO: plan-time validate
 			return sdkdiag.AppendErrorf(diags, "vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -1069,27 +1116,23 @@ func TargetGroupSuffixFromARN(arn *string) string {
 func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
+	targetType := aws.StringValue(targetGroup.TargetType)
+
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("ip_address_type", targetGroup.IpAddressType)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
-	d.Set("target_type", targetGroup.TargetType)
+	d.Set("target_type", targetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)
 	}
 
-	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
-		d.Set("vpc_id", targetGroup.VpcId)
-		d.Set("port", targetGroup.Port)
-		d.Set("protocol", targetGroup.Protocol)
-	}
-
-	switch d.Get("protocol").(string) {
-	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-		d.Set("protocol_version", targetGroup.ProtocolVersion)
-	}
+	d.Set("vpc_id", targetGroup.VpcId)
+	d.Set("port", targetGroup.Port)
+	d.Set("protocol", targetGroup.Protocol)
+	d.Set("protocol_version", targetGroup.ProtocolVersion)
 
 	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
@@ -1289,6 +1332,28 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 	return nil
 }
 
+func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if diff.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		healthCheck := healthChecks[0].(map[string]interface{})
+		healthCheckProtocol := healthCheck["protocol"].(string)
+
+		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q",
+				"protocol",
+				elbv2.ProtocolEnumTcp,
+				"target_type",
+				elbv2.TargetTypeEnumLambda,
+			)
+		}
+	}
+
+	return nil
+}
+
 func flattenLbTargetGroupHealthCheck(targetGroup *elbv2.TargetGroup) []interface{} {
 	if targetGroup == nil {
 		return []interface{}{}
@@ -1315,4 +1380,37 @@ func flattenLbTargetGroupHealthCheck(targetGroup *elbv2.TargetGroup) []interface
 	}
 
 	return []interface{}{m}
+}
+
+func pathString(path cty.Path) string {
+	var buf strings.Builder
+	for i, step := range path {
+		switch x := step.(type) {
+		case cty.GetAttrStep:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(x.Name)
+		case cty.IndexStep:
+			val := x.Key
+			typ := val.Type()
+			var s string
+			switch {
+			case typ == cty.String:
+				s = val.AsString()
+			case typ == cty.Number:
+				num := val.AsBigFloat()
+				s = num.String()
+			default:
+				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+			}
+			buf.WriteString(fmt.Sprintf("[%s]", s))
+		default:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+		}
+	}
+	return buf.String()
 }
