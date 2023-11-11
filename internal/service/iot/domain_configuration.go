@@ -210,7 +210,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
 
-	return nil
+	return diags
 }
 
 func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
