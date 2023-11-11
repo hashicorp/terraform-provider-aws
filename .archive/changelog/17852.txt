@@ -1,0 +1,19 @@
+```release-note:new-data-source
+aws_dx_connection
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `owner_account_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Add `owner_account_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `provider_name` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Add `provider_name` argument
+```

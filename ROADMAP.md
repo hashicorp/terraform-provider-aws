@@ -1,111 +1,92 @@
-# Roadmap: August - October 2020
+# Roadmap:  May 2023 - July 2023
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](docs/CORE_SERVICES.md), and internal priorities. When community pull requests exist for a given item, we will prioritize working with the original authors to include their contributions. If the author can no longer take on the implementation, HashiCorp will complete any additional work needed.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
-Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/terraform-providers/terraform-provider-aws/milestone/138).
+Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap.
 
-Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist we will create the resources and implementation ourselves.
+This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-From [May through July](docs/roadmaps/2020_May_to_July.md), we committed to adding support for WAFv2 and Lex. We are happy to report that WAFv2 support is now complete and we will be finishing support for Lex immediately following the release of v3.0.0. Additionally, we planned to refactor ACM and will include the redesigned resource as part of the 3.0.0 package. Lastly, we spent some time researching Default Tags and want to extend a thank you to all the folks that volunteered to assist. We’ve written a proposal for the feature that is being reviewed internally and we hope to include the functionality in the product in the future.
+In the period spanning January to April 2023 the AWS Provider added support for the following (among many others):
 
-From August-October ‘20, we will be prioritizing the following areas of work:
+- AWS VPC Lattice
+- AWS Quicksight
+- AWS Directory Service “Trust”
+- AWS Observability Access Manager
 
-## New Services
+From May - July 2023, we will be prioritizing the following areas of work:
 
-### EventBridge
+## New Services  
 
-Issue: [#9330](https://github.com/terraform-providers/terraform-provider-aws/issues/9330)
+### Amazon OpenSearch Serverless
 
-_[Amazon EventBridge](https://aws.amazon.com/eventbridge/) is a serverless event bus that makes it easy to connect applications together using data from your own applications, integrated Software-as-a-Service (SaaS) applications, and AWS services. EventBridge delivers a stream of real-time data from event sources, such as Zendesk, Datadog, or Pagerduty, and routes that data to targets like AWS Lambda. You can set up routing rules to determine where to send your data to build application architectures that react in real time to all of your data sources._
+Issue: [#28313](https://github.com/hashicorp/terraform-provider-aws/issues/28313)
 
-As EventBridge exists as an addition to existing CloudWatch APIs we will perform a research phase to determine whether Terraform support should exist as separate resources, additions to existing ones, or a combination of the two.
+[Amazon OpenSearch Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) makes it easy for customers to run large-scale search and analytics workloads without managing clusters. It automatically provisions and scales the underlying resources to deliver fast data ingestion and query responses for even the most demanding and unpredictable workloads, eliminating the need to configure and optimize clusters.
 
-### EC2 Image Builder
-
-Issue: [#11084](https://github.com/terraform-providers/terraform-provider-aws/issues/11084)
-
-_[EC2 Image Builder](https://aws.amazon.com/image-builder/) simplifies the creation, maintenance, validation, sharing, and deployment of Linux or Windows Server images for use with Amazon EC2 and on-premises._
-
-Support for EC2 Image Builder will include:
-
-New Resource(s):
-- aws_imagebuilder_component
-- aws_imagebuilder_distribution_configuration
-- aws_imagebuilder_image
-- aws_imagebuilder_image_pipeline
-- aws_imagebuilder_image_recipe
-- aws_imagebuilder_infrastructure_configuration
-
-New Data Source(s):
-- aws_imagebuilder_image
-
-### AWS Lake Formation
-
-Issue: [#9700](https://github.com/terraform-providers/terraform-provider-aws/issues/9700)
-
-_[AWS Lake Formation](https://aws.amazon.com/lake-formation) is a service that makes it easy to set up a secure data lake in days. A data lake is a centralized, curated, and secured repository that stores all your data, both in its original form and prepared for analysis. A data lake enables you to break down data silos and combine different types of analytics to gain insights and guide better business decisions._
-
-Support for AWS Lake Formation will include:
+Support for Amazon OpenSearch Serverless may include:
 
 New Resource(s):
 
-- aws_lakeformation_resource
-- aws_lakeformation_datalake_settings
-- aws_lakeformation_permissions
+- `aws_opensearchserverless_collection`
+- `aws_opensearchserverless_access_policy`
+- `aws_opensearchserverless_security_config`
+- `aws_opensearchserverless_security_policy`
+- `aws_opensearchserverless_vpc_endpoint`
 
-### AWS Serverless Application Repository
+### AWS Clean Rooms
 
-Issue: [#3981](https://github.com/terraform-providers/terraform-provider-aws/issues/3981)
+Issue: [#30024](https://github.com/hashicorp/terraform-provider-aws/issues/30024)
 
-_The [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/) is a managed repository for serverless applications. It enables teams, organizations, and individual developers to store and share reusable applications, and easily assemble and deploy serverless architectures in powerful new ways. Using the Serverless Application Repository, you don't need to clone, build, package, or publish source code to AWS before deploying it. Instead, you can use pre-built applications from the Serverless Application Repository in your serverless architectures, helping you and your teams reduce duplicated work, ensure organizational best practices, and get to market faster. Integration with AWS Identity and Access Management (IAM) provides resource-level control of each application, enabling you to publicly share applications with everyone or privately share them with specific AWS accounts._
+[AWS Clean Rooms](https://aws.amazon.com/clean-rooms/) helps companies and their partners more easily and securely analyze and collaborate on their collective datasets–without sharing or copying one another's underlying data. With AWS Clean Rooms, customers can create a secure data clean room in minutes, and collaborate with any other company on the AWS Cloud to generate unique insights about advertising campaigns, investment decisions, and research and development.
 
-Support for AWS Serverless Application Repository will include:
+Support for AWS Clean Rooms may include:
 
 New Resource(s):
-- aws_serverlessrepository_stack
 
-New Data Source(s):
-- aws_serverlessrepository_application
+- `aws_cleanrooms_collaboration`
+- `aws_cleanrooms_configured_table`
+- `aws_cleanrooms_configured_table_analysis_rule`
+- `aws_cleanrooms_configured_table_association`
+- `aws_cleanrooms_membership`
 
-## Issues and Enhancements
+## Enhancements to Existing Services
 
-The issues below have gained substantial support via our community. As a result, we want to highlight our commitment to addressing them.
+This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [#12690](https://github.com/terraform-providers/terraform-provider-aws/issues/12690) RDS Proxy Support
-- [#11281](https://github.com/terraform-providers/terraform-provider-aws/issues/11281) Home Directory Mappings Support for AWS Transfer User
-- [#384](https://github.com/terraform-providers/terraform-provider-aws/issues/384) Add support for CreateVPCAssociationAuthorization AWS API
-- [#6562](https://github.com/terraform-providers/terraform-provider-aws/issues/6562) Auto Scaling Plans (Dynamic/Predictive Auto Scaling Groups)
-- [#5549](https://github.com/terraform-providers/terraform-provider-aws/issues/5549) Terraform constantly updates resource policy on API Gateway
-- [#11569](https://github.com/terraform-providers/terraform-provider-aws/issues/11569) aws_transfer_server: support Elastic IPs
-- [#5286](https://github.com/terraform-providers/terraform-provider-aws/issues/5286) Point in time restore support for AWS RDS instances
+- [Lack of support for sso-session in .aws/config](https://github.com/hashicorp/terraform-provider-aws/issues/28263)
+- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
+- [aws_wafv2_web_acl - Error: Provider produced inconsistent final plan](https://github.com/hashicorp/terraform-provider-aws/issues/23992)
+- [aws_lb_target_group_attachment: target_id should be a list](https://github.com/hashicorp/terraform-provider-aws/issues/9901)
+- [Extend Secrets Manager Rotation Configuration](https://github.com/hashicorp/terraform-provider-aws/issues/22969)
 
-## United States Federal Focus
+## Major Release v5
 
-We have added extra engineering and product capacity to enable us to provide the same compatibility and coverage assurances in the GovCloud, C2S, and SC2S regions as we currently do for Commercial AWS regions. Our attention on C2S/SC2S environments should result in better outcomes in other similar air gapped environments. Initially, we will be focusing on GovCloud and users should expect improved experiences within that region in the coming months.
+The release of version 5.0 of the Terraform AWS provider will bring highly anticipated updates to default tags, and make changes and deprecations.
 
-## Technical Debt Theme
+### Default Tags
 
-Each quarter we identify a technical debt theme for the team to focus on alongside new service additions, issue resolutions and enhancements. This quarter we are looking at spending time improving the reliability of our acceptance test framework. We have a number of flaky tests which add friction to the development cycle. Making these more consistent should improve the development experience for both contributors and maintainers.
+Default tags in the Terraform AWS provider allow practitioners to define common metadata tags at the provider level. These tags are then applied to all supported resources in the Terraform configuration. Previously, assumptions and restrictions were made to allow this feature to function across as many resources as possible. However, it could be difficult to retrofit existing code, causing frustrating manual intervention.
+Thanks to new features available in the [Terraform plugin SDK](https://developer.hashicorp.com/terraform/plugin/sdkv2) and the [Terraform plugin framework](https://developer.hashicorp.com/terraform/plugin/framework), we have removed several limitations which made default tags difficult to integrate with existing resources and modules.
 
-## Research Topics
+The updates in version 5.0 solve for:
 
-Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
+- Inconsistent final plans that cause failures when tags are computed.
+- Identical tags in both default tags and resource tags.
+- Perpetual diffs within tag configurations.
 
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
+### Remove EC2 Classic Functionality
 
-### API Calls/IAM Actions Per Terraform Resource (Minimum IAM)
+In 2021 AWS [announced](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) the retirement of EC2 Classic Networking functionality. This was scheduled to occur on August 15th, 2022. Support for the functionality was extended until late September when any AWS customers who had qualified for extension finished their migration. At that time those features were marked as deprecated and it is now time to remove them as the functionality is no longer available through AWS. While this is a standard deprecation, this is a major feature removal.
 
-Issue: [#9154](https://github.com/terraform-providers/terraform-provider-aws/issues/9154)
+### Updating RDS Identifiers In–Place
 
-To address security concerns and best practices we are considering how Terraform could surface minimally viable IAM policies for taking actions on resources or executing a TF plan. This is in the early stages of research and we are particularly interested in whether or not this would be useful and the resources or services areas for which it is most valuable.
+Allow DB names to be updated in place. This is now supported by AWS, so we should allow its use. Practitioners will now be able to change names without a recreation. Details for this issue can be tracked in issue [#507](https://github.com/hashicorp/terraform-provider-aws/issues/507).
 
-### Lifecycle: Retain [Add 'retain' attribute to the Terraform lifecycle meta-parameter]
+### Remove Default Value from Engine Parameters
 
-Issue: [#902](https://github.com/terraform-providers/terraform-provider-aws/issues/902)
-
-Some resources (e.g. log groups) are intended to be created but never destroyed. Terraform currently does not have a lifecycle attribute for retaining such resources. We are curious as to whether or not retaining resources is a workflow that meets the needs of our community and if so, how and where we might make use of that in the AWS Provider.
+Removes a default value that does not have a parallel with AWS and causes unexpected behavior for end users. Practitioners will now have to specify a value. Details for this issue can be tracked in issue [#27960](https://github.com/hashicorp/terraform-provider-aws/issues/27960).
 
 ## Disclosures
 

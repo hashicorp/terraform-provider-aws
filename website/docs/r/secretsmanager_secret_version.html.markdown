@@ -16,7 +16,7 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 ### Simple String Value
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret_version" "example" {
   secret_id     = aws_secretsmanager_secret.example.id
   secret_string = "example-string-to-protect"
@@ -27,7 +27,7 @@ resource "aws_secretsmanager_secret_version" "example" {
 
 Secrets Manager also accepts key-value pairs in JSON.
 
-```hcl
+```terraform
 # The map here can come from other supported configurations
 # like locals, resource attribute, map() built-in, etc.
 variable "example" {
@@ -45,9 +45,11 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 ```
 
+-> **Note:** In Terraform 0.14 and later, use `sensitive = true` to protect the values of the variable from being printed in logs and console output (see [Protect Sensitive Input Variables](https://learn.hashicorp.com/tutorials/terraform/sensitive-variables)).
+
 Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
 
-```hcl
+```terraform
 output "example" {
   value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
@@ -55,7 +57,7 @@ output "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `secret_string` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if secret_binary is not set.
@@ -66,14 +68,25 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This resource exports the following attributes in addition to the arguments above:
+
 * `arn` - The ARN of the secret.
 * `id` - A pipe delimited combination of secret ID and version ID.
 * `version_id` - The unique identifier of the version of the secret.
 
 ## Import
 
-`aws_secretsmanager_secret_version` can be imported by using the secret ID and version ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
+```terraform
+import {
+  to = aws_secretsmanager_secret_version.example
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx"
+}
 ```
-$ terraform import aws_secretsmanager_secret_version.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx
+
+Using `terraform import`, import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
+
+```console
+% terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```

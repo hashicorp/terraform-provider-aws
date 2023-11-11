@@ -1,12 +1,12 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_instance_fleet"
 description: |-
   Provides an Elastic MapReduce Cluster Instance Fleet
 ---
 
-# aws_emr_instance_fleet
+# Resource: aws_emr_instance_fleet
 
 Provides an Elastic MapReduce Cluster Instance Fleet configuration.
 See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/emr/) for more information.
@@ -17,7 +17,7 @@ Terraform will resize any Instance Fleet to zero when destroying the resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.cluster.id
   instance_type_configs {
@@ -56,7 +56,7 @@ resource "aws_emr_instance_fleet" "task" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_id` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
@@ -111,9 +111,9 @@ The launch specification for Spot instances in the fleet, which determines the d
 * `timeout_action` - (Required) The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
 * `timeout_duration_minutes` - (Required) The spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier of the instance fleet.
 
@@ -127,8 +127,17 @@ to fulfill TargetSpotCapacity. This provisioned capacity might be less than or g
 
 ## Import
 
-EMR Instance Fleet can be imported with the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_emr_instance_fleet.example
+  id = "j-123456ABCDEF/if-15EK4O09RZLNR"
+}
+```
+
+Using `terraform import`, import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
 
 ```console
-$ terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
+% terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
 ```

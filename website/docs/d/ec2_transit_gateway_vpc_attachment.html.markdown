@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment"
 description: |-
@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway VPC Attachment.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachment" "example" {
   filter {
     name   = "vpc-id"
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachment" "example" {
   id = "tgw-attach-12345678"
 }
@@ -33,7 +33,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway VPC Attachment.
@@ -45,8 +45,9 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
+* `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6_support` - Whether IPv6 support is enabled.
@@ -55,3 +56,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
 * `vpc_id` - Identifier of EC2 VPC.
 * `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

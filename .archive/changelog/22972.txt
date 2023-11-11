@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ami_copy: Add `boot_mode` and `ebs_block_device.outpost_arn` attributes
+```
+
+```release-note:enhancement
+resource/aws_ami_from_instance: Add `boot_mode` and `ebs_block_device.outpost_arn` attributes
+```

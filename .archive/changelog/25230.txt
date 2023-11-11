@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_keyspaces_table: Relax validation of the `schema_definition.column.type` argument to allow collection types
+```

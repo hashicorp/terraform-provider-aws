@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_customer_gateway: `ip_address` can no longer be set to `""` 
+```

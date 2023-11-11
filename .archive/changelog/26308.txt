@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eip: Include any provider-level configured `default_tags` on resource Create
+```

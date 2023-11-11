@@ -1,22 +1,22 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_logging_configuration"
 description: |-
-  Creates a WAFv2 Web ACL Logging Configuration resource.
+  Create a resource for WAFv2 Web ACL Logging Configuration.
 ---
 
 # Resource: aws_wafv2_web_acl_logging_configuration
 
-Creates a WAFv2 Web ACL Logging Configuration resource.
+This resource creates a WAFv2 Web ACL Logging Configuration.
 
--> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g. [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
-If you are capturing logs for Amazon CloudFront, always create the firehose in US East (N. Virginia).
-Be sure to give the data firehose a name that starts with the prefix `aws-waf-logs-`.
+!> **WARNING:** When logging from a WAFv2 Web ACL to a CloudWatch Log Group, the WAFv2 service tries to create or update a generic Log Resource Policy named `AWSWAF-LOGS`. However, if there are a large number of Web ACLs or if the account frequently creates and deletes Web ACLs, this policy may exceed the maximum policy size. As a result, this resource type will fail to be created. More details about this issue can be found in [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/25296). To prevent this issue, you can manage a specific resource policy. Please refer to the [example](#with-cloudwatch-log-group-and-managed-cloudwatch-log-resource-policy) below for managing a CloudWatch Log Group with a managed CloudWatch Log Resource Policy.
 
 ## Example Usage
 
-```hcl
+### With Redacted Fields
+
+```terraform
 resource "aws_wafv2_web_acl_logging_configuration" "example" {
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.example.arn]
   resource_arn            = aws_wafv2_web_acl.example.arn
@@ -28,49 +28,177 @@ resource "aws_wafv2_web_acl_logging_configuration" "example" {
 }
 ```
 
+### With Logging Filter
+
+```terraform
+resource "aws_wafv2_web_acl_logging_configuration" "example" {
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.example.arn]
+  resource_arn            = aws_wafv2_web_acl.example.arn
+
+  logging_filter {
+    default_behavior = "KEEP"
+
+    filter {
+      behavior = "DROP"
+
+      condition {
+        action_condition {
+          action = "COUNT"
+        }
+      }
+
+      condition {
+        label_name_condition {
+          label_name = "awswaf:111122223333:rulegroup:testRules:LabelNameZ"
+        }
+      }
+
+      requirement = "MEETS_ALL"
+    }
+
+    filter {
+      behavior = "KEEP"
+
+      condition {
+        action_condition {
+          action = "ALLOW"
+        }
+      }
+
+      requirement = "MEETS_ANY"
+    }
+  }
+}
+```
+
+### With CloudWatch Log Group and managed CloudWatch Log Resource Policy
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "aws-waf-logs-some-uniq-suffix"
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "example" {
+  log_destination_configs = [aws_cloudwatch_log_group.example.arn]
+  resource_arn            = aws_wafv2_web_acl.example.arn
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_document = data.aws_iam_policy_document.example.json
+  policy_name     = "webacl-policy-uniq-name"
+}
+
+data "aws_iam_policy_document" "example" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = ["${aws_cloudwatch_log_group.example.arn}:*"]
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+      variable = "aws:SourceArn"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [tostring(data.aws_caller_identity.current.account_id)]
+      variable = "aws:SourceAccount"
+    }
+  }
+}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `log_destination_configs` - (Required) The Amazon Kinesis Data Firehose Amazon Resource Name (ARNs) that you want to associate with the web ACL. Currently, only 1 ARN is supported.
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the web ACL that you want to associate with `log_destination_configs`.
-* `redacted_fields` - (Optional) The parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported.
+* `log_destination_configs` - (Required) Configuration block that allows you to associate Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) with the web ACL. **Note:** data firehose, log group, or bucket name **must** be prefixed with `aws-waf-logs-`, e.g. `aws-waf-logs-example-firehose`, `aws-waf-logs-example-log-group`, or `aws-waf-logs-example-bucket`.
+* `logging_filter` - (Optional) Configuration block that specifies which web requests are kept in the logs and which are dropped. It allows filtering based on the rule action and the web request labels applied by matching rules during web ACL evaluation. For more details, refer to the [Logging Filter](#logging-filter) section below.
+* `redacted_fields` - (Optional) Configuration for parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
+* `resource_arn` - (Required) Amazon Resource Name (ARN) of the web ACL that you want to associate with `log_destination_configs`.
+
+### Logging Filter
+
+The `logging_filter` block supports the following arguments:
+
+* `default_behavior` - (Required) Default handling for logs that don't match any of the specified filtering conditions. Valid values for `default_behavior` are `KEEP` or `DROP`.
+* `filter` - (Required) Filter(s) that you want to apply to the logs. See [Filter](#filter) below for more details.
+
+### Filter
+
+The `filter` block supports the following arguments:
+
+* `behavior` - (Required) Parameter that determines how to handle logs that meet the conditions and requirements of the filter. The valid values for `behavior` are `KEEP` or `DROP`.
+* `condition` - (Required) Match condition(s) for the filter. See [Condition](#condition) below for more details.
+* `requirement` - (Required) Logic to apply to the filtering conditions. You can specify that a log must match all conditions or at least one condition in order to satisfy the filter. Valid values for `requirement` are `MEETS_ALL` or `MEETS_ANY`.
+
+### Condition
+
+The `condition` block supports the following arguments:
+
+~> **NOTE:** Either the `action_condition` or `label_name_condition` must be specified.
+
+* `action_condition` - (Optional) Configuration for a single action condition. See [Action Condition](#action-condition) below for more details.
+* `label_name_condition` - (Optional) Condition for a single label name. See [Label Name Condition](#label-name-condition) below for more details.
+
+### Action Condition
+
+The `action_condition` block supports the following argument:
+
+* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, and `COUNT`.
+
+### Label Name Condition
+
+The `label_name_condition` block supports the following argument:
+
+* `label_name` - (Required) Name of the label that a log record must contain in order to meet the condition. It must be a fully qualified label name, which includes a prefix, optional namespaces, and the label name itself. The prefix identifies the rule group or web ACL context of the rule that added the label.
+
+### Redacted Fields
 
 The `redacted_fields` block supports the following arguments:
 
-* `all_query_arguments` - (Optional) Redact all query arguments.
-* `body` - (Optional) Redact the request body, which immediately follows the request headers.
-* `method` - (Optional) Redact the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
-* `query_string` - (Optional) Redact the query string. This is the part of a URL that appears after a `?` character, if any.
-* `single_header` - (Optional) Redact a single header. See [Single Header](#single-header) below for details.
-* `single_query_argument` - (Optional) Redact a single query argument. See [Single Query Argument](#single-query-argument) below for details.
-* `uri_path` - (Optional) Redact the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
+~> **NOTE:** You can only specify one of the following: `method`, `query_string`, `single_header`, or `uri_path`.
+
+* `method` - (Optional) HTTP method to be redacted. It must be specified as an empty configuration block `{}`. The method indicates the type of operation that the request is asking the origin to perform.
+* `query_string` - (Optional) Whether to redact the query string. It must be specified as an empty configuration block `{}`. The query string is the part of a URL that appears after a `?` character, if any.
+* `single_header` - (Optional) "single_header" refers to the redaction of a single header. For more information, please see the details below under [Single Header](#single-header).
+* `uri_path` - (Optional) Configuration block that redacts the request URI path. It should be specified as an empty configuration block `{}`. The URI path is the part of a web request that identifies a resource, such as `/images/daily-ad.jpg`.
 
 ### Single Header
 
-Redact a single header. Provide the name of the header to redact, for example, `User-Agent` or `Referer` (provided as lowercase strings).
+To redact a single header, provide the name of the header to be redacted. For example, use `User-Agent` or `Referer` (provided as lowercase strings).
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to redact. This setting must be provided as lower case characters.
+* `name` - (Optional) Name of the query header to redact. This setting must be provided in lowercase characters.
 
-### Single Query Argument
+## Attribute Reference
 
-Redact a single query argument. Provide the name of the query argument to redact, such as `UserName` or `SalesRegion` (provided as lowercase strings).
+This resource exports the following attributes in addition to the arguments above:
 
-The `single_query_argument` block supports the following arguments:
-
-* `name` - (Optional) The name of the query header to redact. This setting must be provided as lower case characters.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - The Amazon Resource Name (ARN) of the WAFv2 Web ACL.
+* `id` - Amazon Resource Name (ARN) of the WAFv2 Web ACL.
 
 ## Import
 
-WAFv2 Web ACL Logging Configurations can be imported using the WAFv2 Web ACL ARN e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Logging Configurations using the ARN of the WAFv2 Web ACL. For example:
 
+```terraform
+import {
+  to = aws_wafv2_web_acl_logging_configuration.example
+  id = "arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef"
+}
 ```
-$ terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
+
+Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the ARN of the WAFv2 Web ACL. For example:
+
+```console
+% terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
+```

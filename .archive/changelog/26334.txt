@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_inspector_assessment_template: Add `event_subscription` configuration block
+```

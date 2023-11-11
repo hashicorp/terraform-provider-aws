@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route"
 description: |-
@@ -12,7 +12,7 @@ Manages an EC2 Local Gateway Route. More information can be found in the [Outpos
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_local_gateway_route" "example" {
   destination_cidr_block                   = "172.16.0.0/16"
   local_gateway_route_table_id             = data.aws_ec2_local_gateway_route_table.example.id
@@ -30,14 +30,23 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`)
 
 ## Import
 
-`aws_ec2_local_gateway_route` can be imported by using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
 
+```terraform
+import {
+  to = aws_ec2_local_gateway_route.example
+  id = "lgw-rtb-12345678_172.16.0.0/16"
+}
 ```
-$ terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
+
+Using `terraform import`, import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
+
+```console
+% terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
 ```

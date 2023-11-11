@@ -19,8 +19,8 @@ origin access identities, see
 
 The following example below creates a CloudFront origin access identity.
 
-```hcl
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+```terraform
+resource "aws_cloudfront_origin_access_identity" "example" {
   comment = "Some comment"
 }
 ```
@@ -31,7 +31,7 @@ resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `caller_reference` - Internal value used by CloudFront to allow future
@@ -55,7 +55,7 @@ The `cloudfront_access_identity_path` allows this to be circumvented.
 The below snippet demonstrates use with the `s3_origin_config` structure for the
 [`aws_cloudfront_distribution`][3] resource:
 
-```hcl
+```terraform
 resource "aws_cloudfront_distribution" "example" {
   # ... other configuration ...
 
@@ -74,7 +74,7 @@ principal into an `AWS` IAM ARN principal when supplied in an
 [`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
 you see this behaviour, use the `iam_arn` instead:
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     actions   = ["s3:GetObject"]
@@ -82,7 +82,7 @@ data "aws_iam_policy_document" "s3_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity.iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.example.iam_arn]
     }
   }
 }
@@ -98,11 +98,19 @@ resource "aws_s3_bucket_policy" "example" {
 [3]: /docs/providers/aws/r/cloudfront_distribution.html
 [4]: /docs/providers/aws/r/s3_bucket.html
 
-
 ## Import
 
-Cloudfront Origin Access Identities can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Origin Access Identities using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_access_identity.origin_access
+  id = "E74FTE3AEXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE
+
+Using `terraform import`, import Cloudfront Origin Access Identities using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE
 ```

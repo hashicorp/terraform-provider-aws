@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -27,11 +30,11 @@ EOF
 }
 
 resource "aws_lambda_function" "main" {
-  filename      = "lambda.zip"
+  filename      = "lambda_function.zip"
   function_name = "terraform-example"
   role          = aws_iam_role.main.arn
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "cidp" {
@@ -151,7 +154,7 @@ resource "aws_cognito_user_pool" "pool" {
   }
 
   tags = {
-    "Name"    = "FooBar"
-    "Project" = "Terraform"
+    Name    = "FooBar"
+    Project = "Terraform"
   }
 }

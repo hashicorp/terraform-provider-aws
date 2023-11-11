@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_version"
 description: |-
@@ -12,7 +12,7 @@ Provides a resource to manage an API Gateway Documentation Version.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_documentation_version" "example" {
   version     = "example_version"
   rest_api_id = aws_api_gateway_rest_api.example.id
@@ -36,20 +36,29 @@ resource "aws_api_gateway_documentation_part" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
-* `version` - (Required) The version identifier of the API documentation snapshot.
-* `rest_api_id` - (Required) The ID of the associated Rest API
-* `description` - (Optional) The description of the API documentation version.
+* `version` - (Required) Version identifier of the API documentation snapshot.
+* `rest_api_id` - (Required) ID of the associated Rest API
+* `description` - (Optional) Description of the API documentation version.
 
 ## Attribute Reference
 
-The arguments listed above are all exported as attributes.
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 
-API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_documentation_version.example
+  id = "5i4e1ko720/example-version"
+}
 ```
-$ terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
+
+Using `terraform import`, import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
+
+```console
+% terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
 ```

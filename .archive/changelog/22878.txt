@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_acmpca_certificate_authority: The `status` attribute has been deprecated. Use the `enabled` attribute instead.
+```

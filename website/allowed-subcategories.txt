@@ -1,119 +1,217 @@
 
-ACM PCA
-ACM
-API Gateway (REST APIs)
-API Gateway v2 (WebSocket and HTTP APIs)
-Access Analyzer
-AppMesh
+ACM (Certificate Manager)
+ACM PCA (Certificate Manager Private Certificate Authority)
+AMP (Managed Prometheus)
+API Gateway
+API Gateway V2
+Account Management
+Amazon Bedrock
+Amplify
+App Mesh
+App Runner
+AppConfig
+AppFlow
+AppIntegrations
+AppStream 2.0
 AppSync
-Application Autoscaling
+Application Auto Scaling
 Athena
-Autoscaling
+Audit Manager
+Auto Scaling
+Auto Scaling Plans
 Backup
 Batch
-Budgets
+CE (Cost Explorer)
+Chime
+Chime SDK Media Pipelines
+Chime SDK Voice
+Clean Rooms
+Cloud Control API
+Cloud Map
 Cloud9
 CloudFormation
 CloudFront
-CloudHSM v2
+CloudHSM
+CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch Application Insights
+CloudWatch Evidently
+CloudWatch Internet Monitor
+CloudWatch Logs
+CloudWatch Observability Access Manager
+CloudWatch RUM
+CloudWatch Synthetics
 CodeArtifact
 CodeBuild
+CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Reviewer
 CodePipeline
+CodeStar Connections
 CodeStar Notifications
-Cognito
+Cognito IDP (Identity Provider)
+Cognito Identity
+Comprehend
+Compute Optimizer
 Config
+Connect
+Control Tower
 Cost and Usage Report
-Data Lifecycle Manager (DLM)
-DataPipeline
+DLM (Data Lifecycle Manager)
+DMS (Database Migration)
+Data Exchange
+Data Pipeline
 DataSync
-Database Migration Service (DMS)
+Detective
 Device Farm
 Direct Connect
 Directory Service
 DocumentDB
-DynamoDB Accelerator (DAX)
+DocumentDB Elastic
 DynamoDB
-EC2
-ECR
-ECS
-EFS
-EKS
+DynamoDB Accelerator (DAX)
+EBS (EC2)
+EC2 (Elastic Compute Cloud)
+EC2 Image Builder
+ECR (Elastic Container Registry)
+ECR Public
+ECS (Elastic Container)
+EFS (Elastic File System)
+EKS (Elastic Kubernetes)
+ELB (Elastic Load Balancing)
+ELB Classic
+EMR
+EMR Containers
+EMR Serverless
 ElastiCache
 Elastic Beanstalk
-Elastic Load Balancing (ELB Classic)
-Elastic Load Balancing v2 (ALB/NLB)
-Elastic Map Reduce (EMR)
 Elastic Transcoder
-ElasticSearch
-File System (FSx)
-Firewall Manager (FMS)
-Gamelift
-Glacier
+Elasticsearch
+Elemental MediaConnect
+Elemental MediaConvert
+Elemental MediaLive
+Elemental MediaPackage
+Elemental MediaStore
+EventBridge
+EventBridge Pipes
+EventBridge Scheduler
+EventBridge Schemas
+FIS (Fault Injection Simulator)
+FMS (Firewall Manager)
+FSx
+FinSpace
+GameLift
 Global Accelerator
 Glue
 GuardDuty
-IAM
+HealthLake
+IAM (Identity & Access Management)
+IAM Access Analyzer
+IVS (Interactive Video)
+IVS (Interactive Video) Chat
 Inspector
-IoT
-KMS
+Inspector Classic
+IoT Analytics
+IoT Core
+IoT Events
+IoT Greengrass
+KMS (Key Management)
+Kendra
+Keyspaces (for Apache Cassandra)
 Kinesis
-Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Analytics
+Kinesis Analytics V2
 Kinesis Firehose
 Kinesis Video
+Lake Formation
 Lambda
-Lex
+Lex Model Building
+Lex V2 Models
 License Manager
 Lightsail
+Location
 MQ
-Macie Classic
-Managed Streaming for Kafka (MSK)
-MediaConvert
-MediaPackage
-MediaStore
+MWAA (Managed Workflows for Apache Airflow)
+Macie
+Managed Grafana
+Managed Streaming for Kafka
+Managed Streaming for Kafka Connect
+MemoryDB for Redis
+Meta Data Sources
 Neptune
+Network Firewall
+Network Manager
+OpenSearch
+OpenSearch Ingestion
+OpenSearch Serverless
 OpsWorks
 Organizations
 Outposts
+Outposts (EC2)
 Pinpoint
-Pricing
-Quantum Ledger Database (QLDB)
+Pricing Calculator
+QLDB (Quantum Ledger Database)
 QuickSight
-RAM
-RDS
+RAM (Resource Access Manager)
+RDS (Relational Database)
+Recycle Bin (RBin)
 Redshift
+Redshift Data
+Redshift Serverless
+Resource Explorer
 Resource Groups
-Resource Groups Tagging API
-Route53 Domains
-Route53 Resolver
-Route53
-S3
-SES
-SNS
-SQS
-SSM
-SWF
-Sagemaker
+Resource Groups Tagging
+Roles Anywhere
+Route 53
+Route 53 Domains
+Route 53 Recovery Control Config
+Route 53 Recovery Readiness
+Route 53 Resolver
+S3 (Simple Storage)
+S3 Control
+S3 Glacier
+S3 on Outposts
+SDB (SimpleDB)
+SES (Simple Email)
+SESv2 (Simple Email V2)
+SFN (Step Functions)
+SNS (Simple Notification)
+SQS (Simple Queue)
+SSM (Systems Manager)
+SSM Contacts
+SSM Incident Manager Incidents
+SSO Admin
+SSO Identity Store
+STS (Security Token)
+SWF (Simple Workflow)
+SageMaker
 Secrets Manager
 Security Hub
+Security Lake
+Serverless Application Repository
 Service Catalog
-Service Discovery
 Service Quotas
 Shield
-SimpleDB
-Step Function (SFN)
+Signer
 Storage Gateway
-Synthetics
-Transfer
-Transit Gateway Network Manager
-VPC
-WAF Regional
+Timestream Write
+Transcribe
+Transfer Family
+Transit Gateway
+VPC (Virtual Private Cloud)
+VPC IPAM (IP Address Manager)
+VPC Lattice
+VPN (Client)
+VPN (Site-to-Site)
+Verified Access
+Verified Permissions
 WAF
-WAFv2
+WAF Classic
+WAF Classic Regional
+Wavelength
+Web Services Budgets
 WorkLink
-WorkMail
 WorkSpaces
-XRay
+X-Ray

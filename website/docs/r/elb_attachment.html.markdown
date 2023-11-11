@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_attachment"
 description: |-
@@ -19,7 +19,7 @@ conflict and will overwrite attachments.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new load balancer attachment
 resource "aws_elb_attachment" "baz" {
   elb      = aws_elb.bar.id
@@ -29,7 +29,11 @@ resource "aws_elb_attachment" "baz" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `elb` - (Required) The name of the ELB.
 * `instance` - (Required) Instance ID to place in the ELB pool.
+
+## Attribute Reference
+
+This resource exports no additional attributes.

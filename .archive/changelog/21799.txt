@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_iot_thing_group
+```
+
+```release-note:new-resource
+aws_iot_thing_group_membership
+```

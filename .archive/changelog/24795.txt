@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements` argument
+```

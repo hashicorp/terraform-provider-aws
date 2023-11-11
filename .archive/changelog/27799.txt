@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_appmesh_virtual_node: Add the functionality to be able specify multi listeners
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_gateway: Add the functionality to be able specify multi listeners
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_router: Add the functionality to be able specify multi listeners
+```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `port` on the `match` attribute for routes
+```
+
+```release-note:enhancement
+resource/aws_appmesh_route: Add `port` on the `weighted_target` attribute
+```

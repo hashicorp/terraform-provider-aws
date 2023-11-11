@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_ciphertext"
 description: |-
@@ -14,11 +14,11 @@ is stable across every apply. For a changing ciphertext value each apply, see
 the [`aws_kms_ciphertext` data source](/docs/providers/aws/d/kms_ciphertext.html).
 
 ~> **Note:** All arguments including the plaintext be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kms_key" "oauth_config" {
   description = "oauth config"
   is_enabled  = true
@@ -38,14 +38,14 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
 
-## Attributes Reference
+## Attribute Reference
 
-All of the argument attributes are also exported as result attributes.
+This resource exports the following attributes in addition to the arguments above:
 
 * `ciphertext_blob` - Base64 encoded ciphertext

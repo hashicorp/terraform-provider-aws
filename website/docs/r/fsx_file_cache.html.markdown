@@ -1,0 +1,132 @@
+---
+subcategory: "FSx"
+layout: "aws"
+page_title: "AWS: aws_fsx_file_cache"
+description: |-
+  Terraform resource for managing an Amazon File Cache cache.
+---
+
+# Resource: aws_fsx_file_cache
+
+Terraform resource for managing an Amazon File Cache cache.
+See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
+
+## Example Usage
+
+```terraform
+resource "aws_fsx_file_cache" "example" {
+
+  data_repository_association {
+    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_subdirectories = ["test", "test2"]
+    file_cache_path                = "/ns1"
+
+    nfs {
+      dns_ips = ["192.168.0.1", "192.168.0.2"]
+      version = "NFS3"
+    }
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `file_cache_type` - The type of cache that you're creating. The only supported value is `LUSTRE`.
+* `file_cache_type_version` - The version for the type of cache that you're creating. The only supported value is `2.12`.
+* `storage_capacity` - The storage capacity of the cache in gibibytes (GiB). Valid values are `1200` GiB, `2400` GiB, and increments of `2400` GiB.
+* `subnet_ids` - A list of subnet IDs that the cache will be accessible from. You can specify only one subnet ID.
+
+The following arguments are optional:
+
+* `copy_tags_to_data_repository_associations` - A boolean flag indicating whether tags for the cache should be copied to data repository associations. This value defaults to false.
+* `data_repository_association` - See the [`data_repository_association` configuration](#data-repository-association-arguments) block. Max of 8.
+A list of up to 8 configurations for data repository associations (DRAs) to be created during the cache creation. The DRAs link the cache to either an Amazon S3 data repository or a Network File System (NFS) data repository that supports the NFSv3 protocol. The DRA configurations must meet the following requirements: 1) All configurations on the list must be of the same data repository type, either all S3 or all NFS. A cache can't link to different data repository types at the same time. 2) An NFS DRA must link to an NFS file system that supports the NFSv3 protocol. DRA automatic import and automatic export is not supported.
+* `kms_key_id` - Specifies the ID of the AWS Key Management Service (AWS KMS) key to use for encrypting data on an Amazon File Cache. If a KmsKeyId isn't specified, the Amazon FSx-managed AWS KMS key for your account is used.
+* `lustre_configuration` - See the [`lustre_configuration`](#lustre-configuration-arguments) block. Required when `file_cache_type` is `LUSTRE`.
+* `security_group_ids` - A list of IDs specifying the security groups to apply to all network interfaces created for Amazon File Cache access.
+* `tags` - (Optional) A map of tags to assign to the file cache. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+#### Data Repository Association arguments
+
+The `data_repository_association` configuration block supports the following arguments:
+
+* `file_cache_path` - (Required) A path on the cache that points to a high-level directory (such as /ns1/) or subdirectory (such as /ns1/subdir/) that will be mapped 1-1 with DataRepositoryPath. The leading forward slash in the name is required. Two data repository associations cannot have overlapping cache paths. For example, if a data repository is associated with cache path /ns1/, then you cannot link another data repository with cache path /ns1/ns2. This path specifies where in your cache files will be exported from. This cache directory can be linked to only one data repository, and no data repository other can be linked to the directory. Note: The cache path can only be set to root (/) on an NFS DRA when DataRepositorySubdirectories is specified. If you specify root (/) as the cache path, you can create only one DRA on the cache. The cache path cannot be set to root (/) for an S3 DRA.
+* `data_repository_path` - (Optional) The path to the S3 or NFS data repository that links to the cache.
+* `data_repository_subdirectories` - (Optional) A list of NFS Exports that will be linked with this data repository association. The Export paths are in the format /exportpath1. To use this parameter, you must configure DataRepositoryPath as the domain name of the NFS file system. The NFS file system domain name in effect is the root of the subdirectories. Note that DataRepositorySubdirectories is not supported for S3 data repositories. Max of 500.
+* `nfs` - (Optional) - (Optional) See the [`nfs` configuration](#nfs-arguments) block.
+
+#### NFS arguments
+
+The `nfs` configuration block supports the following arguments:
+
+* `version` - (Required) - The version of the NFS (Network File System) protocol of the NFS data repository. The only supported value is NFS3, which indicates that the data repository must support the NFSv3 protocol. The only supported value is `NFS3`.
+* `dns_ips` - (Optional) - A list of up to 2 IP addresses of DNS servers used to resolve the NFS file system domain name. The provided IP addresses can either be the IP addresses of a DNS forwarder or resolver that the customer manages and runs inside the customer VPC, or the IP addresses of the on-premises DNS servers.
+
+#### Lustre Configuration arguments
+
+The `lustre_configuration` configuration block supports the following arguments:
+
+* `deployment_type` - (Required) Specifies the cache deployment type. The only supported value is `CACHE_1`.
+* `metadata_configuration` - (Required) The configuration for a Lustre MDT (Metadata Target) storage volume. See the [`metadata_configuration`](#metadata-configuration-arguments) block.
+* `per_unit_storage_throughput` - (Required) Provisions the amount of read and write throughput for each 1 tebibyte (TiB) of cache storage capacity, in MB/s/TiB. The only supported value is `1000`.
+* `weekly_maintenance_start_time` - (Optional) A recurring weekly time, in the format `D:HH:MM`. `D` is the day of the week, for which `1` represents Monday and `7` represents Sunday. `HH` is the zero-padded hour of the day (0-23), and `MM` is the zero-padded minute of the hour. For example, 1:05:00 specifies maintenance at 5 AM Monday. See the [ISO week date](https://en.wikipedia.org/wiki/ISO_week_date) for more information.
+
+#### Metadata Configuration arguments
+
+The `metadata_configuration` configuration block supports the following arguments:
+
+* `storage_capacity` - (Required) The storage capacity of the Lustre MDT (Metadata Target) storage volume in gibibytes (GiB). The only supported value is `2400` GiB.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The Amazon Resource Name (ARN) for the resource.
+* `data_repository_association_ids` - A list of IDs of data repository associations that are associated with this cache.
+* `dns_name` - The Domain Name System (DNS) name for the cache.
+* `file_cache_id` - The system-generated, unique ID of the cache.
+* `id` - The system-generated, unique ID of the cache.
+* `network_interface_ids` - A list of network interface IDs.
+* `vpc_id` - The ID of your virtual private cloud (VPC).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon File Cache cache using the resource `id`. For example:
+
+```terraform
+import {
+  to = aws_fsx_file_cache.example
+  id = "fc-8012925589"
+}
+```
+
+Using `terraform import`, import Amazon File Cache cache using the resource `id`. For example:
+
+```console
+% terraform import aws_fsx_file_cache.example fc-8012925589
+```

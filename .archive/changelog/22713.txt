@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_internet_gateway: No longer give up before the attachment timeout (4m) is exceeded (previously it was giving up after 20 not found checks).
+```

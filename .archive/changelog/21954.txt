@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Add `sqs_managed_sse_enabled` argument
+```

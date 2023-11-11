@@ -1,0 +1,185 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package ram_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ram"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+func TestAccRAMResourceAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceShareAssociation1 ram.ResourceShareAssociation
+	resourceName := "aws_ram_resource_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRAMResourceAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceShareAssociation1 ram.ResourceShareAssociation
+	resourceName := "aws_ram_resource_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation1),
+					testAccCheckResourceAssociationDisappears(ctx, &resourceShareAssociation1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckResourceAssociationDisappears(ctx context.Context, resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
+
+		input := &ram.DisassociateResourceShareInput{
+			ResourceArns:     []*string{resourceShareAssociation.AssociatedEntity},
+			ResourceShareArn: resourceShareAssociation.ResourceShareArn,
+		}
+
+		_, err := conn.DisassociateResourceShareWithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		return tfram.WaitForResourceShareResourceDisassociation(ctx, conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
+	}
+}
+
+func testAccCheckResourceAssociationExists(ctx context.Context, resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
+
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		resourceShareAssociation, err := tfram.GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not found", resourceShareARN, resourceARN)
+		}
+		if err != nil {
+			return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
+		}
+
+		if aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociated {
+			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not associated: %s", resourceShareARN, resourceARN, aws.StringValue(resourceShareAssociation.Status))
+		}
+
+		*association = *resourceShareAssociation
+
+		return nil
+	}
+}
+
+func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ram_resource_association" {
+				continue
+			}
+
+			resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			resourceShareAssociation, err := tfram.GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
+			if tfresource.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+
+			if resourceShareAssociation != nil && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusDisassociated {
+				return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not disassociated: %s", resourceShareARN, resourceARN, aws.StringValue(resourceShareAssociation.Status))
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccResourceAssociationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ram-resource-association"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-ram-resource-association"
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  name = %q
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_arn       = aws_subnet.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+`, rName)
+}

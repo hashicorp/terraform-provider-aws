@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_account_alternate_contact: Improve eventual consistency handling to avoid "no resource found" on updates
+```
+
+```release-note:enhancement
+resource/aws_account_alternate_contact: Add configurable timeouts
+```

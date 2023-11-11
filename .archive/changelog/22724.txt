@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc: Suppress errors if main route table, default NACL or default security group cannot be found
+```
+
+```release-note:bug
+data-source/aws_vpc: Suppress errors if main route table cannot be found
+```

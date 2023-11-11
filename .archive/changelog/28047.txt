@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_task: Allow updates to `aws_dms_replication_task` even when `migration_type` and `table_mappings` have not changed
+```

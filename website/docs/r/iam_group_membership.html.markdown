@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_group_membership"
 description: |-
@@ -19,7 +19,7 @@ more information on managing IAM Groups or IAM Users, see [IAM Groups][1] or
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group_membership" "team" {
   name = "tf-testing-group-membership"
 
@@ -46,18 +46,19 @@ resource "aws_iam_user" "user_two" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name to identify the Group Membership
 * `users` - (Required) A list of IAM User names to associate with the Group
 * `group` – (Required) The IAM Group name to attach the list of `users` to
 
-## Attributes Reference
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
 * `group` – IAM Group name
-
 
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html

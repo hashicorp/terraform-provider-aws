@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_association"
 description: |-
@@ -17,40 +17,47 @@ Creates a WAFv2 Web ACL Association.
 
 ## Example Usage
 
-```hcl
-resource "aws_api_gateway_stage" "example" {
-  stage_name    = "test"
-  rest_api_id   = aws_api_gateway_rest_api.example.id
-  deployment_id = aws_api_gateway_deployment.example.id
-}
-
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
-  name = "web-acl-association-example"
+  body = jsonencode({
+    openapi = "3.0.1"
+    info = {
+      title   = "example"
+      version = "1.0"
+    }
+    paths = {
+      "/path1" = {
+        get = {
+          x-amazon-apigateway-integration = {
+            httpMethod           = "GET"
+            payloadFormatVersion = "1.0"
+            type                 = "HTTP_PROXY"
+            uri                  = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+          }
+        }
+      }
+    }
+  })
+
+  name = "example"
 }
 
 resource "aws_api_gateway_deployment" "example" {
   rest_api_id = aws_api_gateway_rest_api.example.id
-  depends_on  = [aws_api_gateway_integration.example]
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_api_gateway_integration" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
-  resource_id = aws_api_gateway_resource.example.id
-  http_method = aws_api_gateway_method.example.http_method
-  type        = "MOCK"
-}
-
-resource "aws_api_gateway_resource" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
-  parent_id   = aws_api_gateway_rest_api.example.root_resource_id
-  path_part   = "mytestresource"
-}
-
-resource "aws_api_gateway_method" "example" {
+resource "aws_api_gateway_stage" "example" {
+  deployment_id = aws_api_gateway_deployment.example.id
   rest_api_id   = aws_api_gateway_rest_api.example.id
-  resource_id   = aws_api_gateway_resource.example.id
-  http_method   = "GET"
-  authorization = "NONE"
+  stage_name    = "example"
 }
 
 resource "aws_wafv2_web_acl" "example" {
@@ -74,18 +81,36 @@ resource "aws_wafv2_web_acl_association" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the resource to associate with the web ACL. This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
+* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the resource to associate with the web ACL. This must be an ARN of an Application Load Balancer, an Amazon API Gateway stage, an Amazon Cognito User Pool, an Amazon AppSync GraphQL API, an Amazon App Runner service, or an Amazon Verified Access instance.
 * `web_acl_arn` - (Required) The Amazon Resource Name (ARN) of the Web ACL that you want to associate with the resource.
+
+## Attribute Reference
+
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `5m`)
 
 ## Import
 
-WAFv2 Web ACL Association can be imported using `WEB_ACL_ARN,RESOURCE_ARN` e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
 
+```terraform
+import {
+  to = aws_wafv2_web_acl_association.example
+  id = "arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name"
+}
 ```
-$ terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name
+
+Using `terraform import`, import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
+
+```console
+% terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name
 ```

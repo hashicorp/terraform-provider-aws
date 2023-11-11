@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rules"
 description: |-
@@ -12,9 +12,9 @@ description: |-
 
 ## Example Usage
 
-Retrieving the default resolver rule.
+### Retrieving the default resolver rule
 
-```hcl
+```terraform
 data "aws_route53_resolver_rules" "example" {
   owner_id     = "Route 53 Resolver"
   rule_type    = "RECURSIVE"
@@ -22,10 +22,22 @@ data "aws_route53_resolver_rules" "example" {
 }
 ```
 
-```hcl
+### Retrieving forward rules shared with me
+
+```terraform
 data "aws_route53_resolver_rules" "example" {
   rule_type    = "FORWARD"
   share_status = "SHARED_WITH_ME"
+}
+```
+
+### Retrieving rules by name regex
+
+Resolver rules whose name contains `abc`.
+
+```terraform
+data "aws_route53_resolver_rules" "example" {
+  name_regex = ".*abc.*"
 }
 ```
 
@@ -33,13 +45,17 @@ data "aws_route53_resolver_rules" "example" {
 
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 
+* `name_regex` - (Optional) Regex string to filter resolver rule names.
+  The filtering is done locally, so could have a performance impact if the result is large.
+  This argument should be used along with other arguments to limit the number of results returned.
 * `owner_id` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.
-* `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint for the desired resolver rules.
-* `rule_type` (Optional) The rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
+* `resolver_endpoint_id` (Optional) ID of the outbound resolver endpoint for the desired resolver rules.
+* `rule_type` (Optional) Rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `share_status` (Optional) Whether the desired resolver rules are shared and, if so, whether the current account is sharing the rules with another account, or another account is sharing the rules with the current account. Valid values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `resolver_rule_ids` - The IDs of the matched resolver rules.
+* `id` - AWS Region.
+* `resolver_rule_ids` - IDs of the matched resolver rules.

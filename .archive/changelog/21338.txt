@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_event_subscription: Fix adding new `event_categories` to existing resource
+```

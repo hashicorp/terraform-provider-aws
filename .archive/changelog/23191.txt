@@ -1,0 +1,7 @@
+```release-note:bug
+provider: Support `ap-northeast-3`, `ap-southeast-3` and `us-iso-west-1` as valid AWS Regions
+```
+
+```release-note:bug
+provider: Use AWS HTTP client which allows IMDS authentication in container environments and custom RootCAs in ISO regions
+```

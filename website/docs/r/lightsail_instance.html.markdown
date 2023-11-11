@@ -16,14 +16,49 @@ for more information.
 
 ## Example Usage
 
-```hcl
+### Basic Usage
+
+```terraform
 # Create a new GitLab Lightsail Instance
 resource "aws_lightsail_instance" "gitlab_test" {
   name              = "custom_gitlab"
   availability_zone = "us-east-1b"
-  blueprint_id      = "string"
-  bundle_id         = "string"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
   key_pair_name     = "some_key_name"
+  tags = {
+    foo = "bar"
+  }
+}
+```
+
+### Example With User Data
+
+Lightsail user data is handled differently than ec2 user data. Lightsail user data only accepts a single lined string. The below example shows installing apache and creating the index page.
+
+```terraform
+resource "aws_lightsail_instance" "custom" {
+  name              = "custom"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+  user_data         = "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html"
+}
+```
+
+### Enable Auto Snapshots
+
+```terraform
+resource "aws_lightsail_instance" "test" {
+  name              = "custom_instance"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+  add_on {
+    type          = "AutoSnapshot"
+    snapshot_time = "06:00"
+    status        = "Enabled"
+  }
   tags = {
     foo = "bar"
   }
@@ -32,21 +67,31 @@ resource "aws_lightsail_instance" "gitlab_test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your
 instance (see list below)
-* `blueprint_id` - (Required) The ID for a virtual private server image
-(see list below)
+* `blueprint_id` - (Required) The ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: `aws lightsail get-blueprints`
 * `bundle_id` - (Required) The bundle of specification information (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
-* `user_data` - (Optional) launch script to configure server with additional user data
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
+* `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data
+* `ip_address_type` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
+* `add_on` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `add_on`
+
+Defines the add on configuration for the instance. The `add_on` configuration block supports the following arguments:
+
+* `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
+* `snapshot_time` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
+* `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
 
 ## Availability Zones
-Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
+
+Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`
 - `ap-northeast-2{a,c}`
@@ -62,40 +107,9 @@ Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`
 - `us-east-2{a,b,c}`
 - `us-west-2{a,b,c}`
 
-## Blueprints
-
-Lightsail currently supports the following Blueprint IDs:
-
-### OS Only
-
-- `amazon_linux_2018_03_0_2`
-- `centos_7_1901_01`
-- `debian_8_7`
-- `debian_9_5`
-- `freebsd_11_1`
-- `opensuse_42_2`
-- `ubuntu_16_04_2`
-- `ubuntu_18_04`
-
-### Apps and OS
-
-- `drupal_8_5_6`
-- `gitlab_11_1_4_1`
-- `joomla_3_8_11`
-- `lamp_5_6_37_2`
-- `lamp_7_1_20_1`
-- `magento_2_2_5`
-- `mean_4_0_1`
-- `nginx_1_14_0_1`
-- `nodejs_10_8_0`
-- `plesk_ubuntu_17_8_11_1`
-- `redmine_3_4_6`
-- `wordpress_4_9_8`
-- `wordpress_multisite_4_9_8`
-
 ## Bundles
 
-Lightsail currently supports the following Bundle IDs (e.g. an instance in `ap-northeast-1` would use `small_2_0`):
+Lightsail currently supports the following Bundle IDs (e.g., an instance in `ap-northeast-1` would use `small_2_0`):
 
 ### Prefix
 
@@ -127,23 +141,35 @@ A Bundle ID ends with one of the following suffixes depending on Availability Zo
 - us-east-2: `2_0`
 - us-west-2: `2_0`
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported in addition to the arguments listed above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
 * `created_at` - The timestamp when the instance was created.
-* `availability_zone`
-* `blueprint_id`
-* `bundle_id`
-* `key_pair_name`
-* `user_data`
+* `cpu_count` - The number of vCPUs the instance has.
+* `ram_size` - The amount of RAM in GB on the instance (e.g., 1.0).
+* `ipv6_addresses` - List of IPv6 addresses for the Lightsail instance.
+* `private_ip_address` - The private IP address of the instance.
+* `public_ip_address` - The public IP address of the instance.
+* `is_static_ip` - A Boolean value indicating whether this instance has a static IP assigned to it.
+* `username` - The user name for connecting to the instance (e.g., ec2-user).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Lightsail Instances can be imported using their name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Instances using their name. For example:
 
+```terraform
+import {
+  to = aws_lightsail_instance.gitlab_test
+  id = "custom_gitlab"
+}
 ```
-$ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'
+
+Using `terraform import`, import Lightsail Instances using their name. For example:
+
+```console
+% terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```

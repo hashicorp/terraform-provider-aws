@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_attachment"
 description: |-
@@ -14,55 +14,49 @@ Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
 ~> **NOTE:** The usage of this resource conflicts with the `aws_iam_group_policy_attachment`, `aws_iam_role_policy_attachment`, and `aws_iam_user_policy_attachment` resources and will permanently show a difference if both are defined.
 
+~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role` resource](/docs/providers/aws/r/iam_role.html) `managed_policy_arns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "user" {
   name = "test-user"
 }
 
-resource "aws_iam_role" "role" {
-  name = "test-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  name               = "test-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_group" "group" {
   name = "test-group"
 }
 
+data "aws_iam_policy_document" "policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*"]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy      = data.aws_iam_policy_document.policy.json
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
@@ -76,7 +70,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name`    (Required) - The name of the attachment. This cannot be an empty string.
 * `users`   (Optional) - The user(s) the policy should be applied to
@@ -84,9 +78,9 @@ The following arguments are supported:
 * `groups`  (Optional) - The group(s) the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The policy's ID.
 * `name` - The name of the attachment.

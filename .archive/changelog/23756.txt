@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add `arn` and `window_task_id` attributes.
+```
+
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add `cutoff_behavior` argument.
+```
+
+```release-note:bug
+resource/aws_ssm_maintenance_window_task: Allow creating a window taks without targets.
+```

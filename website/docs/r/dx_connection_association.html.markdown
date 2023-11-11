@@ -12,17 +12,17 @@ Associates a Direct Connect Connection with a LAG.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
 }
 
 resource "aws_dx_connection_association" "example" {
@@ -33,7 +33,11 @@ resource "aws_dx_connection_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_id` - (Required) The ID of the connection.
 * `lag_id` - (Required) The ID of the LAG with which to associate the connection.
+
+## Attribute Reference
+
+This resource exports no additional attributes.

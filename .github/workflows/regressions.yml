@@ -1,0 +1,41 @@
+name: "Regressions Slack Notifier"
+on:
+  issues:
+    types:
+      - labeled
+  pull_request:
+    types:
+      - labeled
+jobs:
+  slack-notification:
+    name: Slack Notifier
+    if: github.event.label.name == 'regression'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 # v1.24.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          EVENT_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          payload: |
+            {
+            	"blocks": [
+            		{
+            			"type": "section",
+            			"text": {
+            				"type": "mrkdwn",
+            				"text": ":warning: The following has been labeled as a regression:"
+            			}
+            		},
+            		{
+            			"type": "section",
+            			"text": {
+            				"type": "mrkdwn",
+            				"text": "<${{ env.EVENT_URL }}|${{ env.EVENT_TITLE }}>"
+            			}
+            		}
+            	]
+            }
