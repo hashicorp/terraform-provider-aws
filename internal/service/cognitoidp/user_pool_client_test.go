@@ -38,7 +38,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "0"),
@@ -52,7 +52,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
 					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
