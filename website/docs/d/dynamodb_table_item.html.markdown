@@ -43,6 +43,7 @@ The following arguments are optional:
 * `expression_attribute_name` - (Optional) - One or more substitution tokens for attribute names in an expression. Use the `#` character in an expression to dereference an attribute name.
 * `projection_expression` - (Optional) A string that identifies one or more attributes to retrieve from the table. These attributes can include scalars, sets, or elements of a JSON document. The attributes in the expression must be separated by commas.
 If no attribute names are specified, then all attributes are returned. If any of the requested attributes are not found, they do not appear in the result.
+* `fail_on_missing` - (Optional) A boolean to fail item lookup if it doesn't exists.  Default is false
 
 ## Attribute Reference
 

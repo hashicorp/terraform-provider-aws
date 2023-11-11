@@ -46,6 +46,11 @@ func DataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"fail_on_missing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -85,23 +90,22 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
-	if out.Item == nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
-	}
-
 	d.SetId(id)
-
 	d.Set("expression_attribute_names", aws.StringValueMap(in.ExpressionAttributeNames))
 	d.Set("projection_expression", in.ProjectionExpression)
 	d.Set("table_name", tableName)
 
-	itemAttrs, err := flattenTableItemAttributes(out.Item)
-
-	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+	if out.Item == nil {
+		if v, ok := d.GetOk("fail_on_missing"); ok && v.(bool) {
+			create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+		}
+	} else {
+		itemAttrs, err := flattenTableItemAttributes(out.Item)
+		if err != nil {
+			return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+		}
+		d.Set("item", itemAttrs)
 	}
-
-	d.Set("item", itemAttrs)
 
 	return nil
 }
