@@ -160,11 +160,13 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				continue
 			}
 
-			if v, err := strconv.Atoi(aws.StringValue(v.VersionId)); err != nil {
+			v, err := strconv.Atoi(aws.StringValue(v.VersionId))
+
+			if err != nil {
 				continue
-			} else {
-				versionIDs = append(versionIDs, v)
 			}
+
+			versionIDs = append(versionIDs, v)
 		}
 
 		if len(versionIDs) > 0 {
