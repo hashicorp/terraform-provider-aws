@@ -2493,7 +2493,7 @@ resource "aws_batch_compute_environment" "test" {
     instance_type       = ["optimal"]
     max_vcpus           = 4
     min_vcpus           = 0
-    security_group_ids  = [
+    security_group_ids = [
       aws_security_group.test.id
     ]
     subnets = [
@@ -2504,7 +2504,7 @@ resource "aws_batch_compute_environment" "test" {
 
   update_policy {
     job_execution_timeout_minutes = %[2]d
-    terminate_jobs_on_update      = %[3]v
+    terminate_jobs_on_update      = %[3]t
   }
 
   type = "MANAGED"

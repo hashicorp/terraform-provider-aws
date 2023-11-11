@@ -151,12 +151,12 @@ resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
   compute_resources {
-		allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
     instance_role       = aws_iam_instance_profile.ecs_instance.arn
-		instance_type       = ["optimal"]
+    instance_type       = ["optimal"]
     max_vcpus           = 4
-		min_vcpus           = 0
-    security_group_ids  = [
+    min_vcpus           = 0
+    security_group_ids = [
       aws_security_group.test.id
     ]
     subnets = [
@@ -164,12 +164,12 @@ resource "aws_batch_compute_environment" "test" {
     ]
     type = "EC2"
   }
-	update_policy {
-		job_execution_timeout_minutes = %[2]d
-		terminate_jobs_on_update      = %[3]v
-	}
+  update_policy {
+    job_execution_timeout_minutes = %[2]d
+    terminate_jobs_on_update      = %[3]t
+  }
 
-  type         = "MANAGED"
+  type = "MANAGED"
 }
 
 data "aws_batch_compute_environment" "by_name" {
