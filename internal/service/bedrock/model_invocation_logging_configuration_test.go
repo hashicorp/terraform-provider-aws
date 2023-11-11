@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
+func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
@@ -29,7 +29,7 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -39,7 +39,7 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelInvocationLoggingConfiguration_basic(rName),
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -56,6 +56,32 @@ func TestAccBedrockModelInvocationLoggingConfiguration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -110,7 +136,7 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 	}
 }
 
-func testAccModelInvocationLoggingConfiguration_basic(rName string) string {
+func testAccModelInvocationLoggingConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -213,7 +239,10 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_bedrock_model_invocation_logging_configuration" "test" {
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_iam_role_policy_attachment.test,
+  ]
 
   logging_config {
     embedding_data_delivery_enabled = true
