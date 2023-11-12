@@ -119,6 +119,9 @@ func ResourceCACertificate() *schema.Resource {
 				Sensitive: true,
 			},
 		},
+
+		// TODO Add check for verification_certificate_pem if certificate_mode is DEFAULT.
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
