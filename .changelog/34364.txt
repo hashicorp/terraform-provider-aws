@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `lb_arns` attribute
+data-source/aws_lb_target_group: Add `lb_arns` attribute
+```
