@@ -71,6 +71,7 @@ variable "service_labels" {
     "computeoptimizer",
     "configservice",
     "connect",
+    "connectcases",
     "connectcontactlens",
     "connectparticipant",
     "controltower",

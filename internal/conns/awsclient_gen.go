@@ -19,6 +19,8 @@ import (
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
+	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -441,8 +443,16 @@ func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
 	return errs.Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect))
 }
 
+func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.Client {
+	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases))
+}
+
 func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
 	return errs.Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
+}
+
+func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
+	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles))
 }
 
 func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
