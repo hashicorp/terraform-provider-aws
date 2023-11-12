@@ -40,6 +40,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	accessTokenValidityDefaultValue  = 1
+	idTokenValidityDefaultValue      = 1
+	refreshTokenValidityDefaultValue = 30
+)
+
 // @FrameworkResource
 func newResourceUserPoolClient(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceUserPoolClient{}
@@ -63,7 +69,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(1),
+				Default:  int64default.StaticInt64(accessTokenValidityDefaultValue),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -176,7 +182,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(1),
+				Default:  int64default.StaticInt64(idTokenValidityDefaultValue),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -220,7 +226,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"refresh_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(30),
+				Default:  int64default.StaticInt64(refreshTokenValidityDefaultValue),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
