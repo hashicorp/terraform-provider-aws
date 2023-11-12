@@ -68,8 +68,8 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.18.0 input-39c8fd3ed01de7a4c5bbc663b2dbb6a16897ac65078b21e1f01a11f41abab5e1 -->
+<!-- cache-key: cdktf-0.19.0 input-39c8fd3ed01de7a4c5bbc663b2dbb6a16897ac65078b21e1f01a11f41abab5e1 -->

@@ -195,19 +195,19 @@ The following arguments are required for any principal policy simulation:
 
 * `actionNames` (Required) - A set of IAM action names to run simulations for. Each entry in this set adds an additional hypothetical request to the simulation.
 
-    Action names consist of a service prefix and an action verb separated by a colon, such as `s3:getObject`. Refer to [Actions, resources, and condition keys for AWS services](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html) to see the full set of possible IAM action names across all AWS services.
+    Action names consist of a service prefix and an action verb separated by a colon, such as `s3:GetObject`. Refer to [Actions, resources, and condition keys for AWS services](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html) to see the full set of possible IAM action names across all AWS services.
 
 * `policySourceArn` (Required) - The [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) of the IAM user, group, or role whose policies will be included in the simulation.
 
 You must closely match the form of the real service request you are simulating in order to achieve a realistic result. You can use the following additional arguments to specify other characteristics of the simulated requests:
 
-* `callerArn` (Optional) - The ARN of an user that will appear as the "caller" of the simulated requests. If you do not specify `callerArn` then the simulation will use the `policySourceArn` instead, if it contains a user ARN.
+* `callerArn` (Optional) - The ARN of an user that will appear as the "caller" of the simulated requests. If you do not specify `caller_arn` then the simulation will use the `policy_source_arn` instead, if it contains a user ARN.
 
 * `context` (Optional) - Each [`context` block](#context-block-arguments) defines an entry in the table of additional context keys in the simulated request.
 
     IAM uses context keys for both custom conditions and for interpolating dynamic request-specific values into policy values. If you use policies that include those features then you will need to provide suitable example values for those keys to achieve a realistic simulation.
 
-* `additionalPoliciesJson` (Optional) - A set of additional principal policy documents to include in the simulation. The simulator will behave as if each of these policies were associated with the object specified in `policySourceArn`, allowing you to test the effect of hypothetical policies not yet created.
+* `additionalPoliciesJson` (Optional) - A set of additional principal policy documents to include in the simulation. The simulator will behave as if each of these policies were associated with the object specified in `policy_source_arn`, allowing you to test the effect of hypothetical policies not yet created.
 
 * `permissionsBoundaryPoliciesJson` (Optional) - A set of [permissions boundary policy documents](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) to include in the simulation.
 
@@ -215,17 +215,17 @@ You must closely match the form of the real service request you are simulating i
 
     This argument is important for actions that have either required or optional resource types listed in [Actions, resources, and condition keys for AWS services](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html), and you must provide ARNs that identify AWS objects of the appropriate types for the chosen actions.
 
-    The policy simulator only automatically loads policies associated with the `policySourceArn`, so if your given resources have their own resource-level policy then you'll also need to provide that explicitly using the `resourcePolicyJson` argument to achieve a realistic simulation.
+    The policy simulator only automatically loads policies associated with the `policy_source_arn`, so if your given resources have their own resource-level policy then you'll also need to provide that explicitly using the `resource_policy_json` argument to achieve a realistic simulation.
 
 * `resourceHandlingOption` (Optional) - Specifies a special simulation type to run. Some EC2 actions require special simulation behaviors and a particular set of resource ARNs to achieve a realistic result.
 
-    For more details, see the `resourceHandlingOption` request parameter for [the underlying `iam:simulatePrincipalPolicy` action](https://docs.aws.amazon.com/IAM/latest/APIReference/API_SimulatePrincipalPolicy.html).
+    For more details, see the `ResourceHandlingOption` request parameter for [the underlying `iam:SimulatePrincipalPolicy` action](https://docs.aws.amazon.com/IAM/latest/APIReference/API_SimulatePrincipalPolicy.html).
 
-* `resourceOwnerAccountId` (Optional) - An AWS account ID to use for any resource ARN in `resourceArns` that doesn't include its own AWS account ID. If unspecified, the simulator will use the account ID from the `callerArn` argument as a placeholder.
+* `resourceOwnerAccountId` (Optional) - An AWS account ID to use for any resource ARN in `resource_arns` that doesn't include its own AWS account ID. If unspecified, the simulator will use the account ID from the `caller_arn` argument as a placeholder.
 
-* `resourcePolicyJson` (Optional) - An IAM policy document representing the resource-level policy of all of the resources specified in `resourceArns`.
+* `resourcePolicyJson` (Optional) - An IAM policy document representing the resource-level policy of all of the resources specified in `resource_arns`.
 
-    The policy simulator cannot automatically load policies that are associated with individual resources, as described in the documentation for `resourceArns` above.
+    The policy simulator cannot automatically load policies that are associated with individual resources, as described in the documentation for `resource_arns` above.
 
 ### `context` block arguments
 
@@ -233,11 +233,11 @@ The following arguments are all required in each `context` block:
 
 * `key` (Required) - The context _condition key_ to set.
 
-    If you have policies containing `condition` elements or using dynamic interpolations then you will need to provide suitable values for each condition key your policies use. See [Actions, resources, and condition keys for AWS services](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html) to find the various condition keys that are normally provided for real requests to each action of each AWS service.
+    If you have policies containing `Condition` elements or using dynamic interpolations then you will need to provide suitable values for each condition key your policies use. See [Actions, resources, and condition keys for AWS services](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html) to find the various condition keys that are normally provided for real requests to each action of each AWS service.
 
 * `type` (Required) - An IAM value type that determines how the policy simulator will interpret the strings given in `values`.
 
-    For more information, see the `contextKeyType` field of [`iamContextEntry`](https://docs.aws.amazon.com/IAM/latest/APIReference/API_ContextEntry.html) in the underlying API.
+    For more information, see the `ContextKeyType` field of [`iam.ContextEntry`](https://docs.aws.amazon.com/IAM/latest/APIReference/API_ContextEntry.html) in the underlying API.
 
 * `values` (Required) - A set of one or more values for this context entry.
 
@@ -251,18 +251,18 @@ This data source exports the following attributes in addition to the arguments a
 
 * `results` - A set of result objects, one for each of the simulated requests, with the following nested attributes:
 
-    * `actionName` - The name of the single IAM action used for this particular request.
+    * `action_name` - The name of the single IAM action used for this particular request.
 
     * `decision` - The raw decision determined from all of the policies in scope; either "allowed", "explicitDeny", or "implicitDeny".
 
     * `allowed` - `true` if `decision` is "allowed", and `false` otherwise.
 
-    * `decisionDetails` - A map of arbitrary metadata entries returned by the policy simulator for this request.
+    * `decision_details` - A map of arbitrary metadata entries returned by the policy simulator for this request.
 
-    * `resourceArn` - ARN of the resource that was used for this particular request. When you specify multiple actions and multiple resource ARNs, that causes a separate policy request for each combination of unique action and resource.
+    * `resource_arn` - ARN of the resource that was used for this particular request. When you specify multiple actions and multiple resource ARNs, that causes a separate policy request for each combination of unique action and resource.
 
-    * `matchedStatements` - A nested set of objects describing which policies contained statements that were relevant to this simulation request. Each object has attributes `sourcePolicyId` and `sourcePolicyType` to identify one of the policies.
+    * `matched_statements` - A nested set of objects describing which policies contained statements that were relevant to this simulation request. Each object has attributes `source_policy_id` and `source_policy_type` to identify one of the policies.
 
-    * `missingContextKeys` - A set of context keys (or condition keys) that were needed by some of the policies contributing to this result but not specified using a `context` block in the configuration. Missing or incorrect context keys will typically cause a simulated request to be disallowed.
+    * `missing_context_keys` - A set of context keys (or condition keys) that were needed by some of the policies contributing to this result but not specified using a `context` block in the configuration. Missing or incorrect context keys will typically cause a simulated request to be disallowed.
 
-<!-- cache-key: cdktf-0.18.0 input-6271bf4e5593c485a454ee1fc263b036e5a42e08cc910da3ee1ceb0f0495dce4 -->
+<!-- cache-key: cdktf-0.19.0 input-6271bf4e5593c485a454ee1fc263b036e5a42e08cc910da3ee1ceb0f0495dce4 -->

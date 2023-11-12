@@ -3478,3 +3478,31 @@ rules:
             - pattern-not-regex: "^TestAccComputeOptimizer"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: computeoptimizer-in-const-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING

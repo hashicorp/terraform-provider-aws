@@ -318,9 +318,9 @@ This argument supports the following arguments:
 * `costTypes` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limitAmount` - (Required) The amount of cost or usage being measured for a budget.
 * `limitUnit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
-* `timePeriodEnd` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017010112:00`.
-* `timePeriodStart` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017010112:00`.
-* `timeUnit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `monthly`, `quarterly`, `annually`, and `daily`.
+* `timePeriodEnd` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
+* `timePeriodStart` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+* `timeUnit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
 * `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `plannedLimit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 
@@ -387,18 +387,18 @@ Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-managem
 
 Valid keys for `notification` parameter.
 
-* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `lessThan`, `equalTo` or `greaterThan`.
+* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
 * `threshold` - (Required) Threshold when the notification should be sent.
-* `thresholdType` - (Required) What kind of threshold is defined. Can be `percentage` OR `absoluteValue`.
-* `notificationType` - (Required) What kind of budget value to notify on. Can be `actual` or `forecasted`
-* `subscriberEmailAddresses` - (Optional) E-Mail addresses to notify. Either this or `subscriberSnsTopicArns` is required.
-* `subscriberSnsTopicArns` - (Optional) SNS topics to notify. Either this or `subscriberEmailAddresses` is required.
+* `thresholdType` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+* `notificationType` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
+* `subscriberEmailAddresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
+* `subscriberSnsTopicArns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
 
 ### Planned Budget Limits
 
 Valid keys for `plannedLimit` parameter.
 
-* `startTime` - (Required) The start time of the budget limit. Format: `2017010112:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `startTime` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `amount` - (Required) The amount of cost or usage being measured for a budget.
 * `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 
@@ -424,4 +424,4 @@ Using `terraform import`, import budgets using `accountId:actionId:budgetName`. 
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e489919affafec652fb181d887cfb745c4899bec31c5aef82fa0e7dc17bde94 -->
+<!-- cache-key: cdktf-0.19.0 input-1e489919affafec652fb181d887cfb745c4899bec31c5aef82fa0e7dc17bde94 -->

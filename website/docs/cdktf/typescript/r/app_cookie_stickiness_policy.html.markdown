@@ -94,4 +94,4 @@ Using `terraform import`, import application cookie stickiness policies using th
 % terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-88293d9f7b9b0c56a30ec158ef04e7ebaf1d4abe22c80ea32220c4d2176785a6 -->
+<!-- cache-key: cdktf-0.19.0 input-88293d9f7b9b0c56a30ec158ef04e7ebaf1d4abe22c80ea32220c4d2176785a6 -->

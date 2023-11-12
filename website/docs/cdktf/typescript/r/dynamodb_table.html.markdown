@@ -220,52 +220,52 @@ class MyConvertedCode extends TerraformStack {
 
 Required arguments:
 
-* `attribute` - (Required) Set of nested attribute definitions. Only required for `hashKey` and `rangeKey` attributes. See below.
+* `attribute` - (Required) Set of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. See below.
 * `hashKey` - (Required, Forces new resource) Attribute to use as the hash (partition) key. Must also be defined as an `attribute`. See below.
 * `name` - (Required) Unique within a region name of the table.
 
 Optional arguments:
 
-* `billingMode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `provisioned` and `payPerRequest`. Defaults to `provisioned`.
+* `billingMode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `deletionProtectionEnabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `importTable` - (Optional) Import Amazon S3 data into a new table. See below.
 * `globalSecondaryIndex` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `localSecondaryIndex` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `pointInTimeRecovery` - (Optional) Enable point-in-time recovery options. See below.
 * `rangeKey` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
-* `readCapacity` - (Optional) Number of read units for this table. If the `billingMode` is `provisioned`, this field is required.
+* `readCapacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
 * `restoreDateTime` - (Optional) Time of the point-in-time recovery point to restore.
 * `restoreSourceName` - (Optional) Name of the table to restore. Must match the name of an existing table.
 * `restoreToLatestTime` - (Optional) If set, restores table to the most recent point-in-time recovery point.
 * `serverSideEncryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. See below.
 * `streamEnabled` - (Optional) Whether Streams are enabled.
-* `streamViewType` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `keysOnly`, `newImage`, `oldImage`, `newAndOldImages`.
+* `streamViewType` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `tableClass` - (Optional) Storage class of the table.
-  Valid values are `standard` and `standardInfrequentAccess`.
-  Default value is `standard`.
-* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
+  Default value is `STANDARD`.
+* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
-* `writeCapacity` - (Optional) Number of write units for this table. If the `billingMode` is `provisioned`, this field is required.
+* `writeCapacity` - (Optional) Number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 
 ### `attribute`
 
 * `name` - (Required) Name of the attribute
-* `type` - (Required) Attribute type. Valid values are `s` (string), `n` (number), `b` (binary).
+* `type` - (Required) Attribute type. Valid values are `S` (string), `N` (number), `B` (binary).
 
 ### `importTable`
 
-* `inputFormat` - (Required) The format of the source data. Valid values are `csv`, `dynamodbJson` and `ion`.
+* `inputFormat` - (Required) The format of the source data. Valid values are `CSV`, `DYNAMODB_JSON` and `ION`.
 * `s3BucketSource` - (Required) Values for the S3 bucket the source file is imported from. See below.
 * `clientToken` - (Optional) Makes the import idempotent, meaning that multiple identical calls have the same effect as one single call (8 hours validity).
-* `inputCompressionType` - (Optional) Type of compression to be used on the input coming from the imported table. Valid values are `gzip`, `zstd` and `none`.
+* `inputCompressionType` - (Optional) Type of compression to be used on the input coming from the imported table. Valid values are `GZIP`, `ZSTD` and `NONE`.
 * `inputFormatOptions` - (Optional) Describe the format options for the data that was imported into the target table. There is one value, `csv`. See below.
 
 #### `inputFormatOptions`
 
 * `csv` - (Optional) This block contains the processing options for the CSV file being imported:
     * `delimiter` - (Optional) The delimiter used for separating items in the CSV file being imported.
-    * `headerList` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
+    * `header_list` - (Optional) List of the headers used to specify a common header for all source CSV files being imported.
 
 #### `s3BucketSource`
 
@@ -277,8 +277,8 @@ Optional arguments:
 
 * `hashKey` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
 * `name` - (Required) Name of the index.
-* `nonKeyAttributes` - (Optional) Only required with `include` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
-* `projectionType` - (Required) One of `all`, `include` or `keysOnly` where `all` projects every attribute into the index, `keysOnly` projects  into the index only the table and index hash_key and sort_key attributes ,  `include` projects into the index all of the attributes that are defined in `nonKeyAttributes` in addition to the attributes that that`keysOnly` project.
+* `nonKeyAttributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
+* `projectionType` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `rangeKey` - (Optional) Name of the range key; must be defined
 * `readCapacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `writeCapacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
@@ -286,13 +286,13 @@ Optional arguments:
 ### `localSecondaryIndex`
 
 * `name` - (Required) Name of the index
-* `nonKeyAttributes` - (Optional) Only required with `include` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
-* `projectionType` - (Required) One of `all`, `include` or `keysOnly` where `all` projects every attribute into the index, `keysOnly` projects  into the index only the table and index hash_key and sort_key attributes ,  `include` projects into the index all of the attributes that are defined in `nonKeyAttributes` in addition to the attributes that that`keysOnly` project.
+* `nonKeyAttributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
+* `projectionType` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `rangeKey` - (Required) Name of the range key.
 
 ### `pointInTimeRecovery`
 
-* `enabled` - (Required) Whether to enable point-in-time recovery. It can take 10 minutes to enable for new tables. If the `pointInTimeRecovery` block is not provided, this defaults to `false`.
+* `enabled` - (Required) Whether to enable point-in-time recovery. It can take 10 minutes to enable for new tables. If the `point_in_time_recovery` block is not provided, this defaults to `false`.
 
 ### `replica`
 
@@ -303,7 +303,7 @@ Optional arguments:
 
 ### `serverSideEncryption`
 
-* `enabled` - (Required) Whether or not to enable encryption at rest using an AWS managed KMS customer master key (CMK). If `enabled` is `false` then server-side encryption is set to AWS-_owned_ key (shown as `default` in the AWS console). Potentially confusingly, if `enabled` is `true` and no `kmsKeyArn` is specified then server-side encryption is set to the _default_ KMS-_managed_ key (shown as `kms` in the AWS console). The [AWS KMS documentation](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html) explains the difference between AWS-_owned_ and KMS-_managed_ keys.
+* `enabled` - (Required) Whether or not to enable encryption at rest using an AWS managed KMS customer master key (CMK). If `enabled` is `false` then server-side encryption is set to AWS-_owned_ key (shown as `DEFAULT` in the AWS console). Potentially confusingly, if `enabled` is `true` and no `kms_key_arn` is specified then server-side encryption is set to the _default_ KMS-_managed_ key (shown as `KMS` in the AWS console). The [AWS KMS documentation](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html) explains the difference between AWS-_owned_ and KMS-_managed_ keys.
 * `kmsKeyArn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
 
 ### `ttl`
@@ -322,7 +322,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `replica.*StreamLabel` - Timestamp, in ISO 8601 format, for the replica stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.
 * `streamArn` - ARN of the Table Stream. Only available when `stream_enabled = true`
 * `streamLabel` - Timestamp, in ISO 8601 format, for this stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -330,9 +330,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -356,4 +356,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-331d28a11466721603dd7ef5ef376375b2685f617fa41cb89eac4c639b0b23d1 -->
+<!-- cache-key: cdktf-0.19.0 input-331d28a11466721603dd7ef5ef376375b2685f617fa41cb89eac4c639b0b23d1 -->

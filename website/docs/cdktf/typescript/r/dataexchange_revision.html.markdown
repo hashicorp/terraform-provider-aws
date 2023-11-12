@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 * `dataSetId` - (Required) The dataset id.
 * `comment` - (Required) An optional comment about the revision.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Id of the data set.
 * `revisionId` - The Id of the revision.
 * `arn` - The Amazon Resource Name of this data set.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -71,4 +71,4 @@ Using `terraform import`, import DataExchange Revisions using their `dataSetId:r
 % terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1dff294cf3af4fd0944cbd190d7f06ffbbea96e953f96933b6e5b54e4c8fdcd1 -->
+<!-- cache-key: cdktf-0.19.0 input-1dff294cf3af4fd0944cbd190d7f06ffbbea96e953f96933b6e5b54e4c8fdcd1 -->

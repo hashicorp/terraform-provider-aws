@@ -192,7 +192,7 @@ This resource supports the following arguments:
 * `maximumExecutionFrequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Source](#source) Below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Scope](#scope) Below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Evaluation Mode
 
@@ -203,29 +203,29 @@ This resource supports the following arguments:
 Defines which resources can trigger an evaluation for the rule.
 If you do not specify a scope, evaluations are triggered when any resource in the recording group changes.
 
-* `complianceResourceId` - (Optional) The IDs of the only AWS resource that you want to trigger an evaluation for the rule. If you specify a resource ID, you must specify one resource type for `complianceResourceTypes`.
-* `complianceResourceTypes` - (Optional) A list of resource types of only those AWS resources that you want to trigger an evaluation for the ruleE.g., `aws::ec2::instance`. You can only specify one type if you also specify a resource ID for `complianceResourceId`. See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types.
-* `tagKey` - (Optional, Required if `tagValue` is specified) The tag key that is applied to only those AWS resources that you want you want to trigger an evaluation for the rule.
+* `complianceResourceId` - (Optional) The IDs of the only AWS resource that you want to trigger an evaluation for the rule. If you specify a resource ID, you must specify one resource type for `compliance_resource_types`.
+* `complianceResourceTypes` - (Optional) A list of resource types of only those AWS resources that you want to trigger an evaluation for the ruleE.g., `AWS::EC2::Instance`. You can only specify one type if you also specify a resource ID for `compliance_resource_id`. See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types.
+* `tagKey` - (Optional, Required if `tag_value` is specified) The tag key that is applied to only those AWS resources that you want you want to trigger an evaluation for the rule.
 * `tagValue` - (Optional) The tag value applied to only those AWS resources that you want to trigger an evaluation for the rule.
 
 ### Source
 
 Provides the rule owner (AWS or customer), the rule identifier, and the notifications that cause the function to evaluate your AWS resources.
 
-* `owner` - (Required) Indicates whether AWS or the customer owns and manages the AWS Config rule. Valid values are `aws`, `customLambda` or `customPolicy`. For more information about managed rules, see the [AWS Config Managed Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html). For more information about custom rules, see the [AWS Config Custom Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html). Custom Lambda Functions require permissions to allow the AWS Config service to invoke them, e.g., via the [`awsLambdaPermission` resource](/docs/providers/aws/r/lambda_permission.html).
-* `sourceIdentifier` - (Optional) For AWS Config managed rules, a predefined identifier, e.g `iamPasswordPolicy`. For custom Lambda rules, the identifier is the ARN of the Lambda Function, such as `arn:aws:lambda:usEast1:123456789012:function:customRuleName` or the [`arn` attribute of the `awsLambdaFunction` resource](/docs/providers/aws/r/lambda_function.html#arn).
-* `sourceDetail` - (Optional) Provides the source and type of the event that causes AWS Config to evaluate your AWS resources. Only valid if `owner` is `customLambda` or `customPolicy`. See [Source Detail](#source-detail) Below.
-* `customPolicyDetails` - (Optional) Provides the runtime system, policy definition, and whether debug logging is enabled. Required when owner is set to `customPolicy`. See [Custom Policy Details](#custom-policy-details) Below.
+* `owner` - (Required) Indicates whether AWS or the customer owns and manages the AWS Config rule. Valid values are `AWS`, `CUSTOM_LAMBDA` or `CUSTOM_POLICY`. For more information about managed rules, see the [AWS Config Managed Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html). For more information about custom rules, see the [AWS Config Custom Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html). Custom Lambda Functions require permissions to allow the AWS Config service to invoke them, e.g., via the [`aws_lambda_permission` resource](/docs/providers/aws/r/lambda_permission.html).
+* `sourceIdentifier` - (Optional) For AWS Config managed rules, a predefined identifier, e.g `IAM_PASSWORD_POLICY`. For custom Lambda rules, the identifier is the ARN of the Lambda Function, such as `arn:aws:lambda:us-east-1:123456789012:function:custom_rule_name` or the [`arn` attribute of the `aws_lambda_function` resource](/docs/providers/aws/r/lambda_function.html#arn).
+* `sourceDetail` - (Optional) Provides the source and type of the event that causes AWS Config to evaluate your AWS resources. Only valid if `owner` is `CUSTOM_LAMBDA` or `CUSTOM_POLICY`. See [Source Detail](#source-detail) Below.
+* `customPolicyDetails` - (Optional) Provides the runtime system, policy definition, and whether debug logging is enabled. Required when owner is set to `CUSTOM_POLICY`. See [Custom Policy Details](#custom-policy-details) Below.
 
 #### Source Detail
 
-* `eventSource` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config to evaluate your AWSresources. This defaults to `awsConfig` and is the only valid value.
-* `maximumExecutionFrequency` - (Optional) The frequency that you want AWS Config to run evaluations for a rule that istriggered periodically. If specified, requires `messageType` to be `scheduledNotification`.
+* `eventSource` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config to evaluate your AWSresources. This defaults to `aws.config` and is the only valid value.
+* `maximumExecutionFrequency` - (Optional) The frequency that you want AWS Config to run evaluations for a rule that istriggered periodically. If specified, requires `message_type` to be `ScheduledNotification`.
 * `messageType` - (Optional) The type of notification that triggers AWS Config to run an evaluation for a rule. You canspecify the following notification types:
-    * `configurationItemChangeNotification` - Triggers an evaluation when AWS Config delivers a configuration item as a result of a resource change.
-    * `oversizedConfigurationItemChangeNotification` - Triggers an evaluation when AWS Config delivers an oversized configuration item. AWS Config may generate this notification type when a resource changes and the notification exceeds the maximum size allowed by Amazon SNS.
-    * `scheduledNotification` - Triggers a periodic evaluation at the frequency specified for `maximumExecutionFrequency`.
-    * `configurationSnapshotDeliveryCompleted` - Triggers a periodic evaluation when AWS Config delivers a configuration snapshot.
+    * `ConfigurationItemChangeNotification` - Triggers an evaluation when AWS Config delivers a configuration item as a result of a resource change.
+    * `OversizedConfigurationItemChangeNotification` - Triggers an evaluation when AWS Config delivers an oversized configuration item. AWS Config may generate this notification type when a resource changes and the notification exceeds the maximum size allowed by Amazon SNS.
+    * `ScheduledNotification` - Triggers a periodic evaluation at the frequency specified for `maximum_execution_frequency`.
+    * `ConfigurationSnapshotDeliveryCompleted` - Triggers a periodic evaluation when AWS Config delivers a configuration snapshot.
 
 #### Custom Policy Details
 
@@ -239,7 +239,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the config rule
 * `ruleId` - The ID of the config rule
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -263,4 +263,4 @@ Using `terraform import`, import Config Rule using the name. For example:
 % terraform import aws_config_config_rule.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ddaef59fa5f30160f091633e8659aa1541092b84b1622013d4f61c51640fbed0 -->
+<!-- cache-key: cdktf-0.19.0 input-ddaef59fa5f30160f091633e8659aa1541092b84b1622013d4f61c51640fbed0 -->

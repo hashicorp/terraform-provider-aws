@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `structured_log_destinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
 * `url` - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.
 
-<!-- cache-key: cdktf-0.18.0 input-527a93818210197a7ed1dcc84d2ff4fa1fd16ef88ced9a8af3676cc1ab7b8447 -->
+<!-- cache-key: cdktf-0.19.0 input-527a93818210197a7ed1dcc84d2ff4fa1fd16ef88ced9a8af3676cc1ab7b8447 -->

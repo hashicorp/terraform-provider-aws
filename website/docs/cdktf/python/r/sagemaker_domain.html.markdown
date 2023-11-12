@@ -275,4 +275,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-19db5ea50c6e2c5430e3020c46bbc94271da9af4b5dcb1c6e538ebe50443f56a -->
+<!-- cache-key: cdktf-0.19.0 input-19db5ea50c6e2c5430e3020c46bbc94271da9af4b5dcb1c6e538ebe50443f56a -->

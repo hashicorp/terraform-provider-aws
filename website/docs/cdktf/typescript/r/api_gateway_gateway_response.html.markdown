@@ -82,4 +82,4 @@ Using `terraform import`, import `awsApiGatewayGatewayResponse` using `restApiId
 % terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1cf3d4efa3dea58b3eb33a7d86b84e6f760a3bfa3f2190d9e1f9e796eec417fc -->
+<!-- cache-key: cdktf-0.19.0 input-1cf3d4efa3dea58b3eb33a7d86b84e6f760a3bfa3f2190d9e1f9e796eec417fc -->

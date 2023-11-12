@@ -131,33 +131,33 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `deploymentConfigName` - (Required) The name of the deployment config.
-* `computePlatform` - (Optional) The compute platform can be `server`, `lambda`, or `ecs`. Default is `server`.
-* `minimumHealthyHosts` - (Optional) A minimum_healthy_hosts block. Required for `server` compute platform. Minimum Healthy Hosts are documented below.
+* `computePlatform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
+* `minimumHealthyHosts` - (Optional) A minimum_healthy_hosts block. Required for `Server` compute platform. Minimum Healthy Hosts are documented below.
 * `trafficRoutingConfig` - (Optional) A traffic_routing_config block. Traffic Routing Config is documented below.
 
 The `minimumHealthyHosts` block supports the following:
 
-* `type` - (Required) The type can either be `fleetPercent` or `hostCount`.
-* `value` - (Required) The value when the type is `fleetPercent` represents the minimum number of healthy instances as
+* `type` - (Required) The type can either be `FLEET_PERCENT` or `HOST_COUNT`.
+* `value` - (Required) The value when the type is `FLEET_PERCENT` represents the minimum number of healthy instances as
 a percentage of the total number of instances in the deployment. If you specify FLEET_PERCENT, at the start of the
 deployment, AWS CodeDeploy converts the percentage to the equivalent number of instance and rounds up fractional instances.
-When the type is `hostCount`, the value represents the minimum number of healthy instances as an absolute value.
+When the type is `HOST_COUNT`, the value represents the minimum number of healthy instances as an absolute value.
 
 The `trafficRoutingConfig` block supports the following:
 
-* `type` - (Optional) Type of traffic routing config. One of `timeBasedCanary`, `timeBasedLinear`, `allAtOnce`.
-* `timeBasedCanary` - (Optional) The time based canary configuration information. If `type` is `timeBasedLinear`, use `timeBasedLinear` instead.
-* `timeBasedLinear` - (Optional) The time based linear configuration information. If `type` is `timeBasedCanary`, use `timeBasedCanary` instead.
+* `type` - (Optional) Type of traffic routing config. One of `TimeBasedCanary`, `TimeBasedLinear`, `AllAtOnce`.
+* `timeBasedCanary` - (Optional) The time based canary configuration information. If `type` is `TimeBasedLinear`, use `time_based_linear` instead.
+* `timeBasedLinear` - (Optional) The time based linear configuration information. If `type` is `TimeBasedCanary`, use `time_based_canary` instead.
 
 The `timeBasedCanary` block supports the following:
 
-* `interval` - (Optional) The number of minutes between the first and second traffic shifts of a `timeBasedCanary` deployment.
-* `percentage` - (Optional) The percentage of traffic to shift in the first increment of a `timeBasedCanary` deployment.
+* `interval` - (Optional) The number of minutes between the first and second traffic shifts of a `TimeBasedCanary` deployment.
+* `percentage` - (Optional) The percentage of traffic to shift in the first increment of a `TimeBasedCanary` deployment.
 
 The `timeBasedLinear` block supports the following:
 
-* `interval` - (Optional) The number of minutes between each incremental traffic shift of a `timeBasedLinear` deployment.
-* `percentage` - (Optional) The percentage of traffic that is shifted at the start of each increment of a `timeBasedLinear` deployment.
+* `interval` - (Optional) The number of minutes between each incremental traffic shift of a `TimeBasedLinear` deployment.
+* `percentage` - (Optional) The percentage of traffic that is shifted at the start of each increment of a `TimeBasedLinear` deployment.
 
 ## Attribute Reference
 
@@ -188,4 +188,4 @@ Using `terraform import`, import CodeDeploy Deployment Configurations using the 
 % terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->
+<!-- cache-key: cdktf-0.19.0 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->

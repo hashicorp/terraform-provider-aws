@@ -22,8 +22,8 @@ Grants permissions to the principal to access metadata in the Data Catalog and d
 
 When using Lake Formation, choose ONE of the following options as they are mutually exclusive:
 
-1. Use this resource (`awsLakeformationPermissions`), change the default security settings using [`awsLakeformationDataLakeSettings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html), and remove existing `iamAllowedPrincipals` permissions
-2. Use `iamAllowedPrincipals` without `awsLakeformationPermissions`
+1. Use this resource (`awsLakeformationPermissions`), change the default security settings using [`aws_lakeformation_data_lake_settings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html), and remove existing `IAMAllowedPrincipals` permissions
+2. Use `iamAllowedPrincipals` without `aws_lakeformation_permissions`
 
 This example shows removing the `iamAllowedPrincipals` default security settings and making the caller a Lake Formation admin. Since `createDatabaseDefaultPermissions` and `createTableDefaultPermissions` are not set in the [`awsLakeformationDataLakeSettings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html) resource, they are cleared.
 
@@ -65,7 +65,7 @@ To remove existing `iamAllowedPrincipals` permissions, use the [AWS Lake Formati
 
 This is Lake Formation's default behavior:
 
-* Lake Formation grants `super` permission to `iamAllowedPrincipals` on all existing AWS Glue Data Catalog resources.
+* Lake Formation grants `super` permission to `IAMAllowedPrincipals` on all existing AWS Glue Data Catalog resources.
 * Lake Formation enables "Use only IAM access control" for new Data Catalog resources.
 
 For more details, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html).
@@ -234,8 +234,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `permissions` – (Required) List of permissions granted to the principal. Valid values may include `all`, `alter`, `associate`, `createDatabase`, `createTable`, `dataLocationAccess`, `delete`, `describe`, `drop`, `insert`, and `select`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `iamAllowedPrincipals` (see [Default Behavior and `iamAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `permissions` – (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 
 ~> **NOTE:** We highly recommend that the `principal` _NOT_ be a Lake Formation administrator (granted using `awsLakeformationDataLakeSettings`). The entity (e.g., IAM role) running Terraform will most likely need to be a Lake Formation administrator. As such, the entity will have implicit permissions and does not need permissions granted through this resource.
 
@@ -289,7 +289,7 @@ The following argument is optional:
 
 The following arguments are required:
 
-* `resourceType` – (Required) The resource type for which the tag policy applies. Valid values are `database` and `table`.
+* `resourceType` – (Required) The resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
 * `expression` - (Required) A list of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
 
 The following argument is optional:
@@ -317,18 +317,18 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `columnNames` - (Required, at least one of `columnNames` or `wildcard`) Set of column names for the table.
+* `columnNames` - (Required, at least one of `column_names` or `wildcard`) Set of column names for the table.
 * `databaseName` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
 * `name` – (Required) Name of the table resource.
-* `wildcard` - (Required, at least one of `columnNames` or `wildcard`) Whether to use a column wildcard. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
+* `wildcard` - (Required, at least one of `column_names` or `wildcard`) Whether to use a column wildcard. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 The following arguments are optional:
 
 * `catalogId` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
+* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-fd78e0884a6908a814356ab7d33f0f75b98fe926eb713d3c171ff4fd77586027 -->
+<!-- cache-key: cdktf-0.19.0 input-fd78e0884a6908a814356ab7d33f0f75b98fe926eb713d3c171ff4fd77586027 -->

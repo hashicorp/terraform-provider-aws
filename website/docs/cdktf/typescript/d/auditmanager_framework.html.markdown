@@ -42,10 +42,10 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) Name of the framework.
-* `type` - (Required) Type of framework. Valid values are `custom` and `standard`.
+* `type` - (Required) Type of framework. Valid values are `Custom` and `Standard`.
 
 ## Attribute Reference
 
 See the [`awsAuditmanagerFramework` resource](/docs/providers/aws/r/auditmanager_framework.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.18.0 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->
+<!-- cache-key: cdktf-0.19.0 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->

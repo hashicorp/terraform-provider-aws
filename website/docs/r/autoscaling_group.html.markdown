@@ -465,6 +465,7 @@ This resource supports the following arguments:
   when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
 - `warm_pool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
+- `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
 ### launch_template
 

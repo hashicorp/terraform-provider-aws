@@ -89,4 +89,4 @@ Using `terraform import`, import EMR Managed Scaling Policies using the EMR Clus
 % terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62b04cc94e05c0974582d7b0b1123356847a607e2399a95467c580bdbc32dcb0 -->
+<!-- cache-key: cdktf-0.19.0 input-62b04cc94e05c0974582d7b0b1123356847a607e2399a95467c580bdbc32dcb0 -->

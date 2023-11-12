@@ -93,4 +93,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_policy` using the se
 % terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->
+<!-- cache-key: cdktf-0.19.0 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->

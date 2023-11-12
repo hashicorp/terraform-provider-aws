@@ -80,4 +80,4 @@ Using `terraform import`, import `aws_lightsail_disk` using the name attribute. 
 % terraform import aws_lightsail_disk.test test
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7753e5e8b07d0ea697ccda6f53778fce21cb9f997c8e2dfbe4fb7552ab0ed771 -->
+<!-- cache-key: cdktf-0.19.0 input-7753e5e8b07d0ea697ccda6f53778fce21cb9f997c8e2dfbe4fb7552ab0ed771 -->

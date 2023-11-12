@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `ipamRegion` - The home region of the IPAM.
 * `isDefault` - A boolean to identify if the Resource Discovery is the accounts default resource discovery.
 * `state` - The lifecycle state of the association when you associate or disassociate a resource discovery.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import IPAMs using the IPAM resource discovery associa
 % terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f38914c02b6478a3d1a5d0b4590df76302aa42ccd4610ae8d1077dfd286db5df -->
+<!-- cache-key: cdktf-0.19.0 input-f38914c02b6478a3d1a5d0b4590df76302aa42ccd4610ae8d1077dfd286db5df -->

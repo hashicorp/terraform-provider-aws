@@ -77,4 +77,4 @@ Using `terraform import`, import Egress-only Internet gateways using the `id`. F
 % terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7ed3e94395680c60b6e40820f5a3e85dfb53bdc2a67b6dc191917e0125e4b534 -->
+<!-- cache-key: cdktf-0.19.0 input-7ed3e94395680c60b6e40820f5a3e85dfb53bdc2a67b6dc191917e0125e4b534 -->

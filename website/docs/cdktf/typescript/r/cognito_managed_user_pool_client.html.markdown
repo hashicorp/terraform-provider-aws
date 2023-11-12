@@ -129,29 +129,29 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `userPoolId` - (Required) User pool that the client belongs to.
-* `namePattern` - (Required, one of `namePattern` or `namePrefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
-* `namePrefix` - (Required, one of `namePrefix` or `namePattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
+* `namePattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
+* `namePrefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
 
 The following arguments are optional:
 
-* `accessTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `tokenValidityUnitsAccessToken`.
+* `accessTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowedOauthFlowsUserPoolClient` - (Optional) Whether the client is allowed to use the OAuth protocol when interacting with Cognito user pools.
 * `allowedOauthFlows` - (Optional) List of allowed OAuth flows, including code, implicit, and client_credentials.
 * `allowedOauthScopes` - (Optional) List of allowed OAuth scopes, including phone, email, openid, profile, and aws.cognito.signin.user.admin.
 * `analyticsConfiguration` - (Optional) Configuration block for Amazon Pinpoint analytics that collects metrics for this user pool. See [details below](#analytics_configuration).
-* `authSessionValidity` - (Optional) Duration, in minutes, of the session token created by Amazon Cognito for each API request in an authentication flow. The session token must be responded to by the native user of the user pool before it expires. Valid values for `authSessionValidity` are between `3` and `15`, with a default value of `3`.
+* `authSessionValidity` - (Optional) Duration, in minutes, of the session token created by Amazon Cognito for each API request in an authentication flow. The session token must be responded to by the native user of the user pool before it expires. Valid values for `auth_session_validity` are between `3` and `15`, with a default value of `3`.
 * `callbackUrls` - (Optional) List of allowed callback URLs for the identity providers.
 * `defaultRedirectUri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
 * `enableTokenRevocation` - (Optional) Enables or disables token revocation.
 * `enablePropagateAdditionalUserContextData` - (Optional) Enables the propagation of additional user context data.
 * `explicitAuthFlows` - (Optional) List of authentication flows. The available options include ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, and ALLOW_REFRESH_TOKEN_AUTH.
 * `generateSecret` - (Optional) Boolean flag indicating whether an application secret should be generated.
-* `idTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `tokenValidityUnitsIdToken`.
+* `idTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers.
 * `preventUserExistenceErrors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `readAttributes` - (Optional) List of user pool attributes that the application client can read from.
-* `refreshTokenValidity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `tokenValidityUnitsRefreshToken`.
-* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `providerName` attribute of the `awsCognitoIdentityProvider` resource(s), or the equivalent string(s).
+* `refreshTokenValidity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
+* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
 * `writeAttributes` - (Optional) List of user pool attributes that the application client can write to.
 
@@ -159,19 +159,19 @@ The following arguments are optional:
 
 Either `applicationArn` or `applicationId` is required for this configuration block.
 
-* `applicationArn` - (Optional) Application ARN for an Amazon Pinpoint application. It conflicts with `externalId` and `roleArn`.
+* `applicationArn` - (Optional) Application ARN for an Amazon Pinpoint application. It conflicts with `external_id` and `role_arn`.
 * `applicationId` - (Optional) Unique identifier for an Amazon Pinpoint application.
-* `externalId` - (Optional) ID for the Analytics Configuration and conflicts with `applicationArn`.
-* `roleArn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. It conflicts with `applicationArn`.
-* `userDataShared` - (Optional) If `userDataShared` is set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+* `externalId` - (Optional) ID for the Analytics Configuration and conflicts with `application_arn`.
+* `roleArn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. It conflicts with `application_arn`.
+* `userDataShared` - (Optional) If `user_data_shared` is set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
 ### token_validity_units
 
 Valid values for the following arguments are: `seconds`, `minutes`, `hours`, or `days`.
 
-* `accessToken` - (Optional) Time unit for the value in `accessTokenValidity` and defaults to `hours`.
-* `idToken` - (Optional) Time unit for the value in `idTokenValidity`, and it defaults to `hours`.
-* `refreshToken` - (Optional) Time unit for the value in `refreshTokenValidity` and defaults to `days`.
+* `accessToken` - (Optional) Time unit for the value in `access_token_validity` and defaults to `hours`.
+* `idToken` - (Optional) Time unit for the value in `id_token_validity`, and it defaults to `hours`.
+* `refreshToken` - (Optional) Time unit for the value in `refresh_token_validity` and defaults to `days`.
 
 ## Attribute Reference
 
@@ -203,4 +203,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-09a5545a9b1f170005d5b45885469f05e619194057d0005875513587b0db3def -->
+<!-- cache-key: cdktf-0.19.0 input-09a5545a9b1f170005d5b45885469f05e619194057d0005875513587b0db3def -->

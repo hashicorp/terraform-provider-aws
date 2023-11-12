@@ -94,24 +94,24 @@ The following arguments are optional:
 
 * `awsAccountId` - (Optional) AWS account ID.
 * `dnsResolvers` - (Optional) A list of IP addresses of DNS resolver endpoints for the VPC connection.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the VPC connection.
-* `availabilityStatus` - The availability status of the VPC connection. Valid values are `available`, `unavailable` or `partiallyAvailable`.
+* `availabilityStatus` - The availability status of the VPC connection. Valid values are `AVAILABLE`, `UNAVAILABLE` or `PARTIALLY_AVAILABLE`.
 * `id` - A comma-delimited string joining AWS account ID and VPC connection ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import QuickSight VPC connection using the AWS account
 % terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->
+<!-- cache-key: cdktf-0.19.0 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->

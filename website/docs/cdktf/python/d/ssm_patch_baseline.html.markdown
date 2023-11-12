@@ -94,4 +94,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - The name specified to identify the patch source.
     * `products` - The specific operating system versions a patch repository applies to.
 
-<!-- cache-key: cdktf-0.18.0 input-1c115d0fa5611577b6c8646f608f018267b9450033415bb6dcacd2efe1e7a958 -->
+<!-- cache-key: cdktf-0.19.0 input-1c115d0fa5611577b6c8646f608f018267b9450033415bb6dcacd2efe1e7a958 -->

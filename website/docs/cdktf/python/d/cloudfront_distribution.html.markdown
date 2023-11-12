@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
      alias for the zone ID `Z2FDTNDATAQYW2`.
 * `web_acl_id` AWS WAF web ACL associated with this distribution.
 
-<!-- cache-key: cdktf-0.18.0 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->
+<!-- cache-key: cdktf-0.19.0 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->

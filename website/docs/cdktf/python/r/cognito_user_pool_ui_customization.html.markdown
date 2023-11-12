@@ -131,4 +131,4 @@ Using `terraform import`, import Cognito User Pool UI Customizations using the `
 % terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bf4b70b595c743ddb747623355c0d273cc993578aa1b9483b75e196d7e5ca18c -->
+<!-- cache-key: cdktf-0.19.0 input-bf4b70b595c743ddb747623355c0d273cc993578aa1b9483b75e196d7e5ca18c -->

@@ -52,8 +52,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `cdcStartPosition` - (Optional, Conflicts with `cdcStartTime`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
-* `cdcStartTime` - (Optional, Conflicts with `cdcStartPosition`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
+* `cdcStartPosition` - (Optional, Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
+* `cdcStartTime` - (Optional, Conflicts with `cdc_start_position`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
 * `migrationType` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
 * `replicationInstanceArn` - (Required) The Amazon Resource Name (ARN) of the replication instance.
 * `replicationTaskId` - (Required) The replication task identifier.
@@ -67,7 +67,7 @@ This resource supports the following arguments:
 * `sourceEndpointArn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
 * `startReplicationTask` - (Optional) Whether to run or stop the replication task.
 * `tableMappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targetEndpointArn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 
 ## Attribute Reference
@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `replicationTaskArn` - The Amazon Resource Name (ARN) for the replication task.
 * `status` - Replication Task status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import replication tasks using the `replicationTaskId`
 % terraform import aws_dms_replication_task.test test-dms-replication-task-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1c6fdf5f04f2d2b7b3a680bdf7b1130eb1a4ca982a963ef8d0d3f17d5c86acbb -->
+<!-- cache-key: cdktf-0.19.0 input-1c6fdf5f04f2d2b7b3a680bdf7b1130eb1a4ca982a963ef8d0d3f17d5c86acbb -->

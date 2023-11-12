@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `id` - (Required) Identifier of the file system (e.g. `fs12345678`).
+* `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
 ## Attribute Reference
 
@@ -52,21 +52,21 @@ This data source exports the following attributes in addition to the arguments a
 * `auditLogConfiguration` - The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system.
 * `automaticBackupRetentionDays` - The number of days to retain automatic backups.
 * `copyTagsToBackups` - A boolean flag indicating whether tags on the file system should be copied to backups.
-* `dailyAutomaticBackupStartTime` - The preferred time (in `hh:mm` format) to take daily automatic backups, in the UTC time zone.
+* `dailyAutomaticBackupStartTime` - The preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deploymentType` - The file system deployment type.
 * `diskIopsConfiguration` - The SSD IOPS configuration for the file system.
-* `dnsName` - DNS name for the file system (e.g. `fs12345678CorpExampleCom`).
-* `id` - Identifier of the file system (e.g. `fs12345678`).
+* `dnsName` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
+* `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kmsKeyId` - ARN for the KMS Key to encrypt the file system at rest.
 * `ownerId` - AWS account identifier that created the file system.
 * `preferredSubnetId` - Specifies the subnet in which you want the preferred file server to be located.
 * `preferredFileServerIp` - The IP address of the primary, or preferred, file server.
 * `storageCapacity` - The storage capacity of the file system in gibibytes (GiB).
-* `storageType` - The type of storage the file system is using. If set to `ssd`, the file system uses solid state drive storage. If set to `hdd`, the file system uses hard disk drive storage.
+* `storageType` - The type of storage the file system is using. If set to `SSD`, the file system uses solid state drive storage. If set to `HDD`, the file system uses hard disk drive storage.
 * `subnetIds` - Specifies the IDs of the subnets that the file system is accessible from.
 * `tags` - The tags to associate with the file system.
 * `throughputCapacity` - Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
 * `vpcId` - The ID of the primary virtual private cloud (VPC) for the file system.
-* `weeklyMaintenanceStartTime` - The preferred start time (in `d:hh:mm` format) to perform weekly maintenance, in the UTC time zone.
+* `weeklyMaintenanceStartTime` - The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-<!-- cache-key: cdktf-0.18.0 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->
+<!-- cache-key: cdktf-0.19.0 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->

@@ -117,7 +117,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) True to enable the fleet provisioning template, otherwise false.
 * `preProvisioningHook` - (Optional) Creates a pre-provisioning hook template. Details below.
 * `provisioningRoleArn` - (Required) The role ARN for the role associated with the fleet provisioning template. This IoT role grants permission to provision a device.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `templateBody` - (Required) The JSON formatted contents of the fleet provisioning template.
 * `type` - (Optional) The type you define in a provisioning template.
 
@@ -125,7 +125,7 @@ This resource supports the following arguments:
 
 The `preProvisioningHook` configuration block supports the following:
 
-* `payloadVersion` - (Optional) The version of the payload that was sent to the target function. The only valid (and the default) payload version is `"20200401"`.
+* `payloadVersion` - (Optional) The version of the payload that was sent to the target function. The only valid (and the default) payload version is `"2020-04-01"`.
 * `targetArn` - (Optional) The ARN of the target function.
 
 ## Attribute Reference
@@ -134,7 +134,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN that identifies the provisioning template.
 * `defaultVersionId` - The default version of the fleet provisioning template.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -158,4 +158,4 @@ Using `terraform import`, import IoT fleet provisioning templates using the `nam
 % terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0caa47853f782deb3ce1c0adf39db30dd119e9251e987dbe84f960ceed581db6 -->
+<!-- cache-key: cdktf-0.19.0 input-0caa47853f782deb3ce1c0adf39db30dd119e9251e987dbe84f960ceed581db6 -->

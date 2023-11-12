@@ -193,4 +193,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3f84c98fe9b700bccf273478828122f05fe2e305acb212ed114e7d70a9c33251 -->
+<!-- cache-key: cdktf-0.19.0 input-3f84c98fe9b700bccf273478828122f05fe2e305acb212ed114e7d70a9c33251 -->
