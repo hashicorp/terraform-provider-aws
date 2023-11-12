@@ -40,6 +40,13 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"lb_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"connection_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -225,6 +232,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("lb_arns", targetGroup.LoadBalancerArns)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 

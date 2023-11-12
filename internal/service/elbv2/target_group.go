@@ -64,6 +64,13 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"lb_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"connection_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1064,6 +1071,7 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("lb_arns", targetGroup.LoadBalancerArns)
 	d.Set("ip_address_type", targetGroup.IpAddressType)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
