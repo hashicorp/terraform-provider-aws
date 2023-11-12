@@ -55,5 +55,5 @@ import {
 Using `terraform import`, import Amazon Connect Cases Domain using the resource `id`. For example:
 
 ```console
-% terraform import aws_connectcases_domain.example fc-8012925589
+% terraform import aws_connectcases_domain.example e6f777be-22d0-4b40-b307-5d2720ef16b2
 ```

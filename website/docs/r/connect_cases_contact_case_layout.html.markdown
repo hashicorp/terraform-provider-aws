@@ -67,6 +67,7 @@ The following arguments are required:
 
 * `name` - The name of the layout. It must be unique for the Cases domain.
 * `content` - A block that specifies information about which fields will be present in the layout, and information about the order of the fields. [Documented below](#content).
+* `domain_id` - The unique identifier of the Cases domain. 
 
 ### `content`
 
