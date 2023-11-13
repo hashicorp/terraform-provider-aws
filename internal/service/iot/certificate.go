@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_iot_certificate")
+// @SDKResource("aws_iot_certificate", name="Certificate)
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -23,11 +23,6 @@ func ResourceCertificate() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
 		Schema: map[string]*schema.Schema{
-			"csr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"active": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -36,23 +31,28 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ca_pem": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
 			"certificate_pem": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"ca_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+			"csr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
-			"public_key": {
+			"private_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			"public_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
