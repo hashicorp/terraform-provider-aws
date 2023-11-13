@@ -130,9 +130,6 @@ func testAccVoiceConnector_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// Legacy chime resources are always created in us-east-1, and the ListTags operation
-			// can behave unexpectedly when configured with a different region.
-			// acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),

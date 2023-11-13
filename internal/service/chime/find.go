@@ -11,9 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	voiceConnectorResourcePropagationTimeout = 1 * time.Minute
+)
+
 func FindVoiceConnectorResourceWithRetry[T any](ctx context.Context, isNewResource bool, f func() (T, error)) (T, error) {
 	var resp T
-	err := tfresource.Retry(ctx, 1*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, voiceConnectorResourcePropagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = f()
 		if isNewResource && tfresource.NotFound(err) {
