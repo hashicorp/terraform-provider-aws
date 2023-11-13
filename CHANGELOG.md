@@ -1,4 +1,17 @@
 ## 5.26.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_iot_policy: Add configurable timeouts ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_iot_policy: When updating the resource, delete the oldest non-default version of the policy if creating a new version would exceed the maximum number of versions (5) ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_rds_cluster: Add `delete_automated_backups` argument ([#34309](https://github.com/hashicorp/terraform-provider-aws/issues/34309))
+
+BUG FIXES:
+
+* resource/aws_iot_policy: Retry `DeleteConflictException` errors on delete ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_quicksight_data_source: Set all parameters to update aws_quicksight_data_source ([#33061](https://github.com/hashicorp/terraform-provider-aws/issues/33061))
+* resource/aws_synthetics_canary: Fix to properly suppress differences when `expression` is `rate(0 minutes)` ([#34084](https://github.com/hashicorp/terraform-provider-aws/issues/34084))
+
 ## 5.25.0 (November 10, 2023)
 
 NOTES:
