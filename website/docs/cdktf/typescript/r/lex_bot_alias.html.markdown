@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `botName` - (Required) The name of the bot.
-* `botVersion` - (Required) The name of the bot.
+* `botVersion` - (Required) The version of the bot.
 * `conversationLogs` - (Optional) The settings that determine how Amazon Lex uses conversation logs for the alias. Attributes are documented under [conversation_logs](#conversation_logs).
 * `description` - (Optional) A description of the alias. Must be less than or equal to 200 characters in length.
 * `name` - (Required) The name of the alias. The name is not case sensitive. Must be less than or equal to 100 characters in length.
@@ -104,4 +104,4 @@ Using `terraform import`, import bot aliases using an ID with the format `botNam
 % terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-45b5fa895e86b52a4a0265d1cd0006d748a86ae86a7462e4c4c8ab42d16123fc -->
+<!-- cache-key: cdktf-0.19.0 input-1d88de25eb65ac94895d774194baf992f1fe3487e7eec1fc9809a28597665e73 -->
