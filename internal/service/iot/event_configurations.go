@@ -25,6 +25,10 @@ func ResourceEventConfigurations() *schema.Resource {
 		UpdateWithoutTimeout: resourceEventConfigurationsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"event_configurations": {
 				Type:     schema.TypeMap,

@@ -46,7 +46,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Billing Groups can be imported using the name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Billing Groups using the name. For example:
+
+```terraform
+import {
+  to = aws_iot_billing_group.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import IoT Billing Groups using the name. For example:
 
 ```
 $ terraform import aws_iot_billing_group.example example
