@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
@@ -31,9 +33,10 @@ func ResourceEventConfigurations() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"event_configurations": {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     schema.TypeBool,
+				Type:             schema.TypeMap,
+				Required:         true,
+				Elem:             schema.TypeBool,
+				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(iot.EventType_Values(), false))),
 			},
 		},
 	}
