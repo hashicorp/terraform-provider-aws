@@ -29,6 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceEndpoint,
 			TypeName: "aws_iot_endpoint",
 		},
+		{
+			Factory:  DataSourceRegistrationCode,
+			TypeName: "aws_iot_registration_code",
+			Name:     "Registration Code",
+		},
 	}
 }
 
@@ -39,8 +44,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_authorizer",
 		},
 		{
+			Factory:  ResourceCACertificate,
+			TypeName: "aws_iot_ca_certificate",
+			Name:     "CA Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceCertificate,
 			TypeName: "aws_iot_certificate",
+			Name:     "Certificate",
 		},
 		{
 			Factory:  ResourceDomainConfiguration,
