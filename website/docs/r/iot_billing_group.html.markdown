@@ -36,9 +36,9 @@ resource "aws_iot_billing_group" "example" {
 
 * `description` - (Optional) A description of the Billing Group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Billing Group.
 * `id` - The Billing Group ID.
@@ -57,6 +57,6 @@ import {
 
 Using `terraform import`, import IoT Billing Groups using the name. For example:
 
-```
-$ terraform import aws_iot_billing_group.example example
+```console
+% terraform import aws_iot_billing_group.example example
 ```

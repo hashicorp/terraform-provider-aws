@@ -36,6 +36,10 @@ resource "aws_iot_event_configurations" "example" {
 
 * `event_configurations` - (Required) Map. The new event configuration values. You can use only these strings as keys: `THING_GROUP_HIERARCHY`, `THING_GROUP_MEMBERSHIP`, `THING_TYPE`, `THING_TYPE_ASSOCIATION`, `THING_GROUP`, `THING`, `POLICY`, `CA_CERTIFICATE`, `JOB_EXECUTION`, `CERTIFICATE`, `JOB`. Use boolean for values of mapping.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Event Configurations using the AWS Region. For example:
@@ -49,6 +53,6 @@ import {
 
 Using `terraform import`, import IoT Event Configurations using the AWS Region. For example:
 
-```
-$ terraform import aws_iot_event_configurations.example us-west-2
+```console
+% terraform import aws_iot_event_configurations.example us-west-2
 ```
