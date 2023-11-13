@@ -5,6 +5,7 @@ package iot
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -102,7 +104,7 @@ func ResourceCACertificate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"not_after": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"not_before": {
@@ -114,14 +116,24 @@ func ResourceCACertificate() *schema.Resource {
 			},
 			"verification_certificate_pem": {
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
 		},
 
-		// TODO Add check for verification_certificate_pem if certificate_mode is DEFAULT.
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if mode := diff.Get("certificate_mode").(string); mode == iot.CertificateModeDefault {
+					if _, ok := diff.GetOk("verification_certificate_pem"); !ok {
+						return fmt.Errorf(`"verification_certificate_pem" is required when certificate_mode is %q`, mode)
+					}
+				}
+
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
