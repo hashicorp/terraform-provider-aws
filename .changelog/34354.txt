@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_verifiedaccess_endpoint: Added `policy_document` property to resource.
+```
