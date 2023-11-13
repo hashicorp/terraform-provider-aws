@@ -35,7 +35,7 @@ func ResourceEventConfigurations() *schema.Resource {
 			"event_configurations": {
 				Type:             schema.TypeMap,
 				Required:         true,
-				Elem:             schema.TypeBool,
+				Elem:             &schema.Schema{Type: schema.TypeBool},
 				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(iot.EventType_Values(), false))),
 			},
 		},
