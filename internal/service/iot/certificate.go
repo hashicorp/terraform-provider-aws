@@ -5,7 +5,6 @@ package iot
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -22,6 +21,7 @@ func ResourceCertificate() *schema.Resource {
 		ReadWithoutTimeout:   resourceCertificateRead,
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
+
 		Schema: map[string]*schema.Schema{
 			"active": {
 				Type:     schema.TypeBool,
@@ -65,64 +65,68 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	_, okcert := d.GetOk("certificate_pem")
-	_, okCA := d.GetOk("ca_pem")
-
-	cert_status := "INACTIVE"
-	if d.Get("active").(bool) {
-		cert_status = "ACTIVE"
+	active := d.Get("active").(bool)
+	status := iot.CertificateStatusInactive
+	if active {
+		status = iot.CertificateStatusActive
 	}
+	vCert, okCert := d.GetOk("certificate_pem")
+	vCA, okCA := d.GetOk("ca_pem")
 
-	if _, ok := d.GetOk("csr"); ok {
-		log.Printf("[DEBUG] Creating certificate from CSR")
-		out, err := conn.CreateCertificateFromCsrWithContext(ctx, &iot.CreateCertificateFromCsrInput{
-			CertificateSigningRequest: aws.String(d.Get("csr").(string)),
-			SetAsActive:               aws.Bool(d.Get("active").(bool)),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating certificate from CSR: %v", err)
+	if vCSR, okCSR := d.GetOk("csr"); okCSR {
+		input := &iot.CreateCertificateFromCsrInput{
+			CertificateSigningRequest: aws.String(vCSR.(string)),
+			SetAsActive:               aws.Bool(active),
 		}
-		log.Printf("[DEBUG] Created certificate from CSR")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-	} else if okcert && okCA {
-		log.Printf("[DEBUG] Registering certificate with CA")
-		out, err := conn.RegisterCertificateWithContext(ctx, &iot.RegisterCertificateInput{
-			CaCertificatePem: aws.String(d.Get("ca_pem").(string)),
-			CertificatePem:   aws.String(d.Get("certificate_pem").(string)),
-			Status:           aws.String(cert_status),
-		})
+		output, err := conn.CreateCertificateFromCsrWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "registering certificate with CA: %v", err)
+			return sdkdiag.AppendErrorf(diags, "creating IoT Certificate from CSR: %s", err)
 		}
-		log.Printf("[DEBUG] Certificate with CA registered")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-	} else if okcert {
-		log.Printf("[DEBUG] Registering certificate without CA")
-		out, err := conn.RegisterCertificateWithoutCAWithContext(ctx, &iot.RegisterCertificateWithoutCAInput{
-			CertificatePem: aws.String(d.Get("certificate_pem").(string)),
-			Status:         aws.String(cert_status),
-		})
+		d.SetId(aws.StringValue(output.CertificateId))
+	} else if okCert && okCA {
+		input := &iot.RegisterCertificateInput{
+			CaCertificatePem: aws.String(vCA.(string)),
+			CertificatePem:   aws.String(vCert.(string)),
+			Status:           aws.String(status),
+		}
+
+		output, err := conn.RegisterCertificateWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "registering certificate without CA: %v", err)
+			return sdkdiag.AppendErrorf(diags, "registering IoT Certificate with CA: %s", err)
 		}
-		log.Printf("[DEBUG] Certificate without CA registered")
 
-		d.SetId(aws.StringValue(out.CertificateId))
+		d.SetId(aws.StringValue(output.CertificateId))
+	} else if okCert {
+		input := &iot.RegisterCertificateWithoutCAInput{
+			CertificatePem: aws.String(vCert.(string)),
+			Status:         aws.String(status),
+		}
+
+		output, err := conn.RegisterCertificateWithoutCAWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "registering IoT Certificate without CA: %s", err)
+		}
+
+		d.SetId(aws.StringValue(output.CertificateId))
 	} else {
-		log.Printf("[DEBUG] Creating keys and certificate")
-		out, err := conn.CreateKeysAndCertificateWithContext(ctx, &iot.CreateKeysAndCertificateInput{
-			SetAsActive: aws.Bool(d.Get("active").(bool)),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating keys and certificate: %v", err)
+		input := &iot.CreateKeysAndCertificateInput{
+			SetAsActive: aws.Bool(active),
 		}
-		log.Printf("[DEBUG] Created keys and certificate")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-		d.Set("public_key", out.KeyPair.PublicKey)
-		d.Set("private_key", out.KeyPair.PrivateKey)
+		output, err := conn.CreateKeysAndCertificateWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating IoT Certificate: %s", err)
+		}
+
+		d.SetId(aws.StringValue(output.CertificateId))
+		d.Set("private_key", output.KeyPair.PrivateKey)
+		d.Set("public_key", output.KeyPair.PublicKey)
 	}
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
