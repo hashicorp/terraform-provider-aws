@@ -5,9 +5,11 @@ package iot
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,19 +178,33 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	_, err := conn.UpdateCertificateWithContext(ctx, &iot.UpdateCertificateInput{
-		CertificateId: aws.String(d.Id()),
-		NewStatus:     aws.String("INACTIVE"),
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "inactivating certificate: %v", err)
+	if d.Get("active").(bool) {
+		log.Printf("[DEBUG] Disabling IoT Certificate: %s", d.Id())
+		_, err := conn.UpdateCertificateWithContext(ctx, &iot.UpdateCertificateInput{
+			CertificateId: aws.String(d.Id()),
+			NewStatus:     aws.String(iot.CertificateStatusInactive),
+		})
+
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling IoT Certificate (%s): %s", d.Id(), err)
+		}
 	}
 
-	_, err = conn.DeleteCertificateWithContext(ctx, &iot.DeleteCertificateInput{
+	log.Printf("[DEBUG] Deleting IoT Certificate: %s", d.Id())
+	_, err := conn.DeleteCertificateWithContext(ctx, &iot.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting certificate: %v", err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Certificate (%s): %s", d.Id(), err)
 	}
 
 	return diags

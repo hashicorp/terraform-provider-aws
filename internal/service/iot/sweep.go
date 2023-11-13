@@ -117,6 +117,7 @@ func sweepCertificates(region string) error {
 			r := ResourceCertificate()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
