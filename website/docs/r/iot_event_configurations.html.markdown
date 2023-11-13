@@ -10,6 +10,8 @@ description: |-
 
 Manages IoT event configurations.
 
+~> **NOTE:** Deleting this resource does not disable the event configurations, the resource in simply removed from state instead.
+
 ## Example Usage
 
 ```terraform
