@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_iam_policy_attachment")
@@ -206,10 +207,13 @@ func composeErrors(desc string, uErr error, rErr error, gErr error) diag.Diagnos
 
 func attachPolicyToUsers(ctx context.Context, conn *iam.IAM, users []*string, arn string) error {
 	for _, u := range users {
-		_, err := conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
+		input := &iam.AttachUserPolicyInput{
 			UserName:  u,
 			PolicyArn: aws.String(arn),
-		})
+		}
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.AttachUserPolicyWithContext(ctx, input)
+		}, iam.ErrCodeConcurrentModificationException)
 		if err != nil {
 			return err
 		}
@@ -218,10 +222,13 @@ func attachPolicyToUsers(ctx context.Context, conn *iam.IAM, users []*string, ar
 }
 func attachPolicyToRoles(ctx context.Context, conn *iam.IAM, roles []*string, arn string) error {
 	for _, r := range roles {
-		_, err := conn.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+		input := &iam.AttachRolePolicyInput{
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
-		})
+		}
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.AttachRolePolicyWithContext(ctx, input)
+		}, iam.ErrCodeConcurrentModificationException)
 		if err != nil {
 			return err
 		}
@@ -230,10 +237,13 @@ func attachPolicyToRoles(ctx context.Context, conn *iam.IAM, roles []*string, ar
 }
 func attachPolicyToGroups(ctx context.Context, conn *iam.IAM, groups []*string, arn string) error {
 	for _, g := range groups {
-		_, err := conn.AttachGroupPolicyWithContext(ctx, &iam.AttachGroupPolicyInput{
+		input := &iam.AttachGroupPolicyInput{
 			GroupName: g,
 			PolicyArn: aws.String(arn),
-		})
+		}
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.AttachGroupPolicyWithContext(ctx, input)
+		}, iam.ErrCodeConcurrentModificationException)
 		if err != nil {
 			return err
 		}

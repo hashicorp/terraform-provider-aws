@@ -150,10 +150,12 @@ func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.Resource
 }
 
 func attachPolicyToGroup(ctx context.Context, conn *iam.IAM, group string, arn string) error {
-	_, err := conn.AttachGroupPolicyWithContext(ctx, &iam.AttachGroupPolicyInput{
-		GroupName: aws.String(group),
-		PolicyArn: aws.String(arn),
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachGroupPolicyWithContext(ctx, &iam.AttachGroupPolicyInput{
+			GroupName: aws.String(group),
+			PolicyArn: aws.String(arn),
+		})
+	}, iam.ErrCodeConcurrentModificationException)
 	return err
 }
 

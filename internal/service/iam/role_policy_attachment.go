@@ -157,10 +157,12 @@ func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 }
 
 func attachPolicyToRole(ctx context.Context, conn *iam.IAM, role string, arn string) error {
-	_, err := conn.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
-		RoleName:  aws.String(role),
-		PolicyArn: aws.String(arn),
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+			RoleName:  aws.String(role),
+			PolicyArn: aws.String(arn),
+		})
+	}, iam.ErrCodeConcurrentModificationException)
 	return err
 }
 

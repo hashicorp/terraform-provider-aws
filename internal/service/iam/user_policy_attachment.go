@@ -153,10 +153,12 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 }
 
 func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user string, arn string) error {
-	_, err := conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
-		UserName:  aws.String(user),
-		PolicyArn: aws.String(arn),
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
+			UserName:  aws.String(user),
+			PolicyArn: aws.String(arn),
+		})
+	}, iam.ErrCodeConcurrentModificationException)
 	return err
 }
 
