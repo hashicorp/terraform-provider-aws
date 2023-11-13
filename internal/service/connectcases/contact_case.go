@@ -9,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connectcases"
+	"github.com/aws/aws-sdk-go-v2/service/connectcases/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_connectcases_contact_case", name="Connect Cases Contact Case")
@@ -30,23 +30,31 @@ func ResourceContactCase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			//TODO: Implement fields
-			// "fields": {
-			// 	Type:     schema.TypeSet,
-			// 	Required: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:     schema.TypeString,
-			// 				Required: true,
-			// 			},
-			// 			"value": {
-			// 				Type:     schema.TypeString,
-			// 				Required: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
+			"fields": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						//@bschaatsbergen, can we enforce it that only one of these 3 can be set?
+						"bool_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"decimal_value": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+						},
+						"string_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"template_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -64,8 +72,6 @@ func ResourceContactCase() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -78,9 +84,9 @@ func resourceContactCaseCreate(ctx context.Context, d *schema.ResourceData, meta
 		DomainId:   aws.String(d.Get("domain_id").(string)),
 	}
 
-	// if v, ok := d.GetOk("fields"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-	// 	input.Fields = expandFields(v.([]interface{})[0].(map[string]interface{}))
-	// }
+	if v, ok := d.GetOk("fields"); ok {
+		input.Fields = expandFields(v.(*schema.Set).List())
+	}
 
 	output, err := conn.CreateCase(ctx, input)
 
@@ -101,24 +107,21 @@ func resourceContactCaseRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectCasesClient(ctx)
 
-	input := &connectcases.GetCaseInput{
-		CaseId:   aws.String(d.Id()),
-		DomainId: aws.String(d.Get("domain_id").(string)),
-	}
-
-	output, err := conn.GetCase(ctx, input)
+	domainId := d.Get("domain_id").(string)
+	output, err := FindContactCaseByDomainAndId(ctx, conn, d.Id(), domainId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Connect Cases Contact Case (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Connect Case Contact Case (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Connect Cases Contact Case (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Case Contact Case (%s): %s", d.Id(), err)
 	}
 
 	d.Set("template_id", output.TemplateId)
+	d.Set("fields", flattenFields(output.Fields))
 
 	return diags
 }
@@ -140,4 +143,83 @@ func resourceContactCaseUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return append(diags, resourceContactCaseRead(ctx, d, meta)...)
+}
+
+func expandFields(fields []interface{}) []types.FieldValue {
+	if len(fields) == 0 || fields[0] == nil {
+		return nil
+	}
+
+	apiObject := make([]types.FieldValue, 0, len(fields))
+
+	for _, object := range fields {
+		field, ok := object.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+
+		fieldValue := &types.FieldValue{}
+
+		if v, ok := field["id"].(string); ok && v != "" {
+			fieldValue.Id = aws.String(v)
+		}
+
+		if v, ok := field["bool_value"].(bool); ok {
+			fieldValue.Value = &types.FieldValueUnionMemberBooleanValue{Value: v}
+		}
+
+		if v, ok := field["decimal_value"].(float64); ok {
+			fieldValue.Value = &types.FieldValueUnionMemberDoubleValue{Value: v}
+		}
+
+		if v, ok := field["string_value"].(string); ok {
+			fieldValue.Value = &types.FieldValueUnionMemberStringValue{Value: v}
+		}
+
+		apiObject = append(apiObject, *fieldValue)
+	}
+
+	return apiObject
+}
+
+func flattenFields(apiObject []types.FieldValue) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	var apiResult []interface{}
+	for _, field := range apiObject {
+		result := map[string]interface{}{
+			"id":    aws.ToString(field.Id),
+			"value": flattenFieldValue(field.Value),
+		}
+
+		apiResult = append(apiResult, result)
+	}
+
+	return []interface{}{apiResult}
+}
+
+func flattenFieldValue(apiObject types.FieldValueUnion) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	apiResult := map[string]interface{}{}
+
+	switch v := apiObject.(type) {
+	case *types.FieldValueUnionMemberBooleanValue:
+		apiResult["bool_value"] = v.Value
+
+	case *types.FieldValueUnionMemberDoubleValue:
+		apiResult["double_value"] = v.Value
+
+	case *types.FieldValueUnionMemberStringValue:
+		apiResult["string_value"] = v.Value
+
+	default:
+		log.Println("union is nil or unknown type")
+	}
+
+	return []interface{}{apiResult}
 }

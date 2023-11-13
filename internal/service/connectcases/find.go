@@ -14,6 +14,32 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindContactCaseByDomainAndId(ctx context.Context, conn *connectcases.Client, id, domainId string) (*connectcases.GetCaseOutput, error) {
+	input := &connectcases.GetCaseInput{
+		CaseId:   aws.String(id),
+		DomainId: aws.String(domainId),
+	}
+
+	output, err := conn.GetCase(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindDomainById(ctx context.Context, conn *connectcases.Client, id string) (*connectcases.GetDomainOutput, error) {
 	input := &connectcases.GetDomainInput{
 		DomainId: aws.String(id),
