@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -18,7 +18,7 @@ import (
 
 func TestAccIoTBillingGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var BillingGroup iot.DescribeBillingGroupOutput
+	var v iot.DescribeBillingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_billing_group.test"
 
@@ -30,8 +30,8 @@ func TestAccIoTBillingGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBillingGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
@@ -52,7 +52,7 @@ func TestAccIoTBillingGroup_basic(t *testing.T) {
 
 func TestAccIoTBillingGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var BillingGroup iot.DescribeBillingGroupOutput
+	var v iot.DescribeBillingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_billing_group.test"
 
@@ -65,7 +65,7 @@ func TestAccIoTBillingGroup_disappears(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceBillingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,7 +76,7 @@ func TestAccIoTBillingGroup_disappears(t *testing.T) {
 
 func TestAccIoTBillingGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var BillingGroup iot.DescribeBillingGroupOutput
+	var v iot.DescribeBillingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_billing_group.test"
 
@@ -89,7 +89,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -102,7 +102,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -111,7 +111,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -122,7 +122,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 
 func TestAccIoTBillingGroup_properties(t *testing.T) {
 	ctx := acctest.Context(t)
-	var BillingGroup iot.DescribeBillingGroupOutput
+	var v iot.DescribeBillingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_billing_group.test"
 
@@ -135,7 +135,7 @@ func TestAccIoTBillingGroup_properties(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_properties(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 1"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -149,7 +149,7 @@ func TestAccIoTBillingGroup_properties(t *testing.T) {
 			{
 				Config: testAccBillingGroupConfig_propertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBillingGroupExists(ctx, resourceName, &BillingGroup),
+					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -166,11 +166,7 @@ func testAccCheckBillingGroupExists(ctx context.Context, n string, v *iot.Descri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IoT Billing Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		output, err := tfiot.FindBillingGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -186,7 +182,7 @@ func testAccCheckBillingGroupExists(ctx context.Context, n string, v *iot.Descri
 
 func testAccCheckBillingGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_billing_group" {

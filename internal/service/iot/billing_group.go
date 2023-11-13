@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -80,18 +83,14 @@ func ResourceBillingGroup() *schema.Resource {
 	}
 }
 
-const (
-	BillingGroupDeleteTimeout = 1 * time.Minute
-)
-
 func resourceBillingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateBillingGroupInput{
-		Tags:             GetTagsIn(ctx),
 		BillingGroupName: aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -111,7 +110,7 @@ func resourceBillingGroupCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindBillingGroupByName(ctx, conn, d.Id())
 
@@ -142,7 +141,6 @@ func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("properties", nil)
 	}
-
 	d.Set("version", output.Version)
 
 	return diags
@@ -150,12 +148,12 @@ func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateBillingGroupInput{
+			BillingGroupName: aws.String(d.Id()),
 			ExpectedVersion:  aws.Int64(int64(d.Get("version").(int))),
-			BillingGroupName: aws.String(d.Get("name").(string)),
 		}
 
 		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -164,7 +162,6 @@ func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.BillingGroupProperties = &iot.BillingGroupProperties{}
 		}
 
-		log.Printf("[DEBUG] Updating IoT Billing Group: %s", input)
 		_, err := conn.UpdateBillingGroupWithContext(ctx, input)
 
 		if err != nil {
@@ -177,14 +174,12 @@ func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBillingGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IoT Billing Group: %s", d.Id())
-	deleteParams := &iot.DeleteBillingGroupInput{
+	_, err := conn.DeleteBillingGroupWithContext(ctx, &iot.DeleteBillingGroupInput{
 		BillingGroupName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteBillingGroupWithContext(ctx, deleteParams)
+	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return diags
