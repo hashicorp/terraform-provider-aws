@@ -88,31 +88,6 @@ func FindThingGroupByName(ctx context.Context, conn *iot.IoT, name string) (*iot
 	return output, nil
 }
 
-func FindBillingGroupByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeBillingGroupOutput, error) {
-	input := &iot.DescribeBillingGroupInput{
-		BillingGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeBillingGroupWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindThingGroupMembership(ctx context.Context, conn *iot.IoT, thingGroupName, thingName string) error {
 	input := &iot.ListThingGroupsForThingInput{
 		ThingName: aws.String(thingName),
