@@ -36,12 +36,14 @@ func ResourceCertificate() *schema.Resource {
 			"ca_pem": {
 				Type:      schema.TypeString,
 				Optional:  true,
+				ForceNew:  true,
 				Sensitive: true,
 			},
 			"certificate_pem": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
+				ForceNew:  true,
 				Sensitive: true,
 			},
 			"csr": {
@@ -156,19 +158,19 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChange("active") {
-		status := iot.CertificateStatusInactive
-		if d.Get("active").(bool) {
-			status = iot.CertificateStatusActive
-		}
+	status := iot.CertificateStatusInactive
+	if d.Get("active").(bool) {
+		status = iot.CertificateStatusActive
+	}
+	input := &iot.UpdateCertificateInput{
+		CertificateId: aws.String(d.Id()),
+		NewStatus:     aws.String(status),
+	}
 
-		_, err := conn.UpdateCertificateWithContext(ctx, &iot.UpdateCertificateInput{
-			CertificateId: aws.String(d.Id()),
-			NewStatus:     aws.String(status),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating certificate: %v", err)
-		}
+	_, err := conn.UpdateCertificateWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IoT Certificate (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
