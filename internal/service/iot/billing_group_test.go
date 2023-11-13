@@ -6,9 +6,9 @@ package iot_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccIoTBillingGroup_basic(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
