@@ -1622,6 +1622,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "capacity-optimized"),
 				),
 			},
 			{
@@ -1647,6 +1648,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnet2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "price-capacity-optimized"),
 				),
 			},
 			{
@@ -3980,7 +3982,7 @@ resource "aws_emr_cluster" "test" {
     }
     launch_specifications {
       spot_specification {
-        allocation_strategy      = "capacity-optimized"
+        allocation_strategy      = "price-capacity-optimized"
         block_duration_minutes   = 0
         timeout_action           = "SWITCH_TO_ON_DEMAND"
         timeout_duration_minutes = 10

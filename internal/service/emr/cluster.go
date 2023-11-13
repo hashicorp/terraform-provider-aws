@@ -2082,9 +2082,9 @@ func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisionin
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		// The return value from api is wrong. it return "LOWEST_PRICE" instead of "lowest-price"
-		// "allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
-		"allocation_strategy": emr.OnDemandProvisioningAllocationStrategyLowestPrice,
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		"allocation_strategy": strings.Replace(strings.ToLower(aws.StringValue(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
 	}
 	return []interface{}{m}
 }
@@ -2101,9 +2101,9 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
 	}
 	if spotSpecification.AllocationStrategy != nil {
-		// The return value from api is wrong. It return "CAPACITY_OPTIMIZED" instead of "capacity-optimized"
-		// m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
-		m["allocation_strategy"] = emr.SpotProvisioningAllocationStrategyCapacityOptimized
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		m["allocation_strategy"] = strings.Replace(strings.ToLower(aws.StringValue(spotSpecification.AllocationStrategy)), "_", "-", -1)
 	}
 
 	return []interface{}{m}
