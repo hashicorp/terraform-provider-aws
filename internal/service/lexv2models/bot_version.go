@@ -269,7 +269,7 @@ func (r *resourceBotVersion) ImportState(ctx context.Context, req resource.Impor
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.BotStatusVersioning),
+		Pending:                   enum.Slice(awstypes.BotStatusCreating, awstypes.BotStatusVersioning),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBotVersion(ctx, conn, id),
 		Timeout:                   timeout,
