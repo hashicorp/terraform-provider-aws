@@ -57,6 +57,8 @@ Comprehend
 Compute Optimizer
 Config
 Connect
+Connect Cases
+Connect Customer Profiles
 Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
