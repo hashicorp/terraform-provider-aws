@@ -11,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_iot_certificate", name="Certificate)
@@ -30,6 +32,10 @@ func ResourceCertificate() *schema.Resource {
 				Required: true,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ca_certificate_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,16 +146,23 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	out, err := conn.DescribeCertificateWithContext(ctx, &iot.DescribeCertificateInput{
-		CertificateId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading certificate details: %v", err)
+	output, err := FindCertificateByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Certificate (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("active", aws.Bool(aws.StringValue(out.CertificateDescription.Status) == iot.CertificateStatusActive))
-	d.Set("arn", out.CertificateDescription.CertificateArn)
-	d.Set("certificate_pem", out.CertificateDescription.CertificatePem)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IoT Certificate (%s): %s", d.Id(), err)
+	}
+
+	certificateDescription := output.CertificateDescription
+	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CertificateStatusActive)
+	d.Set("arn", certificateDescription.CertificateArn)
+	d.Set("ca_certificate_id", certificateDescription.CaCertificateId)
+	d.Set("certificate_pem", certificateDescription.CertificatePem)
 
 	return diags
 }
@@ -210,4 +223,29 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func FindCertificateByID(ctx context.Context, conn *iot.IoT, id string) (*iot.DescribeCertificateOutput, error) {
+	input := &iot.DescribeCertificateInput{
+		CertificateId: aws.String(id),
+	}
+
+	output, err := conn.DescribeCertificateWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CertificateDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
