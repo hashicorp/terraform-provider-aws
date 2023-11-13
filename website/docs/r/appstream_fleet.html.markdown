@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_fleet"
 description: |-
@@ -21,11 +21,11 @@ resource "aws_appstream_fleet" "test_fleet" {
   }
 
   description                        = "test fleet"
-  idle_disconnect_timeout_in_seconds = 15
+  idle_disconnect_timeout_in_seconds = 60
   display_name                       = "test-fleet"
   enable_default_internet_access     = false
   fleet_type                         = "ON_DEMAND"
-  image_name                         = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name                         = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type                      = "stream.standard.large"
   max_user_duration_in_seconds       = 600
 
@@ -59,7 +59,7 @@ The following arguments are optional:
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
-* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays.
+* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
 * `max_user_duration_in_seconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
@@ -78,10 +78,9 @@ The following arguments are optional:
 * `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
 * `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - ARN of the appstream fleet.
@@ -95,11 +94,19 @@ In addition to all arguments above, the following attributes are exported:
 * `in_use` - Number of instances in use for streaming.
 * `running` - Total number of simultaneous streaming instances that are running.
 
-
 ## Import
 
-`aws_appstream_fleet` can be imported using the id, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_fleet` using the id. For example:
 
+```terraform
+import {
+  to = aws_appstream_fleet.example
+  id = "fleetNameExample"
+}
 ```
-$ terraform import aws_appstream_fleet.example fleetNameExample
+
+Using `terraform import`, import `aws_appstream_fleet` using the id. For example:
+
+```console
+% terraform import aws_appstream_fleet.example fleetNameExample
 ```

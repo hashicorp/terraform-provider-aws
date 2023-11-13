@@ -19,10 +19,15 @@ resource "aws_guardduty_detector" "primary" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl = "private"
+  # ... other configuration ...
 }
 
-resource "aws_s3_bucket_object" "MyThreatIntelSet" {
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "MyThreatIntelSet" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.bucket.id
@@ -33,34 +38,43 @@ resource "aws_guardduty_threatintelset" "MyThreatIntelSet" {
   activate    = true
   detector_id = aws_guardduty_detector.primary.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.MyThreatIntelSet.bucket}/${aws_s3_bucket_object.MyThreatIntelSet.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.MyThreatIntelSet.bucket}/${aws_s3_object.MyThreatIntelSet.key}"
   name        = "MyThreatIntelSet"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded ThreatIntelSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.
 * `format` - (Required) The format of the file that contains the ThreatIntelSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
 * `location` - (Required) The URI of the file that contains the ThreatIntelSet.
 * `name` - (Required) The friendly name to identify the ThreatIntelSet.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty ThreatIntelSet.
 * `id` - The ID of the GuardDuty ThreatIntelSet and the detector ID. Format: `<DetectorID>:<ThreatIntelSetID>`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-GuardDuty ThreatIntelSet can be imported using the the primary GuardDuty detector ID and ThreatIntelSetID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty ThreatIntelSet using the primary GuardDuty detector ID and ThreatIntelSetID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_threatintelset.MyThreatIntelSet
+  id = "00b00fd5aecc0ab60a708659477e9617:123456789012"
+}
 ```
-$ terraform import aws_guardduty_threatintelset.MyThreatIntelSet 00b00fd5aecc0ab60a708659477e9617:123456789012
+
+Using `terraform import`, import GuardDuty ThreatIntelSet using the primary GuardDuty detector ID and ThreatIntelSetID. For example:
+
+```console
+% terraform import aws_guardduty_threatintelset.MyThreatIntelSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```

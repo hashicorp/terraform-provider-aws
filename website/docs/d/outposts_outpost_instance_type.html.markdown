@@ -29,7 +29,7 @@ resource "aws_ec2_instance" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Outpost Amazon Resource Name (ARN).
+* `arn` - (Required) Outpost ARN.
 
 The following arguments are optional:
 
@@ -38,6 +38,6 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Outpost identifier.

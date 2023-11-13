@@ -1,0 +1,63 @@
+```release-note:bug
+resource/aws_opsworks_application: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_custom_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_ecs_cluster_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_ganglia_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_haproxy_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_instance: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_java_app_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_memcached_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_mysql_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_nodejs_app_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_php_app_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_rails_app_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_rds_db_instance: Correctly remove from state in certain deletion situations
+```
+
+```release-note:bug
+resource/aws_opsworks_stack: Fix error reported on successful deletion, lack of eventual consistency wait
+```
+
+```release-note:bug
+resource/aws_opsworks_static_web_layer: Fix error reported on successful deletion
+```
+
+```release-note:bug
+resource/aws_opsworks_user_profile: Fix error reported on successful deletion
+```

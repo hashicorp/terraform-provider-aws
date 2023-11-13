@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_network_association"
 description: |-
@@ -13,47 +13,48 @@ Provides network associations for AWS Client VPN endpoints. For more information
 
 ## Example Usage
 
-### Using default security group
-
 ```terraform
 resource "aws_ec2_client_vpn_network_association" "example" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
   subnet_id              = aws_subnet.example.id
-}
-```
-
-### Using custom security groups
-
-```terraform
-resource "aws_ec2_client_vpn_network_association" "example" {
-  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
-  subnet_id              = aws_subnet.example.id
-  security_groups        = [aws_security_group.example1.id, aws_security_group.example2.id]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
-* `security_groups` - (Optional) A list of up to five custom security groups to apply to the target network. If not specified, the VPC's default security group is assigned.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
-* `security_groups` - The IDs of the security groups applied to the target network association.
-* `status` - The current state of the target network association.
 * `vpc_id` - The ID of the VPC in which the target subnet is located.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
-AWS Client VPN network associations can be imported using the endpoint ID and the association ID. Values are separated by a `,`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`. For example:
 
+```terraform
+import {
+  to = aws_ec2_client_vpn_network_association.example
+  id = "cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad"
+}
 ```
-$ terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad
+
+Using `terraform import`, import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`. For example:
+
+```console
+% terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad
 ```

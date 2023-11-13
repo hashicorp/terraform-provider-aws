@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Ensure both `key` and `value` arguments of the `filter` `tag` configuration block are correctly populated in the outgoing API request and terraform state.
+```

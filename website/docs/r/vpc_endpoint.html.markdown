@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint"
 description: |-
@@ -11,8 +11,9 @@ description: |-
 Provides a VPC Endpoint resource.
 
 ~> **NOTE on VPC Endpoints and VPC Endpoint Associations:** Terraform provides both standalone VPC Endpoint Associations for
-[Route Tables](vpc_endpoint_route_table_association.html) - (an association between a VPC endpoint and a single `route_table_id`) and
-[Subnets](vpc_endpoint_subnet_association.html) - (an association between a VPC endpoint and a single `subnet_id`) and
+[Route Tables](vpc_endpoint_route_table_association.html) - (an association between a VPC endpoint and a single `route_table_id`),
+[Security Groups](vpc_endpoint_security_group_association.html) - (an association between a VPC endpoint and a single `security_group_id`),
+and [Subnets](vpc_endpoint_subnet_association.html) - (an association between a VPC endpoint and a single `subnet_id`) and
 a VPC Endpoint resource with `route_table_ids` and `subnet_ids` attributes.
 Do not use the same resource ID in both a VPC Endpoint resource and a VPC Endpoint Association resource.
 Doing so will cause a conflict of associations and will overwrite the association.
@@ -111,32 +112,39 @@ resource "aws_route53_record" "ptfe_service" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `vpc_id` - (Required) The ID of the VPC in which the endpoint will be used.
 * `auto_accept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
-* `private_dns_enabled` - (Optional; AWS services and AWS Marketplace partner services only) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
+* `private_dns_enabled` - (Optional; AWS services and AWS Marketplace partner services only) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`. Most users will want this enabled to allow services within the VPC to automatically use the endpoint.
 Defaults to `false`.
+* `dns_options` - (Optional) The DNS options for the endpoint. See dns_options below.
+* `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
-* `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`.
-* `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Required for endpoints of type `Interface`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
+* `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`.
+If no security groups are specified, the VPC's [default security group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#DefaultSecurityGroup) is associated with the endpoint.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway`, `GatewayLoadBalancer`, or `Interface`. Defaults to `Gateway`.
 
-### Timeouts
+### dns_options
 
-`aws_vpc_endpoint` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+* `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
+* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Default is `false`. Can only be specified if private_dns_enabled is `true`.
 
-- `create` - (Default `10 minutes`) Used for creating a VPC endpoint
-- `update` - (Default `10 minutes`) Used for VPC endpoint modifications
-- `delete` - (Default `10 minutes`) Used for destroying VPC endpoints
+## Timeouts
 
-## Attributes Reference
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-In addition to all arguments above, the following attributes are exported:
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC endpoint.
 * `arn` - The Amazon Resource Name (ARN) of the VPC endpoint.
@@ -147,7 +155,7 @@ In addition to all arguments above, the following attributes are exported:
 * `prefix_list_id` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `state` - The state of the VPC endpoint.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 DNS blocks (for `dns_entry`) support the following attributes:
 
@@ -156,8 +164,17 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
-VPC Endpoints can be imported using the `vpc endpoint id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint.endpoint1
+  id = "vpce-3ecf2a57"
+}
 ```
-$ terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+
+Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```

@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement` attribute
+```

@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_role_policy"
 description: |-
@@ -56,18 +56,18 @@ resource "aws_iam_role" "test_role" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the role policy. If omitted, Terraform will
 assign a random, unique name.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified
   prefix. Conflicts with `name`.
 * `policy` - (Required) The inline policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
-* `role` - (Required) The IAM role to attach to the policy.
+* `role` - (Required) The name of the IAM role to attach to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The role policy ID, in the form of `role_name:role_policy_name`.
 * `name` - The name of the policy.
@@ -76,8 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
+```terraform
+import {
+  to = aws_iam_role_policy.mypolicy
+  id = "role_of_mypolicy_name:mypolicy_name"
+}
 ```
-$ terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
+
+Using `terraform import`, import IAM Role Policies using the `role_name:role_policy_name`. For example:
+
+```console
+% terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
 ```

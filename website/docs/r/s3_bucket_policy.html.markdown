@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_policy"
 description: |-
@@ -15,54 +15,59 @@ Attaches a policy to an S3 bucket resource.
 ### Basic Usage
 
 ```terraform
-resource "aws_s3_bucket" "b" {
+resource "aws_s3_bucket" "example" {
   bucket = "my-tf-test-bucket"
 }
 
-resource "aws_s3_bucket_policy" "b" {
-  bucket = aws_s3_bucket.b.id
+resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.allow_access_from_another_account.json
+}
 
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression's result to valid JSON syntax.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "MYBUCKETPOLICY"
-    Statement = [
-      {
-        Sid       = "IPAllow"
-        Effect    = "Deny"
-        Principal = "*"
-        Action    = "s3:*"
-        Resource = [
-          aws_s3_bucket.b.arn,
-          "${aws_s3_bucket.b.arn}/*",
-        ]
-        Condition = {
-          NotIpAddress = {
-            "aws:SourceIp" = "8.8.8.8/32"
-          }
-        }
-      },
+data "aws_iam_policy_document" "allow_access_from_another_account" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
     ]
-  })
+
+    resources = [
+      aws_s3_bucket.example.arn,
+      "${aws_s3_bucket.example.arn}/*",
+    ]
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `bucket` - (Required) The name of the bucket to which to apply the policy.
-* `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
+* `bucket` - (Required) Name of the bucket to which to apply the policy.
+* `policy` - (Required) Text of the policy. Although this is a bucket policy rather than an IAM policy, the [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket policies can be imported using the bucket name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket policies using the bucket name. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_policy.allow_access_from_another_account
+  id = "my-tf-test-bucket"
+}
 ```
-$ terraform import aws_s3_bucket_policy.example my-bucket-name
+
+Using `terraform import`, import S3 bucket policies using the bucket name. For example:
+
+```console
+% terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
 ```

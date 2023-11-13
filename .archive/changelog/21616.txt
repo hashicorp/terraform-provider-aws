@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_node_group: Support for `BOTTLEROCKET_ARM_64` and `BOTTLEROCKET_x86_64` `ami_type` argument values
+```

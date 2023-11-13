@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workteam"
 description: |-
-  Provides a Sagemaker Workteam resource.
+  Provides a SageMaker Workteam resource.
 ---
 
 # Resource: aws_sagemaker_workteam
 
-Provides a Sagemaker Workteam resource.
+Provides a SageMaker Workteam resource.
 
 ## Example Usage
 
@@ -48,14 +48,14 @@ resource "aws_sagemaker_workteam" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
 * `workforce_name` - (Required) The name of the Workteam (must be unique).
 * `workteam_name` - (Required) The name of the workforce.
 * `member_definition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognito_member_definition`. For workforces created using your own OIDC identity provider (IdP) use `oidc_member_definition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notification_configuration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Member Definition
 
@@ -76,20 +76,28 @@ The following arguments are supported:
 
 * `notification_topic_arn` - (Required) The ARN for the SNS topic to which notifications should be published.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workteam.
 * `id` - The name of the Workteam.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Sagemaker Workteams can be imported using the `workteam_name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workteams using the `workteam_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_workteam.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_workteam.example example
+
+Using `terraform import`, import SageMaker Workteams using the `workteam_name`. For example:
+
+```console
+% terraform import aws_sagemaker_workteam.example example
 ```

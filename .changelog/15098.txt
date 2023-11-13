@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_iot_registration_code
+```
+
+```release-note:new-resource
+aws_iot_ca_certificate
+```

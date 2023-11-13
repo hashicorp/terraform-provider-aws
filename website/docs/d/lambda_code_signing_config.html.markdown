@@ -22,23 +22,23 @@ data "aws_lambda_code_signing_config" "existing_csc" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the code signing configuration.
+* `arn` - (Required) ARN of the code signing configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allowed_publishers` - List of allowed publishers as signing profiles for this code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.
 * `description` - Code signing configuration description.
-* `last_modified` - The date and time that the code signing configuration was last modified.
+* `last_modified` - Date and time that the code signing configuration was last modified.
 * `policies` - List of code signing policies that control the validation failure action for signature mismatch or expiry.
 
 `allowed_publishers` is exported with the following attribute:
 
-* `signing_profile_version_arns` - The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
+* `signing_profile_version_arns` - The ARN for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
 
 `policies` is exported with the following attribute:
 

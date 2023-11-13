@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `cold_storage_options` argument to the `cluster_config` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `cold_storage_options` attribute to the `cluster_config` configuration block
+```

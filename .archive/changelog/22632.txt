@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Increase the maximum valid `origin_keepalive_timeout` value to `180`
+```

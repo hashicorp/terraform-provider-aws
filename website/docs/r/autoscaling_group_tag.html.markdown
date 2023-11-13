@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group_tag"
 description: |-
@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_autoscaling_group_tag
 
-Manages an individual Autoscaling Group (ASG) tag. This resource should only be used in cases where ASGs are created outside Terraform (e.g. ASGs implicitly created by EKS Node Groups).
+Manages an individual Autoscaling Group (ASG) tag. This resource should only be used in cases where ASGs are created outside Terraform (e.g., ASGs implicitly created by EKS Node Groups).
 
 ~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_autoscaling_group` and `aws_autoscaling_group_tag` to manage tags of the same ASG will cause a perpetual difference where the `aws_autoscaling_group` resource will try to remove the tag being added by the `aws_autoscaling_group_tag` resource.
 
@@ -44,10 +44,10 @@ resource "aws_autoscaling_group_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `autoscaling_group_name` - (Required) The name of the Autoscaling Group to apply the tag to.
-* `tag` - (Required) The tag to create. The `tag` block is documented below.
+* `autoscaling_group_name` - (Required) Name of the Autoscaling Group to apply the tag to.
+* `tag` - (Required) Tag to create. The `tag` block is documented below.
 
 The `tag` block supports the following arguments:
 
@@ -55,16 +55,25 @@ The `tag` block supports the following arguments:
 * `value` - (Required) Tag value.
 * `propagate_at_launch` - (Required) Whether to propagate the tags to instances launched by the ASG.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ASG name and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_autoscaling_group_tag` can be imported by using the ASG name and key, separated by a comma (`,`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_autoscaling_group_tag.example
+  id = "asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType"
+}
 ```
-$ terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType
+
+Using `terraform import`, import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType
 ```

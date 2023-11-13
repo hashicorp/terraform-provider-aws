@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_ec2_public_ipv4_pools
+```
+
+```release-note:new-data-source
+aws_ec2_public_ipv4_pool
+```

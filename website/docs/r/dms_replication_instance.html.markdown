@@ -1,5 +1,5 @@
 ---
-subcategory: "Database Migration Service (DMS)"
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_instance"
 description: |-
@@ -11,12 +11,13 @@ description: |-
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
 ## Example Usage
+
 Create required roles and then create a DMS instance, setting the depends_on to the required role policy attachments.
 
 ```terraform
 # Database Migration Service requires the below IAM Roles to be created before
 # replication instances can be created. See the DMS Documentation for
-# additional information: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.APIRole
+# additional information: https://docs.aws.amazon.com/dms/latest/userguide/security-iam.html#CHAP_Security.APIRole
 #  * dms-vpc-role
 #  * dms-cloudwatch-logs-role
 #  * dms-access-for-endpoint
@@ -95,7 +96,7 @@ resource "aws_dms_replication_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
@@ -105,6 +106,7 @@ The following arguments are supported:
 * `engine_version` - (Optional) The engine version number of the replication instance.
 * `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
+* `network_type` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
     - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
@@ -113,7 +115,7 @@ The following arguments are supported:
     - Constraints: Minimum 30-minute window.
 
 * `publicly_accessible` - (Optional, Default: false) Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
-* `replication_instance_class` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. Can be one of `dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge`
+* `replication_instance_class` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for available instance sizes and advice on which one to choose.
 * `replication_instance_id` - (Required) The replication instance identifier. This parameter is stored as a lowercase string.
 
     - Must contain from 1 to 63 alphanumeric characters or hyphens.
@@ -122,31 +124,39 @@ The following arguments are supported:
     - Cannot contain two consecutive hyphens.
 
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `replication_instance_arn` - The Amazon Resource Name (ARN) of the replication instance.
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_dms_replication_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for Creating Instances
-- `update` - (Default `30 minutes`) Used for Database modifications
-- `delete` - (Default `30 minutes`) Used for destroying databases.
+- `create` - (Default `40m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
-Replication instances can be imported using the `replication_instance_id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication instances using the `replication_instance_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_replication_instance.test
+  id = "test-dms-replication-instance-tf"
+}
 ```
-$ terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
+
+Using `terraform import`, import replication instances using the `replication_instance_id`. For example:
+
+```console
+% terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```

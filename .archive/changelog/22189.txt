@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_codebuild_project: Add `artifacts.bucket_owner_access`, `secondary_artifacts.bucket_owner_access`, `logs_config.s3_logs.bucket_owner_access`, `project_visibility`, `resource_access_role` arguments.
+```
+
+```release-note:enhancement
+resource/aws_codebuild_project: Add `public_project_alias` attribute.
+```
+
+```release-note:enhancement
+resource/aws_codebuild_project: Add plan time validation for `cache.modes` and `service_role`.
+```

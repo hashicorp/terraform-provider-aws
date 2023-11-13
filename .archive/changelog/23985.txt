@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_s3_bucket: The `acceleration_status`, `acl`, `cors_rule`, `grant`, `lifecycle_rule`, `logging`, `object_lock_configuration.rule`, `policy`, `replication_configuration`, `request_payer`, `server_side_encryption_configuration`, `versioning`, and `website` parameters are now Optional. Please refer to the documentation for details on drift detection and potential conflicts when configuring these parameters with the standalone `aws_s3_bucket_*` resources.
+```

@@ -7,87 +7,68 @@ on:
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
-      - .go-version
-      - .tflint.hcl
-      - aws/*_test.go
-      - scripts/validate-terraform.sh
-      - tools/go.mod
+      - .ci/.tflint.hcl
+      - .ci/scripts/validate-terraform.sh
+      - .ci/tools/go.mod
+      - go.sum
+      - 'internal/service/**/*_test.go'
 
 jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+          go-version-file: go.mod
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
-      # - run: terrafmt diff ./aws --check --pattern '*_test.go' --fmtcompat
+
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+
       - run: |
-          # resource_aws_ecs_capacity_provider_test.go: two format verbs on one line (%[2]q = %[3]q). https://github.com/katbyte/terrafmt/issues/46
-          # resource_aws_efs_file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_kms_grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_quicksight_user_test.go: format verb as resource name (%[1]q). https://github.com/katbyte/terrafmt/issues/48
-          # resource_aws_sns_platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          find ./aws -type f -name '*_test.go' \
+          find ./internal/service -type f -name '*_test.go' \
             | sort -u \
-            | grep -v resource_aws_ecs_capacity_provider_test.go \
-            | grep -v resource_aws_efs_file_system_test.go \
-            | grep -v resource_aws_kms_grant_test.go \
-            | grep -v resource_aws_quicksight_user_test.go \
-            | grep -v resource_aws_s3_bucket_object_test.go \
-            | grep -v resource_aws_sns_platform_application_test.go \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
-  validate-terraform:
-    runs-on: ubuntu-latest
+  tflint:
+    name: Validate Acceptance Tests
+    runs-on: [custom, linux, xl]
+    strategy:
+      matrix:
+        path: ['[a-f]', '[g-z]']
+    env:
+      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
+
     steps:
-      - uses: actions/checkout@v2
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+          go-version-file: go.mod
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
-
-      - run: cd tools && go install github.com/terraform-linters/tflint
-
-      - uses: actions/cache@v2
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         name: Cache plugin dir
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.tflint.d/plugins
-          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint --init
-      
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
       - run: |
-          # resource_aws_ecs_capacity_provider_test.go: two format verbs on one line (%[2]q = %[3]q). https://github.com/katbyte/terrafmt/issues/46
-          # resource_aws_efs_file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_kms_grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_lambda_permission_test.go: format verb as resource name ("%s"). https://github.com/katbyte/terrafmt/issues/48
-          # resource_aws_quicksight_user_test.go: format verb as resource name (%[1]q). https://github.com/katbyte/terrafmt/issues/48
-          # resource_aws_sns_platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          find ./aws -type f -name '*_test.go' \
-            | sort -u \
-            | grep -v resource_aws_ecs_capacity_provider_test.go \
-            | grep -v resource_aws_efs_file_system_test.go \
-            | grep -v resource_aws_kms_grant_test.go \
-            | grep -v resource_aws_lambda_permission_test.go \
-            | grep -v resource_aws_quicksight_user_test.go \
-            | grep -v resource_aws_s3_bucket_object_test.go \
-            | grep -v resource_aws_sns_platform_application_test.go \
-            | ./scripts/validate-terraform.sh
+          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
+            | .ci/scripts/validate-terraform.sh

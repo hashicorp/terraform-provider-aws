@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_qldb_stream
+```
+
+```release-note:enhancement
+data-source/aws_qldb_ledger: Add `kms_key` and `tags` attributes
+```
+
+```release-note:enhancement
+resource/aws_qldb_ledger: Add `kms_key` argument
+```

@@ -45,7 +45,7 @@ The following arguments are optional:
 * `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. Currently, only credentials based on user name and password are supported. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
 * `ssl_properties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_connection_properties`- (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [VPC Connection Properties](#vpc_connection_properties-argument-reference) below for more details.
 
 ### credentials Argument Reference
@@ -208,17 +208,26 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `max_rows` - (Required) The maximum number of rows to query.
 * `query` - (Required) The Twitter query to retrieve the data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data source
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-A QuickSight data source can be imported using the AWS account ID, and data source ID name separated by a slash (`/`) e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight data source using the AWS account ID, and data source ID separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_data_source.example
+  id = "123456789123/my-data-source-id"
+}
 ```
-$ terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
+
+Using `terraform import`, import a QuickSight data source using the AWS account ID, and data source ID separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```

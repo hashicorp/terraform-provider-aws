@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/glue_connection: Add tagging support.
+```
+
+```release-note:enhancement
+data-source/glue_connection: Add tagging support.
+```
