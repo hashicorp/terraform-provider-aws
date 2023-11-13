@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -15,4 +18,8 @@ const (
 	GlobalClusterStatusDeleting  = "deleting"
 	GlobalClusterStatusModifying = "modifying"
 	GlobalClusterStatusUpgrading = "upgrading"
+)
+
+const (
+	errCodeInvalidParameterValue = "InvalidParameterValue"
 )

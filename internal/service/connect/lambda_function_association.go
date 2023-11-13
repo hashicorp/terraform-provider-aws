@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,7 +43,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 	functionArn := d.Get("function_arn").(string)
@@ -53,7 +55,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 
 	_, err := conn.AssociateLambdaFunctionWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err))
+		return diag.Errorf("creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err)
 	}
 
 	d.SetId(LambdaFunctionAssociationCreateResourceID(instanceId, functionArn))
@@ -62,7 +64,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 
@@ -79,7 +81,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", functionArn, err))
+		return diag.Errorf("finding Connect Lambda Function Association by Function ARN (%s): %s", functionArn, err)
 	}
 
 	d.Set("function_arn", lfaArn)
@@ -89,7 +91,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {
@@ -108,7 +110,7 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Connect Lambda Function Association (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Connect Lambda Function Association (%s): %s", d.Id(), err)
 	}
 
 	return nil

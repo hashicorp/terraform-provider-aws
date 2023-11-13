@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -22,7 +25,7 @@ func TestAccVPCsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", 0),
 				),
 			},
 		},
@@ -60,7 +63,7 @@ func TestAccVPCsDataSource_filters(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", 0),
 				),
 			},
 		},

@@ -73,7 +73,7 @@ resource "aws_api_gateway_method" "any" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `resource_id` - (Required) API resource ID
@@ -90,14 +90,23 @@ The following arguments are supported:
 * `request_parameters` - (Optional) Map of request parameters (from the path, query string and headers) that should be passed to the integration. The boolean value indicates whether the parameter is required (`true`) or optional (`false`).
   For example: `request_parameters = {"method.request.header.X-Some-Header" = true "method.request.querystring.some-query-param" = true}` would define that the header `X-Some-Header` and the query string `some-query-param` must be provided in the request.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_method` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_method` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_method.example
+  id = "12345abcde/67890fghij/GET"
+}
 ```
-$ terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
+
+Using `terraform import`, import `aws_api_gateway_method` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
+
+```console
+% terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rolesanywhere
 
 import (
@@ -88,14 +91,14 @@ func ResourceTrustAnchor() *schema.Resource {
 }
 
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &rolesanywhere.CreateTrustAnchorInput{
 		Enabled: aws.Bool(d.Get("enabled").(bool)),
 		Name:    aws.String(name),
 		Source:  expandSource(d.Get("source").([]interface{})),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
@@ -111,7 +114,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	trustAnchor, err := FindTrustAnchorByID(ctx, conn, d.Id())
 
@@ -137,7 +140,7 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rolesanywhere.UpdateTrustAnchorInput{
@@ -171,7 +174,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Trust Anchor (%s)", d.Id())
 	_, err := conn.DeleteTrustAnchor(ctx, &rolesanywhere.DeleteTrustAnchorInput{
@@ -272,7 +275,7 @@ func expandSourceDataCertificateBundle(tfMap map[string]interface{}) *types.Sour
 }
 
 func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.DisableTrustAnchorInput{
 		TrustAnchorId: aws.String(trustAnchorId),
@@ -283,7 +286,7 @@ func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interfac
 }
 
 func enableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.EnableTrustAnchorInput{
 		TrustAnchorId: aws.String(trustAnchorId),

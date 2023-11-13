@@ -25,9 +25,9 @@ data "aws_storagegateway_local_disk" "test" {
 * `disk_node` - (Optional) Device node of the local disk to retrieve. For example, `/dev/sdb`.
 * `disk_path` - (Optional) Device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `disk_id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 * `id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`

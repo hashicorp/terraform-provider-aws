@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -36,11 +39,11 @@ func StatusProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acc
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing product status: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing product status: %w", err)
 		}
 
 		if output == nil || output.ProductViewDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing product status: empty product view detail")
+			return nil, StatusUnavailable, fmt.Errorf("describing product status: empty product view detail")
 		}
 
 		return output, aws.StringValue(output.ProductViewDetail.Status), err
@@ -60,11 +63,11 @@ func StatusTagOption(ctx context.Context, conn *servicecatalog.ServiceCatalog, i
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing tag option: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing tag option: %w", err)
 		}
 
 		if output == nil || output.TagOptionDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing tag option: empty tag option detail")
+			return nil, StatusUnavailable, fmt.Errorf("describing tag option: empty tag option detail")
 		}
 
 		return output.TagOptionDetail, servicecatalog.StatusAvailable, err
@@ -83,11 +86,11 @@ func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Ser
 		}
 
 		if err != nil {
-			return nil, servicecatalog.ShareStatusError, fmt.Errorf("error describing portfolio share status: %w", err)
+			return nil, servicecatalog.ShareStatusError, fmt.Errorf("describing portfolio share status: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing portfolio share status: empty response")
+			return nil, StatusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
 		}
 
 		return output, aws.StringValue(output.Status), err
@@ -125,11 +128,11 @@ func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Service
 		}
 
 		if err != nil {
-			return nil, OrganizationAccessStatusError, fmt.Errorf("error getting Organizations Access: %w", err)
+			return nil, OrganizationAccessStatusError, fmt.Errorf("getting Organizations Access: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error getting Organizations Access: empty response")
+			return nil, StatusUnavailable, fmt.Errorf("getting Organizations Access: empty response")
 		}
 
 		return output, aws.StringValue(output.AccessStatus), err
@@ -155,7 +158,7 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, 
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing constraint: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing constraint: %w", err)
 		}
 
 		if output == nil || output.ConstraintDetail == nil {
@@ -179,7 +182,7 @@ func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing product portfolio association: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing product portfolio association: %w", err)
 		}
 
 		if output == nil {
@@ -209,11 +212,11 @@ func StatusServiceAction(ctx context.Context, conn *servicecatalog.ServiceCatalo
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing Service Action: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing Service Action: %w", err)
 		}
 
 		if output == nil || output.ServiceActionDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing Service Action: empty Service Action Detail")
+			return nil, StatusUnavailable, fmt.Errorf("describing Service Action: empty Service Action Detail")
 		}
 
 		return output.ServiceActionDetail, servicecatalog.StatusAvailable, nil
@@ -231,7 +234,7 @@ func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.S
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing tag option resource association: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing tag option resource association: %w", err)
 		}
 
 		if output == nil {
@@ -255,7 +258,7 @@ func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing tag option resource association: %w", err)
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing tag option resource association: %w", err)
 		}
 
 		if output == nil {
@@ -290,26 +293,6 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Servic
 		}
 
 		return output, aws.StringValue(output.Status), err
-	}
-}
-
-func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
-		}
-
-		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing principal portfolio association: %w", err)
-		}
-
-		if output == nil {
-			return nil, StatusNotFound, err
-		}
-
-		return output, servicecatalog.StatusAvailable, err
 	}
 }
 

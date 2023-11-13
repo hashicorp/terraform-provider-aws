@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -96,14 +99,16 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name": testAccQuickConnectDataSource_name,
 		},
 		"RoutingProfile": {
-			"basic":                testAccRoutingProfile_basic,
-			"disappears":           testAccRoutingProfile_disappears,
-			"tags":                 testAccRoutingProfile_updateTags,
-			"concurrency":          testAccRoutingProfile_updateConcurrency,
-			"defaultOutboundQueue": testAccRoutingProfile_updateDefaultOutboundQueue,
-			"queues":               testAccRoutingProfile_updateQueues,
-			"dataSource_id":        testAccRoutingProfileDataSource_routingProfileID,
-			"dataSource_name":      testAccRoutingProfileDataSource_name,
+			"basic":                        testAccRoutingProfile_basic,
+			"disappears":                   testAccRoutingProfile_disappears,
+			"tags":                         testAccRoutingProfile_updateTags,
+			"concurrency":                  testAccRoutingProfile_updateConcurrency,
+			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
+			"queues":                       testAccRoutingProfile_updateQueues,
+			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,
+			"updateQueueBatchAssociations": testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate,
+			"dataSource_id":                testAccRoutingProfileDataSource_routingProfileID,
+			"dataSource_name":              testAccRoutingProfileDataSource_name,
 		},
 		"SecurityProfile": {
 			"basic":           testAccSecurityProfile_basic,
@@ -122,6 +127,8 @@ func TestAccConnect_serial(t *testing.T) {
 			"phoneConfig":        testAccUser_updatePhoneConfig,
 			"routingProfileId":   testAccUser_updateRoutingProfileId,
 			"securityProfileIds": testAccUser_updateSecurityProfileIds,
+			"dataSource_id":      testAccUserDataSource_userID,
+			"dataSource_name":    testAccUserDataSource_name,
 		},
 		"UserHierarchyGroup": {
 			"basic":           testAccUserHierarchyGroup_basic,
@@ -137,9 +144,11 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_id": testAccUserHierarchyStructureDataSource_instanceID,
 		},
 		"Vocabulary": {
-			"basic":      testAccVocabulary_basic,
-			"disappears": testAccVocabulary_disappears,
-			"tags":       testAccVocabulary_updateTags,
+			"basic":           testAccVocabulary_basic,
+			"disappears":      testAccVocabulary_disappears,
+			"tags":            testAccVocabulary_updateTags,
+			"dataSource_id":   testAccVocabularyDataSource_vocabularyID,
+			"dataSource_name": testAccVocabularyDataSource_name,
 		},
 	}
 

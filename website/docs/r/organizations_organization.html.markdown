@@ -29,15 +29,15 @@ resource "aws_organizations_organization" "org" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aws_service_access_principals` - (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have `feature_set` set to `ALL`. Some services do not support enablement via this endpoint, see [warning in aws docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html).
 * `enabled_policy_types` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY`, and `TAG_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
 * `feature_set` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
@@ -66,8 +66,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The AWS organization can be imported by using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS organization using the `id`. For example:
 
+```terraform
+import {
+  to = aws_organizations_organization.my_org
+  id = "o-1234567"
+}
 ```
-$ terraform import aws_organizations_organization.my_org o-1234567
+
+Using `terraform import`, import the AWS organization using the `id`. For example:
+
+```console
+% terraform import aws_organizations_organization.my_org o-1234567
 ```

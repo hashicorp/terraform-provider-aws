@@ -5,6 +5,10 @@ package chimesdkvoice
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	chimesdkvoice_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,11 +28,46 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceGlobalSettings,
+			TypeName: "aws_chimesdkvoice_global_settings",
+		},
+		{
+			Factory:  ResourceSipMediaApplication,
+			TypeName: "aws_chimesdkvoice_sip_media_application",
+			Name:     "Sip Media Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSipRule,
+			TypeName: "aws_chimesdkvoice_sip_rule",
+			Name:     "Sip Rule",
+		},
+		{
+			Factory:  ResourceVoiceProfileDomain,
+			TypeName: "aws_chimesdkvoice_voice_profile_domain",
+			Name:     "Voice Profile Domain",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.ChimeSDKVoice
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*chimesdkvoice_sdkv1.ChimeSDKVoice, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return chimesdkvoice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

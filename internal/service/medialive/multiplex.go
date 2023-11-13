@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -107,13 +110,13 @@ const (
 )
 
 func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(id.UniqueId()),
 		Name:              aws.String(d.Get("name").(string)),
 		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("multiplex_settings"); ok && len(v.([]interface{})) > 0 {
@@ -145,7 +148,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindMultiplexByID(ctx, conn, d.Id())
 
@@ -171,7 +174,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
@@ -220,7 +223,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
 
@@ -410,16 +413,16 @@ func expandMultiplexSettings(tfList []interface{}) *types.MultiplexSettings {
 	s := types.MultiplexSettings{}
 
 	if v, ok := m["transport_stream_bitrate"]; ok {
-		s.TransportStreamBitrate = int32(v.(int))
+		s.TransportStreamBitrate = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := m["transport_stream_id"]; ok {
-		s.TransportStreamId = int32(v.(int))
+		s.TransportStreamId = aws.Int32(int32(v.(int)))
 	}
 	if val, ok := m["maximum_video_buffer_delay_milliseconds"]; ok {
-		s.MaximumVideoBufferDelayMilliseconds = int32(val.(int))
+		s.MaximumVideoBufferDelayMilliseconds = aws.Int32(int32(val.(int)))
 	}
 	if val, ok := m["transport_stream_reserved_bitrate"]; ok {
-		s.TransportStreamReservedBitrate = int32(val.(int))
+		s.TransportStreamReservedBitrate = aws.Int32(int32(val.(int)))
 	}
 
 	return &s

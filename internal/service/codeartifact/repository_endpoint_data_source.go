@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -50,7 +53,7 @@ func DataSourceRepositoryEndpoint() *schema.Resource {
 
 func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	domain := d.Get("domain").(string)
 	repo := d.Get("repository").(string)

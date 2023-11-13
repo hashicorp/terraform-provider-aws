@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
@@ -55,13 +58,13 @@ func ResourcePipeline() *schema.Resource {
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	uniqueID := id.UniqueId()
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -71,7 +74,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	resp, err := conn.CreatePipelineWithContext(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating datapipeline: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating datapipeline: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.PipelineId))
@@ -81,7 +84,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	v, err := PipelineRetrieve(ctx, d.Id(), conn)
 	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
@@ -90,13 +93,13 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error describing DataPipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing DataPipeline (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
 
-	SetTagsOut(ctx, v.Tags)
+	setTagsOut(ctx, v.Tags)
 
 	return diags
 }
@@ -111,7 +114,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),

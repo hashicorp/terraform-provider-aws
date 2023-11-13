@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -42,48 +45,6 @@ func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Redshift
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshiftserverless.Namespace); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			redshiftserverless.WorkgroupStatusCreating,
-			redshiftserverless.WorkgroupStatusModifying,
-		},
-		Target: []string{
-			redshiftserverless.WorkgroupStatusAvailable,
-		},
-		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: 10 * time.Minute,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			redshiftserverless.WorkgroupStatusModifying,
-			redshiftserverless.WorkgroupStatusDeleting,
-		},
-		Target:  []string{},
-		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: 10 * time.Minute,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
 		return output, err
 	}
 

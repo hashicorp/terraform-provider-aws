@@ -1,9 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfprotov5
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	msgpack "github.com/vmihailenco/msgpack/v5"
+	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
 // ErrUnknownDynamicValueType is returned when a DynamicValue has no MsgPack or
@@ -35,13 +43,50 @@ func NewDynamicValue(t tftypes.Type, v tftypes.Value) (DynamicValue, error) {
 
 // DynamicValue represents a nested encoding value that came from the protocol.
 // The only way providers should ever interact with it is by calling its
-// `Unmarshal` method to retrive a `tftypes.Value`. Although the type system
+// `Unmarshal` method to retrieve a `tftypes.Value`. Although the type system
 // allows for other interactions, they are explicitly not supported, and will
 // not be considered when evaluating for breaking changes. Treat this type as
 // an opaque value, and *only* call its `Unmarshal` method.
 type DynamicValue struct {
 	MsgPack []byte
 	JSON    []byte
+}
+
+// IsNull returns true if the DynamicValue represents a null value based on the
+// underlying JSON or MessagePack data.
+func (d DynamicValue) IsNull() (bool, error) {
+	if d.JSON != nil {
+		decoder := json.NewDecoder(bytes.NewReader(d.JSON))
+		token, err := decoder.Token()
+
+		if err != nil {
+			return false, fmt.Errorf("unable to read DynamicValue JSON token: %w", err)
+		}
+
+		if token != nil {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	if d.MsgPack != nil {
+		decoder := msgpack.NewDecoder(bytes.NewReader(d.MsgPack))
+		code, err := decoder.PeekCode()
+
+		if err != nil {
+			return false, fmt.Errorf("unable to read DynamicValue MsgPack code: %w", err)
+		}
+
+		// Extensions are considered unknown
+		if msgpcode.IsExt(code) || code != msgpcode.Nil {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	return false, fmt.Errorf("unable to read DynamicValue: %w", ErrUnknownDynamicValueType)
 }
 
 // Unmarshal returns a `tftypes.Value` that represents the information

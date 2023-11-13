@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -115,7 +118,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10),
 											validation.StringMatch(
-												regexp.MustCompile(`[0-9]+[s]`),
+												regexache.MustCompile(`[0-9]+[s]`),
 												"numeric string followed by the character \"s\"",
 											),
 										),
@@ -237,7 +240,7 @@ func ResourceIndex() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"The name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -353,7 +356,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 2048),
 											validation.StringMatch(
-												regexp.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
+												regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
 												"Must be valid URL",
 											),
 										),
@@ -376,14 +379,14 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &kendra.CreateIndexInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -426,11 +429,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return diag.Errorf("error creating Kendra Index (%s): %s", name, err)
+		return diag.Errorf("creating Kendra Index (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("error creating Kendra Index (%s): empty output", name)
+		return diag.Errorf("creating Kendra Index (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateIndexOutput)
@@ -439,7 +442,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	callUpdateIndex := false
@@ -462,7 +465,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
 
@@ -473,7 +476,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Kendra Index (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -523,7 +526,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
@@ -572,12 +575,12 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return diag.Errorf("error updating Index (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Index (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -585,7 +588,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
@@ -594,11 +597,11 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting Index (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Index (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1065,7 +1068,7 @@ func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *t
 	}
 
 	values := map[string]interface{}{
-		"user_group_resolution_configuration": userGroupResolutionConfiguration.UserGroupResolutionMode,
+		"user_group_resolution_mode": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
 	return []interface{}{values}

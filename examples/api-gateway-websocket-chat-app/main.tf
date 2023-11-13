@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 #
 # Terraform configuration for simple-websockets-chat-app that has the DynamoDB table and
 # Lambda functions needed to demonstrate the Websocket protocol on API Gateway.

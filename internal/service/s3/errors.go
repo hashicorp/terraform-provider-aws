@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 // Error code constants missing from AWS Go SDK:
@@ -10,21 +13,25 @@ const (
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
-	ErrCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
+	errCodeNoSuchBucket                         = "NoSuchBucket"
+	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
 	errCodeNoSuchConfiguration                  = "NoSuchConfiguration"
-	ErrCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
+	errCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
+	errCodeNoSuchKey                            = "NoSuchKey"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
 	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
-	ErrCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
+	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/26317
 	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
+	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
+	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
-	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
+	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from Third Party S3 implementations
 	// and so far has been noticed with calls to GetBucketWebsite.

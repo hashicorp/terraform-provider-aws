@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_redshiftserverless_workgroup: Allow `require_ssl` and `use_fips_ssl` `config_parameters` keys
+```

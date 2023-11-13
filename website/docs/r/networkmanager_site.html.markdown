@@ -23,7 +23,7 @@ resource "aws_networkmanager_site" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_network_id` - (Required) The ID of the Global Network to create the site in.
 * `description` - (Optional) Description of the Site.
@@ -36,17 +36,26 @@ The `location` object supports the following:
 * `latitude` - (Optional) Latitude of the location.
 * `longitude` - (Optional) Longitude of the location.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Site Amazon Resource Name (ARN)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_networkmanager_site` can be imported using the site ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_site` using the site ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_site.example
+  id = "arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223"
+}
 ```
-$ terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223
+
+Using `terraform import`, import `aws_networkmanager_site` using the site ARN. For example:
+
+```console
+% terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223
 ```

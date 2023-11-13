@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
@@ -64,9 +67,11 @@ func ResourceEnvironmentEC2() *schema.Resource {
 					"amazonlinux-1-x86_64",
 					"amazonlinux-2-x86_64",
 					"ubuntu-18.04-x86_64",
+					"ubuntu-22.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
 			},
 			"instance_type": {
@@ -105,7 +110,7 @@ func ResourceEnvironmentEC2() *schema.Resource {
 
 func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
@@ -113,7 +118,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
@@ -171,7 +176,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	env, err := FindEnvironmentByID(ctx, conn, d.Id())
 
@@ -198,7 +203,7 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := cloud9.UpdateEnvironmentInput{
@@ -220,7 +225,7 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironmentWithContext(ctx, &cloud9.DeleteEnvironmentInput{

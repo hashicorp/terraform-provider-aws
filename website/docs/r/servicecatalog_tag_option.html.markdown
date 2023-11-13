@@ -32,9 +32,9 @@ The following arguments are optional:
 
 * `active` - (Optional) Whether tag option is active. Default is `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier (e.g., `tag-pjtvagohlyo3m`).
 * `owner_id` - AWS account ID of the owner account that created the tag option.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_tag_option` using the tag option ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_tag_option.example
+  id = "tag-pjtvagohlyo3m"
+}
 ```
-$ terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m
+
+Using `terraform import`, import `aws_servicecatalog_tag_option` using the tag option ID. For example:
+
+```console
+% terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m
 ```

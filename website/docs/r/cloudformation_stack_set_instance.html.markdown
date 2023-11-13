@@ -16,6 +16,8 @@ Manages a CloudFormation StackSet Instance. Instances are managed in the account
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_cloudformation_stack_set_instance" "example" {
   account_id     = "123456789012"
@@ -81,7 +83,7 @@ resource "aws_cloudformation_stack_set_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
@@ -109,13 +111,20 @@ The `operation_preferences` configuration block supports the following arguments
 * `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
 * `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - StackSet name, target AWS account ID, and target AWS region separated by commas (`,`)
-* `organizational_unit_id` - The organization root ID or organizational unit (OU) IDs specified for `deployment_targets`.
-* `stack_id` - Stack identifier
+* `id` - Unique identifier for the resource. If `deployment_targets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
+* `organizational_unit_id` - The organization root ID or organizational unit (OU) ID in which the stack is deployed.
+* `stack_id` - Stack identifier.
+* `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deployment_targets` is set. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
+
+### `stack_instance_summaries` Attribute Reference
+
+* `account_id` - AWS account ID in which the stack is deployed.
+* `organizational_unit_id` - Organizational unit ID in which the stack is deployed.
+* `stack_id` - Stack identifier.
 
 ## Timeouts
 
@@ -127,14 +136,47 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFormation StackSet Instances that target an AWS Account ID can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS Region separated by commas (`,`). For example:
 
-```
-$ terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1
+```terraform
+import {
+  to = aws_cloudformation_stack_set_instance.example
+  id = "example,123456789012,us-east-1"
+}
 ```
 
-CloudFormation StackSet Instances that target AWS Organizational Units can be imported using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS region separated by commas (`,`) e.g.
+Import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS Region separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack_set_instance.example
+  id = "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1"
+}
 ```
-$ terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1
+
+Import CloudFormation StackSet Instances when acting a delegated administrator in a member account using the StackSet name, target AWS account ID or slash (`/`) separated list of organizational unit IDs, target AWS Region and `call_as` value separated by commas (`,`). For example:
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set_instance.example
+  id = "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN"
+}
+```
+
+Using `terraform import`, import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS Region separated by commas (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1
+```
+
+Using `terraform import`, import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS Region separated by commas (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1
+```
+
+Using `terraform import`, import CloudFormation StackSet Instances when acting a delegated administrator in a member account using the StackSet name, target AWS account ID or slash (`/`) separated list of organizational unit IDs, target AWS Region and `call_as` value separated by commas (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```

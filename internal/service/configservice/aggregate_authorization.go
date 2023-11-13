@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -58,19 +61,19 @@ func ResourceAggregateAuthorization() *schema.Resource {
 
 func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	region := d.Get("region").(string)
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	_, err := conn.PutAggregationAuthorizationWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating aggregate authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating aggregate authorization: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
@@ -80,7 +83,7 @@ func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceDa
 
 func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
@@ -134,7 +137,7 @@ func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {

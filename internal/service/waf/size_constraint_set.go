@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -35,7 +38,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 
 func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &waf.CreateSizeConstraintSetInput{
@@ -60,7 +63,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	sizeConstraintSet, err := FindSizeConstraintSetByID(ctx, conn, d.Id())
 
@@ -91,7 +94,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
@@ -109,7 +112,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -27,22 +30,6 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 	}
 }
 
-func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dBCluster, err := FindDBClusterById(ctx, conn, dBClusterID)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) || dBCluster == nil {
-			return nil, DBClusterStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Cluster (%s): %w", dBClusterID, err)
-		}
-
-		return dBCluster, aws.StringValue(dBCluster.Status), nil
-	}
-}
-
 func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBClusterSnapshot, err := FindDBClusterSnapshotById(ctx, conn, dBClusterSnapshotID)
@@ -56,38 +43,6 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 		}
 
 		return dBClusterSnapshot, aws.StringValue(dBClusterSnapshot.Status), nil
-	}
-}
-
-func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) || dBInstance == nil {
-			return nil, DBInstanceStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Instance (%s): %w", dBInstanceID, err)
-		}
-
-		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
-	}
-}
-
-func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dBSubnetGroup, err := FindDBSubnetGroupByName(ctx, conn, dBSubnetGroupName)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) || dBSubnetGroup == nil {
-			return nil, DBSubnetGroupStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Subnet Group (%s): %w", dBSubnetGroupName, err)
-		}
-
-		return dBSubnetGroup, aws.StringValue(dBSubnetGroup.SubnetGroupStatus), nil
 	}
 }
 

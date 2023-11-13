@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -34,7 +37,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -43,7 +46,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
 				),
@@ -55,7 +58,6 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -111,7 +113,6 @@ func TestAccKMSExternalKey_multiRegion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -144,7 +145,6 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -185,7 +185,6 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -226,7 +225,6 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -276,7 +274,6 @@ func TestAccKMSExternalKey_keyMaterialBase64(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -320,7 +317,6 @@ func TestAccKMSExternalKey_policy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -363,7 +359,6 @@ func TestAccKMSExternalKey_policyBypass(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -397,7 +392,6 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -418,6 +412,23 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+			{
+				Config: testAccExternalKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key3),
+					testAccCheckExternalKeyNotRecreated(&key2, &key3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_safety_check",
+					"deletion_window_in_days",
+				},
 			},
 		},
 	})
@@ -452,7 +463,6 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -497,7 +507,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -522,7 +532,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 
 func testAccCheckExternalKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_external_key" {
@@ -557,7 +567,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, name string, key *kms.Ke
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
@@ -699,6 +709,15 @@ resource "aws_kms_external_key" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccExternalKeyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_external_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName)
 }
 
 func testAccExternalKeyConfig_validTo(rName, validTo string) string {

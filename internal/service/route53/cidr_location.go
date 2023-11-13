@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -62,7 +66,7 @@ func (r *resourceCIDRLocation) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(16),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
 		},
@@ -78,7 +82,7 @@ func (r *resourceCIDRLocation) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collectionID := data.CIDRCollectionID.ValueString()
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
@@ -130,7 +134,7 @@ func (r *resourceCIDRLocation) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	cidrBlocks, err := findCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
 
@@ -147,7 +151,15 @@ func (r *resourceCIDRLocation) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	data.CIDRBlocks = flex.FlattenFrameworkStringValueSet(ctx, cidrBlocks)
+	if n := len(cidrBlocks); n > 0 {
+		elems := make([]attr.Value, n)
+		for i, cidrBlock := range cidrBlocks {
+			elems[i] = fwtypes.CIDRBlockValue(cidrBlock)
+		}
+		data.CIDRBlocks = types.SetValueMust(fwtypes.CIDRBlockType, elems)
+	} else {
+		data.CIDRBlocks = types.SetNull(fwtypes.CIDRBlockType)
+	}
 	data.CIDRCollectionID = types.StringValue(collectionID)
 	data.Name = types.StringValue(name)
 
@@ -177,7 +189,7 @@ func (r *resourceCIDRLocation) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 
@@ -255,7 +267,7 @@ func (r *resourceCIDRLocation) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 

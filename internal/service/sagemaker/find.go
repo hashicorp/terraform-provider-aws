@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -597,6 +600,31 @@ func FindSpaceByName(ctx context.Context, conn *sagemaker.SageMaker, domainId, n
 	output, err := conn.DescribeSpaceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindPipelineByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribePipelineOutput, error) {
+	input := &sagemaker.DescribePipelineInput{
+		PipelineName: aws.String(name),
+	}
+
+	output, err := conn.DescribePipelineWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

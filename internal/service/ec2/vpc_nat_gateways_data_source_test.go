@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -81,7 +84,7 @@ resource "aws_subnet" "test3" {
 }
 
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -89,7 +92,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -97,7 +100,7 @@ resource "aws_eip" "test2" {
 }
 
 resource "aws_eip" "test3" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

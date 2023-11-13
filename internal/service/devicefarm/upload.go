@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
@@ -72,7 +75,7 @@ func ResourceUpload() *schema.Resource {
 
 func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.CreateUploadInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -86,7 +89,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := conn.CreateUploadWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Upload: %s", err)
 	}
 
 	arn := aws.StringValue(out.Upload.Arn)
@@ -98,7 +101,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	upload, err := FindUploadByARN(ctx, conn, d.Id())
 
@@ -133,7 +136,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.UpdateUploadInput{
 		Arn: aws.String(d.Id()),
@@ -150,7 +153,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating DeviceFarm Upload: %s", d.Id())
 	_, err := conn.UpdateUploadWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Upload (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
@@ -158,7 +161,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.DeleteUploadInput{
 		Arn: aws.String(d.Id()),
@@ -170,7 +173,7 @@ func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Upload: %s", err)
 	}
 
 	return diags

@@ -20,13 +20,13 @@ data "aws_batch_scheduling_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the scheduling policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `fairshare_policy` - Fairshare policy block specifies the `compute_reservation`, `share_delay_seconds`, and `share_distribution` of the scheduling policy. The `fairshare_policy` block is documented below.
 * `name` - Name of the scheduling policy.
