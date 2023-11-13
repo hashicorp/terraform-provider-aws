@@ -125,8 +125,10 @@ func ResourceCACertificate() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if mode := diff.Get("certificate_mode").(string); mode == iot.CertificateModeDefault {
-					if _, ok := diff.GetOk("verification_certificate_pem"); !ok {
-						return fmt.Errorf(`"verification_certificate_pem" is required when certificate_mode is %q`, mode)
+					if v := diff.GetRawConfig().GetAttr("verification_certificate_pem"); v.IsKnown() {
+						if v.IsNull() || v.AsString() == "" {
+							return fmt.Errorf(`"verification_certificate_pem" is required when certificate_mode is %q`, mode)
+						}
 					}
 				}
 

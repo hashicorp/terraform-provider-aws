@@ -15,7 +15,6 @@ Creates and manages an AWS IoT CA Certificate.
 ```terraform
 resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
-  key_algorithm   = "RSA"
   subject {
     common_name  = "example.com"
     organization = "ACME Examples, Inc"
@@ -34,10 +33,9 @@ resource "tls_private_key" "ca" {
 }
 
 resource "tls_cert_request" "verification" {
-  key_algorithm   = "RSA"
   private_key_pem = tls_private_key.verification.private_key_pem
   subject {
-    common_name = data.aws_iot_registration_code.example.id
+    common_name = data.aws_iot_registration_code.example.registration_code
   }
 }
 
@@ -46,10 +44,9 @@ resource "tls_private_key" "verification" {
 }
 
 resource "tls_locally_signed_cert" "verification" {
-  cert_request_pem   = tls_cert_request.verification.cert_request_pem
-  ca_private_key_pem = tls_private_key.ca.private_key_pem
-  ca_cert_pem        = tls_self_signed_cert.ca.cert_pem
-  ca_key_algorithm   = "RSA"
+  cert_request_pem      = tls_cert_request.verification.cert_request_pem
+  ca_private_key_pem    = tls_private_key.ca.private_key_pem
+  ca_cert_pem           = tls_self_signed_cert.ca.cert_pem
   validity_period_hours = 12
   allowed_uses = [
     "key_encipherment",
