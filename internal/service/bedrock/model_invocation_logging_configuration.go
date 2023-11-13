@@ -6,6 +6,7 @@ package bedrock
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -25,7 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const ResNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
+const (
+	iamPropagationTimeout                      = time.Minute * 1
+	ResNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
+)
 
 // @FrameworkResource(name="Model Invocation Logging Configuration")
 func newResourceModelInvocationLoggingConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
@@ -116,7 +120,17 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 		LoggingConfig: loggingConfig,
 	}
 
-	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
+	// Retry handling to allow for IAM propagation
+	//
+	// Example:
+	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
+	//   the IAM role permissions are correct.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, iamPropagationTimeout,
+		func() (interface{}, error) {
+			return conn.PutModelInvocationLoggingConfiguration(ctx, &input)
+		},
+		"Failed to validate permissions for log group",
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
