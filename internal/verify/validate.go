@@ -478,6 +478,20 @@ func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
 }
 
+func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		for k := range v.(map[string]interface{}) {
+			for _, keyValidator := range keyValidators {
+				diags = append(diags, keyValidator(k, path.IndexString(k))...)
+			}
+		}
+
+		return diags
+	}
+}
+
 func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
