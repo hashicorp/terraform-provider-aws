@@ -245,6 +245,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -291,6 +292,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
@@ -414,4 +416,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-0e0dec25d22a19f39d4881dd603482a4765f842b794421afb1763a74aeea1795 -->
+<!-- cache-key: cdktf-0.19.0 input-8ab543c6a00b60a4cbcaa97e979a4ee014302a0c9b26c452c8b946f74fda3b0e -->
