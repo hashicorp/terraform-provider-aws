@@ -23,7 +23,7 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	resourceName := "aws_iot_ca_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,7 +57,7 @@ func TestAccIoTCACertificate_disappears(t *testing.T) {
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	resourceName := "aws_iot_ca_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,7 +81,7 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	resourceName := "aws_iot_ca_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,7 +126,7 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 		},
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
