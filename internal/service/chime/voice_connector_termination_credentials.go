@@ -11,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_chime_voice_connector_termination_credentials")
@@ -81,12 +83,15 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chimesdkvoice.ListVoiceConnectorTerminationCredentialsInput{
-		VoiceConnectorId: aws.String(d.Id()),
+	_, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+		return findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
 	}
 
-	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -164,4 +169,29 @@ func expandCredentials(data []interface{}) []*chimesdkvoice.Credential {
 	}
 
 	return credentials
+}
+
+func findVoiceConnectorTerminationCredentialsByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+	in := &chimesdkvoice.ListVoiceConnectorTerminationCredentialsInput{
+		VoiceConnectorId: aws.String(id),
+	}
+
+	resp, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if resp == nil || resp.Usernames == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

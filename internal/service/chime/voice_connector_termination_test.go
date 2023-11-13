@@ -9,15 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccVoiceConnectorTermination_basic(t *testing.T) {
@@ -28,7 +27,6 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -62,7 +60,6 @@ func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -89,7 +86,6 @@ func testAccVoiceConnectorTermination_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -190,12 +186,12 @@ func testAccCheckVoiceConnectorTerminationDestroy(ctx context.Context) resource.
 				continue
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-			input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
-				VoiceConnectorId: aws.String(rs.Primary.ID),
-			}
-			resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.Termination, error) {
+				return tfchime.FindVoiceConnectorTerminationByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -203,9 +199,7 @@ func testAccCheckVoiceConnectorTerminationDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			if resp != nil && resp.Termination != nil {
-				return fmt.Errorf("error Chime Voice Connector Termination still exists")
-			}
+			return fmt.Errorf("voice connector termination still exists: (%s)", rs.Primary.ID)
 		}
 
 		return nil
