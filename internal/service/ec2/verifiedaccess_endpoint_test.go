@@ -525,7 +525,6 @@ resource "aws_verifiedaccess_endpoint" "test" {
   endpoint_domain_prefix = "example"
   endpoint_type          = "load-balancer"
   policy_document        = %[4]q
-  policy_enabled         = true
   sse_specification {
     customer_managed_key_enabled = false
   }

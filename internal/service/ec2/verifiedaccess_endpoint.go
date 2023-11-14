@@ -140,7 +140,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 			},
 			"policy_enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"policy_document": {
 				Type:     schema.TypeString,
@@ -292,57 +292,50 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-
 	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessEndpointInput{
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
-
 		if d.HasChanges("description") {
 			input.Description = aws.String(d.Get("description").(string))
 		}
-
 		if d.HasChanges("load_balancer_options") {
 			if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LoadBalancerOptions = expandModifyVerifiedAccessEndpointLoadBalancerOptions(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
-
 		if d.HasChanges("network_interface_options") {
 			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
-
 		if d.HasChanges("verified_access_group_id") {
 			input.VerifiedAccessGroupId = aws.String(d.Get("verified_access_group_id").(string))
 		}
-
 		_, err := conn.ModifyVerifiedAccessEndpoint(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s): %s", d.Id(), err)
 		}
-
 		if _, err := WaitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
-
-	if d.HasChanges("policy_document", "policy_enabled") {
+	if d.HasChanges("policy_document") {
 		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
-			PolicyEnabled:            aws.Bool(d.Get("policy_enabled").(bool)),
 		}
-
+		if d.Get("policy_document") == "" {
+			input.PolicyDocument = nil
+			input.PolicyEnabled = aws.Bool(false)
+		} else if d.Get("policy_document") != "" {
+			input.PolicyEnabled = aws.Bool(true)
+		}
 		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s) Policy: %s", d.Id(), err)
 		}
 	}
-
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
