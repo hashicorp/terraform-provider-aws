@@ -144,7 +144,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Neptune Cluster Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", ep.DBClusterEndpointArn)
@@ -163,25 +163,31 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		req := &neptune.ModifyDBClusterEndpointInput{
-			DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
+		clusterID, clusterEndpointID, err := clusterEndpointParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := &neptune.ModifyDBClusterEndpointInput{
+			DBClusterEndpointIdentifier: aws.String(clusterEndpointID),
 		}
 
 		if d.HasChange("endpoint_type") {
-			req.EndpointType = aws.String(d.Get("endpoint_type").(string))
-		}
-
-		if d.HasChange("static_members") {
-			req.StaticMembers = flex.ExpandStringSet(d.Get("static_members").(*schema.Set))
+			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
 		}
 
 		if d.HasChange("excluded_members") {
-			req.ExcludedMembers = flex.ExpandStringSet(d.Get("excluded_members").(*schema.Set))
+			input.ExcludedMembers = flex.ExpandStringSet(d.Get("excluded_members").(*schema.Set))
 		}
 
-		_, err := conn.ModifyDBClusterEndpointWithContext(ctx, req)
+		if d.HasChange("static_members") {
+			input.StaticMembers = flex.ExpandStringSet(d.Get("static_members").(*schema.Set))
+		}
+
+		_, err = conn.ModifyDBClusterEndpointWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%q): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 		}
 
 		_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
@@ -211,7 +217,7 @@ func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Neptune Cluster Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
 	_, err = WaitDBClusterEndpointDeleted(ctx, conn, d.Id())
