@@ -6,7 +6,10 @@ package iam
 // Exports for use in tests only.
 var (
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
+	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 
 	FindAttachedGroupPolicies           = findAttachedGroupPolicies
 	FindAttachedGroupPolicyByTwoPartKey = findAttachedGroupPolicyByTwoPartKey
+	FindAttachedUserPolicies            = findAttachedUserPolicies
+	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
 )
