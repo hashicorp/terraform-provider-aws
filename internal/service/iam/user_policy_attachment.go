@@ -123,8 +123,8 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
-			UserName:  aws.String(user),
 			PolicyArn: aws.String(policyARN),
+			UserName:  aws.String(user),
 		})
 	}, iam.ErrCodeConcurrentModificationException)
 
@@ -138,8 +138,8 @@ func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN stri
 func detachPolicyFromUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.DetachUserPolicyWithContext(ctx, &iam.DetachUserPolicyInput{
-			UserName:  aws.String(user),
 			PolicyArn: aws.String(policyARN),
+			UserName:  aws.String(user),
 		})
 	}, iam.ErrCodeConcurrentModificationException)
 

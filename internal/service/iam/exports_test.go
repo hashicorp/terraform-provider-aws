@@ -15,4 +15,5 @@ var (
 	FindAttachedRolePolicyByTwoPartKey  = findAttachedRolePolicyByTwoPartKey
 	FindAttachedUserPolicies            = findAttachedUserPolicies
 	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
+	FindPolicyByARN                     = findPolicyByARN
 )

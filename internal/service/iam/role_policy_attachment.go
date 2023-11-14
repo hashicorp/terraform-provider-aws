@@ -138,8 +138,8 @@ func attachPolicyToRole(ctx context.Context, conn *iam.IAM, role, policyARN stri
 func detachPolicyFromRole(ctx context.Context, conn *iam.IAM, role, policyARN string) error {
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.DetachRolePolicyWithContext(ctx, &iam.DetachRolePolicyInput{
-			RoleName:  aws.String(role),
 			PolicyArn: aws.String(policyARN),
+			RoleName:  aws.String(role),
 		})
 	}, iam.ErrCodeConcurrentModificationException)
 
