@@ -310,7 +310,7 @@ func statusClusterEndpoint(ctx context.Context, conn *neptune.Neptune, clusterID
 	}
 }
 
-func waitClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) {
+func waitClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) { //nolint:unparam
 	const (
 		timeout = 10 * time.Minute
 	)
