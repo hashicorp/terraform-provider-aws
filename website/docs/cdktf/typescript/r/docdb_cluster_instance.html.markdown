@@ -67,7 +67,8 @@ This argument supports the following arguments:
      are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) This parameter does not apply to Amazon DocumentDB. Amazon DocumentDB does not perform minor version upgrades regardless of the value set (see [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_DBInstance.html)). Default `true`.
 * `availabilityZone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_CreateDBInstance.html) about the details.
-* `clusterIdentifier` - (Required) The identifier of the [`awsDocdbCluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
+* `clusterIdentifier` - (Required) The identifier of the [`aws_docdb_cluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
+* `copyTagsToSnapshot` – (Optional, boolean) Copy all DB instance `tags` to snapshots. Default is `false`.
 * `enablePerformanceInsights` - (Optional) A value that indicates whether to enable Performance Insights for the DB Instance. Default `false`. See [docs] (https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html) about the details.
 * `engine` - (Optional) The name of the database engine to be used for the DocumentDB instance. Defaults to `docdb`. Valid Values: `docdb`.
 * `identifier` - (Optional, Forces new resource) The identifier for the DocumentDB instance, if omitted, Terraform will assign a random, unique identifier.
@@ -75,6 +76,13 @@ This argument supports the following arguments:
 * `instanceClass` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocumentDB Instances][2].
   DocumentDB currently supports the below instance classes.
   Please see [AWS Documentation][4] for complete details.
+    - db.r6g.large
+    - db.r6g.xlarge
+    - db.r6g.2xlarge
+    - db.r6g.4xlarge
+    - db.r6g.8xlarge
+    - db.r6g.12xlarge
+    - db.r6g.16xlarge
     - db.r5.large
     - db.r5.xlarge
     - db.r5.2xlarge
@@ -87,12 +95,13 @@ This argument supports the following arguments:
     - db.r4.4xlarge
     - db.r4.8xlarge
     - db.r4.16xlarge
+    - db.t4g.medium
     - db.t3.medium
 * `performanceInsightsKmsKeyId` - (Optional) The KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. If you do not specify a value for PerformanceInsightsKMSKeyId, then Amazon DocumentDB uses your default KMS key.
 * `preferredMaintenanceWindow` - (Optional) The window to perform maintenance in.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotionTier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -107,8 +116,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `port` - The database port
 * `preferredBackupWindow` - The daily time range during which automated backups are created if automated backups are enabled.
 * `storageEncrypted` - Specifies whether the DB cluster is encrypted.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `writer` – Boolean indicating if this instance is writable. `false` indicates this instance is a read replica.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `caCertIdentifier` - (Optional) The identifier of the CA certificate for the DB instance.
 
 [1]: /docs/providers/aws/r/docdb_cluster.html
@@ -120,10 +129,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `90M`)
+- `create` - (Default `90m`)
 restoring from Snapshots
-- `update` - (Default `90M`)
-- `delete` - (Default `90M`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 the time required to take snapshots
 
 ## Import
@@ -148,4 +157,4 @@ Using `terraform import`, import DocumentDB Cluster Instances using the `identif
 % terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9001d18e22768d2e49a85d0c81f631138ad3372c56e7119d64b069973b71706f -->
+<!-- cache-key: cdktf-0.19.0 input-9a6c6904f8952b2942358908c66b371b4c5097186378f30754ea569b6e4e1d71 -->

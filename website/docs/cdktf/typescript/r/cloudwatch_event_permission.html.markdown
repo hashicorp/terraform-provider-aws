@@ -75,15 +75,15 @@ This resource supports the following arguments:
 
 * `principal` - (Required) The 12-digit AWS account ID that you are permitting to put events to your default event bus. Specify `*` to permit any account to put events to your default event bus, optionally limited by `condition`.
 * `statementId` - (Required) An identifier string for the external account that you are granting permissions to.
-* `action` - (Optional) The action that you are enabling the other account to perform. Defaults to `events:putEvents`.
+* `action` - (Optional) The action that you are enabling the other account to perform. Defaults to `events:PutEvents`.
 * `condition` - (Optional) Configuration block to limit the event bus permissions you are granting to only accounts that fulfill the condition. Specified below.
 * `eventBusName` - (Optional) The name of the event bus to set the permissions on.
   If you omit this, the permissions are set on the `default` event bus.
 
 ### condition
 
-* `key` - (Required) Key for the condition. Valid values: `aws:principalOrgId`.
-* `type` - (Required) Type of condition. Value values: `stringEquals`.
+* `key` - (Required) Key for the condition. Valid values: `aws:PrincipalOrgID`.
+* `type` - (Required) Type of condition. Value values: `StringEquals`.
 * `value` - (Required) Value for the key.
 
 ## Attribute Reference
@@ -114,4 +114,4 @@ Using `terraform import`, import EventBridge permissions using the `eventBusName
 % terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61e6e8cd01bf17093c7daf47be3dce1db556b13575a6c0f84dd9556644d63f94 -->
+<!-- cache-key: cdktf-0.19.0 input-61e6e8cd01bf17093c7daf47be3dce1db556b13575a6c0f84dd9556644d63f94 -->

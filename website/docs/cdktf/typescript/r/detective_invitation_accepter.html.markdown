@@ -81,4 +81,4 @@ Using `terraform import`, import `awsDetectiveInvitationAccepter` using the grap
 % terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca2bf5e5cb9affcfcf860965a82f07a76d1193a82b4cdb53e84a5d10e901c8a0 -->
+<!-- cache-key: cdktf-0.19.0 input-ca2bf5e5cb9affcfcf860965a82f07a76d1193a82b4cdb53e84a5d10e901c8a0 -->

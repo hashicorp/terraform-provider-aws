@@ -61,7 +61,7 @@ This resource supports the following arguments:
 * `packetLength` - (Optional) The number of bytes in each packet to mirror. These are bytes after the VXLAN header. Do not specify this parameter when you want to mirror the entire packet. To mirror a subset of the packet, set this to the length (in bytes) that you want to mirror.
 * `sessionNumber` - (Required) - The session number determines the order in which sessions are evaluated when an interface is used by multiple sessions. The first session with a matching filter is the one that mirrors the packets.
 * `virtualNetworkId` - (Optional) - The VXLAN ID for the Traffic Mirror session. For more information about the VXLAN protocol, see RFC 7348. If you do not specify a VirtualNetworkId, an account-wide unique id is chosen at random.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the traffic mirror session.
 * `id` - The name of the session.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `ownerId` - The AWS account ID of the session owner.
 
 ## Import
@@ -94,4 +94,4 @@ Using `terraform import`, import traffic mirror sessions using the `id`. For exa
 % terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bebf9726dbd8427c2549afe146e9559250616ce6b54593bc2d8e49757985351e -->
+<!-- cache-key: cdktf-0.19.0 input-bebf9726dbd8427c2549afe146e9559250616ce6b54593bc2d8e49757985351e -->

@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `instanceTypes` - Set of instance types.
 
-<!-- cache-key: cdktf-0.18.0 input-3dcd4d42109b60dec29ef5ce3754b18b70307fc52baa1c511a6b236d274c3d89 -->
+<!-- cache-key: cdktf-0.19.0 input-3dcd4d42109b60dec29ef5ce3754b18b70307fc52baa1c511a6b236d274c3d89 -->

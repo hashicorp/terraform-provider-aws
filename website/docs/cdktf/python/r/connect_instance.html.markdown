@@ -134,4 +134,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->
+<!-- cache-key: cdktf-0.19.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->

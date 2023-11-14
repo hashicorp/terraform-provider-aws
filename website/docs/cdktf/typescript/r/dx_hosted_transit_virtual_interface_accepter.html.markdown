@@ -82,7 +82,7 @@ This resource supports the following arguments:
 
 * `dxGatewayId` - (Required) The ID of the [Direct Connect gateway](dx_gateway.html) to which to connect the virtual interface.
 * `virtualInterfaceId` - (Required) The ID of the Direct Connect virtual interface to accept.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -90,14 +90,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -121,4 +121,4 @@ Using `terraform import`, import Direct Connect hosted transit virtual interface
 % terraform import aws_dx_hosted_transit_virtual_interface_accepter.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-11153e84fd4c6aad81c1acf38c978286aaac606a6d4e54cc6058708bc8cb04ba -->
+<!-- cache-key: cdktf-0.19.0 input-11153e84fd4c6aad81c1acf38c978286aaac606a6d4e54cc6058708bc8cb04ba -->

@@ -62,6 +62,6 @@ This data source exports the following attributes in addition to the arguments a
 ### constraint_summaries
 
 * `description` - Description of the constraint.
-* `type` - Type of constraint. Valid values are `launch`, `notification`, `stackset`, and `template`.
+* `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
 
-<!-- cache-key: cdktf-0.18.0 input-395a3eb806ea47e44fedb57001a8b66f937569364601cfff911b33a8f74a212b -->
+<!-- cache-key: cdktf-0.19.0 input-395a3eb806ea47e44fedb57001a8b66f937569364601cfff911b33a8f74a212b -->

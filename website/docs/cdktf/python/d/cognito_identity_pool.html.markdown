@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_login_providers` - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - A map of tags to assigned to the Identity Pool.
 
-<!-- cache-key: cdktf-0.18.0 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->
+<!-- cache-key: cdktf-0.19.0 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->

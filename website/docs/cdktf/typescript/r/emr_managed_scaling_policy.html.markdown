@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 ### compute_limits
 
-* `unitType` - (Required) The unit type used for specifying a managed scaling policy. Valid Values: `instanceFleetUnits` | `instances` | `vcpu`
+* `unitType` - (Required) The unit type used for specifying a managed scaling policy. Valid Values: `InstanceFleetUnits` | `Instances` | `VCPU`
 * `minimumCapacityUnits` - (Required) The lower boundary of EC2 units. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. Managed scaling activities are not allowed beyond this boundary. The limit only applies to the core and task nodes. The master node cannot be scaled after initial configuration.
 * `maximumCapacityUnits` - (Required) The upper boundary of EC2 units. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. Managed scaling activities are not allowed beyond this boundary. The limit only applies to the core and task nodes. The master node cannot be scaled after initial configuration.
 * `maximumOndemandCapacityUnits` - (Optional) The upper boundary of On-Demand EC2 units. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. The On-Demand units are not allowed to scale beyond this boundary. The parameter is used to split capacity allocation between On-Demand and Spot instances.
@@ -99,4 +99,4 @@ Using `terraform import`, import EMR Managed Scaling Policies using the EMR Clus
 % terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62b04cc94e05c0974582d7b0b1123356847a607e2399a95467c580bdbc32dcb0 -->
+<!-- cache-key: cdktf-0.19.0 input-62b04cc94e05c0974582d7b0b1123356847a607e2399a95467c580bdbc32dcb0 -->

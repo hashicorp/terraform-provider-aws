@@ -13,11 +13,12 @@ func TestAccConfigService_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"Config": {
+		"ConfigRule": {
 			"basic":            testAccConfigRule_basic,
 			"ownerAws":         testAccConfigRule_ownerAws,
 			"customlambda":     testAccConfigRule_customlambda,
 			"customPolicy":     testAccConfigRule_ownerPolicy,
+			"evaluationMode":   testAccConfigRule_evaluationMode,
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,

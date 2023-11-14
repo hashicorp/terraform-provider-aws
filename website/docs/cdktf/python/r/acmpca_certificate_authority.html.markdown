@@ -226,4 +226,4 @@ Using `terraform import`, import `aws_acmpca_certificate_authority` using the ce
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->
+<!-- cache-key: cdktf-0.19.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->

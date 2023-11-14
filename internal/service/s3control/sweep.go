@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package s3control
 
 import (
@@ -19,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
 		Name: "aws_s3_access_point",
 		F:    sweepAccessPoints,
@@ -74,12 +71,12 @@ func sweepAccessPoints(region string) error {
 		for _, v := range page.AccessPointList {
 			r := resourceAccessPoint()
 			d := r.Data(nil)
-			if id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn)); err != nil {
+			id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn))
+			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
-			} else {
-				d.SetId(id)
 			}
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

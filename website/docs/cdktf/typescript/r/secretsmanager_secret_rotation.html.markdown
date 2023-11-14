@@ -53,14 +53,14 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 This resource supports the following arguments:
 
 * `secretId` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `rotationLambdaArn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.
+* `rotationLambdaArn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
 * `rotationRules` - (Required) A structure that defines the rotation configuration for this secret. Defined below.
 
 ### rotation_rules
 
-* `automaticallyAfterDays` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret. Either `automaticallyAfterDays` or `scheduleExpression` must be specified.
-* `duration` - (Optional) - The length of the rotation window in hours. For example, `3H` for a three hour window.
-* `scheduleExpression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automaticallyAfterDays` or `scheduleExpression` must be specified.
+* `automaticallyAfterDays` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret. Either `automatically_after_days` or `schedule_expression` must be specified.
+* `duration` - (Optional) - The length of the rotation window in hours. For example, `3h` for a three hour window.
+* `scheduleExpression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 
 ## Attribute Reference
 
@@ -92,4 +92,4 @@ Using `terraform import`, import `awsSecretsmanagerSecretRotation` using the sec
 % terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cc47ff7adf2afa181189161981103bc0665261d0e6839ac663513dfdf24e3c49 -->
+<!-- cache-key: cdktf-0.19.0 input-1df41303c1079c151b7ee1f2cea136532366b8e5035376a6a487b2b2fb95e7ce -->

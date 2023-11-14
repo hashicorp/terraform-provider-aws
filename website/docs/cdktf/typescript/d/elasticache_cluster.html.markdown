@@ -69,8 +69,8 @@ accept connections.
 * `configurationEndpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `clusterAddress` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `preferredOutpostArn` - The outpost ARN in which the cache cluster was created if created in outpost.
-* `cacheNodes` - List of node objects including `id`, `address`, `port`, `availabilityZone` and `outpostArn`.
-   Referenceable e.g., as `${dataAwsElasticacheClusterBarCacheNodes0Address}`
+* `cacheNodes` - List of node objects including `id`, `address`, `port`, `availability_zone` and `outpost_arn`.
+   Referenceable e.g., as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.18.0 input-1e3ac11eb5023a5844f4de255a62edd6fa79961694900996bd0798736ae27445 -->
+<!-- cache-key: cdktf-0.19.0 input-1e3ac11eb5023a5844f4de255a62edd6fa79961694900996bd0798736ae27445 -->

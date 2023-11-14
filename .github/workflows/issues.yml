@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Apply Labels'
-        uses: github/issue-labeler@98b5412841f6c4b0b3d9c29d53c13fad16bd7de2 # v3.2
+        uses: github/issue-labeler@6bea9ed491bb74fce38775b3d863e64a59dbd9eb # v3.3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler-issue-triage.yml
@@ -93,14 +93,6 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
-
-      - name: 'Maintainer Issues'
-        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
       - name: 'Assigned to Maintainer'
         if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
@@ -133,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add community note to new Issues'
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
+        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

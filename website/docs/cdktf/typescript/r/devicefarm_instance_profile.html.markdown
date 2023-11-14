@@ -43,14 +43,14 @@ class MyConvertedCode extends TerraformStack {
 * `name` - (Required) The name for the instance profile.
 * `packageCleanup` - (Optional) When set to `true`, Device Farm removes app packages after a test run. The default value is `false` for private devices.
 * `rebootAfterUse` - (Optional) When set to `true`, Device Farm reboots the instance after a test run. The default value is `true`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this instance profile.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -74,4 +74,4 @@ Using `terraform import`, import DeviceFarm Instance Profiles using their ARN. F
 % terraform import aws_devicefarm_instance_profile.example arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-869291a59b04d3cacb00462dab45e1d4434b9d843a3070738a3d718940fb202b -->
+<!-- cache-key: cdktf-0.19.0 input-869291a59b04d3cacb00462dab45e1d4434b9d843a3070738a3d718940fb202b -->

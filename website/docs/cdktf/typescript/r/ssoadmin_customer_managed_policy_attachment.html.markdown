@@ -113,8 +113,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -138,4 +138,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `name`
 % terraform import aws_ssoadmin_customer_managed_policy_attachment.example TestPolicy,/,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a04c10d6fcfe1554e5e21b7e379b1eef18d14ec57155c17e159d69d18e318c3e -->
+<!-- cache-key: cdktf-0.19.0 input-a04c10d6fcfe1554e5e21b7e379b1eef18d14ec57155c17e159d69d18e318c3e -->

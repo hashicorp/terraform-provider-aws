@@ -895,7 +895,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.3"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   artifact_config {
@@ -926,7 +926,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.3"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   artifact_config {

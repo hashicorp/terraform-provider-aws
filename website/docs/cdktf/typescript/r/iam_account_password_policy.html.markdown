@@ -61,7 +61,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `expirePasswords` - Indicates whether passwords in the account expire. Returns `true` if `maxPasswordAge` contains a value greater than `0`. Returns `false` if it is `0` or _not present_.
+* `expirePasswords` - Indicates whether passwords in the account expire. Returns `true` if `max_password_age` contains a value greater than `0`. Returns `false` if it is `0` or _not present_.
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import IAM Account Password Policy using the word `iam
 % terraform import aws_iam_account_password_policy.strict iam-account-password-policy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc08150f6477fe05b7c648840dff00a4154ffcf28a4c1cad6ceaf55d1d45f131 -->
+<!-- cache-key: cdktf-0.19.0 input-bc08150f6477fe05b7c648840dff00a4154ffcf28a4c1cad6ceaf55d1d45f131 -->

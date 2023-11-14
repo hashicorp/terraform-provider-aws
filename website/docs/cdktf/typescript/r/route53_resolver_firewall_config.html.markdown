@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `resourceId` - (Required) The ID of the VPC that the configuration is for.
-* `firewallFailOpen` - (Required) Determines how Route 53 Resolver handles queries during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply. By default, fail open is disabled, which means the failure mode is closed. This approach favors security over availability. DNS Firewall blocks queries that it is unable to evaluate properly. If you enable this option, the failure mode is open. This approach favors availability over security. DNS Firewall allows queries to proceed if it is unable to properly evaluate them. Valid values: `enabled`, `disabled`.
+* `firewallFailOpen` - (Required) Determines how Route 53 Resolver handles queries during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply. By default, fail open is disabled, which means the failure mode is closed. This approach favors security over availability. DNS Firewall blocks queries that it is unable to evaluate properly. If you enable this option, the failure mode is open. This approach favors availability over security. DNS Firewall allows queries to proceed if it is unable to properly evaluate them. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
@@ -80,4 +80,4 @@ Using `terraform import`, import Route 53 Resolver DNS Firewall configs using th
 % terraform import aws_route53_resolver_firewall_config.example rdsc-be1866ecc1683e95
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-47300e21e1334742b1c6242fae853e95ab5ebc4549ee0296560b626b37cb47ed -->
+<!-- cache-key: cdktf-0.19.0 input-47300e21e1334742b1c6242fae853e95ab5ebc4549ee0296560b626b37cb47ed -->

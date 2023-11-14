@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 * `databaseName` – (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 64.
 * `kmsKeyId` - (Optional) The ARN (not Alias ARN) of the KMS key to be used to encrypt the data stored in the database. If the KMS key is not specified, the database will be encrypted with a Timestream managed KMS key located in your account. Refer to [AWS managed KMS keys](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk) for more info.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN that uniquely identifies this database.
 * `kmsKeyId` - The ARN of the KMS key used to encrypt the data stored in the database.
 * `tableCount` - The total number of tables found within the Timestream database.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -102,4 +102,4 @@ Using `terraform import`, import Timestream databases using the `databaseName`. 
 % terraform import aws_timestreamwrite_database.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f9e466cc597e77e2955216c4193bd02e93e398df89c5fb4b6c43b2048b014651 -->
+<!-- cache-key: cdktf-0.19.0 input-f9e466cc597e77e2955216c4193bd02e93e398df89c5fb4b6c43b2048b014651 -->

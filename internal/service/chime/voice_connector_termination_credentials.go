@@ -8,12 +8,14 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_chime_voice_connector_termination_credentials")
@@ -60,11 +62,11 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
-	input := &chime.PutVoiceConnectorTerminationCredentialsInput{
+	input := &chimesdkvoice.PutVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(vcId),
 		Credentials:      expandCredentials(d.Get("credentials").(*schema.Set).List()),
 	}
@@ -79,14 +81,17 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.ListVoiceConnectorTerminationCredentialsInput{
-		VoiceConnectorId: aws.String(d.Id()),
+	_, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+		return findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
 	}
 
-	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -102,10 +107,10 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 }
 
 func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges("credentials") {
-		input := &chime.PutVoiceConnectorTerminationCredentialsInput{
+		input := &chimesdkvoice.PutVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(d.Id()),
 			Credentials:      expandCredentials(d.Get("credentials").(*schema.Set).List()),
 		}
@@ -121,16 +126,16 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chime.DeleteVoiceConnectorTerminationCredentialsInput{
+	input := &chimesdkvoice.DeleteVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
 		Usernames:        expandCredentialsUsernames(d.Get("credentials").(*schema.Set).List()),
 	}
 
 	_, err := conn.DeleteVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 		return nil
 	}
 
@@ -152,16 +157,41 @@ func expandCredentialsUsernames(data []interface{}) []*string {
 	return rawNames
 }
 
-func expandCredentials(data []interface{}) []*chime.Credential {
-	var credentials []*chime.Credential
+func expandCredentials(data []interface{}) []*chimesdkvoice.Credential {
+	var credentials []*chimesdkvoice.Credential
 
 	for _, rItem := range data {
 		item := rItem.(map[string]interface{})
-		credentials = append(credentials, &chime.Credential{
+		credentials = append(credentials, &chimesdkvoice.Credential{
 			Username: aws.String(item["username"].(string)),
 			Password: aws.String(item["password"].(string)),
 		})
 	}
 
 	return credentials
+}
+
+func findVoiceConnectorTerminationCredentialsByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+	in := &chimesdkvoice.ListVoiceConnectorTerminationCredentialsInput{
+		VoiceConnectorId: aws.String(id),
+	}
+
+	resp, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if resp == nil || resp.Usernames == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

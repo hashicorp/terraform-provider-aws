@@ -74,4 +74,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5e110cd77e6a012eaab724d615a7f74ade584854ae6093e0bce3c82605f33152 -->
+<!-- cache-key: cdktf-0.19.0 input-5e110cd77e6a012eaab724d615a7f74ade584854ae6093e0bce3c82605f33152 -->

@@ -255,4 +255,4 @@ Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_
 % terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e953ed182a0fa1dcb61c6d51bec7e4fd4935f7e22b773c4ebbee1298edc5e49e -->
+<!-- cache-key: cdktf-0.19.0 input-e953ed182a0fa1dcb61c6d51bec7e4fd4935f7e22b773c4ebbee1298edc5e49e -->

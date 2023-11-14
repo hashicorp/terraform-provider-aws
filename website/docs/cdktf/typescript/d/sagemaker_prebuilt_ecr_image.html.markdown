@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `repositoryName` - (Required) Name of the repository, which is generally the algorithm or library. Values include `blazingtext`, `factorizationMachines`, `forecastingDeepar`, `imageClassification`, `ipinsights`, `kmeans`, `knn`, `lda`, `linearLearner`, `mxnetInferenceEia`, `mxnetInference`, `mxnetTraining`, `ntm`, `objectDetection`, `object2Vec`, `pca`, `pytorchInferenceEia`, `pytorchInference`, `pytorchTraining`, `randomcutforest`, `sagemakerScikitLearn`, `sagemakerSparkmlServing`, `sagemakerXgboost`, `semanticSegmentation`, `seq2Seq`, `tensorflowInferenceEia`, `tensorflowInference`, `tensorflowTraining`, `huggingfaceTensorflowTraining`, `huggingfaceTensorflowInference`, `huggingfacePytorchTraining`, and `huggingfacePytorchInference`.
+* `repositoryName` - (Required) Name of the repository, which is generally the algorithm or library. Values include `blazingtext`, `factorization-machines`, `forecasting-deepar`, `image-classification`, `ipinsights`, `kmeans`, `knn`, `lda`, `linear-learner`, `mxnet-inference-eia`, `mxnet-inference`, `mxnet-training`, `ntm`, `object-detection`, `object2vec`, `pca`, `pytorch-inference-eia`, `pytorch-inference`, `pytorch-training`, `randomcutforest`, `sagemaker-scikit-learn`, `sagemaker-sparkml-serving`, `sagemaker-xgboost`, `semantic-segmentation`, `seq2seq`, `tensorflow-inference-eia`, `tensorflow-inference`, `tensorflow-training`, `huggingface-tensorflow-training`, `huggingface-tensorflow-inference`, `huggingface-pytorch-training`, and `huggingface-pytorch-inference`.
 * `dnsSuffix` - (Optional) DNS suffix to use in the registry path. If not specified, the AWS provider sets it to the DNS suffix for the current region.
 * `imageTag` - (Optional) Image tag for the Docker image. If not specified, the AWS provider sets the value to `1`, which for many repositories indicates the latest version. Some repositories, such as XGBoost, do not support `1` or `latest` and specific version must be used.
 * `region` (Optional) - Region to use in the registry path. If not specified, the AWS provider sets it to the current region.
@@ -53,6 +53,6 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `registryId` - Account ID containing the image. For example, `469771592824`.
-* `registryPath` - Docker image URL. For example, `341280168497DkrEcrCaCentral1AmazonawsCom/sagemakerSparkmlServing:24`.
+* `registryPath` - Docker image URL. For example, `341280168497.dkr.ecr.ca-central-1.amazonaws.com/sagemaker-sparkml-serving:2.4`.
 
-<!-- cache-key: cdktf-0.18.0 input-9f7430a5070692161cbacbbecaaf444a21d44fae9e8ba95244364cce1a3659ec -->
+<!-- cache-key: cdktf-0.19.0 input-9f7430a5070692161cbacbbecaaf444a21d44fae9e8ba95244364cce1a3659ec -->

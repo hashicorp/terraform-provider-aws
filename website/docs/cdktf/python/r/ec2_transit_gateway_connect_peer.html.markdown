@@ -88,4 +88,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_connect_peer` using th
 % terraform import aws_ec2_transit_gateway_connect_peer.example tgw-connect-peer-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d6fe2e495100d4a7884cb0832674c4c28b10dc1276e47184967c743d1b05aec4 -->
+<!-- cache-key: cdktf-0.19.0 input-d6fe2e495100d4a7884cb0832674c4c28b10dc1276e47184967c743d1b05aec4 -->

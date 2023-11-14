@@ -70,9 +70,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabularyFileUri`
+* `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
 * `vocabularyFileUri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
-* `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -86,9 +86,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -112,4 +112,4 @@ Using `terraform import`, import Transcribe Vocabulary using the `vocabularyName
 % terraform import aws_transcribe_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->
+<!-- cache-key: cdktf-0.19.0 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->

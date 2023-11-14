@@ -46,22 +46,6 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 	}
 }
 
-func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dBSubnetGroup, err := FindDBSubnetGroupByName(ctx, conn, dBSubnetGroupName)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) || dBSubnetGroup == nil {
-			return nil, DBSubnetGroupStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Subnet Group (%s): %w", dBSubnetGroupName, err)
-		}
-
-		return dBSubnetGroup, aws.StringValue(dBSubnetGroup.SubnetGroupStatus), nil
-	}
-}
-
 func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEventSubscriptionByID(ctx, conn, id)

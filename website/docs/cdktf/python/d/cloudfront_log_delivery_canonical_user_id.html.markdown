@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Canonical user ID for the AWS `awslogsdelivery` account in the region.
 
-<!-- cache-key: cdktf-0.18.0 input-2559298f99f82c97aa9ed9f52ecdd43d146cf2ecbc440cc80cecd164b8e630dc -->
+<!-- cache-key: cdktf-0.19.0 input-2559298f99f82c97aa9ed9f52ecdd43d146cf2ecbc440cc80cecd164b8e630dc -->

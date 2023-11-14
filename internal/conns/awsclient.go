@@ -15,6 +15,7 @@ import (
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
+	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,6 +39,7 @@ type AWSClient struct {
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
 	lock                      sync.Mutex
+	logger                    baselogging.Logger
 	s3UsePathStyle            bool                                      // From provider configuration.
 	s3UsEast1RegionalEndpoint endpoints_sdkv1.S3UsEast1RegionalEndpoint // From provider configuration.
 	stsRegion                 string                                    // From provider configuration.
@@ -81,6 +83,11 @@ func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
 // HTTPClient returns the http.Client used for AWS API calls.
 func (client *AWSClient) HTTPClient() *http.Client {
 	return client.httpClient
+}
+
+// RegisterLogger places the configured logger into Context so it can be used via `tflog`.
+func (client *AWSClient) RegisterLogger(ctx context.Context) context.Context {
+	return baselogging.RegisterLogger(ctx, client.logger)
 }
 
 // APIGatewayInvokeURL returns the Amazon API Gateway (REST APIs) invoke URL for the configured AWS Region.

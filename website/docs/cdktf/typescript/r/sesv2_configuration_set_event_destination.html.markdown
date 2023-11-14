@@ -191,7 +191,7 @@ The following arguments are required:
 
 The following arguments are required:
 
-* `matchingEventTypes` - (Required) - An array that specifies which events the Amazon SES API v2 should send to the destinations. Valid values: `send`, `reject`, `bounce`, `complaint`, `delivery`, `open`, `click`, `renderingFailure`, `deliveryDelay`, `subscription`.
+* `matchingEventTypes` - (Required) - An array that specifies which events the Amazon SES API v2 should send to the destinations. Valid values: `SEND`, `REJECT`, `BOUNCE`, `COMPLAINT`, `DELIVERY`, `OPEN`, `CLICK`, `RENDERING_FAILURE`, `DELIVERY_DELAY`, `SUBSCRIPTION`.
 
 The following arguments are optional:
 
@@ -213,7 +213,7 @@ The following arguments are required:
 
 * `defaultDimensionValue` - (Required) The default value of the dimension that is published to Amazon CloudWatch if you don't provide the value of the dimension when you send an email.
 * `dimensionName` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
-* `dimensionValueSource` - (Required) The location where the Amazon SES API v2 finds the value of a dimension to publish to Amazon CloudWatch. Valid values: `messageTag`, `emailHeader`, `linkTag`.
+* `dimensionValueSource` - (Required) The location where the Amazon SES API v2 finds the value of a dimension to publish to Amazon CloudWatch. Valid values: `MESSAGE_TAG`, `EMAIL_HEADER`, `LINK_TAG`.
 
 ### kinesis_firehose_destination
 
@@ -238,7 +238,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A pipe-delimited string combining `configurationSetName` and `eventDestinationName`.
+* `id` - A pipe-delimited string combining `configuration_set_name` and `event_destination_name`.
 
 ## Import
 
@@ -262,4 +262,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set Event
 % terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cad711a1f404bc31687becda354a170176c8e53426698806bef4713eb256b918 -->
+<!-- cache-key: cdktf-0.19.0 input-cad711a1f404bc31687becda354a170176c8e53426698806bef4713eb256b918 -->

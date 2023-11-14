@@ -19,9 +19,9 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
-	engineVersion := "1.0.2.2"
+	engineVersion := "1.1.0.0"
 	licenseModel := "amazon-license"
-	class := "db.t3.medium"
+	class := "db.t4g.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
@@ -46,9 +46,9 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
-	engineVersion := "1.0.3.0"
+	engineVersion := "1.2.0.2"
 	licenseModel := "amazon-license"
-	preferredOption := "db.r4.2xlarge"
+	preferredOption := "db.r5.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
