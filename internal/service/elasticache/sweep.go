@@ -67,6 +67,14 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticache_user", &resource.Sweeper{
 		Name: "aws_elasticache_user",
 		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_elasticache_user_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_elasticache_user_group", &resource.Sweeper{
+		Name: "aws_elasticache_user_group",
+		F:    sweepUserGroups,
 	})
 }
 
@@ -333,7 +341,7 @@ func sweepUsers(region string) error {
 
 			r := ResourceUser()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.UserId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -354,6 +362,50 @@ func sweepUsers(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("sweeping ElastiCache Users (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepUserGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.ElastiCacheConn(ctx)
+	input := &elasticache.DescribeUserGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.UserGroups {
+			r := ResourceUserGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.UserGroupId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache User Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing ElastiCache User Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping ElastiCache User Groups (%s): %w", region, err)
 	}
 
 	return nil
