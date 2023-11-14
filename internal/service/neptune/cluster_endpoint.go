@@ -197,19 +197,23 @@ func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	endpointId := d.Get("cluster_endpoint_identifier").(string)
-	input := &neptune.DeleteDBClusterEndpointInput{
-		DBClusterEndpointIdentifier: aws.String(endpointId),
+	clusterID, clusterEndpointID, err := clusterEndpointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
-			tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Neptune Cluster Endpoint cannot be deleted: %s", err)
+	_, err = conn.DeleteDBClusterEndpointWithContext(ctx, &neptune.DeleteDBClusterEndpointInput{
+		DBClusterEndpointIdentifier: aws.String(clusterEndpointID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
+		return diags
 	}
+
+	if err != nil {
+		return diag.Errorf("deleting Neptune Cluster Endpoint (%s): %s", d.Id(), err)
+	}
+
 	_, err = WaitDBClusterEndpointDeleted(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
