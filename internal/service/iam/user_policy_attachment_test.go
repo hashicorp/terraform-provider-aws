@@ -156,7 +156,7 @@ func testAccCheckUserPolicyAttachmentCount(ctx context.Context, userName string,
 			return fmt.Errorf("UserPolicyAttachmentCount(%q) = %v, want %v", userName, got, want)
 		}
 
-		return err
+		return nil
 	}
 }
 

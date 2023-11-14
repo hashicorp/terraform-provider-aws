@@ -183,7 +183,7 @@ func testAccCheckRolePolicyAttachmentCount(ctx context.Context, roleName string,
 			return fmt.Errorf("RolePolicyAttachmentCount(%q) = %v, want %v", roleName, got, want)
 		}
 
-		return err
+		return nil
 	}
 }
 

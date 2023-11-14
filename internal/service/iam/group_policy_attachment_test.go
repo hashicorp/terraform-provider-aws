@@ -153,7 +153,7 @@ func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, groupName strin
 			return fmt.Errorf("GroupPolicyAttachmentCount(%q) = %v, want %v", groupName, got, want)
 		}
 
-		return err
+		return nil
 	}
 }
 
