@@ -57,8 +57,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
 
-	err := attachPolicyToGroup(ctx, conn, group, policyARN)
-	if err != nil {
+	if err := attachPolicyToGroup(ctx, conn, group, policyARN); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -98,8 +97,7 @@ func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	err := detachPolicyFromGroup(ctx, conn, d.Get("group").(string), d.Get("policy_arn").(string))
-	if err != nil {
+	if err := detachPolicyFromGroup(ctx, conn, d.Get("group").(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -147,7 +145,7 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.IAM, group, policyARN 
 	}
 
 	if err != nil {
-		return fmt.Errorf("dtaching IAM Policy (%s) from IAM Group (%s): %w", policyARN, group, err)
+		return fmt.Errorf("detaching IAM Policy (%s) from IAM Group (%s): %w", policyARN, group, err)
 	}
 
 	return nil
