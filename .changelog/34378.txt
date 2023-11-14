@@ -7,7 +7,7 @@ resource/aws_iam_policy_attachment: Retry `ConcurrentModificationException` erro
 ```
 
 ```release-note:bug
-resource/aws_iam_role_policy_attachment: Retry `ConcurrentModificationException` errors on create
+resource/aws_iam_role_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete
 ```
 
 ```release-note:bug

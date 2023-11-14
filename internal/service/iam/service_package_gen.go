@@ -160,8 +160,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_role_policy",
 		},
 		{
-			Factory:  ResourceRolePolicyAttachment,
+			Factory:  resourceRolePolicyAttachment,
 			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
 		},
 		{
 			Factory:  ResourceSAMLProvider,
@@ -215,6 +216,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
+			Name:     "User Policy Attachment",
 		},
 		{
 			Factory:  ResourceUserSSHKey,

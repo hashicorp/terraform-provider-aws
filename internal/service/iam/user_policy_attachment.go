@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_user_policy_attachment")
+// @SDKResource("aws_iam_user_policy_attachment", name="User Policy Attachment")
 func resourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,

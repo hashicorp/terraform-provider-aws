@@ -109,11 +109,14 @@ func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.Resource
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())
 	}
+
 	groupName := idParts[0]
 	policyARN := idParts[1]
+
 	d.Set("group", groupName)
 	d.Set("policy_arn", policyARN)
 	d.SetId(fmt.Sprintf("%s-%s", groupName, policyARN))
+
 	return []*schema.ResourceData{d}, nil
 }
 
