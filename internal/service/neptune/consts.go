@@ -19,6 +19,18 @@ const (
 )
 
 const (
+	clusterStatusAvailable                  = "available"
+	clusterStatusBackingUp                  = "backing-up"
+	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	clusterStatusCreating                   = "creating"
+	clusterStatusDeleting                   = "deleting"
+	clusterStatusMigrating                  = "migrating"
+	clusterStatusModifying                  = "modifying"
+	clusterStatusPreparingDataMigration     = "preparing-data-migration"
+	clusterStatusUpgrading                  = "upgrading"
+)
+
+const (
 	dbInstanceStatusAvailable                     = "available"
 	dbInstanceStatusBackingUp                     = "backing-up"
 	dbInstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
