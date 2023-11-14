@@ -25,3 +25,7 @@ resource/aws_iam_policy_attachment: Add plan-time validation of `policy_arn`
 ```release-note:enhancement
 resource/aws_iam_role_policy_attachment: Add plan-time validation of `policy_arn`
 ```
+
+```release-note:enhancement
+resource/aws_iam_user_policy_attachment: Add plan-time validation of `policy_arn`
+```

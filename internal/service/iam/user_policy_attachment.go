@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_iam_user_policy_attachment")
@@ -27,20 +28,22 @@ func ResourceUserPolicyAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceUserPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceUserPolicyAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceUserPolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"policy_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"user": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-			},
-			"policy_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 		},
 	}
