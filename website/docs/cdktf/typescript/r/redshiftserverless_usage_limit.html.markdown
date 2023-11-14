@@ -51,10 +51,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `amount` - (Required) The limit amount. If time-based, this amount is in Redshift Processing Units (RPU) consumed per hour. If data-based, this amount is in terabytes (TB) of data transferred between Regions in cross-account sharing. The value must be a positive number.
-* `breachAction` - (Optional) The action that Amazon Redshift Serverless takes when the limit is reached. Valid values are `log`, `emitMetric`, and `deactivate`. The default is `log`.
+* `breachAction` - (Optional) The action that Amazon Redshift Serverless takes when the limit is reached. Valid values are `log`, `emit-metric`, and `deactivate`. The default is `log`.
 * `period` - (Optional) The time period that the amount applies to. A weekly period begins on Sunday. Valid values are `daily`, `weekly`, and `monthly`. The default is `monthly`.
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the Amazon Redshift Serverless resource to create the usage limit for.
-* `usageType` - (Required) The type of Amazon Redshift Serverless usage to create a usage limit for. Valid values are `serverlessCompute` or `crossRegionDatasharing`.
+* `usageType` - (Required) The type of Amazon Redshift Serverless usage to create a usage limit for. Valid values are `serverless-compute` or `cross-region-datasharing`.
 
 ## Attribute Reference
 
@@ -85,4 +85,4 @@ Using `terraform import`, import Redshift Serverless Usage Limits using the `id`
 % terraform import aws_redshiftserverless_usage_limit.example example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-84a424322614113d9d70f498bff96348f7b00d895883170bcacbcdfd508f8a95 -->
+<!-- cache-key: cdktf-0.19.0 input-84a424322614113d9d70f498bff96348f7b00d895883170bcacbcdfd508f8a95 -->

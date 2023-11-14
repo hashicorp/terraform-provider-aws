@@ -267,4 +267,4 @@ Using `terraform import`, import intents using their name. For example:
 % terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->
+<!-- cache-key: cdktf-0.19.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->

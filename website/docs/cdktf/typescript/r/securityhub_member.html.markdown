@@ -57,7 +57,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the member AWS account (matches `accountId`).
+* `id` - The ID of the member AWS account (matches `account_id`).
 * `masterId` - The ID of the master Security Hub AWS account.
 * `memberStatus` - The status of the member account relationship.
 
@@ -83,4 +83,4 @@ Using `terraform import`, import Security Hub members using their account ID. Fo
 % terraform import aws_securityhub_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b2f811f0ff3e2bff9fde29d7ad1d4c2d9fa7578b2c00bebd2e51ff8635a9fa1c -->
+<!-- cache-key: cdktf-0.19.0 input-b2f811f0ff3e2bff9fde29d7ad1d4c2d9fa7578b2c00bebd2e51ff8635a9fa1c -->

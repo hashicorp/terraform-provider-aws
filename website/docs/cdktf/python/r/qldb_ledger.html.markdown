@@ -78,4 +78,4 @@ Using `terraform import`, import QLDB Ledgers using the `name`. For example:
 % terraform import aws_qldb_ledger.sample-ledger sample-ledger
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ce649e87d3aa63512d24a26f84548ecb8485e38743e2428127ead04a1c91c863 -->
+<!-- cache-key: cdktf-0.19.0 input-ce649e87d3aa63512d24a26f84548ecb8485e38743e2428127ead04a1c91c863 -->

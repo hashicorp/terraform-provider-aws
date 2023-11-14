@@ -125,4 +125,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5f65f3c5e87dc3ce9fac6b2ac4088089f1f88f7a6df546f616bc7e3d7b3fd19d -->
+<!-- cache-key: cdktf-0.19.0 input-5f65f3c5e87dc3ce9fac6b2ac4088089f1f88f7a6df546f616bc7e3d7b3fd19d -->

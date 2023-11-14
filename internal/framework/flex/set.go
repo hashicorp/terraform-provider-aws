@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
+func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
 	var output []*string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -19,7 +20,7 @@ func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
 	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v types.Set) Set[string] {
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
 	var output []string
 
 	panicOnError(Expand(ctx, v, &output))
@@ -60,7 +61,7 @@ func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set 
 //
 // A nil slice is converted to a null Set.
 // An empty slice is converted to a null Set.
-func FlattenFrameworkStringValueSet(ctx context.Context, v []string) types.Set {
+func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types.Set {
 	if len(v) == 0 {
 		return types.SetNull(types.StringType)
 	}
@@ -74,11 +75,11 @@ func FlattenFrameworkStringValueSet(ctx context.Context, v []string) types.Set {
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.
 // A nil slice is converted to an empty (non-null) Set.
-func FlattenFrameworkStringValueSetLegacy(_ context.Context, vs []string) types.Set {
+func FlattenFrameworkStringValueSetLegacy[T ~string](_ context.Context, vs []T) types.Set {
 	elems := make([]attr.Value, len(vs))
 
 	for i, v := range vs {
-		elems[i] = types.StringValue(v)
+		elems[i] = types.StringValue(string(v))
 	}
 
 	return types.SetValueMust(types.StringType, elems)

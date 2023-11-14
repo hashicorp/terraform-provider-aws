@@ -82,6 +82,6 @@ All of the argument attributes are also exported as result attributes when there
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-33a69cd7bf58da7db6b0a1e84dd1601b625d3a9040a0150ad517559d95d9622f -->
+<!-- cache-key: cdktf-0.19.0 input-33a69cd7bf58da7db6b0a1e84dd1601b625d3a9040a0150ad517559d95d9622f -->

@@ -192,7 +192,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `failureCause` - Reason the export failed, if it failed.
-* `id` - Unique identifier for the snapshot export task (same value as `exportTaskIdentifier`).
+* `id` - Unique identifier for the snapshot export task (same value as `export_task_identifier`).
 * `percentProgress` - Progress of the snapshot export task as a percentage.
 * `snapshotTime` - Time that the snapshot was created.
 * `sourceType` - Type of source for the export.
@@ -223,4 +223,4 @@ Using `terraform import`, import a RDS (Relational Database) Export Task using t
 % terraform import aws_rds_export_task.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-85f7fbc39b14c8bc604a74daa69a5c20b76d661a4af3a134d17931198e7cd32a -->
+<!-- cache-key: cdktf-0.19.0 input-85f7fbc39b14c8bc604a74daa69a5c20b76d661a4af3a134d17931198e7cd32a -->

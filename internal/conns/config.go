@@ -85,6 +85,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,
@@ -117,6 +118,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// Avoid duplicate calls to STS by enabling SkipCredsValidation for the call to GetAwsConfig
+	// and then restoring the configured value for the call to GetAwsAccountIDAndPartition.
+	skipCredsValidation := awsbaseConfig.SkipCredsValidation
+	awsbaseConfig.SkipCredsValidation = true
+
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
 	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 
@@ -138,6 +144,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 	c.Region = cfg.Region
+
+	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
 	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
@@ -167,7 +175,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if accountID == "" {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
-			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
+			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
 	}
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
@@ -196,6 +204,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
+	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion

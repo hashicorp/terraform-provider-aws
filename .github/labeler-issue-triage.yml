@@ -167,6 +167,8 @@ service/configservice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_config_'
 service/connect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connect_'
+service/connectcases:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcases_'
 service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
@@ -473,6 +475,8 @@ service/opsworkscm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworkscm_'
 service/organizations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_organizations_'
+service/osis:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_osis_'
 service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:

@@ -481,7 +481,7 @@ The `rule` configuration block supports the following arguments:
 * `noncurrentVersionExpiration` - (Optional) Configuration block that specifies when noncurrent object versions expire. [See below](#noncurrent_version_expiration).
 * `noncurrentVersionTransition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class. [See below](#noncurrent_version_transition).
 * `prefix` - (Optional) **DEPRECATED** Use `filter` instead. This has been deprecated by Amazon S3. Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if `filter` is not specified.
-* `status` - (Required) Whether the rule is currently being applied. Valid values: `enabled` or `disabled`.
+* `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 
 ### abort_incomplete_multipart_upload
@@ -494,7 +494,7 @@ The `abortIncompleteMultipartUpload` configuration block supports the following 
 
 The `expiration` configuration block supports the following arguments:
 
-* `date` - (Optional) Date the object is to be moved or deleted. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `20230822`.
+* `date` - (Optional) Date the object is to be moved or deleted. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `2023-08-22`.
 * `days` - (Optional) Lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
 * `expiredObjectDeleteMarker` - (Optional, Conflicts with `date` and `days`) Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to `true`, the delete marker will be expired; if set to `false` the policy takes no action.
 
@@ -504,7 +504,7 @@ The `expiration` configuration block supports the following arguments:
 
 The `filter` configuration block supports the following arguments:
 
-* `and`- (Optional) Configuration block used to apply a logical `and` to two or more predicates. [See below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
+* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates. [See below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
 * `objectSizeGreaterThan` - (Optional) Minimum object size (in bytes) to which the rule applies.
 * `objectSizeLessThan` - (Optional) Maximum object size (in bytes) to which the rule applies.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if not specified.
@@ -523,7 +523,7 @@ The `noncurrentVersionTransition` configuration block supports the following arg
 
 * `newerNoncurrentVersions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
 * `noncurrentDays` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
-* `storageClass` - (Required) Class of storage used to store the object. Valid Values: `glacier`, `standardIa`, `onezoneIa`, `intelligentTiering`, `deepArchive`, `glacierIr`.
+* `storageClass` - (Required) Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### transition
 
@@ -531,9 +531,9 @@ The `transition` configuration block supports the following arguments:
 
 ~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
-* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `20230822`.
-* `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storageClass`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
-* `storageClass` - Class of storage used to store the object. Valid Values: `glacier`, `standardIa`, `onezoneIa`, `intelligentTiering`, `deepArchive`, `glacierIr`.
+* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `2023-08-22`.
+* `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
+* `storageClass` - Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### and
 
@@ -555,7 +555,7 @@ The `tag` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -603,4 +603,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ebcc41b345ec5d3bba0fcf9e93a6e372a400f2139471f2e6a527ebe13fe61bd7 -->
+<!-- cache-key: cdktf-0.19.0 input-ebcc41b345ec5d3bba0fcf9e93a6e372a400f2139471f2e6a527ebe13fe61bd7 -->

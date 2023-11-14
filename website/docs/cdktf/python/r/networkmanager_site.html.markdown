@@ -76,4 +76,4 @@ Using `terraform import`, import `aws_networkmanager_site` using the site ARN. F
 % terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2d6d4d05d7119f51cca78b0e0f7b23a8b934476305b572e9b2f32c6097b5694 -->
+<!-- cache-key: cdktf-0.19.0 input-e2d6d4d05d7119f51cca78b0e0f7b23a8b934476305b572e9b2f32c6097b5694 -->

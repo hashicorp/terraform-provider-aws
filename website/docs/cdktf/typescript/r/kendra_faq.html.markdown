@@ -120,9 +120,9 @@ The `s3Path` configuration block supports the following arguments:
 The following arguments are optional:
 
 * `description` - (Optional, Forces new resource) The description for a FAQ.
-* `fileFormat` - (Optional, Forces new resource) The file format used by the input files for the FAQ. Valid Values are `csv`, `csvWithHeader`, `json`.
+* `fileFormat` - (Optional, Forces new resource) The file format used by the input files for the FAQ. Valid Values are `CSV`, `CSV_WITH_HEADER`, `JSON`.
 * `languageCode` - (Optional, Forces new resource) The code for a language. This shows a supported language for the FAQ document. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -130,19 +130,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the FAQ.
 * `createdAt` - The Unix datetime that the FAQ was created.
-* `errorMessage` - When the Status field value is `failed`, this contains a message that explains why.
+* `errorMessage` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `faqId` - The identifier of the FAQ.
 * `id` - The unique identifiers of the FAQ and index separated by a slash (`/`)
 * `status` - The status of the FAQ. It is ready to use when the status is ACTIVE.
 * `updatedAt` - The date and time that the FAQ was last updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -166,4 +166,4 @@ Using `terraform import`, import `awsKendraFaq` using the unique identifiers of 
 % terraform import aws_kendra_faq.example faq-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-57f89e70ce17623b02f00b073b804b218ccbbb5d903a356e14ccc19a733fa5e6 -->
+<!-- cache-key: cdktf-0.19.0 input-57f89e70ce17623b02f00b073b804b218ccbbb5d903a356e14ccc19a733fa5e6 -->

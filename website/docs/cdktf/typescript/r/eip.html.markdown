@@ -159,7 +159,7 @@ This resource supports the following arguments:
 * `networkInterface` - (Optional) Network interface ID to associate with.
 * `publicIpv4Pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`.
   This option is only available for VPC EIPs.
-* `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional **Deprecated**) Boolean if the EIP is in a VPC or not. Use `domain` instead.
   Defaults to `true` unless the region supports EC2-Classic.
 
@@ -181,7 +181,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `privateIp` - Contains the private IP address (if in VPC).
 * `publicDns` - Public DNS associated with the Elastic IP address.
 * `publicIp` - Contains the public IP address.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** The resource computes the `publicDns` and `privateDns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
 
@@ -189,9 +189,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `15M`)
-- `update` - (Default `5M`)
-- `delete` - (Default `3M`)
+- `read` - (Default `15m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -217,4 +217,4 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html
 
-<!-- cache-key: cdktf-0.18.0 input-2894d9bbbc820133a7e6582361d7e5ae944dbddb77332e6b8487b7c5fcf90efe -->
+<!-- cache-key: cdktf-0.19.0 input-2894d9bbbc820133a7e6582361d7e5ae944dbddb77332e6b8487b7c5fcf90efe -->

@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `description` - Region's description in this format: "Location (Region name)".
 
-<!-- cache-key: cdktf-0.18.0 input-aa7c9151f3a0b19e57d6cc253b49c17fa63fbcf513e80e2ad30986f51d764653 -->
+<!-- cache-key: cdktf-0.19.0 input-aa7c9151f3a0b19e57d6cc253b49c17fa63fbcf513e80e2ad30986f51d764653 -->

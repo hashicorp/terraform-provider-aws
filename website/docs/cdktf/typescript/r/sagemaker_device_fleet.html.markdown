@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `outputConfig` - (Required) Specifies details about the repository. see [Output Config](#output-config) details below.
 * `description` - (Optional) A description of the fleet.
 * `enableIotRoleAlias` - (Optional) Whether to create an AWS IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}".
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Output Config
 
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Device Fleet.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device Fleet.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import SageMaker Device Fleets using the `name`. For e
 % terraform import aws_sagemaker_device_fleet.example my-fleet
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-02fc3724649faa5d99b8102304ae3dbcf8bf2eccc9a7bae5038774ad140d380e -->
+<!-- cache-key: cdktf-0.19.0 input-02fc3724649faa5d99b8102304ae3dbcf8bf2eccc9a7bae5038774ad140d380e -->

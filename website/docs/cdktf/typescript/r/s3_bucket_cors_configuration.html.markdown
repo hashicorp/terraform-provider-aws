@@ -71,10 +71,10 @@ This resource supports the following arguments:
 
 The `corsRule` configuration block supports the following arguments:
 
-* `allowedHeaders` - (Optional) Set of Headers that are specified in the `accessControlRequestHeaders` header.
-* `allowedMethods` - (Required) Set of HTTP methods that you allow the origin to execute. Valid values are `get`, `put`, `head`, `post`, and `delete`.
+* `allowedHeaders` - (Optional) Set of Headers that are specified in the `Access-Control-Request-Headers` header.
+* `allowedMethods` - (Required) Set of HTTP methods that you allow the origin to execute. Valid values are `GET`, `PUT`, `HEAD`, `POST`, and `DELETE`.
 * `allowedOrigins` - (Required) Set of origins you want customers to be able to access the bucket from.
-* `exposeHeaders` - (Optional) Set of headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `xmlHttpRequest` object).
+* `exposeHeaders` - (Optional) Set of headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `XMLHttpRequest` object).
 * `id` - (Optional) Unique identifier for the rule. The value cannot be longer than 255 characters.
 * `maxAgeSeconds` - (Optional) Time in seconds that your browser is to cache the preflight response for the specified resource.
 
@@ -82,7 +82,7 @@ The `corsRule` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -130,4 +130,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_cors_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c6297f41c25d6847931e27891b8cdabf38a1ff8d7e24e15087330868928e32e8 -->
+<!-- cache-key: cdktf-0.19.0 input-c6297f41c25d6847931e27891b8cdabf38a1ff8d7e24e15087330868928e32e8 -->

@@ -157,4 +157,4 @@ Using `terraform import`, import `aws_imagebuilder_distribution_configurations` 
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d8db82ff70fd71c294a27408592fa6427acf20679476b6f735995d9df579444 -->
+<!-- cache-key: cdktf-0.19.0 input-6d8db82ff70fd71c294a27408592fa6427acf20679476b6f735995d9df579444 -->

@@ -47,20 +47,20 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot.
-* `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$latest` version.
+* `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$LATEST` version.
 * `childDirected` - If this Amazon Lex Bot is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to COPPA.
 * `createdDate` - Date that the bot was created.
 * `description` - Description of the bot.
 * `detectSentiment` - When set to true user utterances are sent to Amazon Comprehend for sentiment analysis.
 * `enableModelImprovements` - Set to true if natural language understanding improvements are enabled.
-* `failureReason` - If the `status` is `failed`, the reason why the bot failed to build.
+* `failureReason` - If the `status` is `FAILED`, the reason why the bot failed to build.
 * `idleSessionTtlInSeconds` - The maximum time in seconds that Amazon Lex retains the data gathered in a conversation.
 * `lastUpdatedDate` - Date that the bot was updated.
 * `locale` - Target locale for the bot. Any intent used in the bot must be compatible with the locale of the bot.
 * `name` - Name of the bot, case sensitive.
 * `nluIntentConfidenceThreshold` - The threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot.
 * `status` - Status of the bot.
-* `version` - Version of the bot. For a new bot, the version is always `$latest`.
+* `version` - Version of the bot. For a new bot, the version is always `$LATEST`.
 * `voiceId` - Amazon Polly voice ID that the Amazon Lex Bot uses for voice interactions with the user.
 
-<!-- cache-key: cdktf-0.18.0 input-5ef089ea17f3e167b9e877fe3394478af9b492a4da2e1d52a05076e5bbbba4a7 -->
+<!-- cache-key: cdktf-0.19.0 input-5ef089ea17f3e167b9e877fe3394478af9b492a4da2e1d52a05076e5bbbba4a7 -->

@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20M`)
+* `create` - (Default `20m`)
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import `awsNeptuneClusterSnapshot` using the cluster s
 % terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9b22118c6b5ba9d2b522df8534493a26e09fc274f5e840772d7cfddb43741365 -->
+<!-- cache-key: cdktf-0.19.0 input-9b22118c6b5ba9d2b522df8534493a26e09fc274f5e840772d7cfddb43741365 -->

@@ -58,11 +58,11 @@ This resource supports the following arguments:
 ### connection_password_encryption
 
 * `returnConnectionPasswordEncrypted` - (Required) When set to `true`, passwords remain encrypted in the responses of GetConnection and GetConnections. This encryption takes effect independently of the catalog encryption.
-* `awsKmsKeyId` - (Optional) A KMS key ARN that is used to encrypt the connection password. If connection password protection is enabled, the caller of CreateConnection and UpdateConnection needs at least `kms:encrypt` permission on the specified AWS KMS key, to encrypt passwords before storing them in the Data Catalog.
+* `awsKmsKeyId` - (Optional) A KMS key ARN that is used to encrypt the connection password. If connection password protection is enabled, the caller of CreateConnection and UpdateConnection needs at least `kms:Encrypt` permission on the specified AWS KMS key, to encrypt passwords before storing them in the Data Catalog.
 
 ### encryption_at_rest
 
-* `catalogEncryptionMode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `disabled` and `sseKms`.
+* `catalogEncryptionMode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `DISABLED` and `SSE-KMS`.
 * `sseAwsKmsKeyId` - (Optional) The ARN of the AWS KMS key to use for encryption at rest.
 
 ## Attribute Reference
@@ -93,4 +93,4 @@ Using `terraform import`, import Glue Data Catalog Encryption Settings using `ca
 % terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c2e85f7ebdcf7cc062a847481555cf88d0fa1324f7ad5edd2567de866f418d1e -->
+<!-- cache-key: cdktf-0.19.0 input-c2e85f7ebdcf7cc062a847481555cf88d0fa1324f7ad5edd2567de866f418d1e -->

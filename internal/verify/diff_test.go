@@ -148,9 +148,9 @@ func TestDiffStringMaps(t *testing.T) {
 
 	for i, tc := range cases {
 		c, r, u := DiffStringMaps(tc.Old, tc.New)
-		cm := flex.PointersMapToStringList(c)
-		rm := flex.PointersMapToStringList(r)
-		um := flex.PointersMapToStringList(u)
+		cm := flex.FlattenStringMap(c)
+		rm := flex.FlattenStringMap(r)
+		um := flex.FlattenStringMap(u)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}

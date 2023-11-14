@@ -187,7 +187,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -204,7 +204,7 @@ This resource exports the following attributes in addition to the arguments abov
 - `resourceArn` - The attachment resource ARN.
 - `segmentName` - The name of the segment attachment.
 - `state` - The state of the attachment.
-- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -228,4 +228,4 @@ Using `terraform import`, import `awsNetworkmanagerSiteToSiteVpnAttachment` usin
 % terraform import aws_networkmanager_site_to_site_vpn_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8d596e286a25ca280c4219b11ff4ee7e96e1f115294bc53f7b30dbfae1998f54 -->
+<!-- cache-key: cdktf-0.19.0 input-8d596e286a25ca280c4219b11ff4ee7e96e1f115294bc53f7b30dbfae1998f54 -->

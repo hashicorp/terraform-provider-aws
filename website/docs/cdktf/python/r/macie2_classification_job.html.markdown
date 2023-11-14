@@ -167,4 +167,4 @@ Using `terraform import`, import `aws_macie2_classification_job` using the id. F
 % terraform import aws_macie2_classification_job.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9a222992d46777a40eb5928a868c445f448ac2d2331bda106271060c834b0a4f -->
+<!-- cache-key: cdktf-0.19.0 input-9a222992d46777a40eb5928a868c445f448ac2d2331bda106271060c834b0a4f -->

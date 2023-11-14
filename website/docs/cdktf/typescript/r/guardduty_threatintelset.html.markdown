@@ -73,10 +73,10 @@ This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded ThreatIntelSet.
 * `detectorId` - (Required) The detector ID of the GuardDuty.
-* `format` - (Required) The format of the file that contains the ThreatIntelSet. Valid values: `txt` | `stix` | `otxCsv` | `alienVault` | `proofPoint` | `fireEye`
+* `format` - (Required) The format of the file that contains the ThreatIntelSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
 * `location` - (Required) The URI of the file that contains the ThreatIntelSet.
 * `name` - (Required) The friendly name to identify the ThreatIntelSet.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -84,7 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty ThreatIntelSet.
 * `id` - The ID of the GuardDuty ThreatIntelSet and the detector ID. Format: `<DetectorID>:<ThreatIntelSetID>`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import GuardDuty ThreatIntelSet using the primary Guar
 % terraform import aws_guardduty_threatintelset.MyThreatIntelSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cffb05b04bc89aa2a4faddb04a7472478095a1942cb1aa200f8f7a8b0848a9fd -->
+<!-- cache-key: cdktf-0.19.0 input-cffb05b04bc89aa2a4faddb04a7472478095a1942cb1aa200f8f7a8b0848a9fd -->

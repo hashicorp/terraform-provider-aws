@@ -64,4 +64,4 @@ Using `terraform import`, import `aws_networkmanager_global_network` using the g
 % terraform import aws_networkmanager_global_network.example global-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45d9523e4e6abfc2c3ebc1524528ff8ab02a7954716f34dfbebd84a6acf5efeb -->
+<!-- cache-key: cdktf-0.19.0 input-45d9523e4e6abfc2c3ebc1524528ff8ab02a7954716f34dfbebd84a6acf5efeb -->

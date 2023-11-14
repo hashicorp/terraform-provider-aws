@@ -135,4 +135,4 @@ Using `terraform import`, import DAX Clusters using the `cluster_name`. For exam
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes
 
-<!-- cache-key: cdktf-0.18.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->
+<!-- cache-key: cdktf-0.19.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->

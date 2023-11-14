@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_id` - ARN of the KMS Key to use when encrypting log data.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-98c67f629213b5447fa03395fb5fb657973411cf76bb2bdbeae232bee8c64098 -->
+<!-- cache-key: cdktf-0.19.0 input-98c67f629213b5447fa03395fb5fb657973411cf76bb2bdbeae232bee8c64098 -->

@@ -562,6 +562,7 @@ This resource supports the following arguments:
   when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
 - `warm_pool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
+- `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
 ### launch_template
 
@@ -911,4 +912,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6123f1ad176783c4aeeb8809e50b4e73d7842b1025fac3b7c66ab4860931dd4c -->
+<!-- cache-key: cdktf-0.19.0 input-3da2a4d87e9afc9a8343b46ace677bb510573f4ec59c44873e7937ada49f61a8 -->

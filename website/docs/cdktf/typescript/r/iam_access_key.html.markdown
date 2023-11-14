@@ -97,8 +97,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `pgpKey` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:somePersonThatExists`, for use in the `encryptedSecret` output attribute. If providing a base-64 encoded PGP public key, make sure to provide the "raw" version and not the "armored" one (e.g. avoid passing the `a` option to `gpg --export`).
-* `status` - (Optional) Access key status to apply. Defaults to `active`. Valid values are `active` and `inactive`.
+* `pgpKey` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute. If providing a base-64 encoded PGP public key, make sure to provide the "raw" version and not the "armored" one (e.g. avoid passing the `-a` option to `gpg --export`).
+* `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
 * `user` - (Required) IAM user to associate with this access key.
 
 ## Attribute Reference
@@ -106,12 +106,12 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `createDate` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
-* `encryptedSecret` - Encrypted secret, base64 encoded, if `pgpKey` was specified. This attribute is not available for imported resources. The encrypted secret may be decrypted using the command line, for example: `terraform output -raw encrypted_secret | base64 --decode | keybase pgp decrypt`.
-* `encryptedSesSmtpPasswordV4` - Encrypted SES SMTP password, base64 encoded, if `pgpKey` was specified. This attribute is not available for imported resources. The encrypted password may be decrypted using the command line, for example: `terraform output -raw encrypted_ses_smtp_password_v4 | base64 --decode | keybase pgp decrypt`.
+* `encryptedSecret` - Encrypted secret, base64 encoded, if `pgp_key` was specified. This attribute is not available for imported resources. The encrypted secret may be decrypted using the command line, for example: `terraform output -raw encrypted_secret | base64 --decode | keybase pgp decrypt`.
+* `encryptedSesSmtpPasswordV4` - Encrypted SES SMTP password, base64 encoded, if `pgp_key` was specified. This attribute is not available for imported resources. The encrypted password may be decrypted using the command line, for example: `terraform output -raw encrypted_ses_smtp_password_v4 | base64 --decode | keybase pgp decrypt`.
 * `id` - Access key ID.
 * `keyFingerprint` - Fingerprint of the PGP key used to encrypt the secret. This attribute is not available for imported resources.
-* `secret` - Secret access key. This attribute is not available for imported resources. Note that this will be written to the state file. If you use this, please protect your backend state file judiciously. Alternatively, you may supply a `pgpKey` instead, which will prevent the secret from being stored in plaintext, at the cost of preventing the use of the secret key in automation.
-* `sesSmtpPasswordV4` - Secret access key converted into an SES SMTP password by applying [AWS's documented Sigv4 conversion algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert). This attribute is not available for imported resources. As SigV4 is region specific, valid Provider regions are `apSouth1`, `apSoutheast2`, `euCentral1`, `euWest1`, `usEast1` and `usWest2`. See current [AWS SES regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region).
+* `secret` - Secret access key. This attribute is not available for imported resources. Note that this will be written to the state file. If you use this, please protect your backend state file judiciously. Alternatively, you may supply a `pgp_key` instead, which will prevent the secret from being stored in plaintext, at the cost of preventing the use of the secret key in automation.
+* `sesSmtpPasswordV4` - Secret access key converted into an SES SMTP password by applying [AWS's documented Sigv4 conversion algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert). This attribute is not available for imported resources. As SigV4 is region specific, valid Provider regions are `ap-south-1`, `ap-southeast-2`, `eu-central-1`, `eu-west-1`, `us-east-1` and `us-west-2`. See current [AWS SES regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region).
 
 ## Import
 
@@ -137,4 +137,4 @@ Using `terraform import`, import IAM Access Keys using the identifier. For examp
 
 Resource attributes such as `encryptedSecret`, `keyFingerprint`, `pgpKey`, `secret`, `sesSmtpPasswordV4`, and `encryptedSesSmtpPasswordV4` are not available for imported resources as this information cannot be read from the IAM API.
 
-<!-- cache-key: cdktf-0.18.0 input-d8b11bcbc6ed9d15b50dbb95fe354dd4fff5e472be0814f1548e8af45e078918 -->
+<!-- cache-key: cdktf-0.19.0 input-d8b11bcbc6ed9d15b50dbb95fe354dd4fff5e472be0814f1548e8af45e078918 -->

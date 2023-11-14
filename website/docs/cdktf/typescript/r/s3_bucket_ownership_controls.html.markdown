@@ -58,10 +58,10 @@ The following arguments are required:
 
 The following arguments are required:
 
-* `objectOwnership` - (Required) Object ownership. Valid values: `bucketOwnerPreferred`, `objectWriter` or `bucketOwnerEnforced`
-    * `bucketOwnerPreferred` - Objects uploaded to the bucket change ownership to the bucket owner if the objects are uploaded with the `bucketOwnerFullControl` canned ACL.
-    * `objectWriter` - Uploading account will own the object if the object is uploaded with the `bucketOwnerFullControl` canned ACL.
-    * `bucketOwnerEnforced` - Bucket owner automatically owns and has full control over every object in the bucket. ACLs no longer affect permissions to data in the S3 bucket.
+* `objectOwnership` - (Required) Object ownership. Valid values: `BucketOwnerPreferred`, `ObjectWriter` or `BucketOwnerEnforced`
+    * `BucketOwnerPreferred` - Objects uploaded to the bucket change ownership to the bucket owner if the objects are uploaded with the `bucket-owner-full-control` canned ACL.
+    * `ObjectWriter` - Uploading account will own the object if the object is uploaded with the `bucket-owner-full-control` canned ACL.
+    * `BucketOwnerEnforced` - Bucket owner automatically owns and has full control over every object in the bucket. ACLs no longer affect permissions to data in the S3 bucket.
 
 ## Attribute Reference
 
@@ -91,4 +91,4 @@ Using `terraform import`, import S3 Bucket Ownership Controls using S3 Bucket na
 % terraform import aws_s3_bucket_ownership_controls.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-efb4f4321500cf116368caed3eeb4a2c9b6076d8246ed5f36076a0ed3015eaff -->
+<!-- cache-key: cdktf-0.19.0 input-efb4f4321500cf116368caed3eeb4a2c9b6076d8246ed5f36076a0ed3015eaff -->

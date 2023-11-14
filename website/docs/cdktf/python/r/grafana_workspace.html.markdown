@@ -115,4 +115,4 @@ Using `terraform import`, import Grafana Workspace using the workspace's `id`. F
 % terraform import aws_grafana_workspace.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-820d8fa60d26cc380b30e0e075e8870fa4551ee953fef3e08d695a7c4dd8f5a0 -->
+<!-- cache-key: cdktf-0.19.0 input-820d8fa60d26cc380b30e0e075e8870fa4551ee953fef3e08d695a7c4dd8f5a0 -->

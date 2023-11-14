@@ -45,7 +45,7 @@ The following arguments are required:
 
 * `directoryName` - (Required) Fully qualified name of the directory.
 * `organizationalUnitDistinguishedNames` - (Required) Distinguished names of the organizational units for computer accounts.
-* `serviceAccountCredentials` - (Required) Configuration block for the name of the directory and organizational unit (OU) to use to join the directory config to a Microsoft Active Directory domain. See [`serviceAccountCredentials`](#service_account_credentials) below.
+* `serviceAccountCredentials` - (Required) Configuration block for the name of the directory and organizational unit (OU) to use to join the directory config to a Microsoft Active Directory domain. See [`service_account_credentials`](#service_account_credentials) below.
 
 ### `serviceAccountCredentials`
 
@@ -81,4 +81,4 @@ Using `terraform import`, import `awsAppstreamDirectoryConfig` using the id. For
 % terraform import aws_appstream_directory_config.example directoryNameExample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cc4dcd0e21d4459a6f134b5283f0f40cf04088ba29d91cc8b5c68f07a92ceeb9 -->
+<!-- cache-key: cdktf-0.19.0 input-cc4dcd0e21d4459a6f134b5283f0f40cf04088ba29d91cc8b5c68f07a92ceeb9 -->

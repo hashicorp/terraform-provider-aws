@@ -69,7 +69,7 @@ The following arguments are optional:
 
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `permissions` - (Optional) A set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionDescription` - (Optional) A description of the current theme version being created/updated.
 
 ### permissions
@@ -152,16 +152,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - A comma-delimited string joining AWS account ID and theme ID.
 * `lastUpdatedTime` - The time that the theme was last updated.
 * `status` - The theme creation status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `versionNumber` - The version number of the theme version.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -185,4 +185,4 @@ Using `terraform import`, import a QuickSight Theme using the AWS account ID and
 % terraform import aws_quicksight_theme.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->
+<!-- cache-key: cdktf-0.19.0 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->

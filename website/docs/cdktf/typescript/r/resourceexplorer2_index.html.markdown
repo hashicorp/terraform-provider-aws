@@ -38,23 +38,23 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `type` - (Required) The type of the index. Valid values: `aggregator`, `local`. To understand the difference between `local` and `aggregator`, see the [_AWS Resource Explorer User Guide_](https://docs.aws.amazon.com/resource-explorer/latest/userguide/manage-aggregator-region.html).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Required) The type of the index. Valid values: `AGGREGATOR`, `LOCAL`. To understand the difference between `LOCAL` and `AGGREGATOR`, see the [_AWS Resource Explorer User Guide_](https://docs.aws.amazon.com/resource-explorer/latest/userguide/manage-aggregator-region.html).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `2H`)
-- `update` - (Default `2H`)
-- `delete` - (Default `10M`)
+- `create` - (Default `2h`)
+- `update` - (Default `2h`)
+- `delete` - (Default `10m`)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Resource Explorer index.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import Resource Explorer indexes using the `arn`. For 
 % terraform import aws_resourceexplorer2_index.example arn:aws:resource-explorer-2:us-east-1:123456789012:index/6047ac4e-207e-4487-9bcf-cb53bb0ff5cc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-15aba15c558147fe93e81fd33df5a092fce89b9a9fad5f53b520dc3c70e79bbd -->
+<!-- cache-key: cdktf-0.19.0 input-15aba15c558147fe93e81fd33df5a092fce89b9a9fad5f53b520dc3c70e79bbd -->

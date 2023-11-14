@@ -115,7 +115,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `signingStatus` - (Optional) Hosted Zone signing status. Valid values: `signing`, `notSigning`. Defaults to `signing`.
+* `signingStatus` - (Optional) Hosted Zone signing status. Valid values: `SIGNING`, `NOT_SIGNING`. Defaults to `SIGNING`.
 
 ## Attribute Reference
 
@@ -145,4 +145,4 @@ Using `terraform import`, import `awsRoute53HostedZoneDnssec` resources using th
 % terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c4b8c382f2fc6f33c01f94157d7d27795ecb00847b3a43f8ebf7840f68ff3214 -->
+<!-- cache-key: cdktf-0.19.0 input-c4b8c382f2fc6f33c01f94157d7d27795ecb00847b3a43f8ebf7840f68ff3214 -->

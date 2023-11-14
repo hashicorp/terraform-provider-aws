@@ -232,19 +232,19 @@ This resource supports the following arguments:
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Action Blocks
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixedResponse`, `authenticateCognito` and `authenticateOidc`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
 * `targetGroupArn` - (Optional) The ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
-* `forward` - (Optional) Information for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `targetGroupArn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `targetGroupArn`.
+* `forward` - (Optional) Information for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `target_group_arn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `target_group_arn`.
 * `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
-* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixedResponse`.
-* `authenticateCognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticateCognito`.
-* `authenticateOidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticateOidc`.
+* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `authenticateCognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
+* `authenticateOidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
 
 Forward Blocks (for `forward`) support the following:
 
@@ -268,15 +268,15 @@ Redirect Blocks (for `redirect`) support the following:
 * `host` - (Optional) The hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
 * `path` - (Optional) The absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
 * `port` - (Optional) The port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
-* `protocol` - (Optional) The protocol. Valid values are `http`, `https`, or `#{protocol}`. Defaults to `#{protocol}`.
+* `protocol` - (Optional) The protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
 * `query` - (Optional) The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
-* `statusCode` - (Required) The HTTP redirect code. The redirect is either permanent (`http301`) or temporary (`http302`).
+* `statusCode` - (Required) The HTTP redirect code. The redirect is either permanent (`HTTP_301`) or temporary (`HTTP_302`).
 
 Fixed-response Blocks (for `fixedResponse`) support the following:
 
 * `contentType` - (Required) The content type. Valid values are `text/plain`, `text/css`, `text/html`, `application/javascript` and `application/json`.
 * `messageBody` - (Optional) The message body.
-* `statusCode` - (Optional) The HTTP response code. Valid values are `2Xx`, `4Xx`, or `5Xx`.
+* `statusCode` - (Optional) The HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
 Authenticate Cognito Blocks (for `authenticateCognito`) supports the following:
 
@@ -317,9 +317,9 @@ Condition Blocks (for `condition`) support the following:
 * `hostHeader` - (Optional) Contains a single `values` item which is a list of host header patterns to match. The maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied.
 * `httpHeader` - (Optional) HTTP headers to match. [HTTP Header block](#http-header-blocks) fields documented below.
 * `httpRequestMethod` - (Optional) Contains a single `values` item which is a list of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
-* `pathPattern` - (Optional) Contains a single `values` item which is a list of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `queryString` condition.
+* `pathPattern` - (Optional) Contains a single `values` item which is a list of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `query_string` condition.
 * `queryString` - (Optional) Query strings to match. [Query String block](#query-string-blocks) fields documented below.
-* `sourceIp` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `xForwardedFor` header, use `httpHeader` condition instead.
+* `sourceIp` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
 
 ~> **NOTE::** Exactly one of `hostHeader`, `httpHeader`, `httpRequestMethod`, `pathPattern`, `queryString` or `sourceIp` must be set per condition.
 
@@ -327,7 +327,7 @@ Condition Blocks (for `condition`) support the following:
 
 HTTP Header Blocks (for `httpHeader`) support the following:
 
-* `httpHeaderName` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `hostHeader` condition instead.
+* `httpHeaderName` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `host-header` condition instead.
 * `values` - (Required) List of header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). If the same header appears multiple times in the request they will be searched in order until a match is found. Only one pattern needs to match for the condition to be satisfied. To require that all of the strings are a match, create one condition block per string.
 
 #### Query String Blocks
@@ -347,7 +347,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ARN of the rule (matches `arn`)
 * `arn` - The ARN of the rule (matches `id`)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -371,4 +371,4 @@ Using `terraform import`, import rules using their ARN. For example:
 % terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-12e9f21426e9efd89a154c6e8445b8894b184d7651322f0592349d28d0132dea -->
+<!-- cache-key: cdktf-0.19.0 input-12e9f21426e9efd89a154c6e8445b8894b184d7651322f0592349d28d0132dea -->

@@ -44,15 +44,15 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the parameter.
-* `withDecryption` - (Optional) Whether to return decrypted `secureString` value. Defaults to `true`.
+* `withDecryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.
-* `type` - Type of the parameter. Valid types are `string`, `stringList` and `secureString`.
+* `type` - Type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `insecureValue` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.
 
-<!-- cache-key: cdktf-0.18.0 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->
+<!-- cache-key: cdktf-0.19.0 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->

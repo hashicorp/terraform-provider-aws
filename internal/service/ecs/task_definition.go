@@ -371,7 +371,8 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:         schema.TypeInt,
 										ForceNew:     true,
 										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
+										ValidateFunc: validation.IsPortNumberOrZero,
+										Default:      0,
 									},
 								},
 							},
@@ -569,7 +570,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
@@ -1074,11 +1075,11 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	}
 
 	if config.DriverOpts != nil {
-		m["driver_opts"] = flex.PointersMapToStringList(config.DriverOpts)
+		m["driver_opts"] = flex.FlattenStringMap(config.DriverOpts)
 	}
 
 	if v := config.Labels; v != nil {
-		m["labels"] = flex.PointersMapToStringList(v)
+		m["labels"] = flex.FlattenStringMap(v)
 	}
 
 	items = append(items, m)

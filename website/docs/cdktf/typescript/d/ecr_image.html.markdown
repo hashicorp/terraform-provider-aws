@@ -41,9 +41,9 @@ This data source supports the following arguments:
 
 * `registryId` - (Optional) ID of the Registry where the repository resides.
 * `repositoryName` - (Required) Name of the ECR Repository.
-* `imageDigest` - (Optional) Sha256 digest of the image manifest. At least one of `imageDigest`, `imageTag`, or `mostRecent` must be specified.
-* `imageTag` - (Optional) Tag associated with this image. At least one of `imageDigest`, `imageTag`, or `mostRecent` must be specified.
-* `mostRecent` - (Optional) Return the most recently pushed image. At least one of `imageDigest`, `imageTag`, or `mostRecent` must be specified.
+* `imageDigest` - (Optional) Sha256 digest of the image manifest. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
+* `imageTag` - (Optional) Tag associated with this image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
+* `mostRecent` - (Optional) Return the most recently pushed image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 
 ## Attribute Reference
 
@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `imageSizeInBytes` - Size, in bytes, of the image in the repository.
 * `imageTags` - List of tags associated with this image.
 
-<!-- cache-key: cdktf-0.18.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->
+<!-- cache-key: cdktf-0.19.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->

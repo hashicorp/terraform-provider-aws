@@ -82,26 +82,26 @@ This argument supports the following arguments:
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `availabilityZone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `caCertIdentifier` - (Optional) Identifier of the CA certificate for the DB instance.
-* `clusterIdentifier` - (Required, Forces new resource) Identifier of the [`awsRdsCluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
+* `clusterIdentifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `copyTagsToSnapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `customIamInstanceProfile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbParameterGroupName` - (Optional) Name of the DB parameter group to associate with this instance.
-* `dbSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `dbSubnetGroupName` of the attached [`awsRdsCluster`](/docs/providers/aws/r/rds_cluster.html).
+* `dbSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
 * `engineVersion` - (Optional) Database engine version.
-* `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS instance. Valid Values: `auroraMysql`, `auroraPostgresql`, `mysql`, `postgres`.
+* `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS instance. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.
 * `identifierPrefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
 * `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
 * `monitoringInterval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoringRoleArn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights is enabled or not.
-* `performanceInsightsKmsKeyId` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performanceInsightsKmsKeyId`, `performanceInsightsEnabled` needs to be set to true.
-* `performanceInsightsRetentionPeriod` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performanceInsightsRetentionPeriod`, `performanceInsightsEnabled` needs to be set to true. Defaults to '7'.
-* `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferredBackupWindow` is set at the cluster level, this argument **must** be omitted.
+* `performanceInsightsKmsKeyId` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
+* `performanceInsightsRetentionPeriod` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
+* `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferred_backup_window` is set at the cluster level, this argument **must** be omitted.
 * `preferredMaintenanceWindow` - (Optional) Window to perform maintenance in. Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotionTier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
 * `publiclyAccessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
-* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusterIdentifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier
-* `writer` – Boolean indicating if this instance is writable. `false` indicates this instance is a read replica.
+* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `availabilityZone` - Availability zone of the instance
 * `endpoint` - DNS address for this instance. May not be writable
 * `engine` - Database engine
@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `dbiResourceId` - Region-unique, immutable identifier for the DB instance.
 * `performanceInsightsEnabled` - Specifies whether Performance Insights is enabled or not.
 * `performanceInsightsKmsKeyId` - ARN for the KMS encryption key used by Performance Insights.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
 [3]: /docs/providers/aws/r/rds_cluster.html
@@ -136,9 +136,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `90M`)
-- `update` - (Default `90M`)
-- `delete` - (Default `90M`)
+- `create` - (Default `90m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
@@ -162,4 +162,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-78df55554844c35c7b0301574cb78e36bb9d052650f72b31ee4ebbcccc0b9af7 -->
+<!-- cache-key: cdktf-0.19.0 input-78df55554844c35c7b0301574cb78e36bb9d052650f72b31ee4ebbcccc0b9af7 -->

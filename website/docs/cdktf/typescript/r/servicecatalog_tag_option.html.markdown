@@ -52,17 +52,17 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier (e.g., `tagPjtvagohlyo3M`).
+* `id` - Identifier (e.g., `tag-pjtvagohlyo3m`).
 * `ownerId` - AWS account ID of the owner account that created the tag option.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsServicecatalogTagOption` using the tag opti
 % terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-728b29f4f06d3333a9bc0717ffd7b59ae4e6dcb209ccc4e9ac76b0b4c6cfb651 -->
+<!-- cache-key: cdktf-0.19.0 input-728b29f4f06d3333a9bc0717ffd7b59ae4e6dcb209ccc4e9ac76b0b4c6cfb651 -->
