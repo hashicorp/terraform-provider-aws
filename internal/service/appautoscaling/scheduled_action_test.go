@@ -606,7 +606,7 @@ func testAccCheckScheduledActionExists(ctx context.Context, name string, obj *ap
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-		sa, err := tfappautoscaling.FindScheduledAction(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
+		sa, err := tfappautoscaling.FindScheduledAction(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["scalable_dimension"])
 		if err != nil {
 			return err
 		}

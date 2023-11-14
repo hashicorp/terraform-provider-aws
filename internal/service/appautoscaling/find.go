@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindScheduledAction(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId string) (*applicationautoscaling.ScheduledAction, error) {
+func FindScheduledAction(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId, scalableDimension string) (*applicationautoscaling.ScheduledAction, error) {
 	var result *applicationautoscaling.ScheduledAction
 
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
@@ -29,7 +29,7 @@ func FindScheduledAction(ctx context.Context, conn *applicationautoscaling.Appli
 				continue
 			}
 
-			if name == aws.StringValue(item.ScheduledActionName) {
+			if name == aws.StringValue(item.ScheduledActionName) && scalableDimension == aws.StringValue(item.ScalableDimension) {
 				result = item
 				return false
 			}
