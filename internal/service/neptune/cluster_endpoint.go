@@ -130,27 +130,30 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	resp, err := FindEndpointByID(ctx, conn, d.Id())
+	clusterID, clusterEndpointID, err := clusterEndpointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	ep, err := FindClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Neptune Cluster Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Neptune Cluster Endpoint (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_endpoint_identifier", resp.DBClusterEndpointIdentifier)
-	d.Set("cluster_identifier", resp.DBClusterIdentifier)
-	d.Set("endpoint_type", resp.CustomEndpointType)
-	d.Set("endpoint", resp.Endpoint)
-	d.Set("excluded_members", flex.FlattenStringSet(resp.ExcludedMembers))
-	d.Set("static_members", flex.FlattenStringSet(resp.StaticMembers))
-
-	arn := aws.StringValue(resp.DBClusterEndpointArn)
-	d.Set("arn", arn)
+	d.Set("arn", ep.DBClusterEndpointArn)
+	d.Set("cluster_endpoint_identifier", ep.DBClusterEndpointIdentifier)
+	d.Set("cluster_identifier", ep.DBClusterIdentifier)
+	d.Set("endpoint", ep.Endpoint)
+	d.Set("endpoint_type", ep.CustomEndpointType)
+	d.Set("excluded_members", aws.StringValueSlice(ep.ExcludedMembers))
+	d.Set("static_members", aws.StringValueSlice(ep.StaticMembers))
 
 	return diags
 }
@@ -277,6 +280,56 @@ func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*n
 	}
 
 	return endpoints[0], nil
+}
+
+func FindClusterEndpointByTwoPartKey(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) {
+	input := &neptune.DescribeDBClusterEndpointsInput{
+		DBClusterIdentifier:         aws.String(clusterID),
+		DBClusterEndpointIdentifier: aws.String(clusterEndpointID),
+	}
+
+	return findClusterEndpoint(ctx, conn, input)
+}
+
+func findClusterEndpoint(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterEndpointsInput) (*neptune.DBClusterEndpoint, error) {
+	output, err := findClusterEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findClusterEndpoints(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterEndpointsInput) ([]*neptune.DBClusterEndpoint, error) {
+	var output []*neptune.DBClusterEndpoint
+
+	err := conn.DescribeDBClusterEndpointsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterEndpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 const (
