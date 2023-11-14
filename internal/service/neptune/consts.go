@@ -12,12 +12,12 @@ const (
 )
 
 const (
-	GlobalClusterStatusAvailable = "available"
-	GlobalClusterStatusCreating  = "creating"
-	GlobalClusterStatusDeleted   = "deleted"
-	GlobalClusterStatusDeleting  = "deleting"
-	GlobalClusterStatusModifying = "modifying"
-	GlobalClusterStatusUpgrading = "upgrading"
+	globalClusterStatusAvailable = "available"
+	globalClusterStatusCreating  = "creating"
+	globalClusterStatusDeleted   = "deleted"
+	globalClusterStatusDeleting  = "deleting"
+	globalClusterStatusModifying = "modifying"
+	globalClusterStatusUpgrading = "upgrading"
 )
 
 const (

@@ -310,7 +310,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 
 	globalCluster := output.GlobalClusters[0]
 
-	if status := aws.StringValue(globalCluster.Status); status == GlobalClusterStatusDeleted {
+	if status := aws.StringValue(globalCluster.Status); status == globalClusterStatusDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
@@ -386,8 +386,8 @@ func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) 
 
 func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{GlobalClusterStatusCreating},
-		Target:  []string{GlobalClusterStatusAvailable},
+		Pending: []string{globalClusterStatusCreating},
+		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -403,8 +403,8 @@ func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id str
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
-		Target:  []string{GlobalClusterStatusAvailable},
+		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
+		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -421,7 +421,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id str
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{GlobalClusterStatusAvailable, GlobalClusterStatusDeleting},
+		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
 		Refresh:        statusGlobalCluster(ctx, conn, id),
 		Timeout:        timeout,
