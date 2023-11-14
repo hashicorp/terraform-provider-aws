@@ -294,7 +294,7 @@ resource "aws_iam_group" "test3" {
 }
 
 resource "aws_iam_policy" "test" {
-  name       = %[7]q
+  name        = %[7]q
   description = "A test policy"
 
   policy = <<EOF
