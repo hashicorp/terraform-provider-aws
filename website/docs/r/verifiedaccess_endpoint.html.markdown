@@ -71,6 +71,7 @@ The following arguments are optional:
 * `load_balancer_options` - (Optional) The load balancer details. This parameter is required if the endpoint type is `load-balancer`.
 * `network_interface_options` - (Optional) The network interface details. This parameter is required if the endpoint type is `network-interface`.
 * `security_group_ids` - (Optional) List of the the security groups IDs to associate with the Verified Access endpoint.
+* `policy_document` - (Optional) Policy for this endpoint.
 * `tags` - (Optional) Key-value tags for the Verified Access Endpoint. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -79,6 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `device_validation_domain` - Returned if endpoint has a device trust provider attached.
 * `endpoint_domain` - A DNS name that is generated for the endpoint.
+* `policy_enabled` - Boolean indicating if a policy was enabled.
 * `id` - The ID of the AWS Verified Access endpoint.
 
 ## Timeouts
