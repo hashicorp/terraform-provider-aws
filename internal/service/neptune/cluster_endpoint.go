@@ -118,9 +118,8 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	clusterID, clusterEndpointID := aws.StringValue(output.DBClusterIdentifier), aws.StringValue(output.DBClusterEndpointIdentifier)
 	d.SetId(clusterEndpointCreateResourceID(clusterID, clusterEndpointID))
 
-	_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Available: %s", d.Id(), err)
+	if _, err = waitClusterEndpointAvailable(ctx, conn, clusterID, clusterEndpointID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
@@ -190,9 +189,8 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 		}
 
-		_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Available: %s", d.Id(), err)
+		if _, err = waitClusterEndpointAvailable(ctx, conn, clusterID, clusterEndpointID); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -220,12 +218,8 @@ func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitDBClusterEndpointDeleted(ctx, conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Deleted: %s", d.Id(), err)
+	if _, err = waitClusterEndpointDeleted(ctx, conn, clusterID, clusterEndpointID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -248,48 +242,6 @@ func clusterEndpointParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CLUSTER-ID%[2]sCLUSTER-ENDPOINT-ID", id, clusterEndpointResourceIDSeparator)
-}
-
-func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
-	clusterId, endpointId, err := clusterEndpointParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-	input := &neptune.DescribeDBClusterEndpointsInput{
-		DBClusterIdentifier:         aws.String(clusterId),
-		DBClusterEndpointIdentifier: aws.String(endpointId),
-	}
-
-	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
-		tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	endpoints := output.DBClusterEndpoints
-	if len(endpoints) == 0 {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return endpoints[0], nil
 }
 
 func FindClusterEndpointByTwoPartKey(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) {
@@ -342,67 +294,57 @@ func findClusterEndpoints(ctx context.Context, conn *neptune.Neptune, input *nep
 	return output, nil
 }
 
-const (
-	// DBClusterEndpoint Unknown
-	DBClusterEndpointStatusUnknown = "Unknown"
-)
-
-// StatusDBClusterEndpoint fetches the DBClusterEndpoint and its Status
-func StatusDBClusterEndpoint(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
+func statusClusterEndpoint(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointByID(ctx, conn, id)
+		output, err := FindClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, DBClusterEndpointStatusUnknown, err
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-const (
-	// Maximum amount of time to wait for an DBClusterEndpoint to return Available
-	DBClusterEndpointAvailableTimeout = 10 * time.Minute
-
-	// Maximum amount of time to wait for an DBClusterEndpoint to return Deleted
-	DBClusterEndpointDeletedTimeout = 10 * time.Minute
-)
-
-// WaitDBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
-func WaitDBClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+func waitClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"creating", "modifying"},
-		Target:  []string{"available"},
-		Refresh: StatusDBClusterEndpoint(ctx, conn, id),
-		Timeout: DBClusterEndpointAvailableTimeout,
+		Pending: []string{clusterEndpointStatusCreating, clusterEndpointStatusModifying},
+		Target:  []string{clusterEndpointStatusAvailable},
+		Refresh: statusClusterEndpoint(ctx, conn, clusterID, clusterEndpointID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*neptune.DBClusterEndpoint); ok {
-		return v, err
+	if output, ok := outputRaw.(*neptune.DBClusterEndpoint); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-// WaitDBClusterEndpointDeleted waits for a DBClusterEndpoint to return Deleted
-func WaitDBClusterEndpointDeleted(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+func waitClusterEndpointDeleted(ctx context.Context, conn *neptune.Neptune, clusterID, clusterEndpointID string) (*neptune.DBClusterEndpoint, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"deleting"},
+		Pending: []string{clusterEndpointStatusDeleting},
 		Target:  []string{},
-		Refresh: StatusDBClusterEndpoint(ctx, conn, id),
-		Timeout: DBClusterEndpointDeletedTimeout,
+		Refresh: statusClusterEndpoint(ctx, conn, clusterID, clusterEndpointID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*neptune.DBClusterEndpoint); ok {
-		return v, err
+	if output, ok := outputRaw.(*neptune.DBClusterEndpoint); ok {
+		return output, err
 	}
 
 	return nil, err
