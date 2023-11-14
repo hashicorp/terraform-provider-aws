@@ -123,7 +123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_group_policy",
 		},
 		{
-			Factory:  ResourceGroupPolicyAttachment,
+			Factory:  resourceGroupPolicyAttachment,
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
 		},

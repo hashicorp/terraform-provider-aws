@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_iam_group_policy_attachment", name="Group Policy Attachment")
-func ResourceGroupPolicyAttachment() *schema.Resource {
+func resourceGroupPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceGroupPolicyAttachmentRead,
@@ -74,11 +74,11 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
+	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", group, policyARN)
 
 	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
+		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -142,6 +142,10 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.IAM, group, policyARN 
 		})
 	}, iam.ErrCodeConcurrentModificationException)
 
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("dtaching IAM Policy (%s) from IAM Group (%s): %w", policyARN, group, err)
 	}
@@ -149,7 +153,7 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.IAM, group, policyARN 
 	return nil
 }
 
-func FindAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, policyARN string) (*iam.AttachedPolicy, error) {
+func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, policyARN string) (*iam.AttachedPolicy, error) {
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
