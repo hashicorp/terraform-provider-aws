@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_iam_group_policy_attachment: Retry `ConcurrentModificationException` errors on create
+resource/aws_iam_group_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete
 ```
 
 ```release-note:bug
