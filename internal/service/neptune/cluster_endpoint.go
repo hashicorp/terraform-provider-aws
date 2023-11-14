@@ -32,6 +32,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterEndpointRead,
 		UpdateWithoutTimeout: resourceClusterEndpointUpdate,
 		DeleteWithoutTimeout: resourceClusterEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -41,13 +42,13 @@ func ResourceClusterEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			"cluster_endpoint_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"cluster_endpoint_identifier": {
+			"cluster_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,17 +62,17 @@ func ResourceClusterEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"READER", "WRITER", "ANY"}, false),
-			},
-			"static_members": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				ValidateFunc: validation.StringInSlice(clusterEndpointType_Values(), false),
 			},
 			"excluded_members": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"static_members": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),

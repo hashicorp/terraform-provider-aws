@@ -46,5 +46,19 @@ const (
 )
 
 const (
+	clusterEndpointTypeAny    = "ANY"
+	clusterEndpointTypeReader = "READER"
+	clusterEndpointTypeWriter = "WRITER"
+)
+
+func clusterEndpointType_Values() []string {
+	return []string{
+		clusterEndpointTypeAny,
+		clusterEndpointTypeReader,
+		clusterEndpointTypeWriter,
+	}
+}
+
+const (
 	errCodeInvalidParameterValue = "InvalidParameterValue"
 )
