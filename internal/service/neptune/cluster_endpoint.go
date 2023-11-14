@@ -93,12 +93,12 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
-		input.StaticMembers = flex.ExpandStringSet(attr)
+	if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {
+		input.ExcludedMembers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
-		input.ExcludedMembers = flex.ExpandStringSet(attr)
+	if v, ok := d.GetOk("static_members"); ok && v.(*schema.Set).Len() > 0 {
+		input.StaticMembers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	// Tags are currently only supported in AWS Commercial.
@@ -106,13 +106,14 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Tags = nil
 	}
 
-	out, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
+	output, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Endpoint: %s", err)
 	}
 
-	clusterId := aws.StringValue(out.DBClusterIdentifier)
-	endpointId := aws.StringValue(out.DBClusterEndpointIdentifier)
+	clusterId := aws.StringValue(output.DBClusterIdentifier)
+	endpointId := aws.StringValue(output.DBClusterEndpointIdentifier)
 	d.SetId(fmt.Sprintf("%s:%s", clusterId, endpointId))
 
 	_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
