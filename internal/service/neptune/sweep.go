@@ -32,8 +32,13 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_neptune_cluster_instance", &resource.Sweeper{
 		Name: "aws_neptune_cluster_instance",
 		F:    sweepClusterInstances,
+	})
+
+	resource.AddTestSweepers("aws_neptune_global_cluster", &resource.Sweeper{
+		Name: "aws_neptune_global_cluster",
+		F:    sweepGlobalClusters,
 		Dependencies: []string{
-			"aws_rds_global_cluster",
+			"aws_neptune_cluster",
 		},
 	})
 }
@@ -191,6 +196,50 @@ func sweepClusterInstances(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("sweeping Neptune Cluster Instances (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepGlobalClusters(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeGlobalClustersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *neptune.DescribeGlobalClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GlobalClusters {
+			r := ResourceGlobalCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Global Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing Neptune Global Clusters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Neptune Global Clusters (%s): %w", region, err)
 	}
 
 	return nil
