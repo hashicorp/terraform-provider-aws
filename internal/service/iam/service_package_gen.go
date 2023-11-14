@@ -213,7 +213,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_user_policy",
 		},
 		{
-			Factory:  ResourceUserPolicyAttachment,
+			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
 		},
 		{

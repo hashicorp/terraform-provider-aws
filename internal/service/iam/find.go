@@ -14,40 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindUserAttachedPolicy returns the AttachedPolicy corresponding to the specified user and policy ARN.
-func FindUserAttachedPolicy(ctx context.Context, conn *iam.IAM, userName string, policyARN string) (*iam.AttachedPolicy, error) {
-	input := &iam.ListAttachedUserPoliciesInput{
-		UserName: aws.String(userName),
-	}
-
-	var result *iam.AttachedPolicy
-
-	err := conn.ListAttachedUserPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, attachedPolicy := range page.AttachedPolicies {
-			if attachedPolicy == nil {
-				continue
-			}
-
-			if aws.StringValue(attachedPolicy.PolicyArn) == policyARN {
-				result = attachedPolicy
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string) ([]*iam.User, error) {
 	input := &iam.ListUsersInput{}
 
