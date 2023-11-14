@@ -12,6 +12,13 @@ const (
 )
 
 const (
+	clusterEndpointStatusAvailable = "available"
+	clusterEndpointStatusCreating  = "creating"
+	clusterEndpointStatusDeleting  = "deleting"
+	clusterEndpointStatusModifying = "modifying"
+)
+
+const (
 	dbInstanceStatusAvailable                     = "available"
 	dbInstanceStatusBackingUp                     = "backing-up"
 	dbInstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
