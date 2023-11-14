@@ -365,7 +365,7 @@ EOF
 
 resource "aws_iam_policy_attachment" "test" {
   name       = %[3]q
-  policy_arn = aws_iam_policy.policy.arn
+  policy_arn = aws_iam_policy.test.arn
 
   users = aws_iam_user.test[*].name
 }
