@@ -12,33 +12,12 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for an EventSubscription to return Deleted
-	EventSubscriptionDeletedTimeout = 10 * time.Minute
-
 	// Maximum amount of time to wait for an DBClusterEndpoint to return Available
 	DBClusterEndpointAvailableTimeout = 10 * time.Minute
 
 	// Maximum amount of time to wait for an DBClusterEndpoint to return Deleted
 	DBClusterEndpointDeletedTimeout = 10 * time.Minute
 )
-
-// WaitEventSubscriptionDeleted waits for a EventSubscription to return Deleted
-func WaitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, subscriptionName string) (*neptune.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"deleting"},
-		Target:  []string{EventSubscriptionStatusNotFound},
-		Refresh: StatusEventSubscription(ctx, conn, subscriptionName),
-		Timeout: EventSubscriptionDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*neptune.EventSubscription); ok {
-		return v, err
-	}
-
-	return nil, err
-}
 
 // WaitDBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
 func WaitDBClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
