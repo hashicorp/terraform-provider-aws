@@ -13,3 +13,7 @@ resource/aws_iam_role_policy_attachment: Retry `ConcurrentModificationException`
 ```release-note:bug
 resource/aws_iam_user_policy_attachment: Retry `ConcurrentModificationException` errors on create
 ```
+
+```release-note:enhancement
+resource/aws_iam_group_policy_attachment: Add plan-time validation of `policy_arn`
+```
