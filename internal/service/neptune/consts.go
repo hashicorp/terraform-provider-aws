@@ -12,6 +12,24 @@ const (
 )
 
 const (
+	dbInstanceStatusAvailable                     = "available"
+	dbInstanceStatusBackingUp                     = "backing-up"
+	dbInstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	dbInstanceStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
+	dbInstanceStatusConfiguringLogExports         = "configuring-log-exports"
+	dbInstanceStatusCreating                      = "creating"
+	dbInstanceStatusDeleting                      = "deleting"
+	dbInstanceStatusMaintenance                   = "maintenance"
+	dbInstanceStatusModifying                     = "modifying"
+	dbInstanceStatusRebooting                     = "rebooting"
+	dbInstanceStatusRenaming                      = "renaming"
+	dbInstanceStatusResettingMasterCredentials    = "resetting-master-credentials"
+	dbInstanceStatusStarting                      = "starting"
+	dbInstanceStatusStorageOptimization           = "storage-optimization"
+	dbInstanceStatusUpgrading                     = "upgrading"
+)
+
+const (
 	globalClusterStatusAvailable = "available"
 	globalClusterStatusCreating  = "creating"
 	globalClusterStatusDeleted   = "deleted"

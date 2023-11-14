@@ -142,10 +142,12 @@ func sweepClusters(region string) error {
 
 		return !lastPage
 	})
+
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Cluster sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing Neptune Clusters (%s): %w", region, err))
 	}
@@ -165,19 +167,25 @@ func sweepClusterInstances(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeDBInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &neptune.DescribeDBInstancesInput{}
 	err = conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *neptune.DescribeDBInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.DBInstances {
-			log.Printf("Neptune Instance ID: %q", aws.StringValue(v.DBInstanceIdentifier))
+			id := aws.StringValue(v.DBInstanceIdentifier)
+
+			if state := aws.StringValue(v.DBInstanceStatus); state == dbInstanceStatusDeleting {
+				log.Printf("[INFO] Skipping Neptune Cluster Instance %s: DBInstanceStatus=%s", id, state)
+				continue
+			}
+
 			r := ResourceClusterInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBInstanceIdentifier))
+			d.SetId(id)
 			d.Set("apply_immediately", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
