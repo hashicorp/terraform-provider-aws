@@ -454,7 +454,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 					"Invalid Attribute Combination",
 					fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
 				))
-
 			}
 		}
 	}

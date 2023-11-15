@@ -1994,7 +1994,7 @@ func TestAccELBV2TargetGroup_ALBAlias_missing(t *testing.T) {
 		},
 	}
 
-	for name, tc := range testcases {
+	for name, tc := range testcases { //nolint:paralleltest // false positive
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
@@ -3319,7 +3319,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 		},
 	}
 
-	for _, protocol := range elbv2.ProtocolEnum_Values() {
+	for _, protocol := range elbv2.ProtocolEnum_Values() { //nolint:paralleltest // false positive
 		if protocol == elbv2.ProtocolEnumGeneve {
 			continue
 		}
@@ -3392,7 +3392,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 		},
 	}
 
-	for _, protocol := range elbv2.ProtocolEnum_Values() {
+	for _, protocol := range elbv2.ProtocolEnum_Values() { //nolint:paralleltest // false positive
 		if protocol == elbv2.ProtocolEnumGeneve {
 			continue
 		}
