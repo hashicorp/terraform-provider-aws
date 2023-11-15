@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1270 resources and 520 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1271 resources and 520 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -404,174 +404,174 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 (e.g., `alias` and `version`), the following arguments are supported in the AWS
  `provider` block:
 
-* `accessKey` - (Optional) AWS access key. Can also be set with the `awsAccessKeyId` environment variable, or via a shared credentials file if `profile` is specified. See also `secretKey`.
-* `allowedAccountIds` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbiddenAccountIds`.
-* `assumeRole` - (Optional) Configuration block for assuming an IAM role. See the [`assumeRole` Configuration Block](#assume_role-configuration-block) section below. Only one `assumeRole` block may be in the configuration.
-* `assumeRoleWithWebIdentity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assumeRoleWithWebIdentity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assumeRoleWithWebIdentity` block may be in the configuration.
+* `accessKey` - (Optional) AWS access key. Can also be set with the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified. See also `secret_key`.
+* `allowedAccountIds` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbidden_account_ids`.
+* `assumeRole` - (Optional) Configuration block for assuming an IAM role. See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below. Only one `assume_role` block may be in the configuration.
+* `assumeRoleWithWebIdentity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `customCaBundle` - (Optional) File containing custom root and intermediate certificates.
-  Can also be set using the `awsCaBundle` environment variable.
-  Setting `caBundle` in the shared config file is not supported.
-* `defaultTags` - (Optional) Configuration block with resource tag settings to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed to replace redundant per-resource `tags` configurations. Provider tags can be overridden with new values, but not excluded from specific resources. To override provider tag values, use the `tags` argument within a resource to configure new tag values for matching keys. See the [`defaultTags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments. This functionality is supported in all resources that implement `tags`, with the exception of the `awsAutoscalingGroup` resource.
-* `ec2MetadataServiceEndpoint` - (Optional) Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `awsEc2MetadataServiceEndpoint` environment variable.
-* `ec2MetadataServiceEndpointMode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `iPv4` and `iPv6`. Can also be set with the `awsEc2MetadataServiceEndpointMode` environment variable.
-* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions. See also `useFipsEndpoint`.
-* `forbiddenAccountIds` - (Optional) List of forbidden AWS account IDs to prevent you from mistakenly using the wrong one (and potentially end up destroying a live environment). Conflicts with `allowedAccountIds`.
-* `httpProxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `httpProxy` or `httpsProxy` environment variables.
-* `ignoreTags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `awsEc2Tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignoreTags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
+  Can also be set using the `AWS_CA_BUNDLE` environment variable.
+  Setting `ca_bundle` in the shared config file is not supported.
+* `defaultTags` - (Optional) Configuration block with resource tag settings to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed to replace redundant per-resource `tags` configurations. Provider tags can be overridden with new values, but not excluded from specific resources. To override provider tag values, use the `tags` argument within a resource to configure new tag values for matching keys. See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments. This functionality is supported in all resources that implement `tags`, with the exception of the `aws_autoscaling_group` resource.
+* `ec2MetadataServiceEndpoint` - (Optional) Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
+* `ec2MetadataServiceEndpointMode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
+* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions. See also `use_fips_endpoint`.
+* `forbiddenAccountIds` - (Optional) List of forbidden AWS account IDs to prevent you from mistakenly using the wrong one (and potentially end up destroying a live environment). Conflicts with `allowed_account_ids`.
+* `httpProxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
+* `ignoreTags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `maxRetries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
   The delay between the subsequent API calls increases exponentially.
   If omitted, the default value is `25`.
-  Can also be set using the environment variable `awsMaxAttempts`
-  and the shared configuration parameter `maxAttempts`.
+  Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
+  and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
-  Can also be set using either the environment variables `awsProfile` or `awsDefaultProfile`.
+  Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
 * `region` - (Optional) AWS region where the provider will operate. The region must be set.
-  Can also be set with either the `awsRegion` or `awsDefaultRegion` environment variables,
+  Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
 * `retryMode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
-  Can also be configured using the `awsRetryMode` environment variable or the shared config file parameter `retryMode`.
-* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3AmazonawsCom/bucket/key`.
-  By default, the S3 client will use virtual hosted bucket addressing, `https://bucketS3AmazonawsCom/key`, when possible.
+  Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
+* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
+  By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
   Specific to the Amazon S3 service.
-* `s3UsEast1RegionalEndpoint` - (Optional) Specifies whether S3 API calls in the `usEast1` region use the legacy global endpoint or a regional endpoint.
+* `s3UsEast1RegionalEndpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint.
   Valid values are `legacy` or `regional`.
-  Can also be configured using the `awsS3UsEast1RegionalEndpoint` environment variable or the `s3UsEast1RegionalEndpoint` shared config file parameter.
+  Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
   Specific to the Amazon S3 service.
-* `secretKey` - (Optional) AWS secret key. Can also be set with the `awsSecretAccessKey` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `accessKey`.
-* `sharedConfigFiles` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/Aws/config]`. A single value can also be set with the `awsConfigFile` environment variable.
-* `sharedCredentialsFiles` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/Aws/credentials]`. A single value can also be set with the `awsSharedCredentialsFile` environment variable.
+* `secretKey` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
+* `sharedConfigFiles` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `sharedCredentialsFiles` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skipCredentialsValidation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
 * `skipMetadataApiCheck` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
 * `skipRegionValidation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
 * `skipRequestingAccountId` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:
-    - [`awsApiGatewayDeployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
-    - [`awsApiGatewayRestApi` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
-    - [`awsApiGatewayStage` resource](/docs/providers/aws/r/api_gateway_stage.html)
-    - [`awsApigatewayv2Api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
-    - [`awsApigatewayv2Api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
-    - [`awsApigatewayv2Stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
-    - [`awsAppconfigApplication` resource](/docs/providers/aws/r/appconfig_application.html)
-    - [`awsAppconfigConfigurationProfile` resource](/docs/providers/aws/r/appconfig_configuration_profile.html)
-    - [`awsAppconfigDeployment` resource](/docs/providers/aws/r/appconfig_deployment.html)
-    - [`awsAppconfigDeploymentStrategy` resource](/docs/providers/aws/r/appconfig_deployment_strategy.html)
-    - [`awsAppconfigEnvironment` resource](/docs/providers/aws/r/appconfig_environment.html)
-    - [`awsAppconfigHostedConfigurationVersion` resource](/docs/providers/aws/r/appconfig_hosted_configuration_version.html)
-    - [`awsAthenaWorkgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
-    - [`awsBudgetsBudget` resource](/docs/providers/aws/r/budgets_budget.html)
-    - [`awsCodedeployApp` resource](/docs/providers/aws/r/codedeploy_app.html)
-    - [`awsCodedeployDeploymentGroup` resource](/docs/providers/aws/r/codedeploy_deployment_group.html)
-    - [`awsCognitoIdentityPool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
-    - [`awsCognitoUserPools` data source](/docs/providers/aws/d/cognito_user_pools.html)
-    - [`awsDefaultVpcDhcpOptions`](/docs/providers/aws/r/default_vpc_dhcp_options.html)
-    - [`awsDmsEventSubscription` resource](/docs/providers/aws/r/dms_event_subscription.html)
-    - [`awsDmsReplicationSubnetGroup` resource](/docs/providers/aws/r/dms_replication_subnet_group.html)
-    - [`awsDxConnection` resource](/docs/providers/aws/r/dx_connection.html)
-    - [`awsDxHostedPrivateVirtualInterfaceAccepter` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface_accepter.html)
-    - [`awsDxHostedPrivateVirtualInterface` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface.html)
-    - [`awsDxHostedPublicVirtualInterfaceAccepter` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface_accepter.html)
-    - [`awsDxHostedPublicVirtualInterface` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface.html)
-    - [`awsDxHostedTransitVirtualInterfaceAccepter` resource](/docs/providers/aws/r/dx_hosted_transit_virtual_interface_accepter.html)
-    - [`awsDxHostedTransitVirtualInterface` resource](/docs/providers/aws/r/dx_hosted_transit_virtual_interface.html)
-    - [`awsDxLag` resource](/docs/providers/aws/r/dx_lag.html)
-    - [`awsDxPrivateVirtualInterface` resource](/docs/providers/aws/r/dx_private_virtual_interface.html)
-    - [`awsDxPublicVirtualInterface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
-    - [`awsDxTransitVirtualInterface` resource](/docs/providers/aws/r/dx_transit_virtual_interface.html)
-    - [`awsEbsVolume` data source](/docs/providers/aws/d/ebs_volume.html)
-    - [`awsEc2ClientVpnEndpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
-    - [`awsEc2TrafficMirrorFilter` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter.html)
-    - [`awsEc2TrafficMirrorFilterRule` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter_rule.html)
-    - [`awsEc2TrafficMirrorSession` resource](/docs/providers/aws/r/ec2_traffic_mirror_session.html)
-    - [`awsEc2TrafficMirrorTarget` resource](/docs/providers/aws/r/ec2_traffic_mirror_target.html)
-    - [`awsEc2TransitGatewayRouteTable` data source](/docs/providers/aws/d/ec2_transit_gateway_route_table.html)
-    - [`awsEc2TransitGatewayRouteTable` resource](/docs/providers/aws/r/ec2_transit_gateway_route_table.html)
-    - [`awsEcsCapacityProvider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
-    - [`awsEcsCluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
-    - [`awsEcsService` resource (import)](/docs/providers/aws/r/ecs_service.html)
-    - [`awsCustomerGateway` data source](/docs/providers/aws/d/customer_gateway.html)
-    - [`awsCustomerGateway` resource](/docs/providers/aws/r/customer_gateway.html)
-    - [`awsEfsAccessPoint` data source](/docs/providers/aws/d/efs_access_point.html)
-    - [`awsEfsAccessPoint` resource](/docs/providers/aws/r/efs_access_point.html)
-    - [`awsEfsFileSystem` data source](/docs/providers/aws/d/efs_file_system.html)
-    - [`awsEfsFileSystem` resource](/docs/providers/aws/r/efs_file_system.html)
-    - [`awsEfsMountTarget` data source](/docs/providers/aws/d/efs_mount_target.html)
-    - [`awsEfsMountTarget` resource](/docs/providers/aws/r/efs_mount_target.html)
-    - [`awsElasticacheCluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
-    - [`awsElasticacheCluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
-    - [`awsElb` data source](/docs/providers/aws/d/elb.html)
-    - [`awsElb` resource](/docs/providers/aws/r/elb.html)
-    - [`awsFlowLog` resource](/docs/providers/aws/r/flow_log.html)
-    - [`awsGlueCatalogDatabase` resource](/docs/providers/aws/r/glue_catalog_database.html)
-    - [`awsGlueCatalogTable` resource](/docs/providers/aws/r/glue_catalog_table.html)
-    - [`awsGlueConnection` resource](/docs/providers/aws/r/glue_connection.html)
-    - [`awsGlueCrawler` resource](/docs/providers/aws/r/glue_crawler.html)
-    - [`awsGlueJob` resource](/docs/providers/aws/r/glue_job.html)
-    - [`awsGlueMlTransform` resource](/docs/providers/aws/r/glue_ml_transform.html)
-    - [`awsGlueTrigger` resource](/docs/providers/aws/r/glue_trigger.html)
-    - [`awsGlueUserDefinedFunction` resource](/docs/providers/aws/r/glue_user_defined_function.html)
-    - [`awsGlueWorkflow` resource](/docs/providers/aws/r/glue_workflow.html)
-    - [`awsGuarddutyDetector` resource](/docs/providers/aws/r/guardduty_detector.html)
-    - [`awsGuarddutyIpset` resource](/docs/providers/aws/r/guardduty_ipset.html)
-    - [`awsGuarddutyThreatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)
-    - [`awsInstance` data source](/docs/providers/aws/d/instance.html)
-    - [`awsInstance` resource](/docs/providers/aws/r/instance.html)
-    - [`awsKeyPair` resource](/docs/providers/aws/r/key_pair.html)
-    - [`awsLaunchTemplate` data source](/docs/providers/aws/d/launch_template.html)
-    - [`awsLaunchTemplate` resource](/docs/providers/aws/r/launch_template.html)
-    - [`awsPlacementGroup` resource](/docs/providers/aws/r/placement_group.html)
-    - [`awsRedshiftCluster` resource](/docs/providers/aws/r/redshift_cluster.html)
-    - [`awsRedshiftEventSubscription` resource](/docs/providers/aws/r/redshift_event_subscription.html)
-    - [`awsRedshiftParameterGroup` resource](/docs/providers/aws/r/redshift_parameter_group.html)
-    - [`awsRedshiftSnapshotCopyGrant` resource](/docs/providers/aws/r/redshift_snapshot_copy_grant.html)
-    - [`awsRedshiftSnapshotSchedule` resource](/docs/providers/aws/r/redshift_snapshot_schedule.html)
-    - [`awsRedshiftSubnetGroup` resource](/docs/providers/aws/r/redshift_subnet_group.html)
-    - [`awsS3AccountPublicAccessBlock` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
-    - [`awsSesActiveReceiptRuleSet` resource](/docs/providers/aws/r/ses_active_receipt_rule_set.html)
-    - [`awsSesConfigurationSet` resource](/docs/providers/aws/r/ses_configuration_set.html)
-    - [`awsSesDomainIdentityVerification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
-    - [`awsSesDomainIdentity` resource](/docs/providers/aws/r/ses_domain_identity.html)
-    - [`awsSesEmailIdentity` resource](/docs/providers/aws/r/ses_email_identity.html)
-    - [`awsSesEventDestination` resource](/docs/providers/aws/r/ses_event_destination.html)
-    - [`awsSesReceiptFilter` resource](/docs/providers/aws/r/ses_receipt_filter.html)
-    - [`awsSesReceiptRule` resource](/docs/providers/aws/r/ses_receipt_rule.html)
-    - [`awsSesTemplate` resource](/docs/providers/aws/r/ses_template.html)
-    - [`awsSsmDocument` data source](/docs/providers/aws/d/ssm_document.html)
-    - [`awsSsmDocument` resource](/docs/providers/aws/r/ssm_document.html)
-    - [`awsSsmParameter` data source](/docs/providers/aws/d/ssm_parameter.html)
-    - [`awsSsmParameter` resource](/docs/providers/aws/r/ssm_parameter.html)
-    - [`awsSyntheticsCanary` resource](/docs/providers/aws/r/synthetics_canary.html)
-    - [`awsVpcEndpointService` data source](/docs/providers/aws/d/vpc_endpoint_service.html)
-    - [`awsVpcEndpointService` resource](/docs/providers/aws/r/vpc_endpoint_service.html)
-    - [`awsVpnConnection` resource](/docs/providers/aws/r/vpn_connection.html)
-    - [`awsVpnGateway` data source](/docs/providers/aws/d/vpn_gateway.html)
-    - [`awsVpnGateway` resource](/docs/providers/aws/r/vpn_gateway.html)
-    - [`awsWafGeoMatchSet` resource](/docs/providers/aws/r/waf_geo_match_set.html)
-    - [`awsWafIpset` resource](/docs/providers/aws/r/waf_ipset.html)
-    - [`awsWafRateBasedRule` resource](/docs/providers/aws/r/waf_rate_based_rule.html)
-    - [`awsWafRegexMatchSet` resource](/docs/providers/aws/r/waf_regex_match_set.html)
-    - [`awsWafRegexPatternSet` resource](/docs/providers/aws/r/waf_regex_pattern_set.html)
-    - [`awsWafregionalIpset` resource](/docs/providers/aws/r/wafregional_ipset.html)
-    - [`awsWafregionalRateBasedRule` resource](/docs/providers/aws/r/wafregional_rate_based_rule.html)
-    - [`awsWafregionalRule` resource](/docs/providers/aws/r/wafregional_rule.html)
-    - [`awsWafregionalRuleGroup` resource](/docs/providers/aws/r/wafregional_rule_group.html)
-    - [`awsWafregionalWebAcl` resource](/docs/providers/aws/r/wafregional_web_acl.html)
-    - [`awsWafRule` resource](/docs/providers/aws/r/waf_rule.html)
-    - [`awsWafRuleGroup` resource](/docs/providers/aws/r/waf_rule_group.html)
-    - [`awsWafSizeConstraintSet` resource](/docs/providers/aws/r/waf_size_constraint_set.html)
-    - [`awsWafWebAcl` resource](/docs/providers/aws/r/waf_web_acl.html)
-    - [`awsWafXssMatchSet` resource](/docs/providers/aws/r/waf_xss_match_set.html)
+    - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
+    - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
+    - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
+    - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
+    - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
+    - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
+    - [`aws_appconfig_application` resource](/docs/providers/aws/r/appconfig_application.html)
+    - [`aws_appconfig_configuration_profile` resource](/docs/providers/aws/r/appconfig_configuration_profile.html)
+    - [`aws_appconfig_deployment` resource](/docs/providers/aws/r/appconfig_deployment.html)
+    - [`aws_appconfig_deployment_strategy` resource](/docs/providers/aws/r/appconfig_deployment_strategy.html)
+    - [`aws_appconfig_environment` resource](/docs/providers/aws/r/appconfig_environment.html)
+    - [`aws_appconfig_hosted_configuration_version` resource](/docs/providers/aws/r/appconfig_hosted_configuration_version.html)
+    - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
+    - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
+    - [`aws_codedeploy_app` resource](/docs/providers/aws/r/codedeploy_app.html)
+    - [`aws_codedeploy_deployment_group` resource](/docs/providers/aws/r/codedeploy_deployment_group.html)
+    - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
+    - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
+    - [`aws_default_vpc_dhcp_options`](/docs/providers/aws/r/default_vpc_dhcp_options.html)
+    - [`aws_dms_event_subscription` resource](/docs/providers/aws/r/dms_event_subscription.html)
+    - [`aws_dms_replication_subnet_group` resource](/docs/providers/aws/r/dms_replication_subnet_group.html)
+    - [`aws_dx_connection` resource](/docs/providers/aws/r/dx_connection.html)
+    - [`aws_dx_hosted_private_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface_accepter.html)
+    - [`aws_dx_hosted_private_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface.html)
+    - [`aws_dx_hosted_public_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface_accepter.html)
+    - [`aws_dx_hosted_public_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface.html)
+    - [`aws_dx_hosted_transit_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_transit_virtual_interface_accepter.html)
+    - [`aws_dx_hosted_transit_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_transit_virtual_interface.html)
+    - [`aws_dx_lag` resource](/docs/providers/aws/r/dx_lag.html)
+    - [`aws_dx_private_virtual_interface` resource](/docs/providers/aws/r/dx_private_virtual_interface.html)
+    - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
+    - [`aws_dx_transit_virtual_interface` resource](/docs/providers/aws/r/dx_transit_virtual_interface.html)
+    - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
+    - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
+    - [`aws_ec2_traffic_mirror_filter` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter.html)
+    - [`aws_ec2_traffic_mirror_filter_rule` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter_rule.html)
+    - [`aws_ec2_traffic_mirror_session` resource](/docs/providers/aws/r/ec2_traffic_mirror_session.html)
+    - [`aws_ec2_traffic_mirror_target` resource](/docs/providers/aws/r/ec2_traffic_mirror_target.html)
+    - [`aws_ec2_transit_gateway_route_table` data source](/docs/providers/aws/d/ec2_transit_gateway_route_table.html)
+    - [`aws_ec2_transit_gateway_route_table` resource](/docs/providers/aws/r/ec2_transit_gateway_route_table.html)
+    - [`aws_ecs_capacity_provider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
+    - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
+    - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
+    - [`aws_customer_gateway` data source](/docs/providers/aws/d/customer_gateway.html)
+    - [`aws_customer_gateway` resource](/docs/providers/aws/r/customer_gateway.html)
+    - [`aws_efs_access_point` data source](/docs/providers/aws/d/efs_access_point.html)
+    - [`aws_efs_access_point` resource](/docs/providers/aws/r/efs_access_point.html)
+    - [`aws_efs_file_system` data source](/docs/providers/aws/d/efs_file_system.html)
+    - [`aws_efs_file_system` resource](/docs/providers/aws/r/efs_file_system.html)
+    - [`aws_efs_mount_target` data source](/docs/providers/aws/d/efs_mount_target.html)
+    - [`aws_efs_mount_target` resource](/docs/providers/aws/r/efs_mount_target.html)
+    - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
+    - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
+    - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
+    - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+    - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)
+    - [`aws_glue_catalog_database` resource](/docs/providers/aws/r/glue_catalog_database.html)
+    - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)
+    - [`aws_glue_connection` resource](/docs/providers/aws/r/glue_connection.html)
+    - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
+    - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
+    - [`aws_glue_ml_transform` resource](/docs/providers/aws/r/glue_ml_transform.html)
+    - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
+    - [`aws_glue_user_defined_function` resource](/docs/providers/aws/r/glue_user_defined_function.html)
+    - [`aws_glue_workflow` resource](/docs/providers/aws/r/glue_workflow.html)
+    - [`aws_guardduty_detector` resource](/docs/providers/aws/r/guardduty_detector.html)
+    - [`aws_guardduty_ipset` resource](/docs/providers/aws/r/guardduty_ipset.html)
+    - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)
+    - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
+    - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
+    - [`aws_key_pair` resource](/docs/providers/aws/r/key_pair.html)
+    - [`aws_launch_template` data source](/docs/providers/aws/d/launch_template.html)
+    - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
+    - [`aws_placement_group` resource](/docs/providers/aws/r/placement_group.html)
+    - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
+    - [`aws_redshift_event_subscription` resource](/docs/providers/aws/r/redshift_event_subscription.html)
+    - [`aws_redshift_parameter_group` resource](/docs/providers/aws/r/redshift_parameter_group.html)
+    - [`aws_redshift_snapshot_copy_grant` resource](/docs/providers/aws/r/redshift_snapshot_copy_grant.html)
+    - [`aws_redshift_snapshot_schedule` resource](/docs/providers/aws/r/redshift_snapshot_schedule.html)
+    - [`aws_redshift_subnet_group` resource](/docs/providers/aws/r/redshift_subnet_group.html)
+    - [`aws_s3_account_public_access_block` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
+    - [`aws_ses_active_receipt_rule_set` resource](/docs/providers/aws/r/ses_active_receipt_rule_set.html)
+    - [`aws_ses_configuration_set` resource](/docs/providers/aws/r/ses_configuration_set.html)
+    - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
+    - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
+    - [`aws_ses_email_identity` resource](/docs/providers/aws/r/ses_email_identity.html)
+    - [`aws_ses_event_destination` resource](/docs/providers/aws/r/ses_event_destination.html)
+    - [`aws_ses_receipt_filter` resource](/docs/providers/aws/r/ses_receipt_filter.html)
+    - [`aws_ses_receipt_rule` resource](/docs/providers/aws/r/ses_receipt_rule.html)
+    - [`aws_ses_template` resource](/docs/providers/aws/r/ses_template.html)
+    - [`aws_ssm_document` data source](/docs/providers/aws/d/ssm_document.html)
+    - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
+    - [`aws_ssm_parameter` data source](/docs/providers/aws/d/ssm_parameter.html)
+    - [`aws_ssm_parameter` resource](/docs/providers/aws/r/ssm_parameter.html)
+    - [`aws_synthetics_canary` resource](/docs/providers/aws/r/synthetics_canary.html)
+    - [`aws_vpc_endpoint_service` data source](/docs/providers/aws/d/vpc_endpoint_service.html)
+    - [`aws_vpc_endpoint_service` resource](/docs/providers/aws/r/vpc_endpoint_service.html)
+    - [`aws_vpn_connection` resource](/docs/providers/aws/r/vpn_connection.html)
+    - [`aws_vpn_gateway` data source](/docs/providers/aws/d/vpn_gateway.html)
+    - [`aws_vpn_gateway` resource](/docs/providers/aws/r/vpn_gateway.html)
+    - [`aws_waf_geo_match_set` resource](/docs/providers/aws/r/waf_geo_match_set.html)
+    - [`aws_waf_ipset` resource](/docs/providers/aws/r/waf_ipset.html)
+    - [`aws_waf_rate_based_rule` resource](/docs/providers/aws/r/waf_rate_based_rule.html)
+    - [`aws_waf_regex_match_set` resource](/docs/providers/aws/r/waf_regex_match_set.html)
+    - [`aws_waf_regex_pattern_set` resource](/docs/providers/aws/r/waf_regex_pattern_set.html)
+    - [`aws_wafregional_ipset` resource](/docs/providers/aws/r/wafregional_ipset.html)
+    - [`aws_wafregional_rate_based_rule` resource](/docs/providers/aws/r/wafregional_rate_based_rule.html)
+    - [`aws_wafregional_rule` resource](/docs/providers/aws/r/wafregional_rule.html)
+    - [`aws_wafregional_rule_group` resource](/docs/providers/aws/r/wafregional_rule_group.html)
+    - [`aws_wafregional_web_acl` resource](/docs/providers/aws/r/wafregional_web_acl.html)
+    - [`aws_waf_rule` resource](/docs/providers/aws/r/waf_rule.html)
+    - [`aws_waf_rule_group` resource](/docs/providers/aws/r/waf_rule_group.html)
+    - [`aws_waf_size_constraint_set` resource](/docs/providers/aws/r/waf_size_constraint_set.html)
+    - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
+    - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `stsRegion` - (Optional) AWS region for STS. If unset, AWS will use the same region for STS as other non-STS operations.
-* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `awsSessionToken` environment variable.
-* `useDualstackEndpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `awsUseDualstackEndpoint` environment variable or in a shared config file (`useDualstackEndpoint`).
-* `useFipsEndpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability. Can also be set with the `awsUseFipsEndpoint` environment variable or in a shared config file (`useFipsEndpoint`).
+* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
+* `useDualstackEndpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
+* `useFipsEndpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
 
 ### assume_role Configuration Block
 
 The `assumeRole` configuration block supports the following arguments:
 
-* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1H`, `2H45M`, or `30M15S`.
+* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `externalId` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policyArns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
@@ -587,18 +587,18 @@ The `assumeRoleWithWebIdentity` configuration block supports the following argum
 
 * `duration` - (Optional) Duration of the assume role session.
   You can provide a value from 15 minutes up to the maximum session duration setting for the role.
-  Represented by a string such as `1H`, `2H45M`, or `30M15S`.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policyArns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
 * `roleArn` - (Required) ARN of the IAM Role to assume.
-  Can also be set with the `awsRoleArn` environment variable.
+  Can also be set with the `AWS_ROLE_ARN` environment variable.
 * `sessionName` - (Optional) Session name to use when assuming the role.
-  Can also be set with the `awsRoleSessionName` environment variable.
+  Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
 * `webIdentityToken` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `webIdentityToken` or `webIdentityTokenFile` is required.
+  One of `web_identity_token` or `web_identity_token_file` is required.
 * `webIdentityTokenFile` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `webIdentityTokenFile` or `webIdentityToken` is required.
-  Can also be set with the `awsWebIdentityTokenFile` environment variable.
+  One of `web_identity_token_file` or `web_identity_token` is required.
+  Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
 
@@ -803,8 +803,8 @@ class MyConvertedCode extends TerraformStack {
 
 The `ignoreTags` configuration block supports the following arguments:
 
-* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignoreChanges`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
-* `keyPrefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignoreChanges`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `keyPrefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 
@@ -818,15 +818,15 @@ Approaches differ per authentication providers:
     is always used. Introduced in Terraform `0616`.
 * All other providers (environment variable, shared credentials file, ...)
     will try three approaches in the following order
-    * `iam:getUser` - Typically useful for IAM Users. It also means
-      that each user needs to be privileged to call `iam:getUser` for themselves.
-    * `sts:getCallerIdentity` - _Should_ work for both IAM Users and federated IAM Roles,
-      introduced in Terraform `0616`.
-    * `iam:listRoles` - This is specifically useful for IdP-federated profiles
-      which cannot use `iam:getUser`. It also means that each federated user
-      need to be _assuming_ an IAM role which allows `iam:listRoles`.
-      Used in Terraform `0616+`.
+    * `iam:GetUser` - Typically useful for IAM Users. It also means
+      that each user needs to be privileged to call `iam:GetUser` for themselves.
+    * `sts:GetCallerIdentity` - _Should_ work for both IAM Users and federated IAM Roles,
+      introduced in Terraform `0.6.16`.
+    * `iam:ListRoles` - This is specifically useful for IdP-federated profiles
+      which cannot use `iam:GetUser`. It also means that each federated user
+      need to be _assuming_ an IAM role which allows `iam:ListRoles`.
+      Used in Terraform `0.6.16+`.
       There used to be no better way to get account ID out of the API
-      when using the federated account until `sts:getCallerIdentity` was introduced.
+      when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.18.0 input-acd8a09881ab29aeafe5c6b0411f4694cd3850219e5293c00f973ced87f5aab0 -->
+<!-- cache-key: cdktf-0.19.0 input-0d4215293c55ed9ee9eb54d3e80e99be49d2d9920786a6da5c00639901232e0b -->

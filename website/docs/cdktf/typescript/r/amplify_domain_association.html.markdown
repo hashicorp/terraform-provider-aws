@@ -75,7 +75,7 @@ This resource supports the following arguments:
 * `domainName` - (Required) Domain name for the domain association.
 * `enableAutoSubDomain` - (Optional) Enables the automated creation of subdomains for branches.
 * `subDomain` - (Required) Setting for the subdomain. Documented below.
-* `waitForVerification` - (Optional) If enabled, the resource will wait for the domain association status to change to `pendingDeployment` or `available`. Setting this to `false` will skip the process. Default: `true`.
+* `waitForVerification` - (Optional) If enabled, the resource will wait for the domain association status to change to `PENDING_DEPLOYMENT` or `AVAILABLE`. Setting this to `false` will skip the process. Default: `true`.
 
 The `subDomain` configuration block supports the following arguments:
 
@@ -116,4 +116,4 @@ Using `terraform import`, import Amplify domain association using `appId` and `d
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10844d85ea1b0809e4b08cd8168c429bf0c742ec4760985072b9f61b55e19893 -->
+<!-- cache-key: cdktf-0.19.0 input-10844d85ea1b0809e4b08cd8168c429bf0c742ec4760985072b9f61b55e19893 -->

@@ -94,8 +94,8 @@ The arguments of this data source act as filters for querying the available reso
   This argument should be used along with other arguments to limit the number of results returned.
 * `ownerId` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.
 * `resolverEndpointId` (Optional) ID of the outbound resolver endpoint for the desired resolver rules.
-* `ruleType` (Optional) Rule type of the desired resolver rules. Valid values are `forward`, `system` and `recursive`.
-* `shareStatus` (Optional) Whether the desired resolver rules are shared and, if so, whether the current account is sharing the rules with another account, or another account is sharing the rules with the current account. Valid values are `notShared`, `sharedByMe` or `sharedWithMe`
+* `ruleType` (Optional) Rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
+* `shareStatus` (Optional) Whether the desired resolver rules are shared and, if so, whether the current account is sharing the rules with another account, or another account is sharing the rules with the current account. Valid values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Attribute Reference
 
@@ -104,4 +104,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `resolverRuleIds` - IDs of the matched resolver rules.
 
-<!-- cache-key: cdktf-0.18.0 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->
+<!-- cache-key: cdktf-0.19.0 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->

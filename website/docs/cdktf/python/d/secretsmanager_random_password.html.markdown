@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.
-* `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: `! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .`
+* `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
 * `exclude_uppercase` - (Optional) Specifies whether to exclude uppercase letters from the password.
 * `include_space` - (Optional) Specifies whether to include the space character.
 * `password_length` - (Optional) Length of the password.
@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `random_password` - Random password.
 
-<!-- cache-key: cdktf-0.18.0 input-253220cea464918e719cdeb6fc246c1972e3652b5d753f22810bdf68eb8eaeef -->
+<!-- cache-key: cdktf-0.19.0 input-253220cea464918e719cdeb6fc246c1972e3652b5d753f22810bdf68eb8eaeef -->

@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1049,7 +1050,7 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_initialLifecycleHook(rName),
+				Config: testAccGroupConfig_initialLifecycleHook(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 2),
@@ -1063,6 +1064,25 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 				),
 			},
 			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_initialLifecycleHook(rName, 40),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 2),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
+						"default_result":       "CONTINUE",
+						"heartbeat_timeout":    "40",
+						"lifecycle_transition": "autoscaling:EC2_INSTANCE_LAUNCHING",
+						"name":                 "launching",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -4778,7 +4798,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, maxInstanceLifetime))
 }
 
-func testAccGroupConfig_initialLifecycleHook(rName string) string {
+func testAccGroupConfig_initialLifecycleHook(rName string, timeout int) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4794,7 +4814,7 @@ resource "aws_autoscaling_group" "test" {
   initial_lifecycle_hook {
     name                 = "launching"
     default_result       = "CONTINUE"
-    heartbeat_timeout    = 30 # minimum value
+    heartbeat_timeout    = %[2]d
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
   }
 
@@ -4804,7 +4824,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName))
+`, rName, timeout))
 }
 
 func testAccGroupConfig_launchTemplate(rName string) string {

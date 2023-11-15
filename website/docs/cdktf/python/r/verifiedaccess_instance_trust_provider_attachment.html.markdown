@@ -81,4 +81,4 @@ Using `terraform import`, import Verified Access Instance Trust Provider Attachm
 % terraform import aws_verifiedaccess_instance_trust_provider_attachment.example vai-1234567890abcdef0/vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0166dda69fa58c229770979a9c41f2063a0855d337e923d65532e9982cc3d392 -->
+<!-- cache-key: cdktf-0.19.0 input-0166dda69fa58c229770979a9c41f2063a0855d337e923d65532e9982cc3d392 -->

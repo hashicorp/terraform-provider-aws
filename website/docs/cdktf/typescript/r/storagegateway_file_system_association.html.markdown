@@ -125,7 +125,7 @@ This resource supports the following arguments:
 * `password` - (Required, sensitive) The password of the user credential.
 * `auditDestinationArn` - (Optional) The Amazon Resource Name (ARN) of the storage used for the audit logs.
 * `cacheAttributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### cache_attributes
 
@@ -139,7 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the FSx file system association
 * `arn` - Amazon Resource Name (ARN) of the newly created file system association.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -163,4 +163,4 @@ Using `terraform import`, import `awsStoragegatewayFileSystemAssociation` using 
 % terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-25ffcf0143f211628c624df50a48a4f56f62a6e23545b746731989404c66e06e -->
+<!-- cache-key: cdktf-0.19.0 input-25ffcf0143f211628c624df50a48a4f56f62a6e23545b746731989404c66e06e -->

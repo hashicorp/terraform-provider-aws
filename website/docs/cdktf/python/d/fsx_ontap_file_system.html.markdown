@@ -80,4 +80,4 @@ In addition to all arguments above, the following attributes are exported:
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - IP addresses of the file system endpoint.
 
-<!-- cache-key: cdktf-0.18.0 input-459fa001b98c16cffb882c5412b5d97d3d6335c21e394631f65f1e2eade0cc2d -->
+<!-- cache-key: cdktf-0.19.0 input-459fa001b98c16cffb882c5412b5d97d3d6335c21e394631f65f1e2eade0cc2d -->

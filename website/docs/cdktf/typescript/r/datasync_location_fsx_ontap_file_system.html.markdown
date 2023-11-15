@@ -60,7 +60,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `subdirectory` - (Optional) Path to the file share in the SVM where you'll copy your data. You can specify a junction path (also known as a mount point), qtree path (for NFS file shares), or share name (for SMB file shares) (e.g. `/vol1`, `/vol1/tree1`, `share1`).
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Protocol
 
@@ -73,7 +73,7 @@ The following arguments are optional:
 
 ### NFS Mount Options
 
-* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `nfs3`. Default: `nfs3`
+* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `NFS3`. Default: `NFS3`
 
 ### SMB
 
@@ -84,7 +84,7 @@ The following arguments are optional:
 
 ### SMB Mount Options
 
-* `version` - (Optional) SMB version that you want DataSync to use for mounting your SMB share. Valid values: `automatic`, `smb3`, `smb2` `smb20`. Default: `automatic`
+* `version` - (Optional) SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB3`, `SMB2` `SMB2_0`. Default: `AUTOMATIC`
 
 ## Attribute Reference
 
@@ -116,4 +116,4 @@ Using `terraform import`, import `awsDatasyncLocationFsxOntapFileSystem` using t
 % terraform import aws_datasync_location_fsx_ontap_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:storage-virtual-machine/svm-12345678abcdef123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fdb2898abac9131a1e6f0aedf0c516dba5a11e0930534026410c35d320db2ff2 -->
+<!-- cache-key: cdktf-0.19.0 input-fdb2898abac9131a1e6f0aedf0c516dba5a11e0930534026410c35d320db2ff2 -->

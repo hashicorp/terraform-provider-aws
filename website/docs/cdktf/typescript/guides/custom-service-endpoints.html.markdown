@@ -314,10 +314,10 @@ class MyConvertedCode extends TerraformStack {
 As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
 the following service endpoints can be configured using environment variables:
 
-* DynamoDB: `tfAwsDynamodbEndpoint` (or **Deprecated** `awsDynamodbEndpoint`)
-* IAM: `tfAwsIamEndpoint` (or **Deprecated** `awsIamEndpoint`)
-* S3: `tfAwsS3Endpoint` (or **Deprecated** `awsS3Endpoint`)
-* STS: `tfAwsStsEndpoint` (or **Deprecated** `awsStsEndpoint`)
+* DynamoDB: `tfAwsDynamodbEndpoint` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `tfAwsIamEndpoint` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `tfAwsS3Endpoint` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `tfAwsStsEndpoint` (or **Deprecated** `AWS_STS_ENDPOINT`)
 
 ## Connecting to Local AWS Compatible Solutions
 
@@ -414,4 +414,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0e0dec25d22a19f39d4881dd603482a4765f842b794421afb1763a74aeea1795 -->
+<!-- cache-key: cdktf-0.19.0 input-0e0dec25d22a19f39d4881dd603482a4765f842b794421afb1763a74aeea1795 -->

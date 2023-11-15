@@ -76,4 +76,4 @@ Using `terraform import`, import IoT policies using the `name`. For example:
 % terraform import aws_iot_policy.pubsub PubSubToAnyTopic
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa26a18211ca20b7caee0ba0c439dfec03ce858e13ea7c24d060deccb352d0d2 -->
+<!-- cache-key: cdktf-0.19.0 input-aa26a18211ca20b7caee0ba0c439dfec03ce858e13ea7c24d060deccb352d0d2 -->

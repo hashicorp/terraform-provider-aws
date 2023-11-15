@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `db_user` - A database user name that is authorized to log on to the database `db_name` using the password `db_password` . If the specified `db_user` exists in the database, the new user name has the same database privileges as the user named in `db_user` . By default, the user is added to PUBLIC. the user doesn't exist in the database.
 * `expiration` - Date and time the password in `db_password` expires.
 
-<!-- cache-key: cdktf-0.18.0 input-34a2bbcfc773ba4d89d7b456bbb05f8a84bac33ed819e86e9a4b29600cb82b59 -->
+<!-- cache-key: cdktf-0.19.0 input-34a2bbcfc773ba4d89d7b456bbb05f8a84bac33ed819e86e9a4b29600cb82b59 -->

@@ -153,4 +153,4 @@ Using `terraform import`, import data catalogs using their `name`. For example:
 % terraform import aws_athena_data_catalog.example example-data-catalog
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca384d0d131eb64581ab0b3c036a49902737674d63de3f2960c9f3aa9b8f446f -->
+<!-- cache-key: cdktf-0.19.0 input-ca384d0d131eb64581ab0b3c036a49902737674d63de3f2960c9f3aa9b8f446f -->

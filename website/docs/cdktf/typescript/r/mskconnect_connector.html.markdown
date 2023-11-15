@@ -143,11 +143,11 @@ This resource supports the following arguments:
 
 ### kafka_cluster_client_authentication Configuration Block
 
-* `authenticationType` - (Optional) The type of client authentication used to connect to the Apache Kafka cluster. Valid values: `iam`, `none`. A value of `none` means that no client authentication is used. The default value is `none`.
+* `authenticationType` - (Optional) The type of client authentication used to connect to the Apache Kafka cluster. Valid values: `IAM`, `NONE`. A value of `NONE` means that no client authentication is used. The default value is `NONE`.
 
 ### kafka_cluster_encryption_in_transit Configuration Block
 
-* `encryptionType` - (Optional) The type of encryption in transit to the Apache Kafka cluster. Valid values: `plaintext`, `tls`. The default values is `plaintext`.
+* `encryptionType` - (Optional) The type of encryption in transit to the Apache Kafka cluster. Valid values: `PLAINTEXT`, `TLS`. The default values is `PLAINTEXT`.
 
 ### log_delivery Configuration Block
 
@@ -200,9 +200,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20M`)
-* `update` - (Default `20M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `20m`)
+* `update` - (Default `20m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -226,4 +226,4 @@ Using `terraform import`, import MSK Connect Connector using the connector's `ar
 % terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-40619f08de26cd7fcad3cf70d7685484652ad1f0806e16438690dce5d953aa3a -->
+<!-- cache-key: cdktf-0.19.0 input-40619f08de26cd7fcad3cf70d7685484652ad1f0806e16438690dce5d953aa3a -->

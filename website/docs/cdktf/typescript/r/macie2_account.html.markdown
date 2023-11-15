@@ -39,8 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `findingPublishingFrequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `fifteenMinutes`, `oneHour` or `sixHours`.
-* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `enabled`. Valid values are `enabled` or `paused`.
+* `findingPublishingFrequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
+* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
 ## Attribute Reference
 
@@ -73,4 +73,4 @@ Using `terraform import`, import `awsMacie2Account` using the id. For example:
 % terraform import aws_macie2_account.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3bb36e9a7bd0b8871e777a031ed1a58fdb5d221c7af202cb42579fd8023356ae -->
+<!-- cache-key: cdktf-0.19.0 input-3bb36e9a7bd0b8871e777a031ed1a58fdb5d221c7af202cb42579fd8023356ae -->

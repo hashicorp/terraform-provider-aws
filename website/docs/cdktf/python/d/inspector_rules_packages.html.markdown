@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `arns` - List of the Amazon Inspector Classic Rules Packages arns available in the AWS region.
 
-<!-- cache-key: cdktf-0.18.0 input-b55f49ddc9bd6ffd45988906833e0338e052589bc49023e7487f89772927ed30 -->
+<!-- cache-key: cdktf-0.19.0 input-b55f49ddc9bd6ffd45988906833e0338e052589bc49023e7487f89772927ed30 -->

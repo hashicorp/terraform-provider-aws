@@ -49,13 +49,13 @@ This resource supports the following arguments:
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
 * `name`  - (Required) The name of the Neptune parameter.
 * `value` - (Required) The value of the Neptune parameter.
-* `applyMethod` - (Optional) The apply method of the Neptune parameter. Valid values are `immediate` and `pendingReboot`. Defaults to `pendingReboot`.
+* `applyMethod` - (Optional) The apply method of the Neptune parameter. Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
 
 ## Attribute Reference
 
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Neptune parameter group name.
 * `arn` - The Neptune parameter group Amazon Resource Name (ARN).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import Neptune Parameter Groups using the `name`. For 
 % terraform import aws_neptune_parameter_group.some_pg some-pg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a1cb01e0292301b60c4b212670b59774de132158f48ab1dd04de5f6d3fa58b10 -->
+<!-- cache-key: cdktf-0.19.0 input-a1cb01e0292301b60c4b212670b59774de132158f48ab1dd04de5f6d3fa58b10 -->

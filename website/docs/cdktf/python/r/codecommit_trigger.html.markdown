@@ -62,4 +62,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `configuration_id` - System-generated unique identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-6fc445fde615a4a95723b535dcf09b6e0655d8096cedb2b5da2231587aee3f88 -->
+<!-- cache-key: cdktf-0.19.0 input-6fc445fde615a4a95723b535dcf09b6e0655d8096cedb2b5da2231587aee3f88 -->

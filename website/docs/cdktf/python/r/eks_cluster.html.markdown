@@ -377,4 +377,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->
+<!-- cache-key: cdktf-0.19.0 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->

@@ -137,19 +137,19 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `definition` - (Required) The [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) definition of the state machine.
-* `loggingConfiguration` - (Optional) Defines what execution history events are logged and where they are logged. The `loggingConfiguration` parameter is only valid when `type` is set to `express`. Defaults to `off`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
-* `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `a`-`z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
+* `loggingConfiguration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
+* `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `publish` - (Optional) Set to true to publish a version of the state machine during creation. Default: false.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tracingConfiguration` - (Optional) Selects whether AWS X-Ray tracing is enabled.
-* `type` - (Optional) Determines whether a Standard or Express state machine is created. The default is `standard`. You cannot update the type of a state machine once it has been created. Valid values: `standard`, `express`.
+* `type` - (Optional) Determines whether a Standard or Express state machine is created. The default is `STANDARD`. You cannot update the type of a state machine once it has been created. Valid values: `STANDARD`, `EXPRESS`.
 
 ### `loggingConfiguration` Configuration Block
 
 * `includeExecutionData` - (Optional) Determines whether execution data is included in your log. When set to `false`, data is excluded.
-* `level` - (Optional) Defines which category of execution history events are logged. Valid values: `all`, `error`, `fatal`, `off`
+* `level` - (Optional) Defines which category of execution history events are logged. Valid values: `ALL`, `ERROR`, `FATAL`, `OFF`
 * `logDestination` - (Optional) Amazon Resource Name (ARN) of a CloudWatch log group. Make sure the State Machine has the correct IAM policies for logging. The ARN must end with `:*`
 
 ### `tracingConfiguration` Configuration Block
@@ -163,16 +163,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the state machine.
 * `arn` - The ARN of the state machine.
 * `creationDate` - The date the state machine was created.
-* `status` - The current status of the state machine. Either `active` or `deleting`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -196,4 +196,4 @@ Using `terraform import`, import State Machines using the `arn`. For example:
 % terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f08ea369e176242c031d2aef1b09ffa720bc2fe422b8ec36899abd05e99d76aa -->
+<!-- cache-key: cdktf-0.19.0 input-f08ea369e176242c031d2aef1b09ffa720bc2fe422b8ec36899abd05e99d76aa -->

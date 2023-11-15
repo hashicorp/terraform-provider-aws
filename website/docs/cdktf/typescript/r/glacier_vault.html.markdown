@@ -77,11 +77,11 @@ This resource supports the following arguments:
 * `accessPolicy` - (Optional) The policy document. This is a JSON formatted string.
   The heredoc syntax or `file` function is helpful here. Use the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html) for more information on Glacier Vault Policy
 * `notification` - (Optional) The notifications for the Vault. Fields documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **notification** supports the following:
 
-* `events` - (Required) You can configure a vault to publish a notification for `archiveRetrievalCompleted` and `inventoryRetrievalCompleted` events.
+* `events` - (Required) You can configure a vault to publish a notification for `ArchiveRetrievalCompleted` and `InventoryRetrievalCompleted` events.
 * `snsTopic` - (Required) The SNS Topic ARN.
 
 ## Attribute Reference
@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `location` - The URI of the vault that was created.
 * `arn` - The ARN of the vault.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -114,4 +114,4 @@ Using `terraform import`, import Glacier Vaults using the `name`. For example:
 % terraform import aws_glacier_vault.archive my_archive
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1bfb612252a42581f297e83a2d1f1c7c609160aeeb4a7bd67bccea5a3aa3cff5 -->
+<!-- cache-key: cdktf-0.19.0 input-1bfb612252a42581f297e83a2d1f1c7c609160aeeb4a7bd67bccea5a3aa3cff5 -->

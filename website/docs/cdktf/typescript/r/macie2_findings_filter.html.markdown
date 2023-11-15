@@ -53,10 +53,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `findingCriteria` - (Required) The criteria to use to filter findings.
-* `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A custom description of the filter. The description can contain as many as 512 characters.
-* `action` - (Required) The action to perform on findings that meet the filter criteria (`findingCriteria`). Valid values are: `archive`, suppress (automatically archive) the findings; and, `noop`, don't perform any action on the findings.
+* `action` - (Required) The action to perform on findings that meet the filter criteria (`finding_criteria`). Valid values are: `ARCHIVE`, suppress (automatically archive) the findings; and, `NOOP`, don't perform any action on the findings.
 * `position` - (Optional) The position of the filter in the list of saved filters on the Amazon Macie console. This value also determines the order in which the filter is applied to findings, relative to other filters that are also applied to the findings.
 * `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the filter.
 
@@ -104,4 +104,4 @@ Using `terraform import`, import `awsMacie2FindingsFilter` using the id. For exa
 % terraform import aws_macie2_findings_filter.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-922eadb42886940b99342f03a6f68d81b396a29ebaa5aa573f2d1fa24f21e6b5 -->
+<!-- cache-key: cdktf-0.19.0 input-922eadb42886940b99342f03a6f68d81b396a29ebaa5aa573f2d1fa24f21e6b5 -->

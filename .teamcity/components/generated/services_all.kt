@@ -141,6 +141,7 @@ val services = mapOf(
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),
     "opsworks" to ServiceSpec("OpsWorks", vpcLock = true),
     "organizations" to ServiceSpec("Organizations"),
+    "osis" to ServiceSpec("OpenSearch Ingestion"),
     "outposts" to ServiceSpec("Outposts"),
     "pinpoint" to ServiceSpec("Pinpoint"),
     "pipes" to ServiceSpec("EventBridge Pipes"),

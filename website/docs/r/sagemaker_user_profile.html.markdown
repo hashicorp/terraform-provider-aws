@@ -46,6 +46,9 @@ This resource supports the following arguments:
 
 #### Canvas App Settings
 
+* `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct-deploy-settings) below.
+* `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra-settings) below.
+* `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity-provider-oauth-settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model-register-settings) below.
 * `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. see [Time Series Forecasting Settings](#time-series-forecasting-settings) below.
 * `workspace_settings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace-settings) below.
@@ -98,6 +101,20 @@ This resource supports the following arguments:
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
+
+##### Identity Provider OAuth Settings
+
+* `data_source_name` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `secret_arn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
+* `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### Direct Deploy Settings
+
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### Kendra Settings
+
+* `status` - (Optional) Describes whether the document querying feature is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### Time Series Forecasting Settings
 

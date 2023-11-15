@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `log_exports` - The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespace_id` - The Redshift Namespace ID.
 
-<!-- cache-key: cdktf-0.18.0 input-353587d87083acd6cf58b7bf04d05a60c67f4c8fc0953c115222a623d6c4455b -->
+<!-- cache-key: cdktf-0.19.0 input-353587d87083acd6cf58b7bf04d05a60c67f4c8fc0953c115222a623d6c4455b -->

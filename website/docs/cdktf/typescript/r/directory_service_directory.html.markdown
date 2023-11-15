@@ -172,19 +172,19 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The fully qualified name for the directory, such as `corpExampleCom`
+* `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
-* `size` - (Optional) (For `simpleAd` and `adConnector` types) The size of the directory (`small` or `large` are accepted values). `large` by default.
-* `vpcSettings` - (Required for `simpleAd` and `microsoftAd`) VPC related information about the directory. Fields documented below.
-* `connectSettings` - (Required for `adConnector`) Connector related information about the directory. Fields documented below.
-* `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enableSso`.
+* `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
+* `vpcSettings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
+* `connectSettings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
+* `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enable_sso`.
 * `description` - (Optional) A textual description for the directory.
-* `desiredNumberOfDomainControllers` - (Optional) The number of domain controllers desired in the directory. Minimum value of `2`. Scaling of domain controllers is only supported for `microsoftAd` directories.
-* `shortName` - (Optional) The short name of the directory, such as `corp`.
+* `desiredNumberOfDomainControllers` - (Optional) The number of domain controllers desired in the directory. Minimum value of `2`. Scaling of domain controllers is only supported for `MicrosoftAD` directories.
+* `shortName` - (Optional) The short name of the directory, such as `CORP`.
 * `enableSso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
-* `type` (Optional) - The directory type (`simpleAd`, `adConnector` or `microsoftAd` are accepted values). Defaults to `simpleAd`.
-* `edition` - (Optional, for type `microsoftAd` only) The MicrosoftAD edition (`standard` or `enterprise`). Defaults to `enterprise`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `edition` - (Optional, for type `MicrosoftAD` only) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **vpc_settings** supports the following:
 
@@ -203,10 +203,10 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
-* `accessUrl` - The access URL for the directory, such as `http://aliasAwsappsCom`.
+* `accessUrl` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dnsIpAddresses` - A list of IP addresses of the DNS servers for the directory or connector.
 * `securityGroupId` - The ID of the security group created by the directory.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 `connectSettings` (for `adConnector`) is also exported with the following attributes:
 
@@ -242,4 +242,4 @@ Using `terraform import`, import DirectoryService directories using the director
 % terraform import aws_directory_service_directory.sample d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-49c24dcd4cf67951f7f5fa46955d3c67849291a777e1963a25110967098be86d -->
+<!-- cache-key: cdktf-0.19.0 input-49c24dcd4cf67951f7f5fa46955d3c67849291a777e1963a25110967098be86d -->

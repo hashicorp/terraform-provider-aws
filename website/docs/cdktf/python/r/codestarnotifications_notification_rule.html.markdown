@@ -109,4 +109,4 @@ Using `terraform import`, import CodeStar notification rule using the ARN. For e
 % terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4e53883c7fac8ce18f0f284d8670fbec11d282232b37f3e8c5d77110845632ed -->
+<!-- cache-key: cdktf-0.19.0 input-4e53883c7fac8ce18f0f284d8670fbec11d282232b37f3e8c5d77110845632ed -->

@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the Lightsail load balancer.
 * `sizeInGb` - (Required) The instance port the load balancer will connect.
 * `availabilityZone` - (Required) The Availability Zone in which to create your disk.
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `defaultTags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Lightsail load balancer.
 * `createdAt` - The timestamp when the load balancer was created.
 * `supportCode` - The support code for the disk. Include this code in your email to support when you have questions about a disk in Lightsail. This code enables our support team to look up your Lightsail information more easily.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import `awsLightsailDisk` using the name attribute. Fo
 % terraform import aws_lightsail_disk.test test
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7753e5e8b07d0ea697ccda6f53778fce21cb9f997c8e2dfbe4fb7552ab0ed771 -->
+<!-- cache-key: cdktf-0.19.0 input-7753e5e8b07d0ea697ccda6f53778fce21cb9f997c8e2dfbe4fb7552ab0ed771 -->

@@ -81,4 +81,4 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `id_token` - (Optional) Time unit in for the value in `id_token_validity`, defaults to `hours`.
 * `refresh_token` - (Optional) Time unit in for the value in `refresh_token_validity`, defaults to `days`.
 
-<!-- cache-key: cdktf-0.18.0 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->
+<!-- cache-key: cdktf-0.19.0 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->

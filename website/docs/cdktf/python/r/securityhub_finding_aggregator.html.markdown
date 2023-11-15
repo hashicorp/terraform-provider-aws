@@ -129,4 +129,4 @@ Using `terraform import`, import an existing Security Hub finding aggregator usi
 % terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b0a0cef9ae9a2e4ba102b890bdf1e0083eb9b71a497b601f823d3d520dd935aa -->
+<!-- cache-key: cdktf-0.19.0 input-b0a0cef9ae9a2e4ba102b890bdf1e0083eb9b71a497b601f823d3d520dd935aa -->

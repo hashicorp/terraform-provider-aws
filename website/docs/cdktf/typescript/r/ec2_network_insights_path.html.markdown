@@ -49,7 +49,7 @@ The following arguments are optional:
 * `sourceIp` - (Optional) IP address of the source resource.
 * `destinationIp` - (Optional) IP address of the destination resource.
 * `destinationPort` - (Optional) Destination port to analyze access to.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `destinationArn` - ARN of the destination.
 * `id` - ID of the Network Insights Path.
 * `sourceArn` - ARN of the source.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2d954457dd6558b313317ea2a62a029bb4f6b0f9fb109a2eff89ecd56e960d31 -->
+<!-- cache-key: cdktf-0.19.0 input-2d954457dd6558b313317ea2a62a029bb4f6b0f9fb109a2eff89ecd56e960d31 -->

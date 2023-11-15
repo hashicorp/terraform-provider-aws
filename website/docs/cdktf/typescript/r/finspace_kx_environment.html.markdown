@@ -165,7 +165,7 @@ The following arguments are optional:
 
 * `customDnsConfiguration` - (Optional) List of DNS server name and server IP. This is used to set up Route-53 outbound resolvers. Defined below.
 * `description` - (Optional) Description for the KX environment.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayConfiguration` - (Optional) Transit gateway and network configuration that is used to connect the KX environment to an internal network. Defined below.
 
 ### custom_dns_configuration
@@ -189,7 +189,7 @@ The network access control list (ACL) is an optional layer of security for VPCs 
 The entry is a set of numbered ingress and egress rules that determine whether a packet should be allowed in or out of a subnet associated with the ACL.
 Entries in the ACL are processed according to the rule numbers, in ascending order. The `attachmentNetworkAclConfiguration` block supports the following arguments:
 
-* `cidrBlock` - (Required) The IPv4 network range to allow or deny, in CIDR notation. The specified CIDR block is modified to its canonical form. For example, `10068018/18` will be converted to `1006800/18`.
+* `cidrBlock` - (Required) The IPv4 network range to allow or deny, in CIDR notation. The specified CIDR block is modified to its canonical form. For example, `100.68.0.18/18` will be converted to `100.68.0.0/18`.
 * `protocol` - (Required) Protocol number. A value of `1` means all the protocols.
 * `ruleAction` - (Required) Indicates whether to `allow` or `deny` the traffic that matches the rule.
 * `ruleNumber` - (Required) Rule number for the entry. All the network ACL entries are processed in ascending order by rule number.
@@ -207,8 +207,8 @@ The range of ports the rule applies to (between `0` and `65535`). The `portRange
 
 Defines the ICMP protocol that consists of the ICMP type and code. The `icmpTypeCode` block supports the following arguments:
 
-* `code` - (Required) ICMP code. A value of `1` means all codes for the specified ICMP type.
-* `type` - (Required) ICMP type. A value of `1` means all types.
+* `code` - (Required) ICMP code. A value of `-1` means all codes for the specified ICMP type.
+* `type` - (Required) ICMP type. A value of `-1` means all types.
 
 ## Attribute Reference
 
@@ -221,15 +221,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `infrastructureAccountId` - Unique identifier for the AWS environment infrastructure account.
 * `lastModifiedTimestamp` - Last timestamp at which the environment was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `status` - Status of environment creation
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `45M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `45m`)
 
 ## Import
 
@@ -253,4 +253,4 @@ Using `terraform import`, import an AWS FinSpace Kx Environment using the `id`. 
 % terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-66ff5897d5ab2c91b6931ad3c3dac3ade7477821d5c997374b18bd09ac1f1dd9 -->
+<!-- cache-key: cdktf-0.19.0 input-66ff5897d5ab2c91b6931ad3c3dac3ade7477821d5c997374b18bd09ac1f1dd9 -->
