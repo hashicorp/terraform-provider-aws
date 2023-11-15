@@ -1207,13 +1207,25 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 
 	m := l[0].(map[string]interface{})
 
-	config := &sagemaker.CanvasAppSettings{
-		IdentityProviderOAuthSettings: expandIdentityProviderOAuthSettings(m["identity_provider_oauth_settings"].([]interface{})),
-		DirectDeploySettings:          expandDirectDeploySettings(m["direct_deploy_settings"].([]interface{})),
-		KendraSettings:                expandKendraSettings(m["kendra_settings"].([]interface{})),
-		ModelRegisterSettings:         expandModelRegisterSettings(m["model_register_settings"].([]interface{})),
-		TimeSeriesForecastingSettings: expandTimeSeriesForecastingSettings(m["time_series_forecasting_settings"].([]interface{})),
-		WorkspaceSettings:             expandWorkspaceSettings(m["workspace_settings"].([]interface{})),
+	config := &sagemaker.CanvasAppSettings{}
+
+	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
+		config.DirectDeploySettings = expandDirectDeploySettings(v)
+	}
+	if v, ok := m["identity_provider_oauth_settings"].([]interface{}); ok {
+		config.IdentityProviderOAuthSettings = expandIdentityProviderOAuthSettings(v)
+	}
+	if v, ok := m["kendra_settings"].([]interface{}); ok {
+		config.KendraSettings = expandKendraSettings(v)
+	}
+	if v, ok := m["model_register_settings"].([]interface{}); ok {
+		config.ModelRegisterSettings = expandModelRegisterSettings(v)
+	}
+	if v, ok := m["time_series_forecasting_settings"].([]interface{}); ok {
+		config.TimeSeriesForecastingSettings = expandTimeSeriesForecastingSettings(v)
+	}
+	if v, ok := m["workspace_settings"].([]interface{}); ok {
+		config.WorkspaceSettings = expandWorkspaceSettings(v)
 	}
 
 	return config
