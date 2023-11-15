@@ -1973,30 +1973,48 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 	})
 }
 
-func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+func TestAccELBV2TargetGroup_ALBAlias_missing(t *testing.T) {
+	t.Parallel()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccTargetGroupConfig_albMissingPort(rName),
-				ExpectError: regexache.MustCompile(`port should be set when target type is`),
-			},
-			{
-				Config:      testAccTargetGroupConfig_albMissingProtocol(rName),
-				ExpectError: regexache.MustCompile(`protocol should be set when target type is`),
-			},
-			{
-				Config:      testAccTargetGroupConfig_albMissingVPC(rName),
-				ExpectError: regexache.MustCompile(`vpc_id should be set when target type is`),
-			},
+	testcases := map[string]struct {
+		config     func(string) string
+		errMessage string
+	}{
+		"Port": {
+			config:     testAccTargetGroupConfig_albMissingPort,
+			errMessage: `Attribute "port" must be specified when "target_type" is "instance".`,
 		},
-	})
+		"Protocol": {
+			config:     testAccTargetGroupConfig_albMissingProtocol,
+			errMessage: `Attribute "protocol" must be specified when "target_type" is "instance".`,
+		},
+		"VPC": {
+			config:     testAccTargetGroupConfig_albMissingVPC,
+			errMessage: `Attribute "vpc_id" must be specified when "target_type" is "instance".`,
+		},
+	}
+
+	for name, tc := range testcases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config:      tc.config(rName),
+						ExpectError: regexache.MustCompile(tc.errMessage),
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
@@ -3273,6 +3291,151 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 	}
 }
 
+func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
+	t.Parallel()
+
+	const resourceName = "aws_lb_target_group.test"
+
+	testcases := map[string]struct {
+		validConfig bool
+	}{
+		elbv2.ProtocolEnumHttp: {
+			validConfig: true,
+		},
+		elbv2.ProtocolEnumHttps: {
+			validConfig: true,
+		},
+		elbv2.ProtocolEnumTcp: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumTls: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumUdp: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+	}
+
+	for _, protocol := range elbv2.ProtocolEnum_Values() {
+		if protocol == elbv2.ProtocolEnumGeneve {
+			continue
+		}
+		protocol := protocol
+
+		t.Run(protocol, func(t *testing.T) {
+			protocolCase, ok := testcases[protocol]
+			if !ok {
+				t.Fatalf("missing case for target protocol %q", protocol)
+			}
+
+			ctx := acctest.Context(t)
+			var targetGroup elbv2.TargetGroup
+
+			step := resource.TestStep{
+				Config: testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
+			}
+			if protocolCase.validConfig {
+				step.Check = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
+				)
+			} else {
+				step.Check = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
+				)
+			}
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					step,
+				},
+			})
+		})
+	}
+}
+
+func TestAccELBV2TargetGroup_Instance_protocolVersion_Migrate(t *testing.T) {
+	t.Parallel()
+
+	const resourceName = "aws_lb_target_group.test"
+
+	testcases := map[string]struct {
+		validConfig bool
+	}{
+		elbv2.ProtocolEnumHttp: {
+			validConfig: true,
+		},
+		elbv2.ProtocolEnumHttps: {
+			validConfig: true,
+		},
+		elbv2.ProtocolEnumTcp: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumTls: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumUdp: {
+			validConfig: false,
+		},
+		elbv2.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+	}
+
+	for _, protocol := range elbv2.ProtocolEnum_Values() {
+		if protocol == elbv2.ProtocolEnumGeneve {
+			continue
+		}
+		protocol := protocol
+
+		t.Run(protocol, func(t *testing.T) {
+			protocolCase, ok := testcases[protocol]
+			if !ok {
+				t.Fatalf("missing case for target protocol %q", protocol)
+			}
+
+			ctx := acctest.Context(t)
+			var targetGroup elbv2.TargetGroup
+
+			var check resource.TestCheckFunc
+			if protocolCase.validConfig {
+				check = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
+				)
+			} else {
+				check = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+				)
+			}
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:     func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
+				Steps: testAccMigrateTest{
+					PreviousVersion: "5.25.0",
+					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
+					Check:           check,
+				}.Steps(),
+			})
+		})
+	}
+}
+
 func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
@@ -3439,6 +3602,52 @@ func TestAccELBV2TargetGroup_Lambda_protocol_Migrate(t *testing.T) {
 	}
 }
 
+func TestAccELBV2TargetGroup_Lambda_protocolVersion(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_Lambda_protocolVersion("HTTP1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Lambda_protocolVersion_Migrate(t *testing.T) {
+	const resourceName = "aws_lb_target_group.test"
+
+	ctx := acctest.Context(t)
+	var targetGroup elbv2.TargetGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
+		Steps: testAccMigrateTest{
+			PreviousVersion: "5.25.0",
+			Config:          testAccTargetGroupConfig_Lambda_protocolVersion("GRPC"),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+				resource.TestCheckResourceAttr(resourceName, "protocol_version", ""),
+			),
+		}.Steps(),
+	})
+}
+
 func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
@@ -3456,7 +3665,7 @@ func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckResourceAttr(resourceName, "port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "port", "0"), // Should be Null
 				),
 			},
 		},
@@ -4469,19 +4678,19 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_stickinessDefault(rName, protocol string) string {
 	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = %[2]q
+  vpc_id      = aws_vpc.test.id
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_lb_target_group" "test" {
-  name_prefix = "tf-"
-  port        = 25
-  protocol    = %[2]q
-  vpc_id      = aws_vpc.test.id
 }
 `, rName, protocol)
 }
@@ -5565,6 +5774,23 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
+func testAccTargetGroupConfig_Instance_protocolVersion(protocol, protocolVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "instance"
+
+  port             = 443
+  protocol         = %[1]q
+  protocol_version = %[2]q
+  vpc_id           = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+`, protocol, protocolVersion)
+}
+
 func testAccTargetGroupConfig_Lambda_basic() string {
 	return `
 resource "aws_lb_target_group" "test" {
@@ -5595,6 +5821,16 @@ resource "aws_lb_target_group" "test" {
   protocol = %[1]q
 }
 `, protocol)
+}
+
+func testAccTargetGroupConfig_Lambda_protocolVersion(protocolVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  target_type = "lambda"
+
+  protocol_version = %[1]q
+}
+`, protocolVersion)
 }
 
 func testAccTargetGroupConfig_Lambda_port(port string) string {

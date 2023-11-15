@@ -44,6 +44,14 @@ func healthCheckProtocolEnumValues() []string {
 	}
 }
 
+func protocolVersionEnumValues() []string {
+	return []string{
+		"GRPC",
+		"HTTP1",
+		"HTTP2",
+	}
+}
+
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")
@@ -62,6 +70,7 @@ func ResourceTargetGroup() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
 			lambdaTargetHealthCheckProtocolCustomizeDiff,
+			nonLambdaValidationCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -232,11 +241,7 @@ func ResourceTargetGroup() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"GRPC",
-					"HTTP1",
-					"HTTP2",
-				}, true),
+				ValidateFunc: validation.StringInSlice(protocolVersionEnumValues(), true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Get("target_type").(string) == elbv2.TargetTypeEnumLambda {
 						return true
@@ -390,7 +395,21 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			path := cty.GetAttrPath("protocol")
 			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
 				"Invalid Attribute Combination",
-				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("protocol_version"); ok {
+			path := cty.GetAttrPath("protocol_version")
+			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
 			))
 		}
 
@@ -398,7 +417,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			path := cty.GetAttrPath("port")
 			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
 				"Invalid Attribute Combination",
-				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
 			))
 		}
 
@@ -406,7 +428,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			path := cty.GetAttrPath("vpc_id")
 			diags = append(diags, errs.NewAttributeWarningDiagnostic(path,
 				"Invalid Attribute Combination",
-				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
 			))
 		}
 
@@ -432,20 +457,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-		if _, ok := d.GetOk("port"); !ok {
-			// TODO: plan-time validate
-			return sdkdiag.AppendErrorf(diags, "port should be set when target type is %s", d.Get("target_type").(string))
-		}
-
-		if _, ok := d.GetOk("protocol"); !ok {
-			// TODO: plan-time validate
-			return sdkdiag.AppendErrorf(diags, "protocol should be set when target type is %s", d.Get("target_type").(string))
-		}
-
-		if _, ok := d.GetOk("vpc_id"); !ok {
-			// TODO: plan-time validate
-			return sdkdiag.AppendErrorf(diags, "vpc_id should be set when target type is %s", d.Get("target_type").(string))
-		}
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
 		input.Protocol = aws.String(d.Get("protocol").(string))
 		switch d.Get("protocol").(string) {
@@ -1295,7 +1306,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 	return []interface{}{m}, nil
 }
 
-func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -1332,7 +1343,7 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 	return nil
 }
 
-func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	if diff.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 		return nil
 	}
@@ -1342,13 +1353,48 @@ func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schem
 		healthCheckProtocol := healthCheck["protocol"].(string)
 
 		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
-			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q",
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
 				"protocol",
 				elbv2.ProtocolEnumTcp,
 				"target_type",
 				elbv2.TargetTypeEnumLambda,
 			)
 		}
+	}
+
+	return nil
+}
+
+func nonLambdaValidationCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	targetType := diff.Get("target_type").(string)
+	if targetType == elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	config := diff.GetRawConfig()
+
+	if v := config.GetAttr("port"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"port",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("protocol"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"protocol",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("vpc_id"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"vpc_id",
+			"target_type",
+			targetType,
+		)
 	}
 
 	return nil
