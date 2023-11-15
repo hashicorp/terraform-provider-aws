@@ -744,6 +744,16 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+// CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
+func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.Contains(value, substr) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected contains %#v, got %#v", name, key, substr, value)
+	})
+}
+
 // CheckResourceAttrHasPrefix ensures the Terraform state value has the specified prefix.
 func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
