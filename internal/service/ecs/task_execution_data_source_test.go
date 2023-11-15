@@ -187,7 +187,7 @@ data "aws_ecs_task_execution" "test" {
 
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
-  client_token 	  = "some_token"
+  client_token    = "some_token"
   desired_count   = 1
   launch_type     = "FARGATE"
 
