@@ -1,0 +1,3 @@
+```release-note:feature
+data/aws_ecs_task_execution: Added optional `client_token`
+```
