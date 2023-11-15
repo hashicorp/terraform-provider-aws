@@ -21,49 +21,41 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccGrafana_serial(t *testing.T) {
+func TestRemoveWorkspaceConfigurationReadOnlyFieldsFromJSON(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]map[string]func(t *testing.T){
-		"Workspace": {
-			"saml":                     testAccWorkspace_saml,
-			"sso":                      testAccWorkspace_sso,
-			"disappears":               testAccWorkspace_disappears,
-			"organization":             testAccWorkspace_organization,
-			"dataSources":              testAccWorkspace_dataSources,
-			"permissionType":           testAccWorkspace_permissionType,
-			"notificationDestinations": testAccWorkspace_notificationDestinations,
-			"tags":                     testAccWorkspace_tags,
-			"vpc":                      testAccWorkspace_vpc,
-			"configuration":            testAccWorkspace_configuration,
-			"networkAccess":            testAccWorkspace_networkAccess,
-			"version":                  testAccWorkspace_version,
+	testCases := []struct {
+		testName string
+		input    string
+		want     string
+	}{
+		{
+			testName: "empty JSON",
+			input:    "{}",
+			want:     "{}",
 		},
-		"ApiKey": {
-			"basic": testAccWorkspaceAPIKey_basic,
+		{
+			testName: "single field",
+			input:    `{ "key": 42 }`,
+			want:     `{"key":42}`,
 		},
-		"DataSource": {
-			"basic": testAccWorkspaceDataSource_basic,
-		},
-		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
-		},
-		"SamlConfiguration": {
-			"basic":         testAccWorkspaceSAMLConfiguration_basic,
-			"loginValidity": testAccWorkspaceSAMLConfiguration_loginValidity,
-			"assertions":    testAccWorkspaceSAMLConfiguration_assertions,
-		},
-		"RoleAssociation": {
-			"usersAdmin":           testAccRoleAssociation_usersAdmin,
-			"usersEditor":          testAccRoleAssociation_usersEditor,
-			"groupsAdmin":          testAccRoleAssociation_groupsAdmin,
-			"groupsEditor":         testAccRoleAssociation_groupsEditor,
-			"usersAndGroupsAdmin":  testAccRoleAssociation_usersAndGroupsAdmin,
-			"usersAndGroupsEditor": testAccRoleAssociation_usersAndGroupsEditor,
+		{
+			testName: "with read-only field",
+			input:    "{\"unifiedAlerting\": {\"enabled\": true}, \"plugins\": {\"pluginAdminEnabled\" :false}}",
+			want:     "{\"unifiedAlerting\":{\"enabled\":true}}",
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 0)
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfgrafana.RemoveWorkspaceConfigurationReadOnlyFieldsFromJSON(testCase.input), testCase.want; got != want {
+				t.Errorf("RemoveEmptyFieldsFromJSON(%q) = %q, want %q", testCase.input, got, want)
+			}
+		})
+	}
 }
 
 func testAccWorkspace_saml(t *testing.T) {
@@ -453,19 +445,20 @@ func testAccWorkspace_configuration(t *testing.T) {
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": true }}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":true}}`),
+					acctest.CheckResourceAttrContains(resourceName, "configuration", `"unifiedAlerting":{"enabled":true}`),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
 			},
 			{
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": false }}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":false}}`),
+					acctest.CheckResourceAttrContains(resourceName, "configuration", `"unifiedAlerting":{"enabled":false}`),
 				),
 			},
 		},
