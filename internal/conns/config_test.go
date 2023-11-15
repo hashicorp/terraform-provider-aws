@@ -439,6 +439,7 @@ func TestProxyConfig(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	}
 
 	for name, tc := range cases { //nolint:paralleltest // uses t.Setenv
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 
