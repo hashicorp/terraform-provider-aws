@@ -318,7 +318,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.
 * `https_proxy` - (Optional) URL of a proxy to use for HTTPS requests when accessing the AWS API.
   Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.
-  To use an HTTP proxy **without** an HTTPS proxy, set `https_proxy` to an emtpy string (`""`).
+  To use an HTTP proxy **without** an HTTPS proxy, set `https_proxy` to an empty string (`""`).
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
