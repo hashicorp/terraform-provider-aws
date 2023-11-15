@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	// "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -304,7 +304,6 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 	})
 }
 
-/*
 // https://github.com/hashicorp/terraform-provider-aws/issues/34002.
 func TestAccElastiCacheUser_oobModify(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -332,6 +331,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserUpdateOOB(ctx, &user),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			// Update tags.
 			{
@@ -345,7 +345,6 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 		},
 	})
 }
-*/
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -398,7 +397,6 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 	}
 }
 
-/*
 func testAccCheckUserUpdateOOB(ctx context.Context, v *elasticache.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
@@ -411,7 +409,6 @@ func testAccCheckUserUpdateOOB(ctx context.Context, v *elasticache.User) resourc
 		return err
 	}
 }
-*/
 
 func testAccUserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
