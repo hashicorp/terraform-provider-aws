@@ -3347,7 +3347,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
-					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				)
 			}
 
@@ -3364,7 +3364,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 	}
 }
 
-func TestAccELBV2TargetGroup_Instance_protocolVersion_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 	t.Parallel()
 
 	const resourceName = "aws_lb_target_group.test"
@@ -3429,7 +3429,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_Migrate(t *testing.T) {
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
-					Check:           check,
+					PreCheck:        check,
+					PostCheck:       check,
 				}.Steps(),
 			})
 		})
@@ -3454,10 +3455,10 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "port", "0"),            // Should be Null
-					resource.TestCheckResourceAttr(resourceName, "protocol", ""),         // Should be Null
-					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),           // Should be Null
+					resource.TestCheckNoResourceAttr(resourceName, "port"),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol"),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+					resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
 				),
@@ -3466,7 +3467,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_Lambda_defaults_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	ctx := acctest.Context(t)
@@ -3479,7 +3480,18 @@ func TestAccELBV2TargetGroup_Lambda_defaults_Migrate(t *testing.T) {
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
 			Config:          testAccTargetGroupConfig_Lambda_basic(),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			PreCheck: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+				resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+				resource.TestCheckNoResourceAttr(resourceName, "port"),
+				resource.TestCheckNoResourceAttr(resourceName, "protocol"),
+				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+				resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+			),
+			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
 				resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
@@ -3511,14 +3523,14 @@ func TestAccELBV2TargetGroup_Lambda_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBV2TargetGroup_Lambda_vpc_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	ctx := acctest.Context(t)
@@ -3531,10 +3543,15 @@ func TestAccELBV2TargetGroup_Lambda_vpc_Migrate(t *testing.T) {
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
 			Config:          testAccTargetGroupConfig_Lambda_vpc(),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
 				resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+			),
+			PostCheck: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+				resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
 			),
 		}.Steps(),
 	})
@@ -3563,7 +3580,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-							resource.TestCheckResourceAttr(resourceName, "protocol", ""),
+							resource.TestCheckNoResourceAttr(resourceName, "protocol"),
 						),
 					},
 				},
@@ -3572,7 +3589,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol(t *testing.T) {
 	}
 }
 
-func TestAccELBV2TargetGroup_Lambda_protocol_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	t.Parallel()
@@ -3591,10 +3608,15 @@ func TestAccELBV2TargetGroup_Lambda_protocol_Migrate(t *testing.T) {
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
 					Config:          testAccTargetGroupConfig_Lambda_protocol(protocol),
-					Check: resource.ComposeAggregateTestCheckFunc(
+					PreCheck: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 						resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
 						resource.TestCheckResourceAttr(resourceName, "protocol", protocol),
+					),
+					PostCheck: resource.ComposeAggregateTestCheckFunc(
+						testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+						resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+						resource.TestCheckNoResourceAttr(resourceName, "protocol"),
 					),
 				}.Steps(),
 			})
@@ -3619,14 +3641,14 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBV2TargetGroup_Lambda_protocolVersion_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	ctx := acctest.Context(t)
@@ -3639,10 +3661,15 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_Migrate(t *testing.T) {
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
 			Config:          testAccTargetGroupConfig_Lambda_protocolVersion("GRPC"),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-				resource.TestCheckResourceAttr(resourceName, "protocol_version", ""),
+				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+			),
+			PostCheck: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 			),
 		}.Steps(),
 	})
@@ -3665,14 +3692,14 @@ func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckResourceAttr(resourceName, "port", "0"), // Should be Null
+					resource.TestCheckNoResourceAttr(resourceName, "port"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBV2TargetGroup_Lambda_port_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	ctx := acctest.Context(t)
@@ -3685,10 +3712,15 @@ func TestAccELBV2TargetGroup_Lambda_port_Migrate(t *testing.T) {
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
 			Config:          testAccTargetGroupConfig_Lambda_port("443"),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
 				resource.TestCheckResourceAttr(resourceName, "port", "443"),
+			),
+			PostCheck: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
+				resource.TestCheckNoResourceAttr(resourceName, "port"),
 			),
 		}.Steps(),
 	})
@@ -3726,7 +3758,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	ctx := acctest.Context(t)
@@ -3739,7 +3771,20 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_Migrate(t *testing.T) {
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
 			Config:          testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			PreCheck: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.port", ""),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+			),
+			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
@@ -3816,7 +3861,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 	}
 }
 
-func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_Migrate(t *testing.T) {
+func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T) {
 	const resourceName = "aws_lb_target_group.test"
 
 	t.Parallel()
@@ -3990,8 +4035,10 @@ type testAccMigrateTest struct {
 	// Config is the configuration to be deployed with the previous version and checked with the updated version
 	Config string
 
-	// Check is a check function to validate the values prior to migration
-	Check resource.TestCheckFunc
+	// PreCheck is a check function to validate the values prior to migration
+	PreCheck resource.TestCheckFunc
+
+	PostCheck resource.TestCheckFunc
 }
 
 func (t testAccMigrateTest) Steps() []resource.TestStep {
@@ -4004,12 +4051,13 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 				},
 			},
 			Config: t.Config,
-			Check:  t.Check,
+			Check:  t.PreCheck,
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Config:                   t.Config,
 			PlanOnly:                 true,
+			Check:                    t.PostCheck,
 		},
 	}
 }

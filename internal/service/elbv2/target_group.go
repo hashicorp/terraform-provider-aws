@@ -66,6 +66,15 @@ func ResourceTargetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceTargetGroupV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: targetGroupUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
@@ -1140,10 +1149,18 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 		return fmt.Errorf("setting health_check: %w", err)
 	}
 
-	d.Set("vpc_id", targetGroup.VpcId)
-	d.Set("port", targetGroup.Port)
-	d.Set("protocol", targetGroup.Protocol)
-	d.Set("protocol_version", targetGroup.ProtocolVersion)
+	if targetGroup.Port != nil {
+		d.Set("port", targetGroup.Port)
+	}
+	if _, ok := d.GetOk("protocol"); targetGroup.Protocol != nil || ok {
+		d.Set("protocol", targetGroup.Protocol)
+	}
+	if _, ok := d.GetOk("protocol_version"); targetGroup.ProtocolVersion != nil || ok {
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
+	if _, ok := d.GetOk("vpc_id"); targetGroup.VpcId != nil || ok {
+		d.Set("vpc_id", targetGroup.VpcId)
+	}
 
 	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
