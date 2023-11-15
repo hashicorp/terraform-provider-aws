@@ -57,46 +57,46 @@ This data source exports the following attributes in addition to the arguments a
 ### `rule`
 
 * `inheritedValue` - Configuration block for the value the line item is categorized as if the line item contains the matched dimension. See below.
-* `rule` - Configuration block for the `expression` object used to categorize costs. See below.
-* `type` - You can define the CostCategoryRule rule type as either `regular` or `inheritedValue`.
+* `rule` - Configuration block for the `Expression` object used to categorize costs. See below.
+* `type` - You can define the CostCategoryRule rule type as either `REGULAR` or `INHERITED_VALUE`.
 * `value` - Default value for the cost category.
 
 ### `inheritedValue`
 
 * `dimensionKey` - Key to extract cost category values.
-* `dimensionName` - Name of the dimension that's used to group costs. If you specify `linkedAccountName`, the cost category value is based on account name. If you specify `tag`, the cost category value will be based on the value of the specified tag key. Valid values are `linkedAccountName`, `tag`
+* `dimensionName` - Name of the dimension that's used to group costs. If you specify `LINKED_ACCOUNT_NAME`, the cost category value is based on account name. If you specify `TAG`, the cost category value will be based on the value of the specified tag key. Valid values are `LINKED_ACCOUNT_NAME`, `TAG`
 
 ### `rule`
 
-* `and` - Return results that match both `dimension` objects.
-* `costCategory` - Configuration block for the filter that's based on `costCategory` values. See below.
-* `dimension` - Configuration block for the specific `dimension` to use for `expression`. See below.
-* `not` - Return results that do not match the `dimension` object.
-* `or` - Return results that match either `dimension` object.
-* `tags` - Configuration block for the specific `tag` to use for `expression`. See below.
+* `and` - Return results that match both `Dimension` objects.
+* `costCategory` - Configuration block for the filter that's based on `CostCategory` values. See below.
+* `dimension` - Configuration block for the specific `Dimension` to use for `Expression`. See below.
+* `not` - Return results that do not match the `Dimension` object.
+* `or` - Return results that match either `Dimension` object.
+* `tags` - Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `costCategory`
 
 * `key` - Unique name of the Cost Category.
-* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - Specific value of the Cost Category.
 
 ### `dimension`
 
 * `key` - Unique name of the Cost Category.
-* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - Specific value of the Cost Category.
 
 ### `tags`
 
 * `key` - Key for the tag.
-* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - Specific value of the Cost Category.
 
 ### `splitChargeRule`
 
-* `method` - Method that's used to define how to split your source costs across your targets. Valid values are `fixed`, `proportional`, `even`
-* `parameter` - Configuration block for the parameters for a split charge method. This is only required for the `fixed` method. See below.
+* `method` - Method that's used to define how to split your source costs across your targets. Valid values are `FIXED`, `PROPORTIONAL`, `EVEN`
+* `parameter` - Configuration block for the parameters for a split charge method. This is only required for the `FIXED` method. See below.
 * `source` - Cost Category value that you want to split.
 * `targets` - Cost Category values that you want to split costs across. These values can't be used as a source in other split charge rules.
 
@@ -105,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Parameter type.
 * `values` - Parameter values.
 
-<!-- cache-key: cdktf-0.18.0 input-4cb2fbc95adf79676205ba698e97a322301998e777b3e00de5567e2938e38ac6 -->
+<!-- cache-key: cdktf-0.19.0 input-4cb2fbc95adf79676205ba698e97a322301998e777b3e00de5567e2938e38ac6 -->

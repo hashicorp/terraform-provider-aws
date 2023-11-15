@@ -114,7 +114,7 @@ class MyConvertedCode extends TerraformStack {
 Previously, the provider preferred credentials in the following order:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g., `awsAccessKeyId` or `awsProfile`)
+- Environment variables (e.g., `awsAccessKeyId` or `AWS_PROFILE`)
 - Shared credentials file (e.g., `~/Aws/credentials`)
 - EC2 Instance Metadata Service
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS)
@@ -122,8 +122,8 @@ Previously, the provider preferred credentials in the following order:
 The provider now prefers the following credential ordering:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g., `awsAccessKeyId` or `awsProfile`)
-- Shared credentials and/or configuration file (e.g., `~/Aws/credentials` and `~/Aws/config`)
+- Environment variables (e.g., `awsAccessKeyId` or `AWS_PROFILE`)
+- Shared credentials and/or configuration file (e.g., `~/Aws/credentials` and `~/.aws/config`)
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS, EC2 Instance Metadata Service)
 
 This means workarounds of disabling the EC2 Instance Metadata Service handling to enable CodeBuild/ECS/EKS credentials or to enable other credential methods such as `credentialProcess` in the AWS shared configuration are no longer necessary.
@@ -2542,4 +2542,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fedd1760b9754507e4a21a87fc167b34be2073f23cf84a5f4c3f209428295c89 -->
+<!-- cache-key: cdktf-0.19.0 input-fedd1760b9754507e4a21a87fc167b34be2073f23cf84a5f4c3f209428295c89 -->

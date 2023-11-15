@@ -48,17 +48,17 @@ This resource supports the following arguments:
 
 * `content` - (Required) The content of the custom vocabulary in plain-text format with a table of values. Each row in the table represents a word or a phrase, described with Phrase, IPA, SoundsLike, and DisplayAs fields. Separate the fields with TAB characters. For more information, see [Create a custom vocabulary using a table](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary.html#create-vocabulary-table). Minimum length of `1`. Maximum length of `60000`.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `languageCode` - (Required) The language code of the vocabulary entries. For a list of languages and their corresponding language codes, see [What is Amazon Transcribe?](https://docs.aws.amazon.com/transcribe/latest/dg/transcribe-whatis.html). Valid Values are `arAe`, `deCh`, `deDe`, `enAb`, `enAu`, `enGb`, `enIe`, `enIn`, `enUs`, `enWl`, `esEs`, `esUs`, `frCa`, `frFr`, `hiIn`, `itIt`, `jaJp`, `koKr`, `ptBr`, `ptPt`, `zhCn`.
+* `languageCode` - (Required) The language code of the vocabulary entries. For a list of languages and their corresponding language codes, see [What is Amazon Transcribe?](https://docs.aws.amazon.com/transcribe/latest/dg/transcribe-whatis.html). Valid Values are `ar-AE`, `de-CH`, `de-DE`, `en-AB`, `en-AU`, `en-GB`, `en-IE`, `en-IN`, `en-US`, `en-WL`, `es-ES`, `es-US`, `fr-CA`, `fr-FR`, `hi-IN`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`, `pt-PT`, `zh-CN`.
 * `name` - (Required) A unique name of the custom vocabulary. Must not be more than 140 characters.
 * `tags` - (Optional) Tags to apply to the vocabulary. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `100M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `100m`)
 
 ## Attribute Reference
 
@@ -69,8 +69,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the vocabulary
 separated by a colon (`:`).
 * `lastModifiedTime` - The timestamp when the custom vocabulary was last modified.
-* `state` - The current state of the custom vocabulary. Valid values are `creationInProgress`, `active`, `creationFailed`, `deleteInProgress`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `state` - The current state of the custom vocabulary. Valid values are `CREATION_IN_PROGRESS`, `ACTIVE`, `CREATION_FAILED`, `DELETE_IN_PROGRESS`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vocabularyId` - The identifier of the custom vocabulary.
 
 ## Import
@@ -95,4 +95,4 @@ Using `terraform import`, import Amazon Connect Vocabularies using the `instance
 % terraform import aws_connect_vocabulary.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3955fbdc4f62d37293c6c592a646970e8139f7fe6c62b5ff6553de1bddf5eb38 -->
+<!-- cache-key: cdktf-0.19.0 input-3955fbdc4f62d37293c6c592a646970e8139f7fe6c62b5ff6553de1bddf5eb38 -->

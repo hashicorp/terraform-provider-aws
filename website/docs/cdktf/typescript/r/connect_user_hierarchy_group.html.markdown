@@ -85,7 +85,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the user hierarchy group. Must not be more than 100 characters.
 * `parentGroupId` - (Optional) The identifier for the parent hierarchy group. The user hierarchy is created at level one if the parent group ID is null.
 * `tags` - (Optional) Tags to apply to the hierarchy group. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -93,11 +93,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the hierarchy group.
 * `hierarchyGroupId` - The identifier for the hierarchy group.
-* `hierarchyPath` - A block that contains information about the levels in the hierarchy group. The `hierarchyPath` block is documented below.
+* `hierarchyPath` - A block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group
 separated by a colon (`:`).
 * `levelId` - The identifier of the level in the hierarchy group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `hierarchyPath` block supports the following attributes:
 
@@ -135,4 +135,4 @@ Using `terraform import`, import Amazon Connect User Hierarchy Groups using the 
 % terraform import aws_connect_user_hierarchy_group.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-88263c0c4b64231cf0ae6b158e3728e1a26added6f1a3b85f4dc8db7b158609a -->
+<!-- cache-key: cdktf-0.19.0 input-88263c0c4b64231cf0ae6b158e3728e1a26added6f1a3b85f4dc8db7b158609a -->

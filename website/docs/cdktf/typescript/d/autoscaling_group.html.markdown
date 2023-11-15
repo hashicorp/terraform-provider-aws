@@ -47,7 +47,7 @@ interpolation.
 * `availabilityZones` - One or more Availability Zones for the group.
 * `defaultCoolDown` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desiredCapacity` - Desired size of the group.
-* `desiredCapacityType` - The unit of measurement for the value returned for `desiredCapacity`.
+* `desiredCapacityType` - The unit of measurement for the value returned for `desired_capacity`.
 * `enabledMetrics` - List of metrics enabled for collection.
 * `healthCheckGracePeriod` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `healthCheckType` - Service to use for the health checks. The valid values are EC2 and ELB.
@@ -62,64 +62,64 @@ interpolation.
 * `maxSize` - Maximum size of the group.
 * `minSize` - Minimum size of the group.
 * `mixedInstancesPolicy` - List of mixed instances policy objects for the group.
-    * `instancesDistribution` - List of instances distribution objects.
-        * `onDemandAllocationStrategy` - Strategy used when launching on-demand instances.
-        * `onDemandBaseCapacity` -  Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances.
-        * `spotAllocationStrategy` - Strategy used when launching Spot instances.
-        * `spotInstancePools` - Number of Spot pools per availability zone to allocate capacity.
-        * `spotMaxPrice` - Maximum price per unit hour that the user is willing to pay for the Spot instances.
-    * `launchTemplate` - List of launch templates along with the overrides.
-        * `launchTemplateSpecification` - List of launch template specification objects.
-            * `launchTemplateId` - ID of the launch template.
-            * `launchTemplateName` - Name of the launch template.
+    * `instances_distribution` - List of instances distribution objects.
+        * `on_demand_allocation_strategy` - Strategy used when launching on-demand instances.
+        * `on_demand_base_capacity` -  Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances.
+        * `spot_allocation_strategy` - Strategy used when launching Spot instances.
+        * `spot_instance_pools` - Number of Spot pools per availability zone to allocate capacity.
+        * `spot_max_price` - Maximum price per unit hour that the user is willing to pay for the Spot instances.
+    * `launch_template` - List of launch templates along with the overrides.
+        * `launch_template_specification` - List of launch template specification objects.
+            * `launch_template_id` - ID of the launch template.
+            * `launch_template_name` - Name of the launch template.
             * `version` - Template version.
         * `override` - List of properties overriding the same properties in the launch template.
-            * `instanceRequirements` - List of instance requirements objects.
+            * `instance_requirements` - List of instance requirements objects.
                 * `accelerator_count - List of objects describing the minimum and maximum number of accelerators for an instance type.
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `acceleratorManufacturers` - List of accelerator manufacturer names.
-                * `acceleratorNames` - List of accelerator names.
-                * `acceleratorTotalMemoryMib` - List of objects describing the minimum and maximum total memory of the accelerators.
-                * `acceleratorTypes` - List of accelerator types.
-                * `allowedInstanceTypes` - List of instance types to apply the specified attributes against.
-                * `bareMetal` - Indicates whether bare metal instances are included, excluded, or required.
-                * `baselineEbsBandwidthMbps` - List of objects describing the minimum and maximum baseline EBS bandwidth (Mbps).
+                * `accelerator_manufacturers` - List of accelerator manufacturer names.
+                * `accelerator_names` - List of accelerator names.
+                * `accelerator_total_memory_mib` - List of objects describing the minimum and maximum total memory of the accelerators.
+                * `accelerator_types` - List of accelerator types.
+                * `allowed_instance_types` - List of instance types to apply the specified attributes against.
+                * `bare_metal` - Indicates whether bare metal instances are included, excluded, or required.
+                * `baseline_ebs_bandwidth_mbps` - List of objects describing the minimum and maximum baseline EBS bandwidth (Mbps).
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `burstablePerformance` - Indicates whether burstable performance instance types are included, excluded, or required.
-                * `cpuManufacturers` - List of CPU manufacturer names.
-                * `excludedInstanceTypes` - List of excluded instance types.
-                * `instanceGenerations` - List of instance generation names.
-                * `localStorage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
-                * `localStorageTypes` - List of local storage type names.
-                * `memoryGibPerVcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
+                * `burstable_performance` - Indicates whether burstable performance instance types are included, excluded, or required.
+                * `cpu_manufacturers` - List of CPU manufacturer names.
+                * `excluded_instance_types` - List of excluded instance types.
+                * `instance_generations` - List of instance generation names.
+                * `local_storage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
+                * `local_storage_types` - List of local storage type names.
+                * `memory_gib_per_vcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `memoryMib` - List of objects describing the minimum and maximum amount of memory (MiB).
+                * `memory_mib` - List of objects describing the minimum and maximum amount of memory (MiB).
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `networkBandwidthGbps` - List of objects describing the minimum and maximum amount of network bandwidth (Gbps).
+                * `network_bandwidth_gbps` - List of objects describing the minimum and maximum amount of network bandwidth (Gbps).
                     * `min` - Minimum.
                     * `max`- Maximum.
-                * `networkInterfaceCount` - List of objects describing the minimum and maximum amount of network interfaces.
+                * `network_interface_count` - List of objects describing the minimum and maximum amount of network interfaces.
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `onDemandMaxPricePercentageOverLowestPrice` - Price protection threshold for On-Demand Instances.
-                * `requireHibernateSupport` - Indicates whether instance types must support On-Demand Instance Hibernation.
-                * `spotMaxPricePercentageOverLowestPrice` - Price protection threshold for Spot Instances.
-                * `totalLocalStorageGb` - List of objects describing the minimum and maximum total storage (GB).
+                * `on_demand_max_price_percentage_over_lowest_price` - Price protection threshold for On-Demand Instances.
+                * `require_hibernate_support` - Indicates whether instance types must support On-Demand Instance Hibernation.
+                * `spot_max_price_percentage_over_lowest_price` - Price protection threshold for Spot Instances.
+                * `total_local_storage_gb` - List of objects describing the minimum and maximum total storage (GB).
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `vcpuCount` - List of objects describing the minimum and maximum number of vCPUs.
+                * `vcpu_count` - List of objects describing the minimum and maximum number of vCPUs.
                     * `min` - Minimum.
                     * `max` - Maximum.
-            * `instanceType` - Overriding instance type.
-            * `launchTemplateSpecification` - List of overriding launch template specification objects.
-                * `launchTemplateId` - ID of the launch template.
-                * `launchTemplateName` - Name of the launch template.
+            * `instance_type` - Overriding instance type.
+            * `launch_template_specification` - List of overriding launch template specification objects.
+                * `launch_template_id` - ID of the launch template.
+                * `launch_template_name` - Name of the launch template.
                 * `version` - Template version.
-            * `weightedCapacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
+            * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
 * `name` - Name of the Auto Scaling Group.
 * `placementGroup` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
 * `predictedCapacity` - Predicted capacity of the group.
@@ -129,7 +129,7 @@ interpolation.
 * `tag` - List of tags for the group.
     * `key` - Key.
     * `value` - Value.
-    * `propagateAtLaunch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
+    * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `targetGroupArns` - ARNs of the target groups for your load balancer.
 * `terminationPolicies` - The termination policies for the group.
 * `trafficSource` -Traffic sources.
@@ -137,11 +137,11 @@ interpolation.
     * `type` - Traffic source type.
 * `vpcZoneIdentifier` - VPC ID for the group.
 * `warmPool` - List of warm pool configuration objects.
-    * `instanceReusePolicy` - List of instance reuse policy objects.
-        * `reuseOnScaleIn` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
-    * `maxGroupPreparedPolicy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
-    * `minSize` - Minimum number of instances to maintain in the warm pool.
-    * `poolState` - Instance state to transition to after the lifecycle actions are complete.
+    * `instance_reuse_policy` - List of instance reuse policy objects.
+        * `reuse_on_scale_in` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
+    * `max_group_prepared_policy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+    * `min_size` - Minimum number of instances to maintain in the warm pool.
+    * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warmPoolSize` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.18.0 input-99dec3ec98ed7de1189a2c55151981d1b50b501480be637bbbe4a2b5d7102172 -->
+<!-- cache-key: cdktf-0.19.0 input-99dec3ec98ed7de1189a2c55151981d1b50b501480be637bbbe4a2b5d7102172 -->

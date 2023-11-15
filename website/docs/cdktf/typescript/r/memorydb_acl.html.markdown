@@ -41,10 +41,10 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
-* `name` - (Optional, Forces new resource) Name of the ACL. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional, Forces new resource) Name of the ACL. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `userNames` - (Optional) Set of MemoryDB user names to be included in this ACL.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Same as `name`.
 * `arn` - The ARN of the ACL.
 * `minimumEngineVersion` - The minimum engine version supported by the ACL.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import an ACL using the `name`. For example:
 % terraform import aws_memorydb_acl.example my-acl
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c0b11cab2ffda49ddaeadbf6cc9362150372c08b03e6b84d1bd545de5d3072f1 -->
+<!-- cache-key: cdktf-0.19.0 input-c0b11cab2ffda49ddaeadbf6cc9362150372c08b03e6b84d1bd545de5d3072f1 -->

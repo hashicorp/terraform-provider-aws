@@ -65,4 +65,4 @@ Using `terraform import`, import Audit Manager Organization Admin Account Regist
 % terraform import aws_auditmanager_organization_admin_account_registration.example 012345678901 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-73a8d01ece65d6322ccb932f7e3936fdefadced313d0732bd4dd6da49b4ca658 -->
+<!-- cache-key: cdktf-0.19.0 input-73a8d01ece65d6322ccb932f7e3936fdefadced313d0732bd4dd6da49b4ca658 -->

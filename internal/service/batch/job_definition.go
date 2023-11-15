@@ -68,6 +68,20 @@ func ResourceJobDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
+			"node_properties": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					equal, _ := EquivalentNodePropertiesJSON(old, new)
+					return equal
+				},
+				ValidateFunc: validJobNodeProperties,
+			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -178,7 +192,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer}, true),
+				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer, batch.JobDefinitionTypeMultinode}, true),
 			},
 		},
 
@@ -191,30 +205,48 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
+	jobDefinitionType := d.Get("type").(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
 		Tags:              getTagsIn(ctx),
-		Type:              aws.String(d.Get("type").(string)),
+		Type:              aws.String(jobDefinitionType),
 	}
 
-	if v, ok := d.GetOk("container_properties"); ok {
-		props, err := expandJobContainerProperties(v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+	if jobDefinitionType == batch.JobDefinitionTypeContainer {
+		if v, ok := d.GetOk("node_properties"); ok && v != nil {
+			return sdkdiag.AppendErrorf(diags, "No `node_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
 
-		for _, env := range props.Environment {
-			if aws.StringValue(env.Value) == "" {
-				diags = append(diags, errs.NewAttributeWarningDiagnostic(
-					cty.GetAttrPath("container_properties"),
-					"Ignoring environment variable",
-					fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
-				)
+		if v, ok := d.GetOk("container_properties"); ok {
+			props, err := expandJobContainerProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+			}
+
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
+				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
+				input.ContainerProperties = props
 			}
 		}
+	}
 
-		input.ContainerProperties = props
+	if jobDefinitionType == batch.JobDefinitionTypeMultinode {
+		if v, ok := d.GetOk("container_properties"); ok && v != nil {
+			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
+		}
+
+		if v, ok := d.GetOk("node_properties"); ok {
+			props, err := expandJobNodeProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+			}
+
+			for _, node := range props.NodeRangeProperties {
+				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
+			}
+			input.NodeProperties = props
+		}
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
@@ -270,6 +302,16 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if err := d.Set("container_properties", containerProperties); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting container_properties: %s", err)
+	}
+
+	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "converting Batch Node Properties to JSON: %s", err)
+	}
+
+	if err := d.Set("node_properties", nodeProperties); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
 	}
 
 	d.Set("name", jobDefinition.JobDefinitionName)
@@ -390,6 +432,37 @@ func expandJobContainerProperties(rawProps string) (*batch.ContainerProperties, 
 // Convert batch.ContainerProperties object into its JSON representation
 func flattenContainerProperties(containerProperties *batch.ContainerProperties) (string, error) {
 	b, err := jsonutil.BuildJSON(containerProperties)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
+func validJobNodeProperties(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	_, err := expandJobNodeProperties(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+	}
+	return
+}
+
+func expandJobNodeProperties(rawProps string) (*batch.NodeProperties, error) {
+	var props *batch.NodeProperties
+
+	err := json.Unmarshal([]byte(rawProps), &props)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	return props, nil
+}
+
+// Convert batch.NodeProperties object into its JSON representation
+func flattenNodeProperties(nodeProperties *batch.NodeProperties) (string, error) {
+	b, err := jsonutil.BuildJSON(nodeProperties)
 
 	if err != nil {
 		return "", err
@@ -565,4 +638,16 @@ func flattenJobTimeout(apiObject *batch.JobTimeout) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func removeEmptyEnvironmentVariables(diags *diag.Diagnostics, environment []*batch.KeyValuePair, attributePath cty.Path) {
+	for _, env := range environment {
+		if aws.StringValue(env.Value) == "" {
+			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(
+				attributePath,
+				"Ignoring environment variable",
+				fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
+			)
+		}
+	}
 }

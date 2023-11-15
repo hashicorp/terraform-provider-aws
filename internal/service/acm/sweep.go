@@ -32,6 +32,7 @@ func RegisterSweepers() {
 			"aws_elb",
 			"aws_iam_server_certificate",
 			"aws_iam_signing_certificate",
+			"aws_iot_domain_configuration",
 			"aws_lb",
 			"aws_lb_listener",
 		},

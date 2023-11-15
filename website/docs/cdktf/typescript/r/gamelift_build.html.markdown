@@ -45,10 +45,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the build
-* `operatingSystem` - (Required) Operating system that the game server binaries are built to run onE.g., `windows2012`, `amazonLinux` or `amazonLinux2`.
+* `operatingSystem` - (Required) Operating system that the game server binaries are built to run onE.g., `WINDOWS_2012`, `AMAZON_LINUX` or `AMAZON_LINUX_2`.
 * `storageLocation` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - GameLift Build ID.
 * `arn` - GameLift Build ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import GameLift Builds using the ID. For example:
 % terraform import aws_gamelift_build.example <build-id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c2f0faa65301c95ac0436ad1af88ccbf7979ead6e43e9ac51b389783a62ddcfb -->
+<!-- cache-key: cdktf-0.19.0 input-c2f0faa65301c95ac0436ad1af88ccbf7979ead6e43e9ac51b389783a62ddcfb -->

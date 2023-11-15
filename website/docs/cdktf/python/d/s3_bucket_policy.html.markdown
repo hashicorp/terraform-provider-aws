@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `policy` - IAM bucket policy.
 
-<!-- cache-key: cdktf-0.18.0 input-954a8fd4189d48cbd6438ea0a4f4717a1e6f8116e28864fc0a7752ae9c79f598 -->
+<!-- cache-key: cdktf-0.19.0 input-954a8fd4189d48cbd6438ea0a4f4717a1e6f8116e28864fc0a7752ae9c79f598 -->

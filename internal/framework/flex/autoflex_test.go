@@ -65,6 +65,26 @@ type TestFlexTF07 struct {
 	Field4 fwtypes.SetNestedObjectValueOf[TestFlexTF02]  `tfsdk:"field4"`
 }
 
+// TestFlexTF08 testing for idiomatic singular on TF side but plural on AWS side
+type TestFlexTF08 struct {
+	Field fwtypes.ListNestedObjectValueOf[TestFlexTF01] `tfsdk:"field"`
+}
+
+type TestFlexTF09 struct {
+	City      types.List `tfsdk:"city"`
+	Coach     types.List `tfsdk:"coach"`
+	Tomato    types.List `tfsdk:"tomato"`
+	Vertex    types.List `tfsdk:"vertex"`
+	Criterion types.List `tfsdk:"criterion"`
+	Datum     types.List `tfsdk:"datum"`
+	Hive      types.List `tfsdk:"hive"`
+}
+
+// TestFlexTF10 testing for fields that only differ by capitalization
+type TestFlexTF10 struct {
+	FieldURL types.String `tfsdk:"field_url"`
+}
+
 type TestFlexAWS01 struct {
 	Field1 string
 }
@@ -118,6 +138,24 @@ type TestFlexAWS09 struct {
 	Field2 *TestFlexAWS06
 	Field3 map[string]*string
 	Field4 []TestFlexAWS03
+}
+
+type TestFlexAWS10 struct {
+	Fields []TestFlexAWS01
+}
+
+type TestFlexAWS11 struct {
+	Cities   []*string
+	Coaches  []*string
+	Tomatoes []*string
+	Vertices []*string
+	Criteria []*string
+	Data     []*string
+	Hives    []*string
+}
+
+type TestFlexAWS12 struct {
+	FieldUrl *string
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -394,6 +432,92 @@ func TestGenericExpand(t *testing.T) {
 				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
 				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
 				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
+			},
+		},
+		{
+			TestName: "plural ordinary field names",
+			Source: &TestFlexTF08{
+				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+					Field1: types.StringValue("a"),
+				}),
+			},
+			Target: &TestFlexAWS10{},
+			WantTarget: &TestFlexAWS10{
+				Fields: []TestFlexAWS01{{Field1: "a"}},
+			},
+		},
+		{
+			TestName: "plural field names",
+			Source: &TestFlexTF09{
+				City: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("paris"),
+					types.StringValue("london"),
+				}),
+				Coach: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("guardiola"),
+					types.StringValue("mourinho"),
+				}),
+				Tomato: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("brandywine"),
+					types.StringValue("roma"),
+				}),
+				Vertex: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("ab"),
+					types.StringValue("bc"),
+				}),
+				Criterion: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("votes"),
+					types.StringValue("editors"),
+				}),
+				Datum: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
+					types.StringValue("0f10cb10-2076-5254-bd21-d3f62fe66303"),
+				}),
+				Hive: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("Cegieme"),
+					types.StringValue("Fahumvid"),
+				}),
+			},
+			Target: &TestFlexAWS11{},
+			WantTarget: &TestFlexAWS11{
+				Cities: []*string{
+					aws.String("paris"),
+					aws.String("london"),
+				},
+				Coaches: []*string{
+					aws.String("guardiola"),
+					aws.String("mourinho"),
+				},
+				Tomatoes: []*string{
+					aws.String("brandywine"),
+					aws.String("roma"),
+				},
+				Vertices: []*string{
+					aws.String("ab"),
+					aws.String("bc"),
+				},
+				Criteria: []*string{
+					aws.String("votes"),
+					aws.String("editors"),
+				},
+				Data: []*string{
+					aws.String("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
+					aws.String("0f10cb10-2076-5254-bd21-d3f62fe66303"),
+				},
+				Hives: []*string{
+					aws.String("Cegieme"),
+					aws.String("Fahumvid"),
+				},
+			},
+		},
+		{
+			TestName: "capitalization field names",
+			Source: &TestFlexTF10{
+				FieldURL: types.StringValue("h"),
+			},
+			Target: &TestFlexAWS12{},
+			WantTarget: &TestFlexAWS12{
+				FieldUrl: aws.String("h"),
 			},
 		},
 	}
@@ -751,6 +875,92 @@ func TestGenericFlatten(t *testing.T) {
 					{Field1: types.Int64Value(2000)},
 					{Field1: types.Int64Value(30000)},
 				}),
+			},
+		},
+		{
+			TestName: "plural ordinary field names",
+			Source: &TestFlexAWS10{
+				Fields: []TestFlexAWS01{{Field1: "a"}},
+			},
+			Target: &TestFlexTF08{},
+			WantTarget: &TestFlexTF08{
+				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+					Field1: types.StringValue("a"),
+				}),
+			},
+		},
+		{
+			TestName: "plural field names",
+			Source: &TestFlexAWS11{
+				Cities: []*string{
+					aws.String("paris"),
+					aws.String("london"),
+				},
+				Coaches: []*string{
+					aws.String("guardiola"),
+					aws.String("mourinho"),
+				},
+				Tomatoes: []*string{
+					aws.String("brandywine"),
+					aws.String("roma"),
+				},
+				Vertices: []*string{
+					aws.String("ab"),
+					aws.String("bc"),
+				},
+				Criteria: []*string{
+					aws.String("votes"),
+					aws.String("editors"),
+				},
+				Data: []*string{
+					aws.String("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
+					aws.String("0f10cb10-2076-5254-bd21-d3f62fe66303"),
+				},
+				Hives: []*string{
+					aws.String("Cegieme"),
+					aws.String("Fahumvid"),
+				},
+			},
+			Target: &TestFlexTF09{},
+			WantTarget: &TestFlexTF09{
+				City: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("paris"),
+					types.StringValue("london"),
+				}),
+				Coach: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("guardiola"),
+					types.StringValue("mourinho"),
+				}),
+				Tomato: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("brandywine"),
+					types.StringValue("roma"),
+				}),
+				Vertex: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("ab"),
+					types.StringValue("bc"),
+				}),
+				Criterion: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("votes"),
+					types.StringValue("editors"),
+				}),
+				Datum: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("d1282f78-fa99-5d9d-bd51-e6f0173eb74a"),
+					types.StringValue("0f10cb10-2076-5254-bd21-d3f62fe66303"),
+				}),
+				Hive: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("Cegieme"),
+					types.StringValue("Fahumvid"),
+				}),
+			},
+		},
+		{
+			TestName: "capitalization field names",
+			Source: &TestFlexAWS12{
+				FieldUrl: aws.String("h"),
+			},
+			Target: &TestFlexTF10{},
+			WantTarget: &TestFlexTF10{
+				FieldURL: types.StringValue("h"),
 			},
 		},
 	}

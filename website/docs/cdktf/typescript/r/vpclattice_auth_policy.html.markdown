@@ -84,9 +84,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -110,4 +110,4 @@ Using `terraform import`, import VPC Lattice Auth Policy using the `exampleIdArg
 % terraform import aws_vpclattice_auth_policy.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b4a5732fa3a54f088c4124bbf3f60126a39eedadb80630bef753b4e9195b528d -->
+<!-- cache-key: cdktf-0.19.0 input-b4a5732fa3a54f088c4124bbf3f60126a39eedadb80630bef753b4e9195b528d -->

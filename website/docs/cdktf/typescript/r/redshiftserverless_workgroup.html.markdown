@@ -50,11 +50,11 @@ The following arguments are optional:
 * `publiclyAccessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `securityGroupIds` - (Optional) An array of security group IDs to associate with the workgroup.
 * `subnetIds` - (Optional) An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Config Parameter
 
-* `parameterKey` - (Required) The key of the parameter. The options are `autoMv`, `datestyle`, `enableCaseSensitiveIdentifier`, `enableUserActivityLogging`, `queryGroup`, `searchPath`, `requireSsl`, `useFipsSsl`, and [query monitoring metrics](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless) that let you define performance boundaries: `maxQueryCpuTime`, `maxQueryBlocksRead`, `maxScanRowCount`, `maxQueryExecutionTime`, `maxQueryQueueTime`, `maxQueryCpuUsagePercent`, `maxQueryTempBlocksToDisk`, `maxJoinRowCount` and `maxNestedLoopJoinRowCount`.
+* `parameterKey` - (Required) The key of the parameter. The options are `auto_mv`, `datestyle`, `enable_case_sensitive_identifier`, `enable_user_activity_logging`, `query_group`, `search_path`, `require_ssl`, `use_fips_ssl`, and [query monitoring metrics](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless) that let you define performance boundaries: `max_query_cpu_time`, `max_query_blocks_read`, `max_scan_row_count`, `max_query_execution_time`, `max_query_queue_time`, `max_query_cpu_usage_percent`, `max_query_temp_blocks_to_disk`, `max_join_row_count` and `max_nested_loop_join_row_count`.
 * `parameterValue` - (Required) The value of the parameter to set.
 
 ## Attribute Reference
@@ -64,8 +64,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.
 * `workgroupId` - The Redshift Workgroup ID.
-* `endpoint` - The endpoint that is created from the workgroup. See `endpoint` below.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `endpoint` - The endpoint that is created from the workgroup. See `Endpoint` below.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Endpoint
 
@@ -90,9 +90,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `20M`)
-- `update` - (Default `20M`)
-- `delete` - (Default `20M`)
+- `create` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -116,4 +116,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f8191fced5005bdb54568b11bf8280442d2128c6ce0381714a2d602f4d39f748 -->
+<!-- cache-key: cdktf-0.19.0 input-f8191fced5005bdb54568b11bf8280442d2128c6ce0381714a2d602f4d39f748 -->

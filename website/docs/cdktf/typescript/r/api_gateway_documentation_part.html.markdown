@@ -65,7 +65,7 @@ See supported entity types for each field in the [official docs](https://docs.aw
 * `name` - (Optional) Name of the targeted API entity.
 * `path` - (Optional) URL path of the target. The default value is `/` for the root resource.
 * `statusCode` - (Optional) HTTP status code of a response. The default value is `*` for any status code.
-* `type` - (Required) Type of API entity to which the documentation content appliesE.g., `api`, `method` or `requestBody`
+* `type` - (Required) Type of API entity to which the documentation content appliesE.g., `API`, `METHOD` or `REQUEST_BODY`
 
 ## Attribute Reference
 
@@ -95,4 +95,4 @@ Using `terraform import`, import API Gateway documentation_parts using `restApiI
 % terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-867334446462d153ff9de196dd9a6b79eb1a29610b4a35e0c546b546c92093da -->
+<!-- cache-key: cdktf-0.19.0 input-867334446462d153ff9de196dd9a6b79eb1a29610b4a35e0c546b546c92093da -->

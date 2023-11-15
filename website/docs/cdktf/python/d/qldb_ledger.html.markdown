@@ -40,4 +40,4 @@ class MyConvertedCode(TerraformStack):
 See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.18.0 input-0a3bcd75f129ece3016f3577ca775df98dda0b448d78fa027251b4d8bf803822 -->
+<!-- cache-key: cdktf-0.19.0 input-0a3bcd75f129ece3016f3577ca775df98dda0b448d78fa027251b4d8bf803822 -->

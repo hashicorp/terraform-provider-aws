@@ -53,4 +53,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - EC2 Transit Gateway Multicast Group Member identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-561db583d91352dec7ba040b0abbb86f30bfd413562c455a18fa76289ce3489f -->
+<!-- cache-key: cdktf-0.19.0 input-561db583d91352dec7ba040b0abbb86f30bfd413562c455a18fa76289ce3489f -->

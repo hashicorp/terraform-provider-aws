@@ -49,7 +49,7 @@ The following arguments are optional:
 * `deviceOptions` - (Optional) A block of options for device identity based trust providers.
 * `deviceTrustProviderType` (Optional) The type of device-based trust provider.
 * `oidcOptions` - (Optional) The OpenID Connect details for an oidc-type, user-identity based trust provider.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userTrustProviderType` - (Optional) The type of user-based trust provider.
 
 ## Attribute Reference
@@ -62,9 +62,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import Transfer Workflows using the  `id`. For example
 % terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->
+<!-- cache-key: cdktf-0.19.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->

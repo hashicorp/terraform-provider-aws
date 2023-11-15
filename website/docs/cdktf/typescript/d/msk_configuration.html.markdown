@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `kafkaVersions` - List of Apache Kafka versions which can use this configuration.
 * `serverProperties` - Contents of the server.properties file.
 
-<!-- cache-key: cdktf-0.18.0 input-a4d86b249f9d4af6d96814d6f29e2a202f807b86ac9fffd8815b7aa4931e1636 -->
+<!-- cache-key: cdktf-0.19.0 input-a4d86b249f9d4af6d96814d6f29e2a202f807b86ac9fffd8815b7aa4931e1636 -->

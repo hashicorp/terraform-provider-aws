@@ -191,7 +191,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, Conflicts with `accessControlPolicy`) Canned ACL to apply to the bucket.
+* `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
 * `accessControlPolicy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
@@ -223,14 +223,14 @@ The `grantee` configuration block supports the following arguments:
 
 * `emailAddress` - (Optional) Email address of the grantee. See [Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for supported AWS regions where this argument can be specified.
 * `id` - (Optional) Canonical user ID of the grantee.
-* `type` - (Required) Type of grantee. Valid values: `canonicalUser`, `amazonCustomerByEmail`, `group`.
+* `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket`, `expectedBucketOwner` (if configured), and `acl` (if configured) separated by commas (`,`).
+* `id` - The `bucket`, `expected_bucket_owner` (if configured), and `acl` (if configured) separated by commas (`,`).
 
 ## Import
 
@@ -324,4 +324,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.18.0 input-7e8c0c7d553a8dc18f376cb79615d94086a2767d34d0f7c570f4a8267a6021d2 -->
+<!-- cache-key: cdktf-0.19.0 input-7e8c0c7d553a8dc18f376cb79615d94086a2767d34d0f7c570f4a8267a6021d2 -->

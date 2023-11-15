@@ -69,8 +69,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the collection.
-* `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of collection. One of `search`, `timeseries`, or `vectorsearch`. Defaults to `timeseries`.
+* `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
 
 ## Attribute Reference
 
@@ -86,8 +86,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `20M`)
-- `delete` - (Default `20M`)
+- `create` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -111,4 +111,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6228d2d8e91060f7235e5e926282f581119f807883b0fd65b2ee82f2cc330709 -->
+<!-- cache-key: cdktf-0.19.0 input-6228d2d8e91060f7235e5e926282f581119f807883b0fd65b2ee82f2cc330709 -->

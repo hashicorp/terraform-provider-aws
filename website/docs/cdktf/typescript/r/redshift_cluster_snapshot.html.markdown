@@ -51,8 +51,8 @@ This resource supports the following arguments:
 
 * `clusterIdentifier` - (Required, Forces new resource) The cluster identifier for which you want a snapshot.
 * `snapshotIdentifier` - (Required, Forces new resource) A unique identifier for the snapshot that you are requesting. This identifier must be unique for all snapshots within the Amazon Web Services account.
-* `manualSnapshotRetentionPeriod` - (Optional) The number of days that a manual snapshot is retained. If the value is `1`, the manual snapshot is retained indefinitely. Valid values are -1 and between `1` and `3653`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `manualSnapshotRetentionPeriod` - (Optional) The number of days that a manual snapshot is retained. If the value is `-1`, the manual snapshot is retained indefinitely. Valid values are -1 and between `1` and `3653`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - A unique identifier for the snapshot that you are requesting. This identifiermust be unique for all snapshots within the Amazon Web Services account.
 * `kmsKeyId` - The Key Management Service (KMS) key ID of the encryption key that was used to encrypt data in the cluster from which the snapshot was taken.
 * `ownerAccount` - For manual snapshots, the Amazon Web Services account used to create or copy the snapshot. For automatic snapshots, the owner of the cluster. The owner can perform all snapshot actions, such as sharing a manual snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import Redshift Cluster Snapshots using `snapshotIdent
 % terraform import aws_redshift_cluster_snapshot.test example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a09e33c45529d48fc1c9c42a16cb50804ddf0e3d8b2c1c227d16889af8efa09b -->
+<!-- cache-key: cdktf-0.19.0 input-a09e33c45529d48fc1c9c42a16cb50804ddf0e3d8b2c1c227d16889af8efa09b -->

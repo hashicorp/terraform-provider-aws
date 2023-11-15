@@ -43,7 +43,7 @@ This resource supports the following arguments:
 * `outpostId` - (Required) Identifier of the Outpost to contain this endpoint.
 * `securityGroupId` - (Required) Identifier of the EC2 Security Group.
 * `subnetId` - (Required) Identifier of the EC2 Subnet.
-* `accessType` - (Optional) Type of access for the network connectivity. Valid values are `private` or `customerOwnedIp`.
+* `accessType` - (Optional) Type of access for the network connectivity. Valid values are `Private` or `CustomerOwnedIp`.
 * `customerOwnedIpv4Pool` - (Optional) The ID of a Customer Owned IP Pool. For more on customer owned IP addresses see the [User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/local-rack.html#local-gateway-subnet).
 
 ## Attribute Reference
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `creationTime` - UTC creation time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `id` - Amazon Resource Name (ARN) of the endpoint.
 * `networkInterfaces` - Set of nested attributes for associated Elastic Network Interfaces (ENIs).
-    * `networkInterfaceId` - Identifier of the Elastic Network Interface (ENI).
+    * `network_interface_id` - Identifier of the Elastic Network Interface (ENI).
 
 ## Import
 
@@ -79,4 +79,4 @@ Using `terraform import`, import S3 Outposts Endpoints using Amazon Resource Nam
 % terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b93127d0ddadbf29aad3870a10cc0f25e4ba9456be004933e642fe9c8e38df8b -->
+<!-- cache-key: cdktf-0.19.0 input-b93127d0ddadbf29aad3870a10cc0f25e4ba9456be004933e642fe9c8e38df8b -->

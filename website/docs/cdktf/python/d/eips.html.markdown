@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-ed0c009504a829c5af380a752739119e64fcc7c1f90f4ad49fc2af34458d3af3 -->
+<!-- cache-key: cdktf-0.19.0 input-ed0c009504a829c5af380a752739119e64fcc7c1f90f4ad49fc2af34458d3af3 -->

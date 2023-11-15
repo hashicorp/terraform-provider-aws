@@ -85,6 +85,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,
@@ -174,7 +175,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if accountID == "" {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
-			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
+			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
 	}
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)

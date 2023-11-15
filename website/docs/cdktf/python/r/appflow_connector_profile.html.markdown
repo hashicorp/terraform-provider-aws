@@ -202,6 +202,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `access_token` (Optional) - The credentials used to access protected Salesforce resources.
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
+* `jwt_token` (Optional) - A JSON web token (JWT) that authorizes access to Salesforce records.
+* `oauth2_grant_type` (Optional) - The OAuth 2.0 grant type used when requesting an access token from Salesforce. Valid values are `CLIENT_CREDENTIALS`, `AUTHORIZATION_CODE`, and `JWT_BEARER`.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 
@@ -356,4 +358,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.18.0 input-12a8438ef29150aa2860f41042c61347e6053f7bc63636fa7e0e39ab0a9c445b -->
+<!-- cache-key: cdktf-0.19.0 input-175320c144cddd55dbd02b452b869ed210cf85367e05941516384dd0ea24a19d -->

@@ -65,16 +65,16 @@ This resource supports the following arguments:
 * `fieldToMatch` - (Required) The part of a web request that you want to search, such as a specified header or a query string.
 * `regexPatternSetId` - (Required) The ID of a [Regex Pattern Set](/docs/providers/aws/r/waf_regex_pattern_set.html).
 * `textTransformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
-  e.g., `cmdLine`, `htmlEntityDecode` or `none`.
+  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TextTransformation)
   for all supported values.
 
 #### `fieldToMatch`
 
-* `data` - (Optional) When `type` is `header`, enter the name of the header that you want to search, e.g., `userAgent` or `referer`.
+* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g., `header`, `method` or `body`.
+  e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
@@ -107,4 +107,4 @@ Using `terraform import`, import WAF Regex Match Set using their ID. For example
 % terraform import aws_waf_regex_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ce0a33802205206c3df8153ccf35320eadb17a76e385e935a563c75b8193cf45 -->
+<!-- cache-key: cdktf-0.19.0 input-ce0a33802205206c3df8153ccf35320eadb17a76e385e935a563c75b8193cf45 -->

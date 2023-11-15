@@ -95,4 +95,4 @@ Using the endpoint ID, target network CIDR, and group name:
 % terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->
+<!-- cache-key: cdktf-0.19.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->

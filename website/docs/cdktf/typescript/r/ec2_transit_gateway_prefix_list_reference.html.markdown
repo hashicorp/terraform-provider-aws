@@ -108,4 +108,4 @@ Using `terraform import`, import `awsEc2TransitGatewayPrefixListReference` using
 % terraform import aws_ec2_transit_gateway_prefix_list_reference.example tgw-rtb-12345678_pl-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-32c5c00eacc9b022003008b236983d6790e2080f489aa235567510a3cf34f745 -->
+<!-- cache-key: cdktf-0.19.0 input-32c5c00eacc9b022003008b236983d6790e2080f489aa235567510a3cf34f745 -->
