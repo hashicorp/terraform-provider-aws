@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_inspector2_delegated_admin_account: Fix `errors: *target must be interface or implement error` panic
+```
