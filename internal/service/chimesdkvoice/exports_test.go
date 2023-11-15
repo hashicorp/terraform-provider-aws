@@ -6,4 +6,5 @@ package chimesdkvoice
 // Exports for use in tests only.
 var (
 	FindSIPMediaApplicationByID = findSIPMediaApplicationByID
+	FindSIPRuleByID             = findSIPRuleByID
 )

@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
@@ -30,7 +29,6 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,7 +66,6 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,7 +94,6 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -145,15 +141,16 @@ func testAccCheckSipRuleExists(ctx context.Context, name string, sr *chimesdkvoi
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetSipRuleInput{
-			SipRuleId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetSipRuleWithContext(ctx, input)
+
+		resp, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*chimesdkvoice.SipRule, error) {
+			return tfchimesdkvoice.FindSIPRuleByID(ctx, conn, rs.Primary.ID)
+		})
+
 		if err != nil {
 			return err
 		}
 
-		sr = resp.SipRule
+		sr = resp
 
 		return nil
 	}
@@ -166,16 +163,20 @@ func testAccCheckSipRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-			input := &chimesdkvoice.GetSipRuleInput{
-				SipRuleId: aws.String(rs.Primary.ID),
+
+			_, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*chimesdkvoice.SipRule, error) {
+				return tfchimesdkvoice.FindSIPRuleByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			resp, err := conn.GetSipRuleWithContext(ctx, input)
-			if err == nil {
-				if resp.SipRule != nil && aws.StringValue(resp.SipRule.Name) != "" {
-					return fmt.Errorf("error ChimeSdkVoice Sip Rule still exists")
-				}
+
+			if err != nil {
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("sip rule still exists: (%s)", rs.Primary.ID)
 		}
 		return nil
 	}
