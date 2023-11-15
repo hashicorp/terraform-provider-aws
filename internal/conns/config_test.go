@@ -6,7 +6,6 @@ package conns_test
 import (
 	"context"
 	"fmt"
-	"maps"
 	"net/http"
 	"testing"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"golang.org/x/exp/maps"
 )
 
 type proxyCase struct {
