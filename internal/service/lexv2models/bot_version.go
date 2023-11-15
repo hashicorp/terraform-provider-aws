@@ -73,11 +73,9 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// "idle_session_ttl_in_seconds": schema.Int64Attribute{
-			// 	Computed: true,
-			// },
 			"locale_specification": schema.MapAttribute{
 				Required:    true,
 				ElementType: types.ObjectType{AttrTypes: botVersionLocaleDetails},
@@ -85,25 +83,6 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			// "name": schema.StringAttribute{
-			// 	Computed: true,
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.RequiresReplace(),
-			// 	},
-			// },
-			// "role_arn": schema.StringAttribute{
-			// 	CustomType: fwtypes.ARNType,
-			// 	Computed:   true,
-			// },
-			// "type": schema.StringAttribute{
-			// 	Computed: true,
-			// 	Validators: []validator.String{
-			// 		enum.FrameworkValidate[awstypes.BotType](),
-			// 	},
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
