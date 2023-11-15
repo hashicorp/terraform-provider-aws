@@ -990,8 +990,6 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
 			apiObject.RemoteIpv4NetworkCidr = aws.String(v.(string))
 		}
-
-		apiObject.TunnelInsideIpVersion = aws.String(ec2.TunnelInsideIpVersionIpv4)
 	}
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
