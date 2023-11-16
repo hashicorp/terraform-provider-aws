@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `httpName` - Name of an HTTP namespace.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-fd64564a9e9f20381d3b8498bc1ece55a0a91282b8fa11f6f5581b84a7b4085a -->
+<!-- cache-key: cdktf-0.19.0 input-fd64564a9e9f20381d3b8498bc1ece55a0a91282b8fa11f6f5581b84a7b4085a -->

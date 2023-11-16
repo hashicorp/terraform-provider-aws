@@ -66,6 +66,21 @@ resource "aws_lb_target_group" "alb-example" {
 }
 ```
 
+### Target group with unhealthy connection termination disabled
+
+```terraform
+resource "aws_lb_target_group" "tcp-example" {
+  name     = "tf-example-lb-nlb-tg"
+  port     = 25
+  protocol = "TCP"
+  vpc_id   = aws_vpc.main.id
+
+  target_health_state {
+    enable_unhealthy_connection_termination = false
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -87,6 +102,7 @@ This resource supports the following arguments:
 * `stickiness` - (Optional, Maximum of 1) Stickiness configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_failover` - (Optional) Target failover block. Only applicable for Gateway Load Balancer target groups. See [target_failover](#target_failover) for more information.
+* `target_health_state` - (Optional) Target health state block. Only applicable for Network Load Balancer target groups when `protocol` is `TCP` or `TLS`. See [target_health_state](#target_health_state) for more information.
 * `target_type` - (May be required, Forces new resource) Type of target that you must specify when registering targets with this target group. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html) for supported values. The default is `instance`.
 
   Note that you can't specify targets for a target group using both instance IDs and IP addresses.
@@ -128,6 +144,12 @@ This resource supports the following arguments:
 
 * `on_deregistration` - (Optional) Indicates how the GWLB handles existing flows when a target is deregistered. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_unhealthy`. Default: `no_rebalance`.
 * `on_unhealthy` - Indicates how the GWLB handles existing flows when a target is unhealthy. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_deregistration`. Default: `no_rebalance`.
+
+### target_health_state
+
+~> **NOTE:** This block is only valid for a Network Load Balancer (NLB) target group when `protocol` is `TCP` or `TLS`.
+
+* `enable_unhealthy_connection_termination` - (Optional) Indicates whether the load balancer terminates connections to unhealthy targets. Possible values are `true` or `false`. Default: `true`.
 
 ## Attribute Reference
 

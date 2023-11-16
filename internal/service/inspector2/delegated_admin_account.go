@@ -210,12 +210,11 @@ func FindDelegatedAdminAccountStatusID(ctx context.Context, conn *inspector2.Cli
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			var ve types.ValidationException
-			if errs.AsContains(err, &ve, "is the delegated admin") {
-				return string(types.RelationshipStatusEnabled), accountID, nil
-			}
+		if errs.IsAErrorMessageContains[*types.ValidationException](err, "is the delegated admin") {
+			return string(types.RelationshipStatusEnabled), accountID, nil
+		}
 
+		if err != nil {
 			return "", "", err
 		}
 

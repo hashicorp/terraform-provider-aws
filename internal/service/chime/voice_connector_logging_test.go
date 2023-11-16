@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +25,6 @@ func testAccVoiceConnectorLogging_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -59,7 +56,6 @@ func testAccVoiceConnectorLogging_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -86,7 +82,6 @@ func testAccVoiceConnectorLogging_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -158,19 +153,11 @@ func testAccCheckVoiceConnectorLoggingExists(ctx context.Context, name string) r
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetVoiceConnectorLoggingConfigurationInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
 
-		resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
+		_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.LoggingConfiguration, error) {
+			return tfchime.FindVoiceConnectorLoggingByID(ctx, conn, rs.Primary.ID)
+		})
 
-		if resp == nil || resp.LoggingConfiguration == nil {
-			return fmt.Errorf("no Chime Voice Connector logging configureation (%s) found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }

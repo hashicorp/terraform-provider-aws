@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `accountId` - (Required) The AWS account ID for the account.
 * `email` - (Required) The email address for the account.
 * `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the account in Amazon Macie.
-* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `enabled`. Valid values are `enabled` or `paused`.
+* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 * `invite` - (Optional) Send an invitation to a member
 * `invitationMessage` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
 * `invitationDisableEmailNotification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
@@ -88,4 +88,4 @@ Using `terraform import`, import `awsMacie2Member` using the account ID of the m
 % terraform import aws_macie2_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-270188c839fbbf61a15582b99048abc7d28b091c50c92930247fa2315358a77d -->
+<!-- cache-key: cdktf-0.19.0 input-270188c839fbbf61a15582b99048abc7d28b091c50c92930247fa2315358a77d -->

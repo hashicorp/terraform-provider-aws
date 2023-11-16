@@ -36,6 +36,15 @@ updates:
       - dependency-name: "github.com/hashicorp/go-hclog"
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      # TEMPORARY - Remove below once upstream is fixed
+      # Ref: https://github.com/aws/aws-sdk-go-v2/issues/2349
+      #
+      # config and ini have upstream regressions causing valid configurations to break.
+      # feature/s3/manager is also ignored as the latest versions have a dependency
+      # on broken config versions.
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/config"
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/internal/ini"
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

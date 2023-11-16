@@ -171,6 +171,112 @@ func TestAccVerifiedAccessGroup_policy(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessGroup_updatePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := sdkacctest.RandString(100)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+	policyDocUpdate := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"POST\"\n};"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDocUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocUpdate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+func TestAccVerifiedAccessGroup_setPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessGroup
+	resourceName := "aws_verifiedaccess_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := sdkacctest.RandString(100)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessGroupExists(ctx context.Context, n string, v *types.VerifiedAccessGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -104,19 +104,19 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Brief description of the schedule.
-* `endDate` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `20300101T01:00:00Z`.
+* `endDate` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `groupName` - (Optional, Forces new resource) Name of the schedule group to associate with this schedule. When omitted, the `default` schedule group is used.
 * `kmsKeyArn` - (Optional) ARN for the customer managed KMS key that EventBridge Scheduler will use to encrypt and decrypt your data.
-* `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `scheduleExpressionTimezone` - (Optional) Timezone in which the scheduling expression is evaluated. Defaults to `utc`. Example: `australia/sydney`.
-* `startDate` - (Optional) The date, in UTC, after which the schedule can begin invoking its target. Depending on the schedule's recurrence expression, invocations might occur on, or after, the start date you specify. EventBridge Scheduler ignores the start date for one-time schedules. Example: `20300101T01:00:00Z`.
-* `state` - (Optional) Specifies whether the schedule is enabled or disabled. One of: `enabled` (default), `disabled`.
+* `scheduleExpressionTimezone` - (Optional) Timezone in which the scheduling expression is evaluated. Defaults to `UTC`. Example: `Australia/Sydney`.
+* `startDate` - (Optional) The date, in UTC, after which the schedule can begin invoking its target. Depending on the schedule's recurrence expression, invocations might occur on, or after, the start date you specify. EventBridge Scheduler ignores the start date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
+* `state` - (Optional) Specifies whether the schedule is enabled or disabled. One of: `ENABLED` (default), `DISABLED`.
 
 ### flexible_time_window Configuration Block
 
 * `maximumWindowInMinutes` - (Optional) Maximum time window during which a schedule can be invoked. Ranges from `1` to `1440` minutes.
-* `mode` - (Required) Determines whether the schedule is invoked within a flexible time window. One of: `off`, `flexible`.
+* `mode` - (Required) Determines whether the schedule is invoked within a flexible time window. One of: `OFF`, `FLEXIBLE`.
 
 ### target Configuration Block
 
@@ -128,13 +128,13 @@ The following arguments are required:
 The following arguments are optional:
 
 * `deadLetterConfig` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
-* `ecsParameters` - (Optional) Templated target type for the Amazon ECS [`runTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
-* `eventbridgeParameters` - (Optional) Templated target type for the EventBridge [`putEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
+* `ecsParameters` - (Optional) Templated target type for the Amazon ECS [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
+* `eventbridgeParameters` - (Optional) Templated target type for the EventBridge [`PutEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
-* `kinesisParameters` - (Optional) Templated target type for the Amazon Kinesis [`putRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
+* `kinesisParameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
 * `retryPolicy` - (Optional) Information about the retry policy settings. Detailed below.
-* `sagemakerPipelineParameters` - (Optional) Templated target type for the Amazon SageMaker [`startPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
-* `sqsParameters` - (Optional) The templated target type for the Amazon SQS [`sendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
+* `sagemakerPipelineParameters` - (Optional) Templated target type for the Amazon SageMaker [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
+* `sqsParameters` - (Optional) The templated target type for the Amazon SQS [`SendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
 
 #### dead_letter_config Configuration Block
 
@@ -152,14 +152,14 @@ The following arguments are optional:
 * `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task. For more information, see [Tagging Your Amazon ECS Resources](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html) in the Amazon ECS Developer Guide.
 * `enableExecuteCommand` - (Optional) Specifies whether to enable the execute command functionality for the containers in this task.
 * `group` - (Optional) Specifies an ECS task group for the task. At most 255 characters.
-* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. One of: `ec2`, `fargate`, `external`.
+* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. One of: `EC2`, `FARGATE`, `EXTERNAL`.
 * `networkConfiguration` - (Optional) Configures the networking associated with the task. Detailed below.
 * `placementConstraints` - (Optional) A set of up to 10 placement constraints to use for the task. Detailed below.
 * `placementStrategy` - (Optional) A set of up to 5 placement strategies. Detailed below.
-* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `110`.
-* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. One of: `taskDefinition`.
+* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`.
+* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. One of: `TASK_DEFINITION`.
 * `referenceId` - (Optional) Reference ID to use for the task.
-* `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`runTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
+* `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
 * `taskCount` - (Optional) The number of tasks to create. Ranges from `1` (default) to `10`.
 
 ##### capacity_provider_strategy Configuration Block
@@ -170,7 +170,7 @@ The following arguments are optional:
 
 ##### network_configuration Configuration Block
 
-* `assignPublicIp` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. This attribute is a boolean type, where `true` maps to `enabled` and `false` to `disabled`. You can specify `true` only when the `launchType` is set to `fargate`.
+* `assignPublicIp` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. This attribute is a boolean type, where `true` maps to `ENABLED` and `false` to `DISABLED`. You can specify `true` only when the `launch_type` is set to `FARGATE`.
 * `securityGroups` - (Optional) Set of 1 to 5 Security Group ID-s to be associated with the task. These security groups must all be in the same VPC.
 * `subnets` - (Optional) Set of 1 to 16 subnets to be associated with the task. These subnets must all be in the same VPC.
 
@@ -240,4 +240,4 @@ Using `terraform import`, import schedules using the combination `groupName/name
 % terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-95ba3e7c2dcc364c2b888e21f8830e94c2d1a70691fedb123bb008ebd8c952d3 -->
+<!-- cache-key: cdktf-0.19.0 input-95ba3e7c2dcc364c2b888e21f8830e94c2d1a70691fedb123bb008ebd8c952d3 -->

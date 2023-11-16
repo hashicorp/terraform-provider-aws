@@ -60,15 +60,15 @@ class MyConvertedCode extends TerraformStack {
 * `uplinkJitterMs` - (Optional) Time variation in the delay of received packets in milliseconds as an integer from `0` to `2000`.
 * `uplinkLossPercent` - (Optional) Proportion of received packets that fail to arrive from `0` to `100` percent.
 * `projectArn` - (Required) The ARN of the project for the network profile.
-* `type` - (Optional) The type of network profile to create. Valid values are listed are `private` and `curated`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Optional) The type of network profile to create. Valid values are listed are `PRIVATE` and `CURATED`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this network profile.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import DeviceFarm Network Profiles using their ARN. Fo
 % terraform import aws_devicefarm_network_profile.example arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-82616cb48039f8368ead9b616e986d34cc6658f5bc299c003c202bc94e665131 -->
+<!-- cache-key: cdktf-0.19.0 input-82616cb48039f8368ead9b616e986d34cc6658f5bc299c003c202bc94e665131 -->

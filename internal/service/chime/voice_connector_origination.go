@@ -11,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_chime_voice_connector_origination")
@@ -106,13 +108,15 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
-	input := &chimesdkvoice.GetVoiceConnectorOriginationInput{
-		VoiceConnectorId: aws.String(d.Id()),
+	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.Origination, error) {
+		return findVoiceConnectorOriginationByID(ctx, conn, d.Id())
+	})
+
+	if tfresource.TimedOut(err) {
+		resp, err = findVoiceConnectorOriginationByID(ctx, conn, d.Id())
 	}
 
-	resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) origination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -122,14 +126,10 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("getting Chime Voice Connector (%s) origination: %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.Origination == nil {
-		return diag.Errorf("getting Chime Voice Connector (%s) origination: empty response", d.Id())
-	}
-
-	d.Set("disabled", resp.Origination.Disabled)
+	d.Set("disabled", resp.Disabled)
 	d.Set("voice_connector_id", d.Id())
 
-	if err := d.Set("route", flattenOriginationRoutes(resp.Origination.Routes)); err != nil {
+	if err := d.Set("route", flattenOriginationRoutes(resp.Routes)); err != nil {
 		return diag.Errorf("setting Chime Voice Connector (%s) origination routes: %s", d.Id(), err)
 	}
 
@@ -214,4 +214,29 @@ func flattenOriginationRoutes(routes []*chimesdkvoice.OriginationRoute) []interf
 	}
 
 	return rawRoutes
+}
+
+func findVoiceConnectorOriginationByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.Origination, error) {
+	in := &chimesdkvoice.GetVoiceConnectorOriginationInput{
+		VoiceConnectorId: aws.String(id),
+	}
+
+	resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if resp == nil || resp.Origination == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Origination, nil
 }

@@ -119,7 +119,7 @@ This resource supports the following arguments:
 * `family` - (Required, Forces new resource) The family of the DB parameter group.
 * `description` - (Optional, Forces new resource) The description of the DB parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of DB parameters to apply. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -135,7 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The db parameter group name.
 * `arn` - The ARN of the db parameter group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -159,4 +159,4 @@ Using `terraform import`, import DB Parameter groups using the `name`. For examp
 % terraform import aws_db_parameter_group.rds_pg rds-pg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-58d3afb77ce85c7eccf039e1c08d533c541b3a0e93a559083e86605494ac1352 -->
+<!-- cache-key: cdktf-0.19.0 input-58d3afb77ce85c7eccf039e1c08d533c541b3a0e93a559083e86605494ac1352 -->

@@ -133,4 +133,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Room using the ARN
 % terraform import aws_ivschat_room.example arn:aws:ivschat:us-west-2:326937407773:room/GoXEXyB4VwHb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->
+<!-- cache-key: cdktf-0.19.0 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->

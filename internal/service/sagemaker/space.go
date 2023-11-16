@@ -167,7 +167,7 @@ func ResourceSpace() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {

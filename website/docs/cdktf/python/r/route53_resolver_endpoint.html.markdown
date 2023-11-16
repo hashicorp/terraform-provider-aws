@@ -97,4 +97,4 @@ Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53
 % terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17a9ce982f1bbb8ea75dad88b3aa989a8f0aad667032d40125014dcc640c486e -->
+<!-- cache-key: cdktf-0.19.0 input-17a9ce982f1bbb8ea75dad88b3aa989a8f0aad667032d40125014dcc640c486e -->

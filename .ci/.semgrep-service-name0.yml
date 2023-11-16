@@ -3478,3 +3478,61 @@ rules:
             - pattern-not-regex: "^TestAccComputeOptimizer"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: computeoptimizer-in-const-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: configservice-in-func-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in func name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-test-name
+    languages:
+      - go
+    message: Include "ConfigService" in test name
+    paths:
+      include:
+        - internal/service/configservice/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConfigService"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING

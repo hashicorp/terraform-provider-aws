@@ -153,4 +153,4 @@ Using `terraform import`, import `aws_imagebuilder_container_recipe` resources u
 % terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->
+<!-- cache-key: cdktf-0.19.0 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->

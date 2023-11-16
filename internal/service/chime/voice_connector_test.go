@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccVoiceConnector_basic(t *testing.T) {
@@ -29,7 +28,6 @@ func testAccVoiceConnector_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -41,7 +39,7 @@ func testAccVoiceConnector_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", chimesdkvoice.VoiceConnectorAwsRegionUsEast1),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
 				),
 			},
@@ -64,7 +62,6 @@ func testAccVoiceConnector_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -93,7 +90,6 @@ func testAccVoiceConnector_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -105,7 +101,7 @@ func testAccVoiceConnector_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", chimesdkvoice.VoiceConnectorAwsRegionUsEast1),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
 				),
 			},
@@ -134,9 +130,6 @@ func testAccVoiceConnector_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// Legacy chime resources are always created in us-east-1, and the ListTags operation
-			// can behave unexpectedly when configured with a different region.
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
@@ -237,15 +230,16 @@ func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *chim
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetVoiceConnectorInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
+
+		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnector, error) {
+			return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+		})
+
 		if err != nil {
 			return err
 		}
 
-		vc = resp.VoiceConnector
+		vc = resp
 
 		return nil
 	}
@@ -258,17 +252,22 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-			input := &chimesdkvoice.GetVoiceConnectorInput{
-				VoiceConnectorId: aws.String(rs.Primary.ID),
+
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnector, error) {
+				return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
-			if err == nil {
-				if resp.VoiceConnector != nil && aws.StringValue(resp.VoiceConnector.Name) != "" {
-					return fmt.Errorf("error Chime Voice Connector still exists")
-				}
+
+			if err != nil {
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("voice connector still exists: (%s)", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

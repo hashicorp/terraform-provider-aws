@@ -45,15 +45,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authType` - (Optional) Type of IAM policy. Either `none` or `awsIam`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `authType` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import VPC Lattice Service Network using the `id`. For
 % terraform import aws_vpclattice_service_network.example sn-0158f91c1e3358dba
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd399060a3ff40174d174d00151279d434802a5189dee061f444da739500f832 -->
+<!-- cache-key: cdktf-0.19.0 input-bd399060a3ff40174d174d00151279d434802a5189dee061f444da739500f832 -->

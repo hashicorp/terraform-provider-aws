@@ -43,8 +43,8 @@ class MyConvertedCode extends TerraformStack {
 
 ### Filters
 
-* `application` - (Optional) Optional release label application filter. For example, `spark@210` or `spark`.
-* `prefix` - (Optional) Optional release label version prefix filter. For example, `emr5`.
+* `application` - (Optional) Optional release label application filter. For example, `Spark@2.1.0` or `Spark`.
+* `prefix` - (Optional) Optional release label version prefix filter. For example, `emr-5`.
 
 ## Attribute Reference
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `releaseLabels` - Returned release labels.
 
-<!-- cache-key: cdktf-0.18.0 input-caff30a437585dca8d53271b57c03d47d50046916f1661780cb3a6963d53b86c -->
+<!-- cache-key: cdktf-0.19.0 input-caff30a437585dca8d53271b57c03d47d50046916f1661780cb3a6963d53b86c -->

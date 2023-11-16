@@ -528,12 +528,12 @@ func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) 
 		tfMap["consumer_groups_to_exclude"] = flex.FlattenStringValueSet(v)
 	}
 
-	if apiObject.SynchroniseConsumerGroupOffsets {
-		tfMap["synchronise_consumer_group_offsets"] = aws.Bool(apiObject.SynchroniseConsumerGroupOffsets)
+	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
+		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
 	}
 
-	if apiObject.DetectAndCopyNewConsumerGroups {
-		tfMap["detect_and_copy_new_consumer_groups"] = aws.Bool(apiObject.DetectAndCopyNewConsumerGroups)
+	if aws.ToBool(apiObject.DetectAndCopyNewConsumerGroups) {
+		tfMap["detect_and_copy_new_consumer_groups"] = apiObject.DetectAndCopyNewConsumerGroups
 	}
 
 	return tfMap
@@ -554,16 +554,16 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
 	}
 
-	if apiObject.CopyTopicConfigurations {
-		tfMap["copy_topic_configurations"] = aws.Bool(apiObject.CopyTopicConfigurations)
+	if aws.ToBool(apiObject.CopyTopicConfigurations) {
+		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
 	}
 
-	if apiObject.CopyAccessControlListsForTopics {
-		tfMap["copy_access_control_lists_for_topics"] = aws.Bool(apiObject.CopyAccessControlListsForTopics)
+	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
+		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
-	if apiObject.DetectAndCopyNewTopics {
-		tfMap["detect_and_copy_new_topics"] = aws.Bool(apiObject.CopyAccessControlListsForTopics)
+	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
+		tfMap["detect_and_copy_new_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
 	return tfMap
@@ -639,11 +639,11 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 	}
 
 	if v, ok := tfMap["synchronise_consumer_group_offsets"].(bool); ok {
-		apiObject.SynchroniseConsumerGroupOffsets = v
+		apiObject.SynchroniseConsumerGroupOffsets = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_consumer_groups"].(bool); ok {
-		apiObject.DetectAndCopyNewConsumerGroups = v
+		apiObject.DetectAndCopyNewConsumerGroups = aws.Bool(v)
 	}
 
 	return apiObject
@@ -661,15 +661,15 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = v
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = v
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = v
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
 	return apiObject
@@ -735,11 +735,11 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 	}
 
 	if v, ok := tfMap["synchronise_consumer_group_offsets"].(bool); ok {
-		apiObject.SynchroniseConsumerGroupOffsets = v
+		apiObject.SynchroniseConsumerGroupOffsets = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_consumer_groups"].(bool); ok {
-		apiObject.DetectAndCopyNewConsumerGroups = v
+		apiObject.DetectAndCopyNewConsumerGroups = aws.Bool(v)
 	}
 
 	return apiObject
@@ -757,15 +757,15 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = v
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = v
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = v
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
 	return apiObject

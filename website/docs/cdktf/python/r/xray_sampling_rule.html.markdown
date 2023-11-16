@@ -87,4 +87,4 @@ Using `terraform import`, import XRay Sampling Rules using the name. For example
 % terraform import aws_xray_sampling_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3ca0f87f60b2af282993155f8f46c69e0703d25d278651c0017302f1714b4c23 -->
+<!-- cache-key: cdktf-0.19.0 input-3ca0f87f60b2af282993155f8f46c69e0703d25d278651c0017302f1714b4c23 -->

@@ -43,7 +43,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(45 * time.Minute),
+			Delete: schema.DefaultTimeout(75 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -598,7 +598,7 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 
 	a := &types.NetworkACLEntry{}
 	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
-		a.RuleNumber = int32(v)
+		a.RuleNumber = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		a.Protocol = &v

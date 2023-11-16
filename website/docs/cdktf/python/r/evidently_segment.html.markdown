@@ -121,4 +121,4 @@ Using `terraform import`, import CloudWatch Evidently Segment using the `arn`. F
 % terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8f4f148ae07fcc5e61c1f38f8166eb6097494f8e5ccee4064e248569af124d84 -->
+<!-- cache-key: cdktf-0.19.0 input-8f4f148ae07fcc5e61c1f38f8166eb6097494f8e5ccee4064e248569af124d84 -->

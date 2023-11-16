@@ -33,7 +33,8 @@ const (
 	// A constant for the supported CloudwatchLogsExports types
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
-	cloudWatchLogsExportsAudit = "audit"
+	cloudWatchLogsExportsAudit     = "audit"
+	cloudWatchLogsExportsSlowQuery = "slowquery"
 
 	DefaultPort = 8182
 
@@ -129,6 +130,7 @@ func ResourceCluster() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						cloudWatchLogsExportsAudit,
+						cloudWatchLogsExportsSlowQuery,
 					}, false),
 				},
 			},
@@ -895,15 +897,15 @@ func statusDBCluster(ctx context.Context, conn *neptune.Neptune, id string) retr
 func waitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"creating",
-			"backing-up",
-			"modifying",
-			"preparing-data-migration",
-			"migrating",
-			"configuring-iam-database-auth",
-			"upgrading",
+			clusterStatusCreating,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
+			clusterStatusPreparingDataMigration,
+			clusterStatusMigrating,
+			clusterStatusConfiguringIAMDatabaseAuth,
+			clusterStatusUpgrading,
 		},
-		Target:     []string{"available"},
+		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -922,10 +924,10 @@ func waitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id strin
 func waitDBClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"available",
-			"deleting",
-			"backing-up",
-			"modifying",
+			clusterStatusAvailable,
+			clusterStatusDeleting,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),

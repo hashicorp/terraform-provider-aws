@@ -97,4 +97,4 @@ Using `terraform import`, import WAF Regional Rule using the id. For example:
 % terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a40cdd272300595e743e666f37c7f58fb8e82cbebd3677921ecf317be3ff42df -->
+<!-- cache-key: cdktf-0.19.0 input-a40cdd272300595e743e666f37c7f58fb8e82cbebd3677921ecf317be3ff42df -->

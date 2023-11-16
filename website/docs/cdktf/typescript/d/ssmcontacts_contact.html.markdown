@@ -47,8 +47,8 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `alias` - A unique and identifiable alias of the contact or escalation plan.
-* `type` - The type of contact engaged. A single contact is type `personal` and an escalation plan is type `escalation`.
+* `type` - The type of contact engaged. A single contact is type `PERSONAL` and an escalation plan is type `ESCALATION`.
 * `displayName` - Full friendly name of the contact or escalation plan.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-028dcbba9b9d4f6b9868cfdfa5621e49e88520c35fc79346bd35242d298b06bc -->
+<!-- cache-key: cdktf-0.19.0 input-028dcbba9b9d4f6b9868cfdfa5621e49e88520c35fc79346bd35242d298b06bc -->

@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
-* `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -72,4 +72,4 @@ Using `terraform import`, import `awsDetectiveGraph` using the ARN. For example:
 % terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ee8961bdda24bd4636640d877e7c8cec4877ed2d26e63964d9fab2e0003f440c -->
+<!-- cache-key: cdktf-0.19.0 input-ee8961bdda24bd4636640d877e7c8cec4877ed2d26e63964d9fab2e0003f440c -->

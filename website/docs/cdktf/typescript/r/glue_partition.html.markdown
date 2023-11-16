@@ -119,4 +119,4 @@ Using `terraform import`, import Glue Partitions using the catalog ID (usually A
 % terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-82eb5064cb5a885033f5995b599111156aaf6ca6d5bd48324fd36f1a445015f1 -->
+<!-- cache-key: cdktf-0.19.0 input-82eb5064cb5a885033f5995b599111156aaf6ca6d5bd48324fd36f1a445015f1 -->

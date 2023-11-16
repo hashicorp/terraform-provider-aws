@@ -92,4 +92,4 @@ Using `terraform import`, import `aws_cleanrooms_configured_table` using the `id
 % terraform import aws_cleanrooms_configured_table.table 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->
+<!-- cache-key: cdktf-0.19.0 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->

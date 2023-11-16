@@ -108,4 +108,4 @@ Using `terraform import`, import `awsDynamodbTag` using the DynamoDB resource id
 % terraform import aws_dynamodb_tag.example arn:aws:dynamodb:us-east-1:123456789012:table/example,Name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-75e8bd469b3a6122cab5fe6f134e77c1f13bdbca2f2645fd979c4c90c7684f40 -->
+<!-- cache-key: cdktf-0.19.0 input-75e8bd469b3a6122cab5fe6f134e77c1f13bdbca2f2645fd979c4c90c7684f40 -->

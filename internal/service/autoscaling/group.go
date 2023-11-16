@@ -138,33 +138,81 @@ func ResourceGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_result": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(lifecycleHookDefaultResult_Values(), false),
 						},
 						"heartbeat_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(30, 7200),
 						},
 						"lifecycle_transition": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(lifecycleHookLifecycleTransition_Values(), false),
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 255),
+								validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+									`no spaces or special characters except "-", "_", and "/"`),
+							),
 						},
 						"notification_metadata": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"notification_target_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"instance_maintenance_policy": {
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ValidateFunc: validation.Any(
+								validation.IntBetween(100, 200),
+								validation.IntBetween(-1, -1),
+							),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
+						},
+						"min_healthy_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(-1, 100),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
 						},
 					},
 				},
@@ -253,6 +301,7 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -309,6 +358,7 @@ func ResourceGroup() *schema.Resource {
 			"mixed_instances_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -396,6 +446,7 @@ func ResourceGroup() *schema.Resource {
 									"override": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_requirements": {
@@ -865,13 +916,74 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("launch_template.0.name")
-			}),
-			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("launch_template.0.id")
-			}),
+			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
+			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.override"),
 		),
+	}
+}
+
+func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("instance_maintenance_policy")
+	oList := o.([]interface{})
+	nList := n.([]interface{})
+
+	if len(oList) == 0 && len(nList) != 0 {
+		tfMap := nList[0].(map[string]interface{})
+		if int64(tfMap["min_healthy_percentage"].(int)) == -1 || int64(tfMap["max_healthy_percentage"].(int)) == -1 {
+			return true
+		}
+	}
+	return false
+}
+
+func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if diff.HasChange(subAttribute) {
+			n := diff.Get(baseAttribute)
+			ba, ok := n.([]interface{})
+			if !ok {
+				return nil
+			}
+
+			if baseAttribute == "launch_template" {
+				launchTemplate := ba[0].(map[string]interface{})
+				launchTemplate["id"] = launchTemplateIDUnknown
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+
+			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
+				launchTemplateSpecification := launchTemplate.(map[string]interface{})
+				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+
+			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
+				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+
+				for i := range launchTemplate {
+					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
+
+					if diff.HasChange(key) {
+						launchTemplateSpecification := launchTemplate[i].(map[string]interface{})["launch_template_specification"].([]interface{})[0].(map[string]interface{})
+						launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
+					}
+				}
+
+				if err := diff.SetNew(baseAttribute, ba); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
 	}
 }
 
@@ -950,6 +1062,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("health_check_grace_period"); ok {
 		createInput.HealthCheckGracePeriod = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
+		createInput.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("launch_configuration"); ok {
@@ -1136,6 +1252,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(g.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
@@ -1263,6 +1382,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("health_check_type") {
 			input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
 			input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
+		}
+
+		if d.HasChange("instance_maintenance_policy") {
+			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]interface{}))
 		}
 
 		if d.HasChange("launch_configuration") {
@@ -3035,7 +3158,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	// API returns both ID and name, which Terraform saves to state. Next update returns:
 	// ValidationError: Valid requests must contain either launchTemplateId or LaunchTemplateName
 	// Prefer the ID if we have both.
-	if v, ok := tfMap["launch_template_id"]; ok && v != "" {
+	if v, ok := tfMap["launch_template_id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["launch_template_name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
@@ -3057,7 +3180,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 
 	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap["id"]; ok && v != "" {
+	if v, ok := tfMap["id"]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
@@ -3412,6 +3535,36 @@ func flattenInstancesDistribution(apiObject *autoscaling.InstancesDistribution) 
 	}
 
 	return tfMap
+}
+
+func expandInstanceMaintenancePolicy(l []interface{}) *autoscaling.InstanceMaintenancePolicy {
+	if len(l) == 0 {
+		//Empty InstanceMaintenancePolicy block will reset already assigned values
+		return &autoscaling.InstanceMaintenancePolicy{
+			MinHealthyPercentage: aws.Int64(-1),
+			MaxHealthyPercentage: aws.Int64(-1),
+		}
+	}
+
+	tfMap := l[0].(map[string]interface{})
+
+	return &autoscaling.InstanceMaintenancePolicy{
+		MinHealthyPercentage: aws.Int64(int64(tfMap["min_healthy_percentage"].(int))),
+		MaxHealthyPercentage: aws.Int64(int64(tfMap["max_healthy_percentage"].(int))),
+	}
+}
+
+func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *autoscaling.InstanceMaintenancePolicy) []interface{} {
+	if instanceMaintenancePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"min_healthy_percentage": instanceMaintenancePolicy.MinHealthyPercentage,
+		"max_healthy_percentage": instanceMaintenancePolicy.MaxHealthyPercentage,
+	}
+
+	return []interface{}{m}
 }
 
 func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]interface{} {

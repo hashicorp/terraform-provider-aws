@@ -62,20 +62,20 @@ This resource supports the following arguments:
 * `defaultOutboundQueueId` - (Required) Specifies the default outbound queue for the Routing Profile.
 * `description` - (Required) Specifies the description of the Routing Profile.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `mediaConcurrencies` - (Required) One or more `mediaConcurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `mediaConcurrencies` block is documented below.
+* `mediaConcurrencies` - (Required) One or more `media_concurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `media_concurrencies` block is documented below.
 * `name` - (Required) Specifies the name of the Routing Profile.
-* `queueConfigs` - (Optional) One or more `queueConfigs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queueConfigs` block is documented below.
+* `queueConfigs` - (Optional) One or more `queue_configs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queue_configs` block is documented below.
 * `tags` - (Optional) Tags to apply to the Routing Profile. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `mediaConcurrencies` block supports the following arguments:
 
-* `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `voice`, `chat`, `task`.
-* `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `voice`: Minimum value of 1. Maximum value of 1. Valid Range for `chat`: Minimum value of 1. Maximum value of 10. Valid Range for `task`: Minimum value of 1. Maximum value of 10.
+* `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
+* `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
 
 A `queueConfigs` block supports the following arguments:
 
-* `channel` - (Required) Specifies the channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `voice`, `chat`, `task`.
+* `channel` - (Required) Specifies the channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
 * `delay` - (Required) Specifies the delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - (Required) Specifies the order in which contacts are to be handled for the queue.
 * `queueId` - (Required) Specifies the identifier for the queue.
@@ -86,9 +86,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the Routing Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
-* `queueConfigs` - In addition to the arguments used in the `queueConfigs` argument block, there are additional attributes exported within the `queueConfigs` block. These additional attributes are documented below.
+* `queueConfigs` - In addition to the arguments used in the `queue_configs` argument block, there are additional attributes exported within the `queue_configs` block. These additional attributes are documented below.
 * `routingProfileId` - The identifier for the Routing Profile.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `queueConfigs` block supports the following attributes in addition to the arguments defined earlier:
 
@@ -117,4 +117,4 @@ Using `terraform import`, import Amazon Connect Routing Profiles using the `inst
 % terraform import aws_connect_routing_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1f2cd7ee9876fa36ee4179b3d2a05a02f4d68fe3bb0d9a30414b3a35c3873635 -->
+<!-- cache-key: cdktf-0.19.0 input-1f2cd7ee9876fa36ee4179b3d2a05a02f4d68fe3bb0d9a30414b3a35c3873635 -->
