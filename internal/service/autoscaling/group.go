@@ -3547,11 +3547,11 @@ func expandInstanceMaintenancePolicy(l []interface{}) *autoscaling.InstanceMaint
 	}
 
 	tfMap := l[0].(map[string]interface{})
+
 	return &autoscaling.InstanceMaintenancePolicy{
 		MinHealthyPercentage: aws.Int64(int64(tfMap["min_healthy_percentage"].(int))),
 		MaxHealthyPercentage: aws.Int64(int64(tfMap["max_healthy_percentage"].(int))),
 	}
-
 }
 
 func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *autoscaling.InstanceMaintenancePolicy) []interface{} {
