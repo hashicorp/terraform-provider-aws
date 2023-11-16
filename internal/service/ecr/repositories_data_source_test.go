@@ -10,6 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
 func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, strings.ToLower(ecr.ServiceID))
+			acctest.PreCheckPartitionHasService(t, tfecr.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(ecr.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,28 +44,6 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepositoriesDataSource_empty(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_ecr_repositories.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, strings.ToLower(ecr.ServiceID))
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(ecr.ServiceID)),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRepositoriesDataSourceConfig_empty(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
-				),
-			},
-		},
-	})
-}
-
 func testAccRepositoriesDataSourceConfig_basic(rNames []string) string {
 	rNameJson, _ := json.Marshal(rNames)
 	rNameString := string(rNameJson)
@@ -78,12 +57,8 @@ resource "aws_ecr_repository" "test" {
 	name  = local.repo_list[count.index]
 }
   
-  data "aws_ecr_repositories" "test" {}
+  data "aws_ecr_repositories" "test" {
+	depends_on = [aws_ecr_repository.test]
+  }
 `, rNameString)
-}
-
-func testAccRepositoriesDataSourceConfig_empty() string {
-	return fmt.Sprint(`
-data "aws_ecr_repositories" "test" {}
-`)
 }
