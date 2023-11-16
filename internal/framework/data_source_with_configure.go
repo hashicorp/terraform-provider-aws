@@ -26,7 +26,7 @@ func (d *DataSourceWithConfigure) Configure(_ context.Context, request datasourc
 }
 
 type dataSourceReader[T any] interface {
-	// Read is called when the provider must read data source values in order to update state.
+	// OnRead is called when the provider must read data source values in order to update state.
 	// On entry `data` contains Config values and on return `data` is written to State.
 	OnRead(ctx context.Context, data *T) diag.Diagnostics
 }

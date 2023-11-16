@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,6 +59,118 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	} else {
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
 	}
+}
+
+type resourceCRUDer[T any] interface {
+	// OnCreate is called when the provider must create a new resource.
+	// On entry `data` contains Plan values and on return `data` is written to State.
+	OnCreate(ctx context.Context, data *T) diag.Diagnostics
+	// OnRead is called when the provider must read resource values in order to update state.
+	// On entry `data` contains State values and on return `data` is written to State.
+	OnRead(ctx context.Context, data *T) diag.Diagnostics
+	// OnUpdate is called to update the state of the resource.
+	// On entry `old` contains State values and `new` contains Plan values.
+	// On return `new` is written to State.
+	OnUpdate(ctx context.Context, old, new *T) diag.Diagnostics
+	// OnDelete is called when the provider must delete the resource.
+	// On entry `data` contains State values.
+	// Nothing is done with `data` on return.
+	OnDelete(ctx context.Context, data *T) diag.Diagnostics
+}
+
+type ResourceWithConfigureEx[T any] struct {
+	ResourceWithConfigure
+	impl resourceCRUDer[T]
+}
+
+type r[T any, U any] interface {
+	resource.ResourceWithConfigure
+	resourceCRUDer[U]
+	setImpl(resourceCRUDer[U])
+	*T
+}
+
+func NewResource[T any, U any, V r[T, U]]() resource.ResourceWithConfigure {
+	var v V = new(T)
+	v.setImpl(v)
+	return v
+}
+
+// SetImpl sets the CRUDer implementation.
+func (r *ResourceWithConfigureEx[T]) setImpl(impl resourceCRUDer[T]) {
+	r.impl = impl
+}
+
+// Create is called when the provider must create a new resource.
+// Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
+func (r *ResourceWithConfigureEx[T]) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data T
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.impl.OnCreate(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+// Read is called when the provider must read resource values in order to update state.
+// Planned state values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (r *ResourceWithConfigureEx[T]) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data T
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.impl.OnRead(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+// Update is called to update the state of the resource.
+// Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
+func (r *ResourceWithConfigureEx[T]) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new T
+
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.impl.OnUpdate(ctx, &old, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+// Delete is called when the provider must delete the resource.
+// Config values may be read from the DeleteRequest.
+func (r *ResourceWithConfigureEx[T]) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data T
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.impl.OnDelete(ctx, &data)...)
 }
 
 func mapHasUnknownElements(m types.Map) bool {
