@@ -11,6 +11,7 @@ import (
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -97,7 +98,6 @@ import (
 	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	chimesdkmediapipelines_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	chimesdkvoice_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
@@ -346,8 +346,8 @@ func (c *AWSClient) ChimeSDKMediaPipelinesConn(ctx context.Context) *chimesdkmed
 	return errs.Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
 }
 
-func (c *AWSClient) ChimeSDKVoiceConn(ctx context.Context) *chimesdkvoice_sdkv1.ChimeSDKVoice {
-	return errs.Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
+func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice_sdkv2.Client {
+	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {

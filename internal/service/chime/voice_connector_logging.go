@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -50,18 +51,18 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 }
 
 func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chimesdkvoice.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(vcId),
-		LoggingConfiguration: &chimesdkvoice.LoggingConfiguration{
+		LoggingConfiguration: &awstypes.LoggingConfiguration{
 			EnableMediaMetricLogs: aws.Bool(d.Get("enable_media_metric_logs").(bool)),
 			EnableSIPLogs:         aws.Bool(d.Get("enable_sip_logs").(bool)),
 		},
 	}
 
-	if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
+	if _, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input); err != nil {
 		return diag.Errorf("creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
 	}
 
@@ -70,9 +71,9 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.LoggingConfiguration, error) {
+	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.LoggingConfiguration, error) {
 		return findVoiceConnectorLoggingByID(ctx, conn, d.Id())
 	})
 
@@ -94,18 +95,18 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("enable_sip_logs", "enable_media_metric_logs") {
 		input := &chimesdkvoice.PutVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(d.Id()),
-			LoggingConfiguration: &chimesdkvoice.LoggingConfiguration{
+			LoggingConfiguration: &awstypes.LoggingConfiguration{
 				EnableMediaMetricLogs: aws.Bool(d.Get("enable_media_metric_logs").(bool)),
 				EnableSIPLogs:         aws.Bool(d.Get("enable_sip_logs").(bool)),
 			},
 		}
 
-		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
+		if _, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input); err != nil {
 			return diag.Errorf("updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
@@ -114,19 +115,19 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
-		LoggingConfiguration: &chimesdkvoice.LoggingConfiguration{
+		LoggingConfiguration: &awstypes.LoggingConfiguration{
 			EnableSIPLogs:         aws.Bool(false),
 			EnableMediaMetricLogs: aws.Bool(false),
 		},
 	}
 
-	_, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input)
+	_, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil
 	}
 
@@ -137,14 +138,14 @@ func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func findVoiceConnectorLoggingByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.LoggingConfiguration, error) {
+func findVoiceConnectorLoggingByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.LoggingConfiguration, error) {
 	in := &chimesdkvoice.GetVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(id),
 	}
 
-	resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, in)
+	resp, err := conn.GetVoiceConnectorLoggingConfiguration(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
