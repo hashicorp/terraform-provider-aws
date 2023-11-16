@@ -24,6 +24,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -524,6 +525,10 @@ func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
 
 func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
 	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR))
+}
+
+func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
+	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR))
 }
 
 func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
