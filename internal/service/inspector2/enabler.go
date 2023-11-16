@@ -419,9 +419,13 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 		Delay:   10 * time.Second,
 	}
 
-	raw, err := stateConf.WaitForStateContext(ctx)
-	result := raw.(map[string]AccountResourceStatus)
-	return result, err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]AccountResourceStatus); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
