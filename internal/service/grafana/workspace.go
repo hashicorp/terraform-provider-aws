@@ -4,9 +4,7 @@
 package grafana
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -25,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/ujson"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -72,7 +69,7 @@ func ResourceWorkspace() *schema.Resource {
 				Optional:              true,
 				Computed:              true,
 				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      suppressEquivalentWorkspaceConfiguration,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -527,53 +524,4 @@ func flattenNetworkAccessControl(rs *managedgrafana.NetworkAccessConfiguration) 
 	}
 
 	return []interface{}{m}
-}
-
-// suppressEquivalentWorkspaceConfiguration provides custom difference suppression
-// for strings that are equivalent once read-only fields have been removed.
-func suppressEquivalentWorkspaceConfiguration(k, old, new string, d *schema.ResourceData) bool {
-	if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
-		return old == new
-	}
-
-	old, new = removeWorkspaceConfigurationReadOnlyFieldsFromJSON(old), removeWorkspaceConfigurationReadOnlyFieldsFromJSON(new)
-
-	return verify.JSONStringsEqual(old, new)
-}
-
-// removeWorkspaceConfigurationReadOnlyFieldsFromJSON removes read-only (can't be specified in configuration) fields from a valid JSON string.
-func removeWorkspaceConfigurationReadOnlyFieldsFromJSON(in string) string {
-	roFields := [][]byte{
-		[]byte(`"plugins"`),
-	}
-	out := make([]byte, 0, len(in))
-
-	err := ujson.Walk([]byte(in), func(_ int, key, value []byte) bool {
-		if len(key) != 0 {
-			for _, roField := range roFields {
-				if bytes.Equal(key, roField) {
-					// Remove the key and value from the output.
-					return false
-				}
-			}
-		}
-
-		// Write to output.
-		if len(out) != 0 && ujson.ShouldAddComma(value, out[len(out)-1]) {
-			out = append(out, ',')
-		}
-		if len(key) > 0 {
-			out = append(out, key...)
-			out = append(out, ':')
-		}
-		out = append(out, value...)
-
-		return true
-	})
-
-	if err != nil {
-		return ""
-	}
-
-	return string(out)
 }
