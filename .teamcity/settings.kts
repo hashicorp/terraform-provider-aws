@@ -594,6 +594,10 @@ object Sanity : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
     }
 })
 
@@ -661,6 +665,10 @@ object Performance : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })
