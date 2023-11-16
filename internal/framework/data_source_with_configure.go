@@ -36,14 +36,14 @@ type DataSourceWithConfigureEx[T any] struct {
 	impl dataSourceReader[T]
 }
 
-type dataSource[T any, U any] interface {
+type ds[T any, U any] interface {
 	datasource.DataSourceWithConfigure
 	dataSourceReader[U]
 	setImpl(dataSourceReader[U])
 	*T
 }
 
-func NewDataSource[T any, U any, V dataSource[T, U]]() datasource.DataSourceWithConfigure {
+func NewDataSource[T any, U any, V ds[T, U]]() datasource.DataSourceWithConfigure {
 	var v V = new(T)
 	v.setImpl(v)
 	return v
