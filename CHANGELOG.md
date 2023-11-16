@@ -10,6 +10,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_autoscaling_group: Add `instance_maintenance_policy` attribute ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
+* provider: Adds `https_proxy` and `no_proxy` parameters. ([#34243](https://github.com/hashicorp/terraform-provider-aws/issues/34243))
 * resource/aws_autoscaling_group: Add `instance_maintenance_policy` configuration block ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
 * resource/aws_finspace_kx_cluster: Increase default create and update timeouts to 4 hours to allow for increased startup times with large volumes of cached data ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
 * resource/aws_finspace_kx_environment: Increase default delete timeout to 75 minutes ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
