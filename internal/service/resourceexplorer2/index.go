@@ -145,7 +145,7 @@ func (r *resourceIndex) OnRead(ctx context.Context, data *indexResourceModel) (b
 		return false, diags
 	}
 
-	diags.Append(flex.Flatten(ctx, output, &data)...)
+	diags.Append(flex.Flatten(ctx, output, data)...)
 
 	if diags.HasError() {
 		return false, diags
