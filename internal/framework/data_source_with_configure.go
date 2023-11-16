@@ -43,7 +43,7 @@ type ds[T any, U any] interface {
 	*T
 }
 
-func NewDataSource[T any, U any, V ds[T, U]]() datasource.DataSourceWithConfigure {
+func NewDataSource[T any, U any, V ds[T, U]]() V {
 	var v V = new(T)
 	v.setImpl(v)
 	return v
