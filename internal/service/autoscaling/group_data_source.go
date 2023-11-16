@@ -65,11 +65,11 @@ func DataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"min_healthy_percentage": {
+						"max_healthy_percentage": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"max_healthy_percentage": {
+						"min_healthy_percentage": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

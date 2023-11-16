@@ -193,15 +193,6 @@ func ResourceGroup() *schema.Resource {
 				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"min_healthy_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(-1, 100),
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return old == "" && new == "-1"
-							},
-						},
 						"max_healthy_percentage": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -209,6 +200,15 @@ func ResourceGroup() *schema.Resource {
 								validation.IntBetween(100, 200),
 								validation.IntBetween(-1, -1),
 							),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
+						},
+						"min_healthy_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(-1, 100),
 							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return old == "" && new == "-1"
