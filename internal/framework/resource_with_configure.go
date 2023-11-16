@@ -90,7 +90,7 @@ type r[T any, U any] interface {
 	*T
 }
 
-func NewResource[T any, U any, V r[T, U]]() resource.ResourceWithConfigure {
+func NewResource[T any, U any, V r[T, U]]() V {
 	var v V = new(T)
 	v.setImpl(v)
 	return v
