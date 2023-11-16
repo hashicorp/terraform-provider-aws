@@ -9,4 +9,5 @@ import (
 
 const (
 	propagationTimeout = 2 * time.Minute
+	ServiceID          = "api.ecr"
 )
