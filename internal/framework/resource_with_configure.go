@@ -67,7 +67,8 @@ type resourceCRUDer[T any] interface {
 	OnCreate(ctx context.Context, data *T) diag.Diagnostics
 	// OnRead is called when the provider must read resource values in order to update state.
 	// On entry `data` contains State values and on return `data` is written to State.
-	OnRead(ctx context.Context, data *T) diag.Diagnostics
+	// Set the boolean return value to `true` if the resource was not found.
+	OnRead(ctx context.Context, data *T) (bool, diag.Diagnostics)
 	// OnUpdate is called to update the state of the resource.
 	// On entry `old` contains State values and `new` contains Plan values.
 	// On return `new` is written to State.
@@ -129,8 +130,14 @@ func (r *ResourceWithConfigureEx[T]) Read(ctx context.Context, request resource.
 		return
 	}
 
-	response.Diagnostics.Append(r.impl.OnRead(ctx, &data)...)
+	notFound, diags := r.impl.OnRead(ctx, &data)
+	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if notFound {
+		response.State.RemoveResource(ctx)
 		return
 	}
 
