@@ -60,7 +60,7 @@ region = us-west-2
 			SharedConfigurationFile: `
 	[default]
 	region = us-west-2
-		`,
+		`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
 				if a, e := meta.Region, "us-west-2"; a != e {
@@ -80,7 +80,7 @@ region = us-west-2
 
 	[profile test]
 	region = us-east-1
-			`,
+			`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
 				if a, e := meta.Region, "us-east-1"; a != e {
@@ -99,7 +99,7 @@ region = us-west-2
 
 [profile test]
 region = us-east-1
-`,
+`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
 				if a, e := meta.Region, "us-east-1"; a != e {
@@ -113,7 +113,7 @@ region = us-east-1
 [default]
 region = us-west-2
 sso_start_url = https://d-123456789a.awsapps.com/start#
-`,
+`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				awsConfig := meta.AwsConfig()
 				var ssoStartUrl string
