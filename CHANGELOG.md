@@ -1,4 +1,5 @@
-## 5.26.0 (Unreleased)
+## 5.27.0 (Unreleased)
+## 5.26.0 (November 16, 2023)
 
 FEATURES:
 
