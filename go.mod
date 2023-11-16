@@ -17,6 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.0
@@ -145,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.1 // indirect
-	github.com/aws/smithy-go v1.16.0 // indirect
+	github.com/aws/smithy-go v1.17.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect

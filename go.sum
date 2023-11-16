@@ -58,6 +58,8 @@ github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.1 h1:qeUpRNt719FxxOv0OIb
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.1/go.mod h1:Ta+K43GimomnNMOSgZBHDy6itNw8zfhcJoSVkLWCPiE=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.3.1 h1:lAbJ/wQ96QZPbgMGkwy4MkwYBE0fSkHrsCqpdzKB8FA=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.3.1/go.mod h1:T6sGivDDiUgXY/R3+S9t5oRR0XJiUeKAXyyw3LRdTK4=
+github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.11.2 h1:BOhDhkslpSqyye38XkGuYRtKc2K+LUARi40+nLfFZns=
+github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.11.2/go.mod h1:ugdoQ39F3IjYNFnWgPqruX04VpJLYlvZ/Ncv/UOT2lM=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.7.0 h1:Tzr0M3HxHIjFtxxPzsKE9xeLOrWCfJXl5HDCgkmiylE=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.7.0/go.mod h1:1uZJJhBfD+zak0t687UE2IQ8t8hugY6bpM67IpLcYK8=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.2 h1:wm8zm7z6Gl+5O4K5DbZAm1Q37W2SGX4OrP9VOVPuHvc=
@@ -208,8 +210,8 @@ github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.1 h1:9pj1eIIwWJqGrITnkH6gg
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.1/go.mod h1:WpCZtgHZRiYfv0jN6WsgKYvpsGp5H/QxUF+VYnTwmcE=
 github.com/aws/aws-sdk-go-v2/service/xray v1.22.1 h1:EfeYTIUR/HgFijILpqvRh3Xgky0qOW998lOOmMSPqRY=
 github.com/aws/aws-sdk-go-v2/service/xray v1.22.1/go.mod h1:4+g9QRvp2RZko4VZF62ICz59N3t1yUPllfzMy6yg8yg=
-github.com/aws/smithy-go v1.16.0 h1:gJZEH/Fqh+RsvlJ1Zt4tVAtV6bKkp3cC+R6FCZMNzik=
-github.com/aws/smithy-go v1.16.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
+github.com/aws/smithy-go v1.17.0 h1:wWJD7LX6PBV6etBUwO0zElG0nWN9rUhp0WdYeHSHAaI=
+github.com/aws/smithy-go v1.17.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
 github.com/beevik/etree v1.2.0 h1:l7WETslUG/T+xOPs47dtd6jov2Ii/8/OjCldk5fYfQw=
 github.com/beevik/etree v1.2.0/go.mod h1:aiPf89g/1k3AShMVAzriilpcE4R/Vuor90y83zVZWFc=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
