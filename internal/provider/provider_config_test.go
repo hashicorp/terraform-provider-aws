@@ -23,6 +23,8 @@ import (
 
 // TestSharedConfigFileParsing prevents regression in shared config file parsing
 // * https://github.com/aws/aws-sdk-go-v2/issues/2349: indented keys
+// * https://github.com/aws/aws-sdk-go-v2/issues/2363: leading whitespace
+// * https://github.com/aws/aws-sdk-go-v2/issues/2369: trailing `#` in, e.g. SSO Start URLs
 func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 	testcases := map[string]struct {
 		Config                  map[string]any
