@@ -1330,13 +1330,20 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		healthCheckProtocol := healthCheck["protocol"].(string)
 
 		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
-			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
-				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+					"health_check.matcher",
+					"health_check.protocol",
+					elbv2.ProtocolEnumTcp,
+				)
 			}
-			// Cannot set custom path on TCP health checks
+
 			if m := healthCheck["path"].(string); m != "" {
-				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+					"health_check.path",
+					"health_check.protocol",
+					elbv2.ProtocolEnumTcp,
+				)
 			}
 		}
 	}
@@ -1345,9 +1352,13 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 	if strings.Contains(protocol, elbv2.ProtocolEnumHttp) {
 		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
-			// HTTP(S) Target Groups cannot use TCP health checks
 			if p := healthCheck["protocol"].(string); strings.ToLower(p) == "tcp" {
-				return fmt.Errorf("HTTP Target Groups cannot use TCP health checks")
+				return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
+					"health_check.protocol",
+					elbv2.ProtocolEnumTcp,
+					"protocol",
+					protocol,
+				)
 			}
 		}
 	}
@@ -1370,7 +1381,7 @@ func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schem
 
 		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
 			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
-				"protocol",
+				"health_check.protocol",
 				elbv2.ProtocolEnumTcp,
 				"target_type",
 				elbv2.TargetTypeEnumLambda,

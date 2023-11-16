@@ -2537,8 +2537,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -2685,11 +2684,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else if tc.invalidConfig {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`health_check.matcher is not supported for target_groups with TCP protocol`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.matcher" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -2829,11 +2826,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol, tc.path),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else if tc.invalidConfig {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`health_check.path is not supported for target_groups with TCP protocol`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.path" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -2983,11 +2978,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else if tc.invalidConfig {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`health_check.matcher is not supported for target_groups with TCP protocol`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.matcher" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
 					} else {
 						// TODO: plan-time validation
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '%s' inclusive`, tc.matcher, tc.validRange))
@@ -3123,8 +3116,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3201,11 +3193,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol, tc.path),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else if tc.invalidConfig {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`health_check.path is not supported for target_groups with TCP protocol`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.path" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3270,8 +3260,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						// TODO: Better error message
-						step.ExpectError = regexache.MustCompile(`HTTP Target Groups cannot use TCP health checks`)
+						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else {
 						// TODO: plan-time validation
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher GRPC code '%s' must be within '0-99' inclusive`, tc.matcher))
@@ -3808,7 +3797,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 
 	testcases := map[string]struct {
 		invalidHealthCheckProtocol bool
-		silentFailure              bool
+		silentFailure              bool // TODO: silent failures are bad
 	}{
 		elbv2.ProtocolEnumHttp: {
 			silentFailure: true,
@@ -3837,7 +3826,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 				Config: testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol),
 			}
 			if tc.invalidHealthCheckProtocol {
-				step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "protocol" cannot have value %q when "target_type" is "lambda"`, healthCheckProtocol))
+				step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value %q when "target_type" is "lambda"`, healthCheckProtocol))
 			} else if tc.silentFailure {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3868,7 +3857,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 
 	testcases := map[string]struct {
 		invalidHealthCheckProtocol bool
-		silentFailure              bool // Currently silently fails, but doesn't set the parameter on read
+		silentFailure              bool // TODO: silent failures are bad
 	}{
 		elbv2.ProtocolEnumHttp: {
 			silentFailure: true,
