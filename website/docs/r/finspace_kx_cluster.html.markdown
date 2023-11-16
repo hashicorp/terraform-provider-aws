@@ -52,7 +52,7 @@ resource "aws_finspace_kx_cluster" "example" {
     s3_bucket = aws_s3_bucket.test.id
     s3_key    = aws_s3_object.object.key
   }
-  
+
   # Depending on the amount of data cached, create/update timeouts 
   # may need to be increased up to a potential maximum of 18 hours.
   timeouts {
