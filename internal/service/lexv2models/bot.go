@@ -256,7 +256,8 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	members, _ := flattenMembers(ctx, out.BotMembers)
+	members, errDiags := flattenMembers(ctx, out.BotMembers)
+	resp.Diagnostics.Append(errDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

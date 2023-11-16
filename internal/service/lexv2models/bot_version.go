@@ -83,12 +83,7 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
@@ -147,8 +142,12 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 		aws.ToString(out.BotId),
 		aws.ToString(out.BotVersion),
 	}
-	id, _ := fwflex.FlattenResourceId(idParts, botVersionIDPartCount, false)
-	if resp.Diagnostics.HasError() {
+	id, err := fwflex.FlattenResourceId(idParts, botVersionIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, id, err),
+			err.Error(),
+		)
 		return
 	}
 
