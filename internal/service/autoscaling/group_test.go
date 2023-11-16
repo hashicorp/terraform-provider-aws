@@ -494,7 +494,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAfterCreation(t *testi
 				),
 			},
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 90, 120),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 90, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -504,7 +504,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAfterCreation(t *testi
 			},
 			// To validate update instance_maintenance_policy argument
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 80, 130),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 80, 130),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -514,7 +514,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAfterCreation(t *testi
 			},
 			//To validate removing the instance_maintenance_policy argument
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, -1, -1),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, -1, -1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "0"),
@@ -545,7 +545,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAtCreation(t *testing.
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 90, 120),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 90, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -555,7 +555,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAtCreation(t *testing.
 			},
 			//To validate update instance_maintenance_policy min_healthy_percentage argument
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 90, 130),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 90, 130),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -565,7 +565,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAtCreation(t *testing.
 			},
 			//To validate update instance_maintenance_policy max_healthy_percentage argument
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 80, 130),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 80, 130),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -598,14 +598,14 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyNegativeValues(t *test
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, -1, -1),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, -1, -1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupConfig_InstanceMaintenancePolicy(rName, 90, 120),
+				Config: testAccGroupConfig_instanceMaintenancePolicy(rName, 90, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "1"),
@@ -4143,19 +4143,19 @@ resource "aws_autoscaling_group" "test" {
 `, rName, defaultInstanceWarmup))
 }
 
-func testAccGroupConfig_InstanceMaintenancePolicy(rName string, min_percentage int, max_percentage int) string {
+func testAccGroupConfig_instanceMaintenancePolicy(rName string, min_percentage int, max_percentage int) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
-  resource "aws_autoscaling_group" "test" {
-	availability_zones = [data.aws_availability_zones.available.names[0]]
-	max_size           = 0
-	min_size           = 0
-	name               = %[1]q
-	instance_maintenance_policy {
-	  min_healthy_percentage = %[2]d
-	  max_healthy_percentage = %[3]d
-	}
-	launch_configuration = aws_launch_configuration.test.name
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+  instance_maintenance_policy {
+    min_healthy_percentage = %[2]d
+    max_healthy_percentage = %[3]d
   }
+  launch_configuration = aws_launch_configuration.test.name
+}
 `, rName, min_percentage, max_percentage))
 }
 
