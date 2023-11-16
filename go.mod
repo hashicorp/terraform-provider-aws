@@ -204,6 +204,8 @@ require (
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
 
+replace github.com/aws/aws-sdk-go-v2/service/eks => /Users/brybiggs/Documents/awsSdkGoV2/service/eks
+
 exclude ( // Contains INI parsing regression
 	github.com/aws/aws-sdk-go-v2/config v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.22.0
