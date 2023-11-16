@@ -68,6 +68,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
+			"auth_token_update_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
+				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
+				RequiredWith: []string{"auth_token"},
+			},
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
@@ -855,11 +862,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if d.HasChange("auth_token") {
+		if d.HasChanges("auth_token", "auth_token_update_strategy") {
 			params := &elasticache.ModifyReplicationGroupInput{
 				ApplyImmediately:        aws.Bool(true),
 				ReplicationGroupId:      aws.String(d.Id()),
-				AuthTokenUpdateStrategy: aws.String("ROTATE"),
+				AuthTokenUpdateStrategy: aws.String(d.Get("auth_token_update_strategy").(string)),
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 			}
 
