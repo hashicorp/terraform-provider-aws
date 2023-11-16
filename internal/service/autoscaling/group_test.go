@@ -82,6 +82,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "0"),
