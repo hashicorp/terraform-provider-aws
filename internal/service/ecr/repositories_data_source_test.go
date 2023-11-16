@@ -52,16 +52,16 @@ func testAccRepositoriesDataSourceConfig_basic(rNames []string) string {
 	rNameString := string(rNameJson)
 	return fmt.Sprintf(`
 locals {
-	repo_list = %[1]s
+  repo_list = %[1]s
 }
 
 resource "aws_ecr_repository" "test" {
-	count = length(local.repo_list)
-	name  = local.repo_list[count.index]
+  count = length(local.repo_list)
+  name  = local.repo_list[count.index]
 }
-  
-  data "aws_ecr_repositories" "test" {
-	depends_on = [aws_ecr_repository.test]
-  }
+
+data "aws_ecr_repositories" "test" {
+  depends_on = [aws_ecr_repository.test]
+}
 `, rNameString)
 }
