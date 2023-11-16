@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -32,7 +33,7 @@ import (
 // @FrameworkResource(name="Index")
 // @Tags(identifierAttribute="id")
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIndex{}
+	r := framework.NewResource[resourceIndex, indexResourceModel, *resourceIndex]()
 	r.SetDefaultCreateTimeout(2 * time.Hour)
 	r.SetDefaultUpdateTimeout(2 * time.Hour)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
@@ -41,7 +42,7 @@ func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type resourceIndex struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithConfigureEx[indexResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -72,15 +73,8 @@ func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaReque
 	}
 }
 
-func (r *resourceIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data indexResourceModel
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+func (r *resourceIndex) OnCreate(ctx context.Context, data *indexResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateIndexInput{
@@ -91,9 +85,9 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	output, err := conn.CreateIndex(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Resource Explorer Index", err.Error())
+		diags.AddError("creating Resource Explorer Index", err.Error())
 
-		return
+		return diags
 	}
 
 	arn := aws.ToString(output.Arn)
@@ -101,9 +95,9 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	if _, err := waitIndexCreated(ctx, conn, createTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) create", data.ID.ValueString()), err.Error())
+		diags.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) create", data.ID.ValueString()), err.Error())
 
-		return
+		return diags
 	}
 
 	if data.Type.ValueEnum() == awstypes.IndexTypeAggregator {
@@ -115,75 +109,55 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		_, err := conn.UpdateIndexType(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+			diags.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
 
-			return
+			return diags
 		}
 
 		if _, err := waitIndexUpdated(ctx, conn, createTimeout); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", data.ID.ValueString()), err.Error())
+			diags.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", data.ID.ValueString()), err.Error())
 
-			return
+			return diags
 		}
 	}
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	return diags
 }
 
-func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data indexResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+func (r *resourceIndex) OnRead(ctx context.Context, data *indexResourceModel) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	output, err := findIndex(ctx, conn)
 
 	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
+		diags.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 
-		return
+		return true, diags
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+		diags.AddError(fmt.Sprintf("reading Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
 
-		return
+		return false, diags
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	diags.Append(flex.Flatten(ctx, output, &data)...)
 
-	if response.Diagnostics.HasError() {
-		return
+	if diags.HasError() {
+		return false, diags
 	}
 
 	setTagsOut(ctx, output.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	return false, diags
 }
 
-func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new indexResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
+func (r *resourceIndex) OnUpdate(ctx context.Context, old, new *indexResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if !new.Type.Equal(old.Type) {
 		conn := r.Meta().ResourceExplorer2Client(ctx)
@@ -196,31 +170,24 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		_, err := conn.UpdateIndexType(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", new.ID.ValueString()), err.Error())
+			diags.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", new.ID.ValueString()), err.Error())
 
-			return
+			return diags
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		if _, err := waitIndexUpdated(ctx, conn, updateTimeout); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
+			diags.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
 
-			return
+			return diags
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	return diags
 }
 
-func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data indexResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+func (r *resourceIndex) OnDelete(ctx context.Context, data *indexResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
@@ -231,17 +198,19 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 	})
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+		diags.AddError(fmt.Sprintf("deleting Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
 
-		return
+		return diags
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err := waitIndexDeleted(ctx, conn, deleteTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
+		diags.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
 
-		return
+		return diags
 	}
+
+	return diags
 }
 
 func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
