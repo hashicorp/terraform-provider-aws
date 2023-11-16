@@ -99,7 +99,7 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 	in := &chimesdkvoice.CreateVoiceProfileDomainInput{
 		Name:                              aws.String(d.Get(names.AttrName).(string)),
 		ServerSideEncryptionConfiguration: expandServerSideEncryptionConfiguration(d.Get("server_side_encryption_configuration").([]interface{})),
-		Tags:                              getTagsIn(ctx),
+		//Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
