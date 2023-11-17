@@ -51,7 +51,7 @@ func sweepApps(region string) error {
 				continue
 			}
 
-			r := ResourceApp()
+			r := resourceApp()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", "xxxx", app))
 			d.Set("name", app)

@@ -10,15 +10,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -265,11 +264,9 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetApplication(ctx, &codedeploy.GetApplicationInput{
-				ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-			})
+			_, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
 
-			if errs.IsA[*types.ApplicationDoesNotExistException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -277,37 +274,29 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("still exists")
+			return fmt.Errorf("CodeDeploy Application %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAppExists(ctx context.Context, name string, application *types.ApplicationInfo) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, n string, v *types.ApplicationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
 
-		input := &codedeploy.GetApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		}
-
-		output, err := conn.GetApplication(ctx, input)
+		output, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.Application == nil {
-			return fmt.Errorf("error reading CodeDeploy Application (%s): empty response", rs.Primary.ID)
-		}
-
-		*application = *output.Application
+		*v = *output
 
 		return nil
 	}
@@ -326,8 +315,8 @@ func testAccCheckAppRecreated(i, j *types.ApplicationInfo) resource.TestCheckFun
 func testAccAppConfig_computePlatform(rName string, computePlatform string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
-  compute_platform = %q
-  name             = %q
+  compute_platform = %[1]q
+  name             = %[2]q
 }
 `, computePlatform, rName)
 }
@@ -335,7 +324,7 @@ resource "aws_codedeploy_app" "test" {
 func testAccAppConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
-  name = %q
+  name = %[1]q
 }
 `, rName)
 }
