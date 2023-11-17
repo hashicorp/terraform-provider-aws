@@ -1,4 +1,9 @@
 ## 5.27.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
+
 ## 5.26.0 (November 16, 2023)
 
 FEATURES:
