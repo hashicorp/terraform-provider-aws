@@ -35,7 +35,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
-* `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user.
+* `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user. See [`voice_settings`](#voice-settings).
 
 ## Attribute Reference
 
@@ -43,6 +43,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Comma-delimited string joining locale ID, bot ID, and bot version.
 * `name` - Specified locale name.
+
+### Voice Settings
+
+* `voice_id` - Identifier of the Amazon Polly voice to use.
+* `engine` - Indicates the type of Amazon Polly voice that Amazon Lex should use for voice interaction with the user. For more information, see the [engine parameter of the SynthesizeSpeech operation](https://docs.aws.amazon.com/polly/latest/dg/API_SynthesizeSpeech.html#polly-SynthesizeSpeech-request-Engine) in the Amazon Polly developer guide. If not specified, the default is `standard`.
 
 ## Timeouts
 
