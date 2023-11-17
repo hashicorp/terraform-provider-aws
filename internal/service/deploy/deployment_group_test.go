@@ -9,12 +9,10 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -24,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDeployDeploymentGroup_basic(t *testing.T) {
@@ -35,7 +34,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +108,7 @@ func TestAccDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -181,7 +180,7 @@ func TestAccDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +222,7 @@ func TestAccDeployDeploymentGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,7 +246,7 @@ func TestAccDeployDeploymentGroup_Disappears_app(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -272,7 +271,7 @@ func TestAccDeployDeploymentGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -320,7 +319,7 @@ func TestAccDeployDeploymentGroup_Trigger_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -370,7 +369,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -432,7 +431,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -468,7 +467,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -518,7 +517,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -562,7 +561,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -611,7 +610,7 @@ func TestAccDeployDeploymentGroup_Alarm_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -649,7 +648,7 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -703,7 +702,7 @@ func TestAccDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -749,7 +748,7 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -803,7 +802,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_default(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -838,7 +837,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -881,7 +880,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -929,7 +928,7 @@ func TestAccDeployDeploymentGroup_DeploymentStyle_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -976,7 +975,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1012,7 +1011,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1061,7 +1060,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfo_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1105,7 +1104,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_create(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1142,7 +1141,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1191,7 +1190,7 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1235,7 +1234,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1278,7 +1277,7 @@ func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1355,7 +1354,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1412,7 +1411,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_updateWithASG(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1481,7 +1480,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1564,7 +1563,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1633,7 +1632,7 @@ func TestAccDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1741,7 +1740,7 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1805,7 +1804,7 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_update(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1835,7 +1834,7 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(codedeploy.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
 		Steps: []resource.TestStep{

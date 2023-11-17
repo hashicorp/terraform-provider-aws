@@ -37,6 +37,7 @@ const (
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeDeployEndpointID                 = "codedeploy"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
