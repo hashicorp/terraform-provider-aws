@@ -35,6 +35,7 @@ const (
 	AuditManagerEndpointID               = "auditmanager"
 	BedrockEndpointID                    = "bedrock"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
+	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
