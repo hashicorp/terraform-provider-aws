@@ -140,7 +140,7 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 	input := &codedeploy.CreateDeploymentConfigInput{
 		ComputePlatform:      types.ComputePlatform(d.Get("compute_platform").(string)),
 		DeploymentConfigName: aws.String(name),
-		MinimumHealthyHosts:  expandMinimumHealthHostsConfig(d),
+		MinimumHealthyHosts:  expandMinimumHealthyHosts(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
@@ -174,7 +174,7 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("compute_platform", deploymentConfig.ComputePlatform)
 	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
 	d.Set("deployment_config_name", deploymentConfig.DeploymentConfigName)
-	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(deploymentConfig.MinimumHealthyHosts)); err != nil {
+	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHosts(deploymentConfig.MinimumHealthyHosts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting minimum_healthy_hosts: %s", err)
 	}
 	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(deploymentConfig.TrafficRoutingConfig)); err != nil {
@@ -225,7 +225,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 	return output.DeploymentConfigInfo, nil
 }
 
-func expandMinimumHealthHostsConfig(d *schema.ResourceData) *types.MinimumHealthyHosts {
+func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHosts {
 	hosts, ok := d.GetOk("minimum_healthy_hosts")
 	if !ok {
 		return nil
@@ -253,17 +253,17 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
 		canaryConfig := canary.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedCanary = expandTrafficTimeBasedCanaryConfig(canaryConfig)
+		trafficRoutingConfig.TimeBasedCanary = expandTimeBasedCanary(canaryConfig)
 	}
 	if linear, ok := config["time_based_linear"]; ok && len(linear.([]interface{})) > 0 {
 		linearConfig := linear.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedLinear = expandTrafficTimeBasedLinearConfig(linearConfig)
+		trafficRoutingConfig.TimeBasedLinear = expandTimeBasedLinear(linearConfig)
 	}
 
 	return &trafficRoutingConfig
 }
 
-func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *types.TimeBasedCanary {
+func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary {
 	canary := types.TimeBasedCanary{}
 	if interval, ok := config["interval"]; ok {
 		canary.CanaryInterval = int32(interval.(int))
@@ -274,7 +274,7 @@ func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *types.Ti
 	return &canary
 }
 
-func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *types.TimeBasedLinear {
+func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear {
 	linear := types.TimeBasedLinear{}
 	if interval, ok := config["interval"]; ok {
 		linear.LinearInterval = int32(interval.(int))
@@ -285,7 +285,7 @@ func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *types.Ti
 	return &linear
 }
 
-func flattenMinimumHealthHostsConfig(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
+func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if hosts == nil {
 		return result
@@ -308,13 +308,13 @@ func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[strin
 	item := make(map[string]interface{})
 
 	item["type"] = string(config.Type)
-	item["time_based_canary"] = flattenTrafficRoutingCanaryConfig(config.TimeBasedCanary)
-	item["time_based_linear"] = flattenTrafficRoutingLinearConfig(config.TimeBasedLinear)
+	item["time_based_canary"] = flattenTimeBasedCanary(config.TimeBasedCanary)
+	item["time_based_linear"] = flattenTimeBasedLinear(config.TimeBasedLinear)
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingCanaryConfig(canary *types.TimeBasedCanary) []map[string]interface{} {
+func flattenTimeBasedCanary(canary *types.TimeBasedCanary) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if canary == nil {
 		return result
@@ -327,7 +327,7 @@ func flattenTrafficRoutingCanaryConfig(canary *types.TimeBasedCanary) []map[stri
 	return append(result, item)
 }
 
-func flattenTrafficRoutingLinearConfig(linear *types.TimeBasedLinear) []map[string]interface{} {
+func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if linear == nil {
 		return result

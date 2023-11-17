@@ -22,9 +22,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,7 +35,7 @@ import (
 
 // @SDKResource("aws_codedeploy_deployment_group", name="Deployment Group")
 // @Tags(identifierAttribute="arn")
-func ResourceDeploymentGroup() *schema.Resource {
+func resourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentGroupCreate,
 		ReadWithoutTimeout:   resourceDeploymentGroupRead,
@@ -52,7 +54,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 				deploymentGroupName := idParts[1]
 				conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-				group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
+				group, err := findDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
@@ -137,9 +139,9 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action_on_timeout": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(flattenReadyActionValues(types.DeploymentReadyAction("").Values()), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.DeploymentReadyAction](),
 									},
 									"wait_time_in_minutes": {
 										Type:     schema.TypeInt,
@@ -156,9 +158,9 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(flattenGreenFleetProvisioningActionValues(types.GreenFleetProvisioningAction("").Values()), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
 									},
 								},
 							},
@@ -170,9 +172,9 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(flattenInstanceActionValues(types.InstanceAction("").Values()), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InstanceAction](),
 									},
 									"termination_wait_time_in_minutes": {
 										Type:         schema.TypeInt,
@@ -212,16 +214,16 @@ func ResourceDeploymentGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"deployment_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      string(types.DeploymentOptionWithoutTrafficControl),
-							ValidateFunc: validation.StringInSlice(flattenOptionValues(types.DeploymentOption("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.DeploymentOptionWithoutTrafficControl,
+							ValidateDiagFunc: enum.Validate[types.DeploymentOption](),
 						},
 						"deployment_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      string(types.DeploymentTypeInPlace),
-							ValidateFunc: validation.StringInSlice(flattenTypeValues(types.DeploymentType("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.DeploymentTypeInPlace,
+							ValidateDiagFunc: enum.Validate[types.DeploymentType](),
 						},
 					},
 				},
@@ -415,10 +417,10 @@ func ResourceDeploymentGroup() *schema.Resource {
 				Set: resourceTagFilterHash,
 			},
 			"outdated_instances_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      string(types.OutdatedInstancesStrategyUpdate),
-				ValidateFunc: validation.StringInSlice(flattenOutdatedInstancesStrategyValues(types.OutdatedInstancesStrategy("").Values()), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.OutdatedInstancesStrategyUpdate,
+				ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
 			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
@@ -436,8 +438,8 @@ func ResourceDeploymentGroup() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(flattenTriggerEventTypeValues(types.TriggerEventType("").Values()), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.TriggerEventType](),
 							},
 						},
 						"trigger_name": {
@@ -466,95 +468,87 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
 	serviceRoleArn := d.Get("service_role_arn").(string)
-	input := codedeploy.CreateDeploymentGroupInput{
+	input := &codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if attr, ok := d.GetOk("deployment_style"); ok {
-		input.DeploymentStyle = ExpandDeploymentStyle(attr.([]interface{}))
+	if v, ok := d.GetOk("alarm_configuration"); ok {
+		input.AlarmConfiguration = expandAlarmConfiguration(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("deployment_config_name"); ok {
-		input.DeploymentConfigName = aws.String(attr.(string))
+	if v, ok := d.GetOk("auto_rollback_configuration"); ok {
+		input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("autoscaling_groups"); ok {
-		input.AutoScalingGroups = flex.ExpandStringValueSet(attr.(*schema.Set))
+	if v, ok := d.GetOk("autoscaling_groups"); ok {
+		input.AutoScalingGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
-		onPremFilters := buildOnPremTagFilters(attr.(*schema.Set).List())
-		input.OnPremisesInstanceTagFilters = onPremFilters
+	if v, ok := d.GetOk("blue_green_deployment_config"); ok {
+		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("ec2_tag_set"); ok {
-		input.Ec2TagSet = buildEC2TagSet(attr.(*schema.Set).List())
+	if v, ok := d.GetOk("deployment_style"); ok {
+		input.DeploymentStyle = expandDeploymentStyle(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("ec2_tag_filter"); ok {
-		input.Ec2TagFilters = buildEC2TagFilters(attr.(*schema.Set).List())
+	if v, ok := d.GetOk("deployment_config_name"); ok {
+		input.DeploymentConfigName = aws.String(v.(string))
 	}
 
-	if attr, ok := d.GetOk("ecs_service"); ok {
-		input.EcsServices = expandECSServices(attr.([]interface{}))
+	if v, ok := d.GetOk("ec2_tag_set"); ok {
+		input.Ec2TagSet = expandEC2TagSet(v.(*schema.Set).List())
 	}
 
-	if attr, ok := d.GetOk("trigger_configuration"); ok {
-		triggerConfigs := BuildTriggerConfigs(attr.(*schema.Set).List())
-		input.TriggerConfigurations = triggerConfigs
+	if v, ok := d.GetOk("ec2_tag_filter"); ok {
+		input.Ec2TagFilters = expandEC2TagFilters(v.(*schema.Set).List())
 	}
 
-	if attr, ok := d.GetOk("auto_rollback_configuration"); ok {
-		input.AutoRollbackConfiguration = BuildAutoRollbackConfig(attr.([]interface{}))
+	if v, ok := d.GetOk("ecs_service"); ok {
+		input.EcsServices = expandECSServices(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("alarm_configuration"); ok {
-		input.AlarmConfiguration = BuildAlarmConfig(attr.([]interface{}))
+	if v, ok := d.GetOk("load_balancer_info"); ok {
+		input.LoadBalancerInfo = expandLoadBalancerInfo(v.([]interface{}))
 	}
 
-	if attr, ok := d.GetOk("load_balancer_info"); ok {
-		input.LoadBalancerInfo = ExpandLoadBalancerInfo(attr.([]interface{}))
+	if v, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
+		input.OnPremisesInstanceTagFilters = expandTagFilters(v.(*schema.Set).List())
 	}
 
-	if attr, ok := d.GetOk("blue_green_deployment_config"); ok {
-		input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(attr.([]interface{}))
+	if v, ok := d.GetOk("outdated_instances_strategy"); ok {
+		input.OutdatedInstancesStrategy = types.OutdatedInstancesStrategy(v.(string))
 	}
 
-	if attr, ok := d.GetOk("outdated_instances_strategy"); ok {
-		input.OutdatedInstancesStrategy = types.OutdatedInstancesStrategy(attr.(string))
+	if v, ok := d.GetOk("trigger_configuration"); ok {
+		input.TriggerConfigurations = expandTriggerConfigs(v.(*schema.Set).List())
 	}
 
-	var resp *codedeploy.CreateDeploymentGroupOutput
-	var err error
-	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-		resp, err = conn.CreateDeploymentGroup(ctx, &input)
+	outputRaw, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateDeploymentGroup(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*types.InvalidRoleException](err) {
+				return true, err
+			}
 
-		if errs.IsA[*types.InvalidRoleException](err) {
-			return retry.RetryableError(err)
-		}
+			if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
+				return true, err
+			}
 
-		if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
-			return retry.RetryableError(err)
-		}
+			return false, err
+		},
+	)
 
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDeploymentGroup(ctx, &input)
-	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Group (%s): %s", deploymentGroupName, err)
 	}
 
-	d.SetId(aws.ToString(resp.DeploymentGroupId))
+	d.SetId(aws.ToString(outputRaw.(*codedeploy.CreateDeploymentGroupOutput).DeploymentGroupId))
 
 	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
@@ -563,7 +557,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	group, err := FindDeploymentGroupByTwoPartKey(ctx, conn, d.Get("app_name").(string), d.Get("deployment_group_name").(string))
+	group, err := findDeploymentGroupByTwoPartKey(ctx, conn, d.Get("app_name").(string), d.Get("deployment_group_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
@@ -575,71 +569,55 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("alarm_configuration", flattenAlarmConfiguration(group.AlarmConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting alarm_configuration: %s", err)
+	}
 	appName := aws.ToString(group.ApplicationName)
 	groupName := aws.ToString(group.DeploymentGroupName)
-	groupArn := arn.ARN{
+	d.Set("app_name", appName)
+	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
-
-	d.Set("arn", groupArn)
-	d.Set("app_name", appName)
-	d.Set("deployment_config_name", group.DeploymentConfigName)
-	d.Set("deployment_group_name", group.DeploymentGroupName)
-	d.Set("deployment_group_id", group.DeploymentGroupId)
+	d.Set("arn", arn)
+	if err := d.Set("auto_rollback_configuration", flattenAutoRollbackConfiguration(group.AutoRollbackConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
+	}
+	d.Set("autoscaling_groups", tfslices.ApplyToAll(group.AutoScalingGroups, func(v types.AutoScalingGroup) string {
+		return aws.ToString(v.Name)
+	}))
+	if err := d.Set("blue_green_deployment_config", flattenBlueGreenDeploymentConfiguration(group.BlueGreenDeploymentConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting blue_green_deployment_config: %s", err)
+	}
 	d.Set("compute_platform", group.ComputePlatform)
-	d.Set("service_role_arn", group.ServiceRoleArn)
-	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
-
-	autoScalingGroups := make([]string, len(group.AutoScalingGroups))
-	for i, autoScalingGroup := range group.AutoScalingGroups {
-		autoScalingGroups[i] = aws.ToString(autoScalingGroup.Name)
-	}
-	if err := d.Set("autoscaling_groups", autoScalingGroups); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
-	}
-
-	if err := d.Set("deployment_style", FlattenDeploymentStyle(group.DeploymentStyle)); err != nil {
+	d.Set("deployment_config_name", group.DeploymentConfigName)
+	d.Set("deployment_group_id", group.DeploymentGroupId)
+	d.Set("deployment_group_name", group.DeploymentGroupName)
+	if err := d.Set("deployment_style", flattenDeploymentStyle(group.DeploymentStyle)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_style: %s", err)
 	}
-
-	if err := d.Set("ec2_tag_set", ec2TagSetToMap(group.Ec2TagSet)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_set: %s", err)
-	}
-
-	if err := d.Set("ec2_tag_filter", ec2TagFiltersToMap(group.Ec2TagFilters)); err != nil {
+	if err := d.Set("ec2_tag_filter", flattenEC2TagFilters(group.Ec2TagFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_filter: %s", err)
 	}
-
+	if err := d.Set("ec2_tag_set", flattenEC2TagSet(group.Ec2TagSet)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_set: %s", err)
+	}
 	if err := d.Set("ecs_service", flattenECSServices(group.EcsServices)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ecs_service: %s", err)
 	}
-
-	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(group.OnPremisesInstanceTagFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
-	}
-
-	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
-	}
-
-	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
-	}
-
-	if err := d.Set("alarm_configuration", AlarmConfigToMap(group.AlarmConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting alarm_configuration: %s", err)
-	}
-
-	if err := d.Set("load_balancer_info", FlattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
+	if err := d.Set("load_balancer_info", flattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_info: %s", err)
 	}
-
-	if err := d.Set("blue_green_deployment_config", FlattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting blue_green_deployment_config: %s", err)
+	if err := d.Set("on_premises_instance_tag_filter", flattenTagFilters(group.OnPremisesInstanceTagFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
+	}
+	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
+	d.Set("service_role_arn", group.ServiceRoleArn)
+	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
 
 	return diags
@@ -669,7 +647,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("deployment_style") {
 			_, n := d.GetChange("deployment_style")
-			input.DeploymentStyle = ExpandDeploymentStyle(n.([]interface{}))
+			input.DeploymentStyle = expandDeploymentStyle(n.([]interface{}))
 		}
 
 		if d.HasChange("deployment_config_name") {
@@ -686,19 +664,19 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		// TagFilters aren't like tags. They don't append. They simply replace.
 		if d.HasChange("on_premises_instance_tag_filter") {
 			_, n := d.GetChange("on_premises_instance_tag_filter")
-			onPremFilters := buildOnPremTagFilters(n.(*schema.Set).List())
+			onPremFilters := expandTagFilters(n.(*schema.Set).List())
 			input.OnPremisesInstanceTagFilters = onPremFilters
 		}
 
 		if d.HasChange("ec2_tag_set") {
 			_, n := d.GetChange("ec2_tag_set")
-			ec2TagSet := buildEC2TagSet(n.(*schema.Set).List())
+			ec2TagSet := expandEC2TagSet(n.(*schema.Set).List())
 			input.Ec2TagSet = ec2TagSet
 		}
 
 		if d.HasChange("ec2_tag_filter") {
 			_, n := d.GetChange("ec2_tag_filter")
-			ec2Filters := buildEC2TagFilters(n.(*schema.Set).List())
+			ec2Filters := expandEC2TagFilters(n.(*schema.Set).List())
 			input.Ec2TagFilters = ec2Filters
 		}
 
@@ -708,28 +686,28 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("trigger_configuration") {
 			_, n := d.GetChange("trigger_configuration")
-			triggerConfigs := BuildTriggerConfigs(n.(*schema.Set).List())
+			triggerConfigs := expandTriggerConfigs(n.(*schema.Set).List())
 			input.TriggerConfigurations = triggerConfigs
 		}
 
 		if d.HasChange("auto_rollback_configuration") {
 			_, n := d.GetChange("auto_rollback_configuration")
-			input.AutoRollbackConfiguration = BuildAutoRollbackConfig(n.([]interface{}))
+			input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(n.([]interface{}))
 		}
 
 		if d.HasChange("alarm_configuration") {
 			_, n := d.GetChange("alarm_configuration")
-			input.AlarmConfiguration = BuildAlarmConfig(n.([]interface{}))
+			input.AlarmConfiguration = expandAlarmConfiguration(n.([]interface{}))
 		}
 
 		if d.HasChange("load_balancer_info") {
 			_, n := d.GetChange("load_balancer_info")
-			input.LoadBalancerInfo = ExpandLoadBalancerInfo(n.([]interface{}))
+			input.LoadBalancerInfo = expandLoadBalancerInfo(n.([]interface{}))
 		}
 
 		if d.HasChange("blue_green_deployment_config") {
 			_, n := d.GetChange("blue_green_deployment_config")
-			input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(n.([]interface{}))
+			input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(n.([]interface{}))
 		}
 
 		if d.HasChange("outdated_instances_strategy") {
@@ -783,17 +761,18 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
 	})
 
+	if errs.IsA[*types.DeploymentGroupDoesNotExistException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*types.DeploymentGroupDoesNotExistException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.Client, applicationName, deploymentGroupName string) (*types.DeploymentGroupInfo, error) {
+func findDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.Client, applicationName, deploymentGroupName string) (*types.DeploymentGroupInfo, error) {
 	input := &codedeploy.GetDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
@@ -819,9 +798,7 @@ func FindDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.Clien
 	return output.DeploymentGroupInfo, nil
 }
 
-// buildOnPremTagFilters converts raw schema lists into a list of
-// types.TagFilters.
-func buildOnPremTagFilters(configured []interface{}) []types.TagFilter {
+func expandTagFilters(configured []interface{}) []types.TagFilter {
 	filters := make([]types.TagFilter, 0)
 	for _, raw := range configured {
 		var filter types.TagFilter
@@ -843,9 +820,7 @@ func buildOnPremTagFilters(configured []interface{}) []types.TagFilter {
 	return filters
 }
 
-// buildEC2TagFilters converts raw schema lists into a list of
-// types.EC2TagFilters.
-func buildEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
+func expandEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
 	filters := make([]types.EC2TagFilter, 0)
 	for _, raw := range configured {
 		var filter types.EC2TagFilter
@@ -861,27 +836,24 @@ func buildEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
 	return filters
 }
 
-// buildEC2TagSet converts raw schema lists into a types.EC2TagSet.
-func buildEC2TagSet(configured []interface{}) *types.EC2TagSet {
+func expandEC2TagSet(configured []interface{}) *types.EC2TagSet {
 	filterSets := make([][]types.EC2TagFilter, 0)
 	for _, raw := range configured {
 		m := raw.(map[string]interface{})
 		rawFilters := m["ec2_tag_filter"].(*schema.Set)
-		filters := buildEC2TagFilters(rawFilters.List())
+		filters := expandEC2TagFilters(rawFilters.List())
 		filterSets = append(filterSets, filters)
 	}
 	return &types.EC2TagSet{Ec2TagSetList: filterSets}
 }
 
-// BuildTriggerConfigs converts a raw schema list into a list of
-// types.TriggerConfig.
-func BuildTriggerConfigs(configured []interface{}) []types.TriggerConfig {
+func expandTriggerConfigs(configured []interface{}) []types.TriggerConfig {
 	configs := make([]types.TriggerConfig, 0, len(configured))
 	for _, raw := range configured {
 		var config types.TriggerConfig
 		m := raw.(map[string]interface{})
 
-		config.TriggerEvents = expandTriggerEventTypes(flex.ExpandStringValueSet(m["trigger_events"].(*schema.Set)))
+		config.TriggerEvents = flex.ExpandStringyValueSet[types.TriggerEventType](m["trigger_events"].(*schema.Set))
 		config.TriggerName = aws.String(m["trigger_name"].(string))
 		config.TriggerTargetArn = aws.String(m["trigger_target_arn"].(string))
 
@@ -890,15 +862,13 @@ func BuildTriggerConfigs(configured []interface{}) []types.TriggerConfig {
 	return configs
 }
 
-// BuildAutoRollbackConfig converts a raw schema list containing a map[string]interface{}
-// into a single types.AutoRollbackConfiguration
-func BuildAutoRollbackConfig(configured []interface{}) *types.AutoRollbackConfiguration {
+func expandAutoRollbackConfiguration(configured []interface{}) *types.AutoRollbackConfiguration {
 	result := &types.AutoRollbackConfiguration{}
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
 		result.Enabled = config["enabled"].(bool)
-		result.Events = expandAutoRollbackEvents(flex.ExpandStringValueSet(config["events"].(*schema.Set)))
+		result.Events = flex.ExpandStringyValueSet[types.AutoRollbackEvent](config["events"].(*schema.Set))
 	} else { // delete the configuration
 		result.Enabled = false
 		result.Events = make([]types.AutoRollbackEvent, 0)
@@ -907,9 +877,7 @@ func BuildAutoRollbackConfig(configured []interface{}) *types.AutoRollbackConfig
 	return result
 }
 
-// BuildAlarmConfig converts a raw schema list containing a map[string]interface{}
-// into a single types.AlarmConfiguration
-func BuildAlarmConfig(configured []interface{}) *types.AlarmConfiguration {
+func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguration {
 	result := &types.AlarmConfiguration{}
 
 	if len(configured) == 1 {
@@ -957,7 +925,7 @@ func expandECSServices(l []interface{}) []types.ECSService {
 	return ecsServices
 }
 
-func expandELBInfo(l []interface{}) []types.ELBInfo {
+func expandELBInfos(l []interface{}) []types.ELBInfo {
 	elbInfos := []types.ELBInfo{}
 
 	for _, mRaw := range l {
@@ -977,7 +945,7 @@ func expandELBInfo(l []interface{}) []types.ELBInfo {
 	return elbInfos
 }
 
-func expandTargetGroupInfo(l []interface{}) []types.TargetGroupInfo {
+func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
 	targetGroupInfos := []types.TargetGroupInfo{}
 
 	for _, mRaw := range l {
@@ -997,7 +965,7 @@ func expandTargetGroupInfo(l []interface{}) []types.TargetGroupInfo {
 	return targetGroupInfos
 }
 
-func expandTargetGroupPairInfo(l []interface{}) []types.TargetGroupPairInfo {
+func expandTargetGroupPairInfos(l []interface{}) []types.TargetGroupPairInfo {
 	targetGroupPairInfos := []types.TargetGroupPairInfo{}
 
 	for _, mRaw := range l {
@@ -1009,7 +977,7 @@ func expandTargetGroupPairInfo(l []interface{}) []types.TargetGroupPairInfo {
 
 		targetGroupPairInfo := types.TargetGroupPairInfo{
 			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]interface{})),
-			TargetGroups:     expandTargetGroupInfo(m["target_group"].([]interface{})),
+			TargetGroups:     expandTargetGroupInfos(m["target_group"].([]interface{})),
 			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]interface{})),
 		}
 
@@ -1033,9 +1001,7 @@ func expandTrafficRoute(l []interface{}) *types.TrafficRoute {
 	return trafficRoute
 }
 
-// ExpandDeploymentStyle converts a raw schema list containing a map[string]interface{}
-// into a single types.DeploymentStyle object
-func ExpandDeploymentStyle(list []interface{}) *types.DeploymentStyle {
+func expandDeploymentStyle(list []interface{}) *types.DeploymentStyle {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
@@ -1053,9 +1019,7 @@ func ExpandDeploymentStyle(list []interface{}) *types.DeploymentStyle {
 	return result
 }
 
-// ExpandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
-// into a single types.LoadBalancerInfo object. Returns an empty object if list is nil.
-func ExpandLoadBalancerInfo(list []interface{}) *types.LoadBalancerInfo {
+func expandLoadBalancerInfo(list []interface{}) *types.LoadBalancerInfo {
 	loadBalancerInfo := &types.LoadBalancerInfo{}
 	if len(list) == 0 || list[0] == nil {
 		return loadBalancerInfo
@@ -1064,23 +1028,21 @@ func ExpandLoadBalancerInfo(list []interface{}) *types.LoadBalancerInfo {
 	lbInfo := list[0].(map[string]interface{})
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.ElbInfoList = expandELBInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.ElbInfoList = expandELBInfos(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfos(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]interface{})) > 0 {
-		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfo(attr.([]interface{}))
+		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfos(attr.([]interface{}))
 	}
 
 	return loadBalancerInfo
 }
 
-// ExpandBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
-// into a single types.BlueGreenDeploymentConfiguration object
-func ExpandBlueGreenDeploymentConfig(list []interface{}) *types.BlueGreenDeploymentConfiguration {
+func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreenDeploymentConfiguration {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
@@ -1139,8 +1101,7 @@ func ExpandBlueGreenDeploymentConfig(list []interface{}) *types.BlueGreenDeploym
 	return blueGreenDeploymentConfig
 }
 
-// ec2TagFiltersToMap converts lists of tag filters into a []map[string]interface{}.
-func ec2TagFiltersToMap(list []types.EC2TagFilter) []map[string]interface{} {
+func flattenEC2TagFilters(list []types.EC2TagFilter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tf := range list {
 		l := make(map[string]interface{})
@@ -1158,8 +1119,7 @@ func ec2TagFiltersToMap(list []types.EC2TagFilter) []map[string]interface{} {
 	return result
 }
 
-// onPremisesTagFiltersToMap converts lists of on-prem tag filters into a []map[string]string.
-func onPremisesTagFiltersToMap(list []types.TagFilter) []map[string]string {
+func flattenTagFilters(list []types.TagFilter) []map[string]string {
 	result := make([]map[string]string, 0, len(list))
 	for _, tf := range list {
 		l := make(map[string]string)
@@ -1177,15 +1137,14 @@ func onPremisesTagFiltersToMap(list []types.TagFilter) []map[string]string {
 	return result
 }
 
-// ec2TagSetToMap converts lists of tag filters into a [][]map[string]string.
-func ec2TagSetToMap(tagSet *types.EC2TagSet) []map[string]interface{} {
+func flattenEC2TagSet(tagSet *types.EC2TagSet) []map[string]interface{} {
 	var result []map[string]interface{}
 	if tagSet == nil {
 		result = make([]map[string]interface{}, 0)
 	} else {
 		result = make([]map[string]interface{}, 0, len(tagSet.Ec2TagSetList))
 		for _, filterSet := range tagSet.Ec2TagSetList {
-			filters := ec2TagFiltersToMap(filterSet)
+			filters := flattenEC2TagFilters(filterSet)
 			filtersAsIntfSlice := make([]interface{}, 0, len(filters))
 			for _, item := range filters {
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
@@ -1199,12 +1158,11 @@ func ec2TagSetToMap(tagSet *types.EC2TagSet) []map[string]interface{} {
 	return result
 }
 
-// TriggerConfigsToMap converts a list of []types.TriggerConfig into a []map[string]interface{}
-func TriggerConfigsToMap(list []types.TriggerConfig) []map[string]interface{} {
+func flattenTriggerConfigs(list []types.TriggerConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
-		item["trigger_events"] = flattenTriggerEventTypeValues(tc.TriggerEvents)
+		item["trigger_events"] = tc.TriggerEvents
 		item["trigger_name"] = aws.ToString(tc.TriggerName)
 		item["trigger_target_arn"] = aws.ToString(tc.TriggerTargetArn)
 		result = append(result, item)
@@ -1212,9 +1170,7 @@ func TriggerConfigsToMap(list []types.TriggerConfig) []map[string]interface{} {
 	return result
 }
 
-// AutoRollbackConfigToMap converts a types.AutoRollbackConfiguration
-// into a []map[string]interface{} list containing a single item
-func AutoRollbackConfigToMap(config *types.AutoRollbackConfiguration) []map[string]interface{} {
+func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining events)
@@ -1222,16 +1178,14 @@ func AutoRollbackConfigToMap(config *types.AutoRollbackConfiguration) []map[stri
 	if config != nil && (config.Enabled || len(config.Events) > 0) {
 		item := make(map[string]interface{})
 		item["enabled"] = config.Enabled
-		item["events"] = flattenAutoRollbackEvents(config.Events)
+		item["events"] = config.Events
 		result = append(result, item)
 	}
 
 	return result
 }
 
-// AlarmConfigToMap converts a types.AlarmConfiguration
-// into a []map[string]interface{} list containing a single item
-func AlarmConfigToMap(config *types.AlarmConfiguration) []map[string]interface{} {
+func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
@@ -1268,7 +1222,7 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 	return l
 }
 
-func flattenELBInfo(elbInfos []types.ELBInfo) []interface{} {
+func flattenELBInfos(elbInfos []types.ELBInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, elbInfo := range elbInfos {
@@ -1282,7 +1236,7 @@ func flattenELBInfo(elbInfos []types.ELBInfo) []interface{} {
 	return l
 }
 
-func flattenTargetGroupInfo(targetGroupInfos []types.TargetGroupInfo) []interface{} {
+func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupInfo := range targetGroupInfos {
@@ -1296,13 +1250,13 @@ func flattenTargetGroupInfo(targetGroupInfos []types.TargetGroupInfo) []interfac
 	return l
 }
 
-func flattenTargetGroupPairInfo(targetGroupPairInfos []types.TargetGroupPairInfo) []interface{} {
+func flattenTargetGroupPairInfos(targetGroupPairInfos []types.TargetGroupPairInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupPairInfo := range targetGroupPairInfos {
 		m := map[string]interface{}{
 			"prod_traffic_route": flattenTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
-			"target_group":       flattenTargetGroupInfo(targetGroupPairInfo.TargetGroups),
+			"target_group":       flattenTargetGroupInfos(targetGroupPairInfo.TargetGroups),
 			"test_traffic_route": flattenTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
 		}
 
@@ -1324,9 +1278,7 @@ func flattenTrafficRoute(trafficRoute *types.TrafficRoute) []interface{} {
 	return []interface{}{m}
 }
 
-// FlattenDeploymentStyle converts a types.DeploymentStyle object
-// into a []map[string]interface{} list containing a single item
-func FlattenDeploymentStyle(style *types.DeploymentStyle) []map[string]interface{} {
+func flattenDeploymentStyle(style *types.DeploymentStyle) []map[string]interface{} {
 	if style == nil {
 		return nil
 	}
@@ -1344,23 +1296,21 @@ func FlattenDeploymentStyle(style *types.DeploymentStyle) []map[string]interface
 	return result
 }
 
-func FlattenLoadBalancerInfo(loadBalancerInfo *types.LoadBalancerInfo) []interface{} {
+func flattenLoadBalancerInfo(loadBalancerInfo *types.LoadBalancerInfo) []interface{} {
 	if loadBalancerInfo == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfo(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
-		"target_group_pair_info": flattenTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
+		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfos(loadBalancerInfo.ElbInfoList)),
+		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfos(loadBalancerInfo.TargetGroupInfoList)),
+		"target_group_pair_info": flattenTargetGroupPairInfos(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
 	return []interface{}{m}
 }
 
-// FlattenBlueGreenDeploymentConfig converts a types.BlueGreenDeploymentConfiguration object
-// into a []map[string]interface{} list containing a single item
-func FlattenBlueGreenDeploymentConfig(config *types.BlueGreenDeploymentConfiguration) []map[string]interface{} {
+func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentConfiguration) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -1476,104 +1426,4 @@ func LoadBalancerInfoHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
-}
-
-func flattenReadyActionValues(t []types.DeploymentReadyAction) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenGreenFleetProvisioningActionValues(t []types.GreenFleetProvisioningAction) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenInstanceActionValues(t []types.InstanceAction) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenOptionValues(t []types.DeploymentOption) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenTypeValues(t []types.DeploymentType) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenOutdatedInstancesStrategyValues(t []types.OutdatedInstancesStrategy) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenTriggerEventTypeValues(t []types.TriggerEventType) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func expandTriggerEventTypes(t []string) []types.TriggerEventType {
-	var out []types.TriggerEventType
-
-	for _, v := range t {
-		out = append(out, types.TriggerEventType(v))
-	}
-
-	return out
-}
-
-func expandAutoRollbackEvents(t []string) []types.AutoRollbackEvent {
-	var out []types.AutoRollbackEvent
-
-	for _, v := range t {
-		out = append(out, types.AutoRollbackEvent(v))
-	}
-
-	return out
-}
-
-func flattenAutoRollbackEvents(t []types.AutoRollbackEvent) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
 }

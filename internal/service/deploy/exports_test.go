@@ -7,7 +7,9 @@ package deploy
 var (
 	ResourceApp              = resourceApp
 	ResourceDeploymentConfig = resourceDeploymentConfig
+	ResourceDeploymentGroup  = resourceDeploymentGroup
 
-	FindApplicationByName      = findApplicationByName
-	FindDeploymentConfigByName = findDeploymentConfigByName
+	FindApplicationByName           = findApplicationByName
+	FindDeploymentConfigByName      = findDeploymentConfigByName
+	FindDeploymentGroupByTwoPartKey = findDeploymentGroupByTwoPartKey
 )

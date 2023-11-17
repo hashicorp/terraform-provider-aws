@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Deployment Config",
 		},
 		{
-			Factory:  ResourceDeploymentGroup,
+			Factory:  resourceDeploymentGroup,
 			TypeName: "aws_codedeploy_deployment_group",
 			Name:     "Deployment Group",
 			Tags: &types.ServicePackageResourceTags{
