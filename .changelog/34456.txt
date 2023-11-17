@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic 
+```
