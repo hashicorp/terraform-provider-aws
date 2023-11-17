@@ -41,7 +41,7 @@ ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,
-chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,
+chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,,2,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,x,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,x,,,,,
 chime-sdk-voice,chimesdkvoice,chimesdkvoice,chimesdkvoice,,chimesdkvoice,,,ChimeSDKVoice,ChimeSDKVoice,,,2,,aws_chimesdkvoice_,,chimesdkvoice_,Chime SDK Voice,Amazon,,,,,,,
