@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConnectorProfile,
+			Factory:  resourceConnectorProfile,
 			TypeName: "aws_appflow_connector_profile",
+			Name:     "Connector Profile",
 		},
 		{
 			Factory:  ResourceFlow,
