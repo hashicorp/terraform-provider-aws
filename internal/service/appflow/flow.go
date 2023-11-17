@@ -1556,7 +1556,7 @@ func expandDestinationFlowConfig(tfMap map[string]interface{}) *types.Destinatio
 		a.ConnectorType = types.ConnectorType(v)
 	}
 
-	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.DestinationConnectorProperties = expandDestinationConnectorProperties(v[0].(map[string]interface{}))
 	}
 
@@ -1570,57 +1570,57 @@ func expandDestinationConnectorProperties(tfMap map[string]interface{}) *types.D
 
 	a := &types.DestinationConnectorProperties{}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomConnector = expandCustomConnectorDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomerProfiles = expandCustomerProfilesDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.EventBridge = expandEventBridgeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
-	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.LookoutMetrics = v[0].(*types.LookoutMetricsDestinationProperties)
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3DestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Salesforce = expandSalesforceDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SAPOData = expandSAPODataDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Snowflake = expandSnowflakeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Upsolver = expandUpsolverDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Zendesk = expandZendeskDestinationProperties(v[0].(map[string]interface{}))
 	}
 
@@ -1642,7 +1642,7 @@ func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *t
 		a.EntityName = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1682,7 +1682,7 @@ func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *types
 
 	a := &types.EventBridgeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1700,7 +1700,7 @@ func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *types.H
 
 	a := &types.HoneycodeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1718,7 +1718,7 @@ func expandMarketoDestinationProperties(tfMap map[string]interface{}) *types.Mar
 
 	a := &types.MarketoDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1740,7 +1740,7 @@ func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *types.Re
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1770,7 +1770,7 @@ func expandS3DestinationProperties(tfMap map[string]interface{}) *types.S3Destin
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3OutputFormatConfig = expandS3OutputFormatConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1784,7 +1784,7 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *types.S3OutputFor
 
 	a := &types.S3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1792,7 +1792,7 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *types.S3OutputFor
 		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1810,7 +1810,7 @@ func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *types.
 
 	a := &types.SalesforceDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1836,7 +1836,7 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SA
 
 	a := &types.SAPODataDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1848,7 +1848,7 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SA
 		a.ObjectPath = aws.String(v)
 	}
 
-	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SuccessResponseHandlingConfig = expandSuccessResponseHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1888,7 +1888,7 @@ func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *types.S
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1918,7 +1918,7 @@ func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *types.Up
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3OutputFormatConfig = expandUpsolverS3OutputFormatConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1932,7 +1932,7 @@ func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *types.Ups
 
 	a := &types.UpsolverS3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1940,7 +1940,7 @@ func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *types.Ups
 		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1954,7 +1954,7 @@ func expandZendeskDestinationProperties(tfMap map[string]interface{}) *types.Zen
 
 	a := &types.ZendeskDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
 	}
 
@@ -1992,7 +1992,7 @@ func expandSourceFlowConfig(tfMap map[string]interface{}) *types.SourceFlowConfi
 		a.ConnectorType = types.ConnectorType(v)
 	}
 
-	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]interface{}))
 	}
 
@@ -2024,67 +2024,67 @@ func expandSourceConnectorProperties(tfMap map[string]interface{}) *types.Source
 
 	a := &types.SourceConnectorProperties{}
 
-	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Amplitude = expandAmplitudeSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.CustomConnector = expandCustomConnectorSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Datadog = expandDatadogSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Dynatrace = expandDynatraceSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.GoogleAnalytics = expandGoogleAnalyticsSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.InforNexus = expandInforNexusSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3SourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SAPOData = expandSAPODataSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Salesforce = expandSalesforceSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ServiceNow = expandServiceNowSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Singular = expandSingularSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Slack = expandSlackSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Trendmicro = expandTrendmicroSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Veeva = expandVeevaSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Zendesk = expandZendeskSourceProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2208,7 +2208,7 @@ func expandS3SourceProperties(tfMap map[string]interface{}) *types.S3SourcePrope
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3InputFormatConfig = expandS3InputFormatConfig(v[0].(map[string]interface{}))
 	}
 
@@ -2398,7 +2398,7 @@ func expandTask(tfMap map[string]interface{}) *types.Task {
 
 	a := &types.Task{}
 
-	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.ConnectorOperator = expandConnectorOperator(v[0].(map[string]interface{}))
 	}
 
@@ -2502,7 +2502,7 @@ func expandTriggerConfig(tfMap map[string]interface{}) *types.TriggerConfig {
 
 	a := &types.TriggerConfig{}
 
-	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2521,7 +2521,7 @@ func expandTriggerProperties(tfMap map[string]interface{}) *types.TriggerPropert
 	a := &types.TriggerProperties{}
 
 	// Only return TriggerProperties if nested field is non-empty
-	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]interface{}))
 		return a
 	}
