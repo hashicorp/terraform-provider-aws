@@ -249,13 +249,3 @@ func findApplicationByName(ctx context.Context, conn *codedeploy.Client, name st
 
 	return output.Application, nil
 }
-
-func flattenComputePlatformValues(t []types.ComputePlatform) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
