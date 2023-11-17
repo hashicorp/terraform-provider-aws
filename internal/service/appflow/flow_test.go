@@ -231,7 +231,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFlowConfig_multipleTasks(rSourceName, rDestinationName, rFlowName, "anotherField"),
+				Config: testAccFlowConfig_multipleTasks(rSourceName, rDestinationName, rFlowName, "anotherTestField"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "task.#", "3"),
@@ -252,9 +252,9 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 						"task_type":                             "Map",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "task.*", map[string]string{
-						"destination_field":                     "anotherField",
+						"destination_field":                     "anotherTestField",
 						"source_fields.#":                       "1",
-						"source_fields.0":                       "anotherField",
+						"source_fields.0":                       "anotherTestField",
 						"task_properties.%":                     "2",
 						"task_properties.DESTINATION_DATA_TYPE": "id",
 						"task_properties.SOURCE_DATA_TYPE":      "id",

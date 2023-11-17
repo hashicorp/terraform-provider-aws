@@ -2416,6 +2416,9 @@ func expandTask(tfMap map[string]interface{}) *types.Task {
 
 	if v, ok := tfMap["task_type"].(string); ok && v != "" {
 		a.TaskType = types.TaskType(v)
+	} else {
+		// https://github.com/hashicorp/terraform-provider-aws/issues/28237.
+		return nil
 	}
 
 	return a
