@@ -37,8 +37,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDeploymentConfig,
+			Factory:  resourceDeploymentConfig,
 			TypeName: "aws_codedeploy_deployment_config",
+			Name:     "Deployment Config",
 		},
 		{
 			Factory:  ResourceDeploymentGroup,

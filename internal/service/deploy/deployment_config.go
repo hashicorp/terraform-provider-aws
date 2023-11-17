@@ -11,43 +11,43 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_codedeploy_deployment_config")
-func ResourceDeploymentConfig() *schema.Resource {
+// @SDKResource("aws_codedeploy_deployment_config", name="Deployment Config")
+func resourceDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentConfigCreate,
 		ReadWithoutTimeout:   resourceDeploymentConfigRead,
 		DeleteWithoutTimeout: resourceDeploymentConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"compute_platform": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.ComputePlatformServer,
+				ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
+			},
+			"deployment_config_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deployment_config_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"compute_platform": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					types.ComputePlatformServer,
-					types.ComputePlatformLambda,
-					types.ComputePlatformEcs,
-				), false),
-				Default: types.ComputePlatformServer,
-			},
-
 			"minimum_healthy_hosts": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -56,13 +56,10 @@ func ResourceDeploymentConfig() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.MinimumHealthyHostsTypeHostCount,
-								types.MinimumHealthyHostsTypeFleetPercent,
-							), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
 						},
 						"value": {
 							Type:     schema.TypeInt,
@@ -72,7 +69,6 @@ func ResourceDeploymentConfig() *schema.Resource {
 					},
 				},
 			},
-
 			"traffic_routing_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -80,24 +76,12 @@ func ResourceDeploymentConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.TrafficRoutingTypeAllAtOnce,
-								types.TrafficRoutingTypeTimeBasedCanary,
-								types.TrafficRoutingTypeTimeBasedLinear,
-							), false),
-							Default: string(types.TrafficRoutingTypeAllAtOnce),
-						},
-
 						"time_based_canary": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							MaxItems:      1,
+							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"interval": {
@@ -113,13 +97,12 @@ func ResourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
-
 						"time_based_linear": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							MaxItems:      1,
+							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"interval": {
@@ -135,13 +118,15 @@ func ResourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
+						"type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          types.TrafficRoutingTypeAllAtOnce,
+							ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+						},
 					},
 				},
-			},
-
-			"deployment_config_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -151,19 +136,21 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
+	name := d.Get("deployment_config_name").(string)
 	input := &codedeploy.CreateDeploymentConfigInput{
-		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
 		ComputePlatform:      types.ComputePlatform(d.Get("compute_platform").(string)),
+		DeploymentConfigName: aws.String(name),
 		MinimumHealthyHosts:  expandMinimumHealthHostsConfig(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
 	_, err := conn.CreateDeploymentConfig(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", d.Get("deployment_config_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("deployment_config_name").(string))
+	d.SetId(name)
 
 	return append(diags, resourceDeploymentConfigRead(ctx, d, meta)...)
 }
@@ -172,13 +159,9 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	input := &codedeploy.GetDeploymentConfigInput{
-		DeploymentConfigName: aws.String(d.Id()),
-	}
+	deploymentConfig, err := findDeploymentConfigByName(ctx, conn, d.Id())
 
-	resp, err := conn.GetDeploymentConfig(ctx, input)
-
-	if !d.IsNewResource() && errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -188,21 +171,15 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 
-	if resp.DeploymentConfigInfo == nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): empty result", d.Id())
+	d.Set("compute_platform", deploymentConfig.ComputePlatform)
+	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
+	d.Set("deployment_config_name", deploymentConfig.DeploymentConfigName)
+	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(deploymentConfig.MinimumHealthyHosts)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting minimum_healthy_hosts: %s", err)
 	}
-
-	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
+	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(deploymentConfig.TrafficRoutingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting traffic_routing_config: %s", err)
 	}
-
-	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
-	}
-
-	d.Set("deployment_config_id", resp.DeploymentConfigInfo.DeploymentConfigId)
-	d.Set("deployment_config_name", resp.DeploymentConfigInfo.DeploymentConfigName)
-	d.Set("compute_platform", resp.DeploymentConfigInfo.ComputePlatform)
 
 	return diags
 }
@@ -211,14 +188,41 @@ func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	input := &codedeploy.DeleteDeploymentConfigInput{
+	log.Printf("[INFO] Deleting CodeDeploy Deployment Config: %s", d.Id())
+	_, err := conn.DeleteDeploymentConfig(ctx, &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
-	}
+	})
 
-	if _, err := conn.DeleteDeploymentConfig(ctx, input); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, name string) (*types.DeploymentConfigInfo, error) {
+	input := &codedeploy.GetDeploymentConfigInput{
+		DeploymentConfigName: aws.String(name),
+	}
+
+	output, err := conn.GetDeploymentConfig(ctx, input)
+
+	if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DeploymentConfigInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DeploymentConfigInfo, nil
 }
 
 func expandMinimumHealthHostsConfig(d *schema.ResourceData) *types.MinimumHealthyHosts {

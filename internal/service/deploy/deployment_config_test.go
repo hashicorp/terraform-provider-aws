@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -248,45 +248,39 @@ func testAccCheckDeploymentConfigDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			resp, err := conn.GetDeploymentConfig(ctx, &codedeploy.GetDeploymentConfigInput{
-				DeploymentConfigName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfcodedeploy.FindDeploymentConfigByName(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if err == nil {
-				if resp.DeploymentConfigInfo != nil {
-					return fmt.Errorf("CodeDeploy deployment config still exists:\n%#v", *resp.DeploymentConfigInfo.DeploymentConfigName)
-				}
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("CodeDeploy Deployment Config %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDeploymentConfigExists(ctx context.Context, name string, config *types.DeploymentConfigInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentConfigExists(ctx context.Context, n string, v *types.DeploymentConfigInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
 
-		resp, err := conn.GetDeploymentConfig(ctx, &codedeploy.GetDeploymentConfigInput{
-			DeploymentConfigName: aws.String(rs.Primary.ID),
-		})
+		output, err := tfcodedeploy.FindDeploymentConfigByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*config = *resp.DeploymentConfigInfo
+		*v = *output
 
 		return nil
 	}
@@ -305,11 +299,11 @@ func testAccCheckDeploymentConfigRecreated(i, j *types.DeploymentConfigInfo) res
 func testAccDeploymentConfigConfig_fleet(rName string, value int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
-  deployment_config_name = %q
+  deployment_config_name = %[1]q
 
   minimum_healthy_hosts {
     type  = "FLEET_PERCENT"
-    value = %d
+    value = %[2]d
   }
 }
 `, rName, value)
@@ -318,11 +312,11 @@ resource "aws_codedeploy_deployment_config" "test" {
 func testAccDeploymentConfigConfig_hostCount(rName string, value int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
-  deployment_config_name = %q
+  deployment_config_name = %[1]q
 
   minimum_healthy_hosts {
     type  = "HOST_COUNT"
-    value = %d
+    value = %[2]d
   }
 }
 `, rName, value)
@@ -331,15 +325,15 @@ resource "aws_codedeploy_deployment_config" "test" {
 func testAccDeploymentConfigConfig_trafficCanary(rName string, interval, percentage int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
-  deployment_config_name = %q
+  deployment_config_name = %[1]q
   compute_platform       = "Lambda"
 
   traffic_routing_config {
     type = "TimeBasedCanary"
 
     time_based_canary {
-      interval   = %d
-      percentage = %d
+      interval   = %[2]d
+      percentage = %[3]d
     }
   }
 }
@@ -349,15 +343,15 @@ resource "aws_codedeploy_deployment_config" "test" {
 func testAccDeploymentConfigConfig_trafficLinear(rName string, interval, percentage int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
-  deployment_config_name = %q
+  deployment_config_name = %[1]q
   compute_platform       = "Lambda"
 
   traffic_routing_config {
     type = "TimeBasedLinear"
 
     time_based_linear {
-      interval   = %d
-      percentage = %d
+      interval   = %[2]d
+      percentage = %[3]d
     }
   }
 }
