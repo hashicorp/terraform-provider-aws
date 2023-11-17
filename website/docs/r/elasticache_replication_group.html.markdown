@@ -162,6 +162,28 @@ resource "aws_elasticache_replication_group" "primary" {
 }
 ```
 
+### Redis AUTH and In-Transit Encryption Enabled
+
+```terraform
+resource "aws_elasticache_replication_group" "example" {
+  replication_group_id = "example"
+  description          = "example with authentication"
+  node_type            = "cache.t2.micro"
+  num_cache_clusters   = 1
+  port                 = 6379
+  subnet_group_name    = aws_elasticache_subnet_group.example.name
+  security_group_ids   = [aws_security_group.example.id]
+  parameter_group_name = "default.redis5.0"
+  engine_version       = "5.0.6"
+
+  transit_encryption_enabled = true
+  auth_token                 = "abcdefgh1234567890"
+  auth_token_update_strategy = "ROTATE"
+}
+```
+
+~> When adding a new `auth_token` to a previously passwordless replication group, using the `ROTATE` update strategy will result in support for **both** the new token and passwordless authentication. To immediately require authorization when adding the initial token, use the `SET` strategy instead. See the [Authenticating with the Redis AUTH command](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html) guide for additional details.
+
 ## Argument Reference
 
 The following arguments are required:
