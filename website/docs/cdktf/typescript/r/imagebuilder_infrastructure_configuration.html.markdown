@@ -68,8 +68,8 @@ The following arguments are optional:
 * `resourceTags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `securityGroupIds` - (Optional) Set of EC2 Security Group identifiers.
 * `snsTopicArn` - (Optional) Amazon Resource Name (ARN) of SNS Topic.
-* `subnetId` - (Optional) EC2 Subnet identifier. Also requires `securityGroupIds` argument.
-* `tags` - (Optional) Key-value map of resource tags to assign to the configuration. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `subnetId` - (Optional) EC2 Subnet identifier. Also requires `security_group_ids` argument.
+* `tags` - (Optional) Key-value map of resource tags to assign to the configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminateInstanceOnFailure` - (Optional) Enable if the instance should be terminated when the pipeline fails. Defaults to `false`.
 
 ### instance_metadata_options
@@ -103,7 +103,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the configuration.
 * `dateCreated` - Date when the configuration was created.
 * `dateUpdated` - Date when the configuration was updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -127,4 +127,4 @@ Using `terraform import`, import `awsImagebuilderInfrastructureConfiguration` us
 % terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-92ce8940a00b3a6132cb84f5e5797b0c5f3f5546af00335b30802f922e76f2ef -->
+<!-- cache-key: cdktf-0.19.0 input-92ce8940a00b3a6132cb84f5e5797b0c5f3f5546af00335b30802f922e76f2ef -->

@@ -70,14 +70,14 @@ This resource supports the following arguments:
 * `name` - (Required) A human-readable name for the application.
 * `shortName` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
 * `stackId` - (Required) ID of the stack the application will belong to.
-* `type` - (Required) Opsworks application type. One of `awsFlowRuby`, `java`, `rails`, `php`, `nodejs`, `static` or `other`.
+* `type` - (Required) Opsworks application type. One of `aws-flow-ruby`, `java`, `rails`, `php`, `nodejs`, `static` or `other`.
 * `description` - (Optional) A description of the app.
 * `environment` - (Optional) Object to define environment variables.  Object is described below.
-* `enableSsl` - (Optional) Whether to enable SSL for the app. This must be set in order to let `sslConfigurationPrivateKey`, `sslConfigurationCertificate` and `sslConfigurationChain` take effect.
+* `enableSsl` - (Optional) Whether to enable SSL for the app. This must be set in order to let `ssl_configuration.private_key`, `ssl_configuration.certificate` and `ssl_configuration.chain` take effect.
 * `sslConfiguration` - (Optional) The SSL configuration of the app. Object is described below.
 * `appSource` - (Optional) SCM configuration of the app as described below.
 * `dataSourceArn` - (Optional) The data source's ARN.
-* `dataSourceType` - (Optional) The data source's type one of `autoSelectOpsworksMysqlInstance`, `opsworksMysqlInstance`, or `rdsDbInstance`.
+* `dataSourceType` - (Optional) The data source's type one of `AutoSelectOpsworksMysqlInstance`, `OpsworksMysqlInstance`, or `RdsDbInstance`.
 * `dataSourceDatabaseName` - (Optional) The database name.
 * `domains` -  (Optional) A list of virtual host alias.
 * `documentRoot` - (Optional) Subfolder for the document root for application of type `rails`.
@@ -134,4 +134,4 @@ Using `terraform import`, import Opsworks Application using the `id`. For exampl
 % terraform import aws_opsworks_application.test <id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4eedaae0cb4e4e8acfb36a8488b25242904e757fb2ce525f27f16d8958622f8a -->
+<!-- cache-key: cdktf-0.19.0 input-4eedaae0cb4e4e8acfb36a8488b25242904e757fb2ce525f27f16d8958622f8a -->

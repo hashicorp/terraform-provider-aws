@@ -14,22 +14,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// SetNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
-type SetNestedObjectTypeOf[T any] struct {
+// setNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
+type setNestedObjectTypeOf[T any] struct {
 	basetypes.SetType
 }
 
 var (
-	_ basetypes.SetTypable = SetNestedObjectTypeOf[struct{}]{}
-	_ NestedObjectType     = SetNestedObjectTypeOf[struct{}]{}
+	_ basetypes.SetTypable  = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectType      = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.SetValuable = (*SetNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectValue     = (*SetNestedObjectValueOf[struct{}])(nil)
 )
 
-func NewSetNestedObjectTypeOf[T any](ctx context.Context) SetNestedObjectTypeOf[T] {
-	return SetNestedObjectTypeOf[T]{basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)}}
+func NewSetNestedObjectTypeOf[T any](ctx context.Context) setNestedObjectTypeOf[T] {
+	return setNestedObjectTypeOf[T]{basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)}}
 }
 
-func (t SetNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
-	other, ok := o.(SetNestedObjectTypeOf[T])
+func (t setNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
+	other, ok := o.(setNestedObjectTypeOf[T])
 
 	if !ok {
 		return false
@@ -38,12 +40,12 @@ func (t SetNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
 	return t.SetType.Equal(other.SetType)
 }
 
-func (t SetNestedObjectTypeOf[T]) String() string {
+func (t setNestedObjectTypeOf[T]) String() string {
 	var zero T
 	return fmt.Sprintf("SetNestedObjectTypeOf[%T]", zero)
 }
 
-func (t SetNestedObjectTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (basetypes.SetValuable, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (basetypes.SetValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if in.IsNull() {
@@ -66,7 +68,7 @@ func (t SetNestedObjectTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes
 	return value, diags
 }
 
-func (t SetNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t setNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.SetType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
@@ -88,25 +90,25 @@ func (t SetNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tft
 	return setValuable, nil
 }
 
-func (t SetNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
+func (t setNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return SetNestedObjectValueOf[T]{}
 }
 
-func (t SetNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
 	return nestedObjectTypeNewObjectPtr[T](ctx)
 }
 
-func (t SetNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
 	return nestedObjectTypeNewObjectSlice[T](ctx, len, cap)
 }
 
-func (t SetNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	return NewSetNestedObjectValueOfNull[T](ctx), diags
 }
 
-func (t SetNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
@@ -117,7 +119,7 @@ func (t SetNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr an
 	return nil, diags
 }
 
-func (t SetNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
+func (t setNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v, ok := slice.([]*T); ok {
@@ -132,11 +134,6 @@ func (t SetNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slic
 type SetNestedObjectValueOf[T any] struct {
 	basetypes.SetValue
 }
-
-var (
-	_ basetypes.SetValuable = SetNestedObjectValueOf[struct{}]{}
-	_ NestedObjectValue     = SetNestedObjectValueOf[struct{}]{}
-)
 
 func (v SetNestedObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(SetNestedObjectValueOf[T])

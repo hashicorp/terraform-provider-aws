@@ -69,4 +69,4 @@ Using `terraform import`, import `aws_ec2_carrier_gateway` using the carrier gat
 % terraform import aws_ec2_carrier_gateway.example cgw-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9d4096fc983e6a4fb708311553dddf500634237507ba8f350eee35f1f925e85c -->
+<!-- cache-key: cdktf-0.19.0 input-9d4096fc983e6a4fb708311553dddf500634237507ba8f350eee35f1f925e85c -->

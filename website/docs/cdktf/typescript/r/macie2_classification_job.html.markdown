@@ -56,17 +56,17 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `scheduleFrequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `jobType` property to `oneTime`. (documented below)
+* `scheduleFrequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `customDataIdentifierIds` -  (Optional) The custom data identifiers to use for data analysis and classification.
 * `samplingPercentage` -  (Optional) The sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
-* `name` -  (Optional) A custom name for the job. The name can contain as many as 500 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` -  (Optional) A custom name for the job. The name can contain as many as 500 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` -  (Optional) A custom description of the job. The description can contain as many as 200 characters.
 * `initialRun` -  (Optional) Specifies whether to analyze all existing, eligible objects immediately after the job is created.
-* `jobType` -  (Required) The schedule for running the job. Valid values are: `oneTime` - Run the job only once. If you specify this value, don't specify a value for the `scheduleFrequency` property. `scheduled` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `scheduleFrequency` property to define the recurrence pattern for the job.
+* `jobType` -  (Required) The schedule for running the job. Valid values are: `ONE_TIME` - Run the job only once. If you specify this value, don't specify a value for the `schedule_frequency` property. `SCHEDULED` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `schedule_frequency` property to define the recurrence pattern for the job.
 * `s3JobDefinition` -  (Optional) The S3 buckets that contain the objects to analyze, and the scope of that analysis. (documented below)
 * `tags` -  (Optional) A map of key-value pairs that specifies the tags to associate with the job. A job can have a maximum of 50 tags. Each tag consists of a tag key and an associated tag value. The maximum length of a tag key is 128 characters. The maximum length of a tag value is 256 characters.
-* `jobStatus` -  (Optional) The status for the job. Valid values are: `cancelled`, `running` and `userPaused`
+* `jobStatus` -  (Optional) The status for the job. Valid values are: `CANCELLED`, `RUNNING` and `USER_PAUSED`
 
 The `scheduleFrequency` object supports the following:
 
@@ -76,8 +76,8 @@ The `scheduleFrequency` object supports the following:
 
 The `s3JobDefinition` object supports the following:
 
-* `bucketCriteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucketDefinitions`. (documented below)
-* `bucketDefinitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucketCriteria`. (documented below)
+* `bucketCriteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. (documented below)
+* `bucketDefinitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. (documented below)
 * `scoping` -  (Optional) The property- and tag-based conditions that determine which objects to include or exclude from the analysis. (documented below)
 
 ### bucket_criteria Configuration Block
@@ -137,7 +137,7 @@ The `and` object supports the following:
 
 The `simpleScopeTerm` object supports the following:
 
-* `comparator` -  (Optional) The operator to use in a condition. Valid values are: `eq`, `gt`, `gte`, `lt`, `lte`, `ne`, `contains`, `startsWith`
+* `comparator` -  (Optional) The operator to use in a condition. Valid values are: `EQ`, `GT`, `GTE`, `LT`, `LTE`, `NE`, `CONTAINS`, `STARTS_WITH`
 * `values` -  (Optional) An array that lists the values to use in the condition.
 * `key` -  (Optional) The object property to use in the condition.
 
@@ -145,8 +145,8 @@ The `tagScopeTerm` object supports the following:
 
 * `comparator` -  (Optional) The operator to use in the condition.
 * `tagValues` -  (Optional) The tag keys or tag key and value pairs to use in the condition.
-* `key` -  (Required) The tag key to use in the condition. The only valid value is `tag`.
-* `target` -  (Required) The type of object to apply the condition to. The only valid value is `s3Object`.
+* `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
+* `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
 ## Attribute Reference
 
@@ -154,7 +154,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `createdAt` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `userPausedDetails` - If the current status of the job is `userPaused`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `jobStatus` is `userPaused`.
+* `userPausedDetails` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 
 ## Import
 
@@ -178,4 +178,4 @@ Using `terraform import`, import `awsMacie2ClassificationJob` using the id. For 
 % terraform import aws_macie2_classification_job.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9a222992d46777a40eb5928a868c445f448ac2d2331bda106271060c834b0a4f -->
+<!-- cache-key: cdktf-0.19.0 input-9a222992d46777a40eb5928a868c445f448ac2d2331bda106271060c834b0a4f -->

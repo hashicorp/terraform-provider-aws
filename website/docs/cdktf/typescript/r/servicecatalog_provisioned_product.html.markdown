@@ -66,16 +66,16 @@ The following arguments are optional:
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `ignoreErrors` - (Optional) _Only applies to deleting._ If set to `true`, AWS Service Catalog stops managing the specified provisioned product even if it cannot delete the underlying resources. The default value is `false`.
 * `notificationArns` - (Optional) Passed to CloudFormation. The SNS topic ARNs to which to publish stack-related events.
-* `pathId` - (Optional) Path identifier of the product. This value is optional if the product has a default path, and required if the product has more than one path. To list the paths for a product, use `awsServicecatalogLaunchPaths`. When required, you must provide `pathId` or `pathName`, but not both.
-* `pathName` - (Optional) Name of the path. You must provide `pathId` or `pathName`, but not both.
-* `productId` - (Optional) Product identifier. For example, `prodAbcdzk7Xy33Qa`. You must provide `productId` or `productName`, but not both.
-* `productName` - (Optional) Name of the product. You must provide `productId` or `productName`, but not both.
-* `provisioningArtifactId` - (Optional) Identifier of the provisioning artifact. For example, `pa4Abcdjnxjj6Ne`. You must provide the `provisioningArtifactId` or `provisioningArtifactName`, but not both.
-* `provisioningArtifactName` - (Optional) Name of the provisioning artifact. You must provide the `provisioningArtifactId` or `provisioningArtifactName`, but not both.
+* `pathId` - (Optional) Path identifier of the product. This value is optional if the product has a default path, and required if the product has more than one path. To list the paths for a product, use `aws_servicecatalog_launch_paths`. When required, you must provide `path_id` or `path_name`, but not both.
+* `pathName` - (Optional) Name of the path. You must provide `path_id` or `path_name`, but not both.
+* `productId` - (Optional) Product identifier. For example, `prod-abcdzk7xy33qa`. You must provide `product_id` or `product_name`, but not both.
+* `productName` - (Optional) Name of the product. You must provide `product_id` or `product_name`, but not both.
+* `provisioningArtifactId` - (Optional) Identifier of the provisioning artifact. For example, `pa-4abcdjnxjj6ne`. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
+* `provisioningArtifactName` - (Optional) Name of the provisioning artifact. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
 * `provisioningParameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
 * `retainPhysicalResources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
 * `stackSetProvisioningPreferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
-* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_parameters
 
@@ -91,12 +91,12 @@ All of the `stackSetProvisioningPreferences` are only applicable to a `cfnStacks
 
 This argument supports the following arguments:
 
-* `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `awsServicecatalogProvisioningParameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
-* `failureToleranceCount` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failureToleranceCount` or `failureTolerancePercentage`, but not both. The default value is 0 if no value is specified.
-* `failureTolerancePercentage` - (Optional) Percentage of accounts, per region, for which this stack operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. You must specify either `failureToleranceCount` or `failureTolerancePercentage`, but not both.
-* `maxConcurrencyCount` - (Optional) Maximum number of accounts in which to perform this operation at one time. This is dependent on the value of `failureToleranceCount`. `maxConcurrencyCount` is at most one more than the `failureToleranceCount`. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `maxConcurrencyCount` or `maxConcurrencyPercentage`, but not both.
-* `maxConcurrencyPercentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. This is true except in cases where rounding down would result is zero. In this case, AWS Service Catalog sets the number as 1 instead. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `maxConcurrencyCount` or `maxConcurrencyPercentage`, but not both.
-* `regions` - (Optional) One or more AWS Regions where the provisioned product will be available. The specified regions should be within the list of regions from the STACKSET constraint. To get the list of regions in the STACKSET constraint, use the `awsServicecatalogProvisioningParameters` data source. If no values are specified, the default value is all regions from the STACKSET constraint.
+* `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
+* `failureToleranceCount` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failure_tolerance_count` or `failure_tolerance_percentage`, but not both. The default value is 0 if no value is specified.
+* `failureTolerancePercentage` - (Optional) Percentage of accounts, per region, for which this stack operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. You must specify either `failure_tolerance_count` or `failure_tolerance_percentage`, but not both.
+* `maxConcurrencyCount` - (Optional) Maximum number of accounts in which to perform this operation at one time. This is dependent on the value of `failure_tolerance_count`. `max_concurrency_count` is at most one more than the `failure_tolerance_count`. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `max_concurrency_count` or `max_concurrency_percentage`, but not both.
+* `maxConcurrencyPercentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. This is true except in cases where rounding down would result is zero. In this case, AWS Service Catalog sets the number as 1 instead. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `max_concurrency_count` or `max_concurrency_percentage`, but not both.
+* `regions` - (Optional) One or more AWS Regions where the provisioned product will be available. The specified regions should be within the list of regions from the STACKSET constraint. To get the list of regions in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all regions from the STACKSET constraint.
 
 ## Attribute Reference
 
@@ -106,9 +106,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `cloudwatchDashboardNames` - Set of CloudWatch dashboards that were created when provisioning the product.
 * `createdTime` - Time when the provisioned product was created.
 * `id` - Provisioned Product ID.
-* `lastProvisioningRecordId` - Record identifier of the last request performed on this provisioned product of the following types: `provisionedProduct`, `updateProvisionedProduct`, `executeProvisionedProductPlan`, `terminateProvisionedProduct`.
+* `lastProvisioningRecordId` - Record identifier of the last request performed on this provisioned product of the following types: `ProvisionedProduct`, `UpdateProvisionedProduct`, `ExecuteProvisionedProductPlan`, `TerminateProvisionedProduct`.
 * `lastRecordId` - Record identifier of the last request performed on this provisioned product.
-* `lastSuccessfulProvisioningRecordId` - Record identifier of the last successful request performed on this provisioned product of the following types: `provisionedProduct`, `updateProvisionedProduct`, `executeProvisionedProductPlan`, `terminateProvisionedProduct`.
+* `lastSuccessfulProvisioningRecordId` - Record identifier of the last successful request performed on this provisioned product of the following types: `ProvisionedProduct`, `UpdateProvisionedProduct`, `ExecuteProvisionedProductPlan`, `TerminateProvisionedProduct`.
 * `launchRoleArn` - ARN of the launch role associated with the provisioned product.
 * `outputs` - The set of outputs for the product created.
     * `description` -  The description of the output.
@@ -116,25 +116,25 @@ This resource exports the following attributes in addition to the arguments abov
     * `value` - The output value.
 * `status` - Current status of the provisioned product. See meanings below.
 * `statusMessage` - Current status message of the provisioned product.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `type` - Type of provisioned product. Valid values are `cfnStack` and `cfnStackset`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `type` - Type of provisioned product. Valid values are `CFN_STACK` and `CFN_STACKSET`.
 
 ### `status` Meanings
 
 * `available` - Stable state, ready to perform any operation. The most recent operation succeeded and completed.
-* `underChange` - Transitive state. Operations performed might not have valid results. Wait for an `available` status before performing operations.
+* `underChange` - Transitive state. Operations performed might not have valid results. Wait for an `AVAILABLE` status before performing operations.
 * `tainted` - Stable state, ready to perform any operation. The stack has completed the requested operation but is not exactly what was requested. For example, a request to update to a new version failed and the stack rolled back to the current version.
 * `error` - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.
-* `planInProgress` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `available` status before performing operations.
+* `planInProgress` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `AVAILABLE` status before performing operations.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `read` - (Default `10M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -158,4 +158,4 @@ Using `terraform import`, import `awsServicecatalogProvisionedProduct` using the
 % terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-edd3b705e95bac2e25f2eb97a79b3f04705398287d665fe5f005143d89f697e6 -->
+<!-- cache-key: cdktf-0.19.0 input-edd3b705e95bac2e25f2eb97a79b3f04705398287d665fe5f005143d89f697e6 -->

@@ -80,4 +80,4 @@ Using `terraform import`, import `aws_networkmanager_link` using the link ARN. F
 % terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b3264437514e087e6c9a780921c3cabb87dacb7cfc4e78ab6211866e572c1219 -->
+<!-- cache-key: cdktf-0.19.0 input-b3264437514e087e6c9a780921c3cabb87dacb7cfc4e78ab6211866e572c1219 -->

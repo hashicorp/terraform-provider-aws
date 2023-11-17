@@ -116,7 +116,7 @@ Elastic IPs in the current region. The given filters must match exactly one
 Elastic IP whose data will be exported as attributes.
 
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
-* `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `publicIp`
+* `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `public_ip`
 * `publicIp` - (Optional) Public IP of the specific EIP to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP
 
@@ -146,6 +146,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-7688d5e50a2996c50fe0c8917540205326f787fcf7c961bd9d79ba635401f620 -->
+<!-- cache-key: cdktf-0.19.0 input-7688d5e50a2996c50fe0c8917540205326f787fcf7c961bd9d79ba635401f620 -->

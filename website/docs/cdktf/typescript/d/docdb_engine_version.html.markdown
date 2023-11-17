@@ -39,9 +39,9 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `docdb`)
-* `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `docdb36`.
-* `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
-* `version` - (Optional) Version of the DB engine. For example, `360`. If `version` and `preferredVersions` are not set, the data source will provide information for the AWS-defined default version. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
+* `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `docdb3.6`.
+* `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
+* `version` - (Optional) Version of the DB engine. For example, `3.6.0`. If `version` and `preferred_versions` are not set, the data source will provide information for the AWS-defined default version. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
 
 ## Attribute Reference
 
@@ -49,8 +49,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `engineDescription` - Description of the database engine.
 * `exportableLogTypes` - Set of log types that the database engine has available for export to CloudWatch Logs.
-* `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
+* `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
 * `validUpgradeTargets` - A set of engine versions that this database engine version can be upgraded to.
 * `versionDescription` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.18.0 input-551f8c39da9e4704102d050a7505855d613f3511c6df64ebd9c88d0d5533b8f5 -->
+<!-- cache-key: cdktf-0.19.0 input-551f8c39da9e4704102d050a7505855d613f3511c6df64ebd9c88d0d5533b8f5 -->

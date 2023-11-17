@@ -101,7 +101,7 @@ This resource supports the following arguments:
 * `connectionDraining` - (Optional) Boolean to enable connection draining. Default: `false`
 * `connectionDrainingTimeout` - (Optional) The time in seconds to allow for connections to drain. Default: `300`
 * `desyncMitigationMode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Exactly one of `availabilityZones` or `subnets` must be specified: this
 determines if the ELB exists in a VPC or in EC2-classic.
@@ -111,18 +111,18 @@ Access Logs (`accessLogs`) support the following:
 * `bucket` - (Required) The S3 bucket name to store the logs in.
 * `bucketPrefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
 * `interval` - (Optional) The publishing interval in minutes. Valid values: `5` and `60`. Default: `60`
-* `enabled` - (Optional) Boolean to enable / disable `accessLogs`. Default is `true`
+* `enabled` - (Optional) Boolean to enable / disable `access_logs`. Default is `true`
 
 Listeners (`listener`) support the following:
 
 * `instancePort` - (Required) The port on the instance to route to
 * `instanceProtocol` - (Required) The protocol to use to the instance. Valid
-  values are `http`, `https`, `tcp`, or `ssl`
+  values are `HTTP`, `HTTPS`, `TCP`, or `SSL`
 * `lbPort` - (Required) The port to listen on for the load balancer
-* `lbProtocol` - (Required) The protocol to listen on. Valid values are `http`,
-  `https`, `tcp`, or `ssl`
+* `lbProtocol` - (Required) The protocol to listen on. Valid values are `HTTP`,
+  `HTTPS`, `TCP`, or `SSL`
 * `sslCertificateId` - (Optional) The ARN of an SSL certificate you have
-uploaded to AWS IAM. **Note ECDSA-specific restrictions below.  Only valid when `lbProtocol` is either HTTPS or SSL**
+uploaded to AWS IAM. **Note ECDSA-specific restrictions below.  Only valid when `lb_protocol` is either HTTPS or SSL**
 
 Health Check (`healthCheck`) supports the following:
 
@@ -130,8 +130,8 @@ Health Check (`healthCheck`) supports the following:
 * `unhealthyThreshold` - (Required) The number of checks before the instance is declared unhealthy.
 * `target` - (Required) The target of the check. Valid pattern is "${PROTOCOL}:${PORT}${PATH}", where PROTOCOL
   values are:
-    * `http`, `https` - PORT and PATH are required
-    * `tcp`, `ssl` - PORT is required, PATH is not supported
+    * `HTTP`, `HTTPS` - PORT and PATH are required
+    * `TCP`, `SSL` - PORT is required, PATH is not supported
 * `interval` - (Required) The interval between checks.
 * `timeout` - (Required) The length of time before the check times out.
 
@@ -159,7 +159,7 @@ This resource exports the following attributes in addition to the arguments abov
   part of your inbound rules for your load balancer's back-end application
   instances. Only available on ELBs launched in a VPC.
 * `zoneId` - The canonical hosted zone ID of the ELB (to be used in a Route 53 Alias record)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -183,4 +183,4 @@ Using `terraform import`, import ELBs using the `name`. For example:
 % terraform import aws_elb.bar elb-production-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-51cf9c0bd7493a8933e0ea949d5da8ff7b2aba67934ff679f9a3811feef95d7c -->
+<!-- cache-key: cdktf-0.19.0 input-51cf9c0bd7493a8933e0ea949d5da8ff7b2aba67934ff679f9a3811feef95d7c -->

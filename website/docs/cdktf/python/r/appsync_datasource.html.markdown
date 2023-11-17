@@ -218,4 +218,4 @@ Using `terraform import`, import `aws_appsync_datasource` using the `api_id`, a 
 % terraform import aws_appsync_datasource.example abcdef123456-example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a9f04a5458c9f7419be950e393980c31263681e22e413dc9419e676476b092d0 -->
+<!-- cache-key: cdktf-0.19.0 input-a9f04a5458c9f7419be950e393980c31263681e22e413dc9419e676476b092d0 -->

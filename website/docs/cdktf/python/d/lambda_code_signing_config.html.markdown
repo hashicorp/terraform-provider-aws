@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
 
-<!-- cache-key: cdktf-0.18.0 input-7579a58de49284320a865ba064d26b395888e4b37e0c54bd6bcef30caa65b6ed -->
+<!-- cache-key: cdktf-0.19.0 input-7579a58de49284320a865ba064d26b395888e4b37e0c54bd6bcef30caa65b6ed -->

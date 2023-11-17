@@ -238,25 +238,25 @@ The following arguments are required:
 
 * `clusterName` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `nodeRoleArn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
-* `scalingConfig` - (Required) Configuration block with scaling settings. See [`scalingConfig`](#scaling_config-configuration-block) below for details.
+* `scalingConfig` - (Required) Configuration block with scaling settings. See [`scaling_config`](#scaling_config-configuration-block) below for details.
 * `subnetIds` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
 
 The following arguments are optional:
 
 * `amiType` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
-* `capacityType` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `onDemand`, `spot`. Terraform will only perform drift detection if a configuration value is provided.
+* `capacityType` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `diskSize` - (Optional) Disk size in GiB for worker nodes. Defaults to `50` for Windows, `20` all other node groups. Terraform will only perform drift detection if a configuration value is provided.
 * `forceUpdateVersion` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
-* `instanceTypes` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3Medium"]`. Terraform will only perform drift detection if a configuration value is provided.
+* `instanceTypes` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
-* `launchTemplate` - (Optional) Configuration block with Launch Template settings. See [`launchTemplate`](#launch_template-configuration-block) below for details.
-* `nodeGroupName` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `nodeGroupNamePrefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
-* `nodeGroupNamePrefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `nodeGroupName`.
+* `launchTemplate` - (Optional) Configuration block with Launch Template settings. See [`launch_template`](#launch_template-configuration-block) below for details.
+* `nodeGroupName` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
+* `nodeGroupNamePrefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `releaseVersion` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
-* `remoteAccess` - (Optional) Configuration block with remote access settings. See [`remoteAccess`](#remote_access-configuration-block) below for details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `remoteAccess` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. See [taint](#taint-configuration-block) below for details.
-* `updateConfig` - (Optional) Configuration block with update settings. See [`updateConfig`](#update_config-configuration-block) below for details.
+* `updateConfig` - (Optional) Configuration block with update settings. See [`update_config`](#update_config-configuration-block) below for details.
 * `version` – (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
 
 ### launch_template Configuration Block
@@ -265,12 +265,12 @@ The following arguments are optional:
 
 * `id` - (Optional) Identifier of the EC2 Launch Template. Conflicts with `name`.
 * `name` - (Optional) Name of the EC2 Launch Template. Conflicts with `id`.
-* `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$default` and `$latest`, the API will convert the value to the associated version number (e.g., `1`) on read and Terraform will show a difference on next plan. Using the `defaultVersion` or `latestVersion` attribute of the `awsLaunchTemplate` resource or data source is recommended for this argument.
+* `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$Default` and `$Latest`, the API will convert the value to the associated version number (e.g., `1`) on read and Terraform will show a difference on next plan. Using the `default_version` or `latest_version` attribute of the `aws_launch_template` resource or data source is recommended for this argument.
 
 ### remote_access Configuration Block
 
-* `ec2SshKey` - (Optional) EC2 Key Pair name that provides access for remote communication with the worker nodes in the EKS Node Group. If you specify this configuration, but do not specify `sourceSecurityGroupIds` when you create an EKS Node Group, either port 3389 for Windows, or port 22 for all other operating systems is opened on the worker nodes to the Internet (0.0.0.0/0). For Windows nodes, this will allow you to use RDP, for all others this allows you to SSH into the worker nodes.
-* `sourceSecurityGroupIds` - (Optional) Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes. If you specify `ec2SshKey`, but do not specify this configuration when you create an EKS Node Group, port 22 on the worker nodes is opened to the Internet (0.0.0.0/0).
+* `ec2SshKey` - (Optional) EC2 Key Pair name that provides access for remote communication with the worker nodes in the EKS Node Group. If you specify this configuration, but do not specify `source_security_group_ids` when you create an EKS Node Group, either port 3389 for Windows, or port 22 for all other operating systems is opened on the worker nodes to the Internet (0.0.0.0/0). For Windows nodes, this will allow you to use RDP, for all others this allows you to SSH into the worker nodes.
+* `sourceSecurityGroupIds` - (Optional) Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes. If you specify `ec2_ssh_key`, but do not specify this configuration when you create an EKS Node Group, port 22 on the worker nodes is opened to the Internet (0.0.0.0/0).
 
 ### scaling_config Configuration Block
 
@@ -282,7 +282,7 @@ The following arguments are optional:
 
 * `key` - (Required) The key of the taint. Maximum length of 63.
 * `value` - (Optional) The value of the taint. Maximum length of 63.
-* `effect` - (Required) The effect of the taint. Valid values: `noSchedule`, `noExecute`, `preferNoSchedule`.
+* `effect` - (Required) The effect of the taint. Valid values: `NO_SCHEDULE`, `NO_EXECUTE`, `PREFER_NO_SCHEDULE`.
 
 ### update_config Configuration Block
 
@@ -298,19 +298,19 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `resources` - List of objects containing information about underlying resources.
-    * `autoscalingGroups` - List of objects containing information about AutoScaling Groups.
+    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
-    * `remoteAccessSecurityGroupId` - Identifier of the remote access EC2 Security Group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+    * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `status` - Status of the EKS Node Group.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `60M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
@@ -334,4 +334,4 @@ Using `terraform import`, import EKS Node Groups using the `clusterName` and `no
 % terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-129aa761b524fec3c4f03d1723899506954e7ced19cd217e1c8e264b7e760456 -->
+<!-- cache-key: cdktf-0.19.0 input-129aa761b524fec3c4f03d1723899506954e7ced19cd217e1c8e264b7e760456 -->

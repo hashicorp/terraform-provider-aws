@@ -122,4 +122,4 @@ Using `terraform import`, import Object Lambda Access Points using the `account_
 % terraform import aws_s3control_object_lambda_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1722496a257bb581d51080c0ab0b09b859a573051013001e69e87f94d3f99bed -->
+<!-- cache-key: cdktf-0.19.0 input-1722496a257bb581d51080c0ab0b09b859a573051013001e69e87f94d3f99bed -->

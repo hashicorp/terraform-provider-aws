@@ -75,4 +75,4 @@ The `endpoints` block supports the following attributes:
 * `endpoint` - Endpoint of your Amazon Kendra Experience.
 * `endpoint_type` - Type of endpoint for your Amazon Kendra Experience.
 
-<!-- cache-key: cdktf-0.18.0 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->
+<!-- cache-key: cdktf-0.19.0 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->

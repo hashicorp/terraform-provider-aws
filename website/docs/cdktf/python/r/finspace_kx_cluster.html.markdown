@@ -211,4 +211,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f49ba79f2242b84e16df5a6a714b26006f2a9639ede46db32bec275901e7661a -->
+<!-- cache-key: cdktf-0.19.0 input-f49ba79f2242b84e16df5a6a714b26006f2a9639ede46db32bec275901e7661a -->

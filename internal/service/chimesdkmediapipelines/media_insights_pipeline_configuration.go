@@ -601,9 +601,12 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
-	_, err := conn.DeleteMediaInsightsPipelineConfigurationWithContext(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
-		Identifier: aws.String(d.Id()),
-	})
+	// eventual consistency may cause an initial failure
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (interface{}, error) {
+		return conn.DeleteMediaInsightsPipelineConfigurationWithContext(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
+			Identifier: aws.String(d.Id()),
+		})
+	}, chimesdkmediapipelines.ErrCodeConflictException, "Cannot delete a Media Insights Pipeline Configuration while it is in use by 1 or more Voice Connectors")
 
 	if tfawserr.ErrCodeEquals(err, chimesdkmediapipelines.ErrCodeNotFoundException) {
 		return nil

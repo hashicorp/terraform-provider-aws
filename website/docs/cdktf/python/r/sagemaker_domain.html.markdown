@@ -164,9 +164,26 @@ The following arguments are optional:
 
 #### canvas_app_settings
 
+* `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
+* `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
+* `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
 * `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. See [Time Series Forecasting Settings](#time_series_forecasting_settings) below.
 * `workspace_settings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace_settings) below.
+
+##### identity_provider_oauth_settings
+
+* `data_source_name` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `secret_arn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
+* `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### direct_deploy_settings
+
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### kendra_settings
+
+* `status` - (Optional) Describes whether the document querying feature is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### model_register_settings
 
@@ -275,4 +292,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-19db5ea50c6e2c5430e3020c46bbc94271da9af4b5dcb1c6e538ebe50443f56a -->
+<!-- cache-key: cdktf-0.19.0 input-4ac9570374257ed0e6bc0747e6cbaa715ec8416dbd36b9831ea65f1217a9b793 -->

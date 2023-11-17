@@ -70,4 +70,4 @@ Using `terraform import`, import Pinpoint Baidu Channel using the `application-i
 % terraform import aws_pinpoint_baidu_channel.channel application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0f0737a2ecf3441f3760954b544512dca7098ae0198bf9673837a1b43aafd321 -->
+<!-- cache-key: cdktf-0.19.0 input-0f0737a2ecf3441f3760954b544512dca7098ae0198bf9673837a1b43aafd321 -->

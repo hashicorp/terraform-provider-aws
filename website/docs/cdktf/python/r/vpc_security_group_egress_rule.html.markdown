@@ -86,4 +86,4 @@ Using `terraform import`, import security group egress rules using the `security
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3621cd75bed627759b23d79804e271902694303345d1faee64fd0fa94f65fd5d -->
+<!-- cache-key: cdktf-0.19.0 input-3621cd75bed627759b23d79804e271902694303345d1faee64fd0fa94f65fd5d -->

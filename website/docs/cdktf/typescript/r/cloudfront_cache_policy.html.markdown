@@ -79,17 +79,17 @@ This resource supports the following arguments:
 
 ### Cookies Config
 
-* `cookieBehavior` - (Required) Whether any cookies in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `cookieBehavior` are `none`, `whitelist`, `allExcept`, and `all`.
+* `cookieBehavior` - (Required) Whether any cookies in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `cookie_behavior` are `none`, `whitelist`, `allExcept`, and `all`.
 * `cookies` - (Optional) Object that contains a list of cookie names. See [Items](#items) for more information.
 
 ### Headers Config
 
-* `headerBehavior` - (Required) Whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `headerBehavior` are `none` and `whitelist`.
+* `headerBehavior` - (Required) Whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `header_behavior` are `none` and `whitelist`.
 * `headers` - (Optional) Object contains a list of header names. See [Items](#items) for more information.
 
 ### Query String Config
 
-* `queryStringBehavior` - (Required) Whether URL query strings in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `queryStringBehavior` are `none`, `whitelist`, `allExcept`, and `all`.
+* `queryStringBehavior` - (Required) Whether URL query strings in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `query_string_behavior` are `none`, `whitelist`, `allExcept`, and `all`.
 * `queryStrings` - (Optional) Configuration parameter that contains a list of query string names. See [Items](#items) for more information.
 
 ### Items
@@ -125,4 +125,4 @@ Using `terraform import`, import CloudFront cache policies using the `id` of the
 % terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fda72f4e7c4165f1b2aa65dbf0738cc394e0490f46a68016d550c5ffee31214 -->
+<!-- cache-key: cdktf-0.19.0 input-8fda72f4e7c4165f1b2aa65dbf0738cc394e0490f46a68016d550c5ffee31214 -->

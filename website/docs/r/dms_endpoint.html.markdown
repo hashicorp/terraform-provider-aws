@@ -58,6 +58,7 @@ The following arguments are optional:
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
+* `pause_replication_tasks` - (Optional) Whether to pause associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint. Only tasks paused by the resource will be restarted after the modification completes. Default is `false`.
 * `port` - (Optional) Port used by the endpoint database.
 * `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
 * `s3_settings` - (Optional) (**Deprecated**, use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead) Configuration block for S3 settings. See below.

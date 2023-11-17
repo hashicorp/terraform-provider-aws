@@ -280,4 +280,4 @@ Import a rule that has itself and an IPv6 CIDR block as sources:
 % terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-db0dbf623f1a56f51f8c29803443104e878f48f4aaaba90059e21bccd58f7112 -->
+<!-- cache-key: cdktf-0.19.0 input-db0dbf623f1a56f51f8c29803443104e878f48f4aaaba90059e21bccd58f7112 -->

@@ -72,7 +72,7 @@ Spot Instance Requests support all the same arguments as
 * `waitForFulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
   timeout of 10m is reached.
-* `spotType` - (Optional; Default: `persistent`) If set to `oneTime`, after
+* `spotType` - (Optional; Default: `persistent`) If set to `one-time`, after
   the instance is terminated, the spot request will be closed.
 * `launchGroup` - (Optional) A launch group is a group of spot instances that launch together and terminate together.
   If left empty instances are launched and terminated individually.
@@ -82,7 +82,7 @@ Spot Instance Requests support all the same arguments as
 * `instanceInterruptionBehavior` - (Optional) Indicates Spot instance behavior when it is interrupted. Valid values are `terminate`, `stop`, or `hibernate`. Default value is `terminate`.
 * `validUntil` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. The default end date is 7 days from the current date.
 * `validFrom` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
-* `tags` - (Optional) A map of tags to assign to the Spot Instance Request. These tags are not automatically applied to the launched Instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the Spot Instance Request. These tags are not automatically applied to the launched Instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -108,13 +108,13 @@ should only be used for informational purposes, not for resource dependencies:
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC
 * `privateIp` - The private IP address assigned to the instance
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->
+<!-- cache-key: cdktf-0.19.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->

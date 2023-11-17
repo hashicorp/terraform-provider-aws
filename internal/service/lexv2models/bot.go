@@ -256,6 +256,13 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
+	members, errDiags := flattenMembers(ctx, out.BotMembers)
+	resp.Diagnostics.Append(errDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.Members = members
+
 	datap, _ := flattenDataPrivacy(out.DataPrivacy)
 	if resp.Diagnostics.HasError() {
 		return
@@ -497,6 +504,35 @@ func flattenDataPrivacy(apiObject *awstypes.DataPrivacy) (types.List, diag.Diagn
 	return listVal, diags
 }
 
+func flattenMembers(ctx context.Context, apiObject []awstypes.BotMember) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: botMembersAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, source := range apiObject {
+		obj := map[string]attr.Value{
+			"alias_name": flex.StringToFramework(ctx, source.BotMemberAliasName),
+			"alias_id":   flex.StringToFramework(ctx, source.BotMemberAliasId),
+			"id":         flex.StringToFramework(ctx, source.BotMemberId),
+			"name":       flex.StringToFramework(ctx, source.BotMemberName),
+			"version":    flex.StringToFramework(ctx, source.BotMemberVersion),
+		}
+		objVal, d := types.ObjectValue(botMembersAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
 func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) *awstypes.DataPrivacy {
 	if len(tfList) == 0 {
 		return nil
@@ -580,4 +616,12 @@ type membersData struct {
 
 var dataPrivacyAttrTypes = map[string]attr.Type{
 	"child_directed": types.BoolType,
+}
+
+var botMembersAttrTypes = map[string]attr.Type{
+	"alias_id":   types.StringType,
+	"alias_name": types.StringType,
+	"id":         types.StringType,
+	"name":       types.StringType,
+	"version":    types.StringType,
 }

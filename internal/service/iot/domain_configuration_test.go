@@ -25,7 +25,7 @@ func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_iot_domain_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,7 +65,7 @@ func TestAccIoTDomainConfiguration_disappears(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_iot_domain_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,7 +91,7 @@ func TestAccIoTDomainConfiguration_tags(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_iot_domain_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,7 +138,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_iot_domain_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -180,7 +180,7 @@ func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) { // nosemgrep:ci.aw
 
 	acctest.SkipIfEnvVarNotSet(t, "IOT_DOMAIN_CONFIGURATION_TEST_AWS_MANAGED")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

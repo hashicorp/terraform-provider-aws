@@ -59,7 +59,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `autoEnable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
-* `autoEnableStandards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `default`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `none`.
+* `autoEnableStandards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
 
 ## Attribute Reference
 
@@ -89,4 +89,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_organization_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5b0a80355870042433f0256e95b1b1ca23a8a89ac8d72a202dca64a9bd9f9132 -->
+<!-- cache-key: cdktf-0.19.0 input-5b0a80355870042433f0256e95b1b1ca23a8a89ac8d72a202dca64a9bd9f9132 -->

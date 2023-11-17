@@ -44,4 +44,4 @@ The following arguments are supported:
 * `status` - The status of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-cea02305ec5fbfab04de63ece53105b1232b24f60ce5c0d4c7c6b87963855d23 -->
+<!-- cache-key: cdktf-0.19.0 input-cea02305ec5fbfab04de63ece53105b1232b24f60ce5c0d4c7c6b87963855d23 -->

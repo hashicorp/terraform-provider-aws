@@ -1,19 +1,136 @@
-## 5.25.0 (Unreleased)
+## 5.27.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
+
+## 5.26.0 (November 16, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_iot_registration_code` ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
+* **New Resource:** `aws_iot_billing_group` ([#31237](https://github.com/hashicorp/terraform-provider-aws/issues/31237))
+* **New Resource:** `aws_iot_ca_certificate` ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
+* **New Resource:** `aws_iot_event_configurations` ([#31237](https://github.com/hashicorp/terraform-provider-aws/issues/31237))
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_group: Add `instance_maintenance_policy` attribute ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
+* provider: Adds `https_proxy` and `no_proxy` parameters. ([#34243](https://github.com/hashicorp/terraform-provider-aws/issues/34243))
+* resource/aws_autoscaling_group: Add `instance_maintenance_policy` configuration block ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
+* resource/aws_finspace_kx_cluster: Increase default create and update timeouts to 4 hours to allow for increased startup times with large volumes of cached data ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
+* resource/aws_finspace_kx_environment: Increase default delete timeout to 75 minutes ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
+* resource/aws_iam_group_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_role_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_user_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iot_ca_certificate: Add `ca_certificate_id` attribute ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
+* resource/aws_iot_policy: Add configurable timeouts ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_iot_policy: When updating the resource, delete the oldest non-default version of the policy if creating a new version would exceed the maximum number of versions (5) ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_lambda_function: Add support for `nodejs20.x` and `provided.al2023` `runtime` values ([#34401](https://github.com/hashicorp/terraform-provider-aws/issues/34401))
+* resource/aws_lambda_layer_version: Add support for `nodejs20.x` and `provided.al2023` `compatible_runtimes` values ([#34401](https://github.com/hashicorp/terraform-provider-aws/issues/34401))
+* resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_rds_cluster: Add `delete_automated_backups` argument ([#34309](https://github.com/hashicorp/terraform-provider-aws/issues/34309))
+
+BUG FIXES:
+
+* resource/aws_chime_voice_connector: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chime_voice_connector_group: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chime_voice_connector_logging: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chime_voice_connector_origination: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chime_voice_connector_termination: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chime_voice_connector_termination_credentials: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chimesdkmediapipelines_media_insights_pipeline_configuration: Fix eventual consistency error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chimesdkvoice_sip_media_application: Fix eventual consistency errors when not using `us-east-1` ([#34426](https://github.com/hashicorp/terraform-provider-aws/issues/34426))
+* resource/aws_chimesdkvoice_sip_rule: Fix eventual consistency errors when not using `us-east-1` ([#34426](https://github.com/hashicorp/terraform-provider-aws/issues/34426))
+* resource/aws_elasticache_user: Fix `UserNotFound: ... is not available for tagging` errors on resource Read when there is a concurrent update to the user ([#34396](https://github.com/hashicorp/terraform-provider-aws/issues/34396))
+* resource/aws_grafana_workspace_api_key: Change `key` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#34105](https://github.com/hashicorp/terraform-provider-aws/issues/34105))
+* resource/aws_iam_group_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_role_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_iam_user_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
+* resource/aws_inspector2_delegated_admin_account: Fix `errors: *target must be interface or implement error` panic ([#34424](https://github.com/hashicorp/terraform-provider-aws/issues/34424))
+* resource/aws_inspector2_enabler: Fix `interface conversion: interface {} is nil, not map[string]inspector2.AccountResourceStatus` panic ([#34424](https://github.com/hashicorp/terraform-provider-aws/issues/34424))
+* resource/aws_iot_ca_certificate: Change `ca_pem` and `certificate_pem` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
+* resource/aws_iot_policy: Retry `DeleteConflictException` errors on delete ([#34329](https://github.com/hashicorp/terraform-provider-aws/issues/34329))
+* resource/aws_quicksight_analysis: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Fix handling of the nested `rolling_date` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Fix handling of the nested `select_all_options` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Fix handling of the nested `visual_ids` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Fixes to various optional blocks utilizing the shared column schema definition ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_analysis: Nested `column_index` and `row_index` arguments now properly handle zero values ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Fix handling of the nested `rolling_date` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Fix handling of the nested `select_all_options` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Fix handling of the nested `visual_ids` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Fixes to various optional blocks utilizing the shared column schema definition ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_dashboard: Nested `column_index` and `row_index` arguments now properly handle zero values ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_data_set: Increase `permissions.actions` maximum item limit to 20, aligning with the AWS API limits ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_data_source: Set all parameters to update aws_quicksight_data_source ([#33061](https://github.com/hashicorp/terraform-provider-aws/issues/33061))
+* resource/aws_quicksight_template: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Fix handling of the nested `rolling_date` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Fix handling of the nested `select_all_options` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Fix handling of the nested `visual_ids` argument ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Fixes to various optional blocks utilizing the shared column schema definition ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_quicksight_template: Nested `column_index` and `row_index` arguments now properly handle zero values ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
+* resource/aws_sagemaker_user_profile: Change `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` from TypeSet to TypeList, preventing `interface conversion: interface {} is *schema.Set, not []interface {}` panics ([#34418](https://github.com/hashicorp/terraform-provider-aws/issues/34418))
+* resource/aws_synthetics_canary: Fix to properly suppress differences when `expression` is `rate(0 minutes)` ([#34084](https://github.com/hashicorp/terraform-provider-aws/issues/34084))
+* resource/aws_vpn_connection: Fix `UnsupportedOperation: The tunnel inside ip version parameter is not currently supported in this region` error when creating connections in certain partitions and Regions ([#34420](https://github.com/hashicorp/terraform-provider-aws/issues/34420))
+
+## 5.25.0 (November 10, 2023)
+
+NOTES:
+
+* resource/aws_cloudtrail: The resource's [import ID](https://developer.hashicorp.com/terraform/language/import#import-id) has changed from `name` to `arn` ([#30758](https://github.com/hashicorp/terraform-provider-aws/issues/30758))
+
+FEATURES:
+
+* **New Data Source:** `aws_apigatewayv2_vpc_link` ([#33974](https://github.com/hashicorp/terraform-provider-aws/issues/33974))
+* **New Data Source:** `aws_athena_named_query` ([#24815](https://github.com/hashicorp/terraform-provider-aws/issues/24815))
+* **New Data Source:** `aws_bedrock_foundation_model` ([#34148](https://github.com/hashicorp/terraform-provider-aws/issues/34148))
+* **New Data Source:** `aws_bedrock_foundation_models` ([#34148](https://github.com/hashicorp/terraform-provider-aws/issues/34148))
+* **New Resource:** `aws_athena_prepared_statement` ([#33417](https://github.com/hashicorp/terraform-provider-aws/issues/33417))
+* **New Resource:** `aws_lexv2models_bot_locale` ([#33949](https://github.com/hashicorp/terraform-provider-aws/issues/33949))
+
+ENHANCEMENTS:
+
+* provider: Adds SSO API endpoint override parameter `endpoints.sso` ([#34302](https://github.com/hashicorp/terraform-provider-aws/issues/34302))
 * resource/aws_appflow_connector_profile: Add `jwt_token` and `oauth2_grant_type` arguments to the `connector_profile_config.connector_profile_credentials.salesforce` block. ([#34248](https://github.com/hashicorp/terraform-provider-aws/issues/34248))
+* resource/aws_autoscaling_group: Add plan-time validation of `initial_lifecycle_hook.default_result`, `initial_lifecycle_hook.heartbeat_timeout`, `initial_lifecycle_hook.lifecycle_transition`, `initial_lifecycle_hook.name`, `initial_lifecycle_hook.notification_target_arn` and `initial_lifecycle_hook.role_arn` ([#12145](https://github.com/hashicorp/terraform-provider-aws/issues/12145))
+* resource/aws_autoscaling_lifecycle_hook: Add plan-time validation of `default_result`, `heartbeat_timeout`, `lifecycle_transition`, `name`, `notification_target_arn` and `role_arn` ([#12145](https://github.com/hashicorp/terraform-provider-aws/issues/12145))
 * resource/aws_datasync_task: Add `task_report_config` argument ([#33861](https://github.com/hashicorp/terraform-provider-aws/issues/33861))
 * resource/aws_db_instance: Add `postgres` as a valid `engine` value for blue/green deployments ([#34216](https://github.com/hashicorp/terraform-provider-aws/issues/34216))
+* resource/aws_dms_endpoint: Add `pause_replication_tasks`, which when set to `true`, pauses associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint (only tasks paused by the resource will be restarted after the modification completes) ([#34316](https://github.com/hashicorp/terraform-provider-aws/issues/34316))
+* resource/aws_eks_cluster: Allow `vpc_config.security_group_ids` and `vpc_config.subnet_ids` to be updated in-place ([#32409](https://github.com/hashicorp/terraform-provider-aws/issues/32409))
 * resource/aws_inspector2_organization_configuration: Add `lambda_code` argument to the `auto_enable` configuration block ([#34261](https://github.com/hashicorp/terraform-provider-aws/issues/34261))
 * resource/aws_route53_record: Allow import of records with an empty record name. ([#34212](https://github.com/hashicorp/terraform-provider-aws/issues/34212))
+* resource/aws_sagemaker_domain: Add `default_user_settings.canvas_app_settings.direct_deploy_settings`, `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` and `default_user_settings.canvas_app_settings.kendra_settings` arguments ([#34265](https://github.com/hashicorp/terraform-provider-aws/issues/34265))
+* resource/aws_sagemaker_domain: Change `default_space_settings.kernel_gateway_app_settings.custom_image`, `default_user_settings.kernel_gateway_app_settings.custom_image` and `default_user_settings.r_session_app_settings.custom_image` `MaxItems` from `30` to `200` ([#34265](https://github.com/hashicorp/terraform-provider-aws/issues/34265))
+* resource/aws_sagemaker_feature_group: Add `offline_store_config.s3_storage_config.resolved_output_s3_uri`, `online_store_config.storage_type` and `online_store_config.ttl_duration` arguments ([#34283](https://github.com/hashicorp/terraform-provider-aws/issues/34283))
+* resource/aws_sagemaker_feature_group: Allow `online_store_config.ttl_duration` to be updated in-place ([#34283](https://github.com/hashicorp/terraform-provider-aws/issues/34283))
+* resource/aws_sagemaker_model: Add `container.model_data_source` and `primary_container.model_data_source` configuration blocks ([#34158](https://github.com/hashicorp/terraform-provider-aws/issues/34158))
+* resource/aws_sagemaker_space: Change `space_settings.kernel_gateway_app_settings.custom_image` `MaxItems` from `30` to `200` ([#34265](https://github.com/hashicorp/terraform-provider-aws/issues/34265))
+* resource/aws_sagemaker_user_profile: Add `default_user_settings.canvas_app_settings.direct_deploy_settings`, `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` and `default_user_settings.canvas_app_settings.kendra_settings` arguments ([#34265](https://github.com/hashicorp/terraform-provider-aws/issues/34265))
 * resource/aws_sns_topic: Add `archive_policy` argument and `beginning_archive_time` attribute to support [message archiving](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-archiving-replay.html) ([#34252](https://github.com/hashicorp/terraform-provider-aws/issues/34252))
 * resource/aws_sns_topic: Add `replay_policy` argument ([#34252](https://github.com/hashicorp/terraform-provider-aws/issues/34252))
 
 BUG FIXES:
 
+* provider: Fix `Value Conversion Error` panic for certain resources when `null` tag values are specified ([#34319](https://github.com/hashicorp/terraform-provider-aws/issues/34319))
+* provider: Fixes parsing error in AWS shared config files with extra whitespace ([#34300](https://github.com/hashicorp/terraform-provider-aws/issues/34300))
+* provider: Fixes poor performance when parsing AWS shared config files ([#34300](https://github.com/hashicorp/terraform-provider-aws/issues/34300))
 * resource/aws_autoscaling_group: Change all `initial_lifecycle_hook` configuration block attributes to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#34260](https://github.com/hashicorp/terraform-provider-aws/issues/34260))
+* resource/aws_cloudtrail: Change the `id` attribute from the trail's name to its ARN to support [organization trails](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html) ([#30758](https://github.com/hashicorp/terraform-provider-aws/issues/30758))
 * resource/aws_cloudwatch_event_rule: Increase `event_pattern` max length for validation to 4096 ([#34270](https://github.com/hashicorp/terraform-provider-aws/issues/34270))
+* resource/aws_sagemaker_domain: Fix updating `default_space_settings.r_studio_server_pro_app_settings.access_status` from `ENABLED` to `DISABLED` ([#34265](https://github.com/hashicorp/terraform-provider-aws/issues/34265))
 
 ## 5.24.0 (November  2, 2023)
 

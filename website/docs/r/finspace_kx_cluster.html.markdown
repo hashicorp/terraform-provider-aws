@@ -52,6 +52,13 @@ resource "aws_finspace_kx_cluster" "example" {
     s3_bucket = aws_s3_bucket.test.id
     s3_key    = aws_s3_object.object.key
   }
+
+  # Depending on the amount of data cached, create/update timeouts 
+  # may need to be increased up to a potential maximum of 18 hours.
+  timeouts {
+    create = "18h"
+    update = "18h"
+  }
 }
 ```
 
@@ -123,6 +130,9 @@ The cache_storage_configuration block supports the following arguments:
     * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
 
+Please note that create/update timeouts may have to be adjusted from the default 4 hours depending upon the
+volume of data being cached, as noted in the example configuration.
+
 ### code
 
 The code block supports the following arguments:
@@ -177,8 +187,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `45m`)
-* `update` - (Default `30m`)
+* `create` - (Default `4h`)
+* `update` - (Default `4h`)
 * `delete` - (Default `60m`)
 
 ## Import

@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-342c81cf26422fd2c4195d60a2096623c39f08ed2e906f31b634d44bbdc3ee9c -->
+<!-- cache-key: cdktf-0.19.0 input-342c81cf26422fd2c4195d60a2096623c39f08ed2e906f31b634d44bbdc3ee9c -->

@@ -163,7 +163,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `balancingStrategy` - (Optional) Indicates how GameLift FleetIQ balances the use of Spot Instances and On-Demand Instances.
-  Valid values: `spotOnly`, `spotPreferred`, `onDemandOnly`. Defaults to `spotPreferred`.
+  Valid values: `SPOT_ONLY`, `SPOT_PREFERRED`, `ON_DEMAND_ONLY`. Defaults to `SPOT_PREFERRED`.
 * `gameServerGroupName` - (Required) Name of the game server group.
   This value is used to generate unique ARN identifiers for the EC2 Auto Scaling group and the GameLift FleetIQ game server group.
 * `gameServerProtectionPolicy` - (Optional) Indicates whether instances in the game server group are protected from early termination.
@@ -171,7 +171,7 @@ This resource supports the following arguments:
   causing players to be dropped from the game.
   Protected instances cannot be terminated while there are active game servers running except in the event
   of a forced game server group deletion.
-  Valid values: `noProtection`, `fullProtection`. Defaults to `noProtection`.
+  Valid values: `NO_PROTECTION`, `FULL_PROTECTION`. Defaults to `NO_PROTECTION`.
 * `maxSize` - (Required) The maximum number of instances allowed in the EC2 Auto Scaling group.
   During automatic scaling events, GameLift FleetIQ and EC2 do not scale up the group above this maximum.
 * `minSize` - (Required) The minimum number of instances allowed in the EC2 Auto Scaling group.
@@ -232,8 +232,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -257,4 +257,4 @@ Using `terraform import`, import GameLift Game Server Group using the `name`. Fo
 % terraform import aws_gamelift_game_server_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-366bd6af5a933ffff5198fbc9bb42ed30d90f3b3e04f89cb1b84627bb8a40b8c -->
+<!-- cache-key: cdktf-0.19.0 input-366bd6af5a933ffff5198fbc9bb42ed30d90f3b3e04f89cb1b84627bb8a40b8c -->

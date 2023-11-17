@@ -41,20 +41,20 @@ This resource supports the following arguments:
 
 * `channelId` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The same as `channelId`
+* `id` - The same as `channel_id`
 * `arn` - The ARN of the channel
 * `hlsIngest` - A single item list of HLS ingest information
-    * `ingestEndpoints` - A list of the ingest endpoints
+    * `ingest_endpoints` - A list of the ingest endpoints
         * `password` - The password
         * `url` - The URL
         * `username` - The username
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import Media Package Channels using the channel ID. Fo
 % terraform import aws_media_package_channel.kittens kittens-channel
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-749270ff3fa0c6f15341b2b41f6c3363f04071edc7478cee4ebbc36cb5e14a07 -->
+<!-- cache-key: cdktf-0.19.0 input-749270ff3fa0c6f15341b2b41f6c3363f04071edc7478cee4ebbc36cb5e14a07 -->

@@ -36,6 +36,11 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
   vpc_zone_identifier       = [aws_subnet.example1.id, aws_subnet.example2.id]
 
+  instance_maintenance_policy {
+    min_healthy_percentage = 90
+    max_healthy_percentage = 120
+  }
+
   initial_lifecycle_hook {
     name                 = "foobar"
     default_result       = "CONTINUE"
@@ -418,6 +423,7 @@ This resource supports the following arguments:
   a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
+- `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
 - `desired_capacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
   Capacity](#waiting-for-capacity) below.)
@@ -679,6 +685,13 @@ This configuration block supports the following:
 - `max_group_prepared_capacity` - (Optional) Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
 - `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
+
+### instance_maintenance_policy
+
+This configuration block supports the following:
+
+- `min_healthy_percentage` - (Required) Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+- `max_healthy_percentage` - (Required) Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 
 ### traffic_source
 

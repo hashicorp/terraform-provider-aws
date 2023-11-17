@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,7 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_eks_addon")
-func DataSourceAddon() *schema.Resource {
+func dataSourceAddon() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonRead,
 		Schema: map[string]*schema.Schema{
@@ -60,14 +60,14 @@ func DataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
 	id := AddonCreateResourceID(clusterName, addonName)
 
-	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		return diag.Errorf("reading EKS Add-On (%s): %s", id, err)
@@ -77,8 +77,8 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
 	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
-	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
+	d.Set("created_at", aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	if err := d.Set("tags", KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

@@ -74,7 +74,7 @@ This resource supports the following arguments:
 * `extraPythonLibsS3Path` - (Optional) Path(s) to one or more Python libraries in an S3 bucket that should be loaded in this endpoint. Multiple values must be complete paths separated by a comma.
 * `glueVersion` - (Optional) -  Specifies the versions of Python and Apache Spark to use. Defaults to AWS Glue version 0.9.
 * `name` - (Required) The name of this endpoint. It must be unique in your account.
-* `numberOfNodes` - (Optional) The number of AWS Glue Data Processing Units (DPUs) to allocate to this endpoint. Conflicts with `workerType`.
+* `numberOfNodes` - (Optional) The number of AWS Glue Data Processing Units (DPUs) to allocate to this endpoint. Conflicts with `worker_type`.
 * `numberOfWorkers` - (Optional) The number of workers of a defined worker type that are allocated to this endpoint. This field is available only when you choose worker type G.1X or G.2X.
 * `publicKey` - (Optional) The public key to be used by this endpoint for authentication.
 * `publicKeys` - (Optional) A list of public keys to be used by this endpoint for authentication.
@@ -82,7 +82,7 @@ This resource supports the following arguments:
 * `securityConfiguration` - (Optional) The name of the Security Configuration structure to be used with this endpoint.
 * `securityGroupIds` - (Optional) Security group IDs for the security groups to be used by this endpoint.
 * `subnetId` - (Optional) The subnet ID for the new endpoint to use.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workerType` - (Optional) The type of predefined worker that is allocated to this endpoint. Accepts a value of Standard, G.1X, or G.2X.
 
 ## Attribute Reference
@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `vpcId` - he ID of the VPC used by this endpoint.
 * `status` - The current status of this endpoint.
 * `failureReason` - The reason for a current failure in this endpoint.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -123,4 +123,4 @@ Using `terraform import`, import a Glue Development Endpoint using the `name`. F
 % terraform import aws_glue_dev_endpoint.example foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-59223466494b9a1666a02d2c293b3450a6518da65a3ffe2d8e998ffd375782a6 -->
+<!-- cache-key: cdktf-0.19.0 input-59223466494b9a1666a02d2c293b3450a6518da65a3ffe2d8e998ffd375782a6 -->

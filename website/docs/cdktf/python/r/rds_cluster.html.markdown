@@ -345,6 +345,7 @@ This argument supports the following arguments:
 * `db_subnet_group_name` - (Optional) DB subnet group to associate with this DB cluster.
   **NOTE:** This must match the `db_subnet_group_name` specified on every [`aws_rds_cluster_instance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `db_system_id` - (Optional) For use with RDS Custom.
+* `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB cluster is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB cluster should have deletion protection enabled.
   The database can't be deleted when this value is set to `true`.
   The default is `false`.
@@ -588,4 +589,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a76812360c43b35e98c5b13afa036fb8cb63cbbf7dbd975d84293aab1f4fed49 -->
+<!-- cache-key: cdktf-0.19.0 input-a267287b8dbbb9cbcbb99a6d797554e8b316d9d6ca3cbfdf68a4d0e577410085 -->
