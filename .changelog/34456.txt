@@ -3,5 +3,5 @@ resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not m
 ```
 
 ```release-note:bug
-resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `task` is updated
+resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated
 ```

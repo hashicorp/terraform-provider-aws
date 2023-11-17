@@ -1554,6 +1554,9 @@ func expandDestinationFlowConfig(tfMap map[string]interface{}) *types.Destinatio
 
 	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
 		a.ConnectorType = types.ConnectorType(v)
+	} else {
+		// https://github.com/hashicorp/terraform-provider-aws/issues/26491.
+		return nil
 	}
 
 	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
