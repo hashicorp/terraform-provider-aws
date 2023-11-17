@@ -34,7 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Connector Profile",
 		},
 		{
-			Factory:  ResourceFlow,
+			Factory:  resourceFlow,
 			TypeName: "aws_appflow_flow",
 			Name:     "Flow",
 			Tags: &types.ServicePackageResourceTags{

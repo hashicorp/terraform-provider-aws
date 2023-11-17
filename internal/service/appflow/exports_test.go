@@ -6,6 +6,8 @@ package appflow
 // Exports for use in tests only.
 var (
 	ResourceConnectorProfile = resourceConnectorProfile
+	ResourceFlow             = resourceFlow
 
 	FindConnectorProfileByARN = findConnectorProfileByARN
+	FindFlowByARN             = findFlowByARN
 )
