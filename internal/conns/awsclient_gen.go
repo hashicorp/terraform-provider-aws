@@ -8,6 +8,7 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -83,7 +84,6 @@ import (
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-	appflow_sdkv1 "github.com/aws/aws-sdk-go/service/appflow"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -270,8 +270,8 @@ func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client
 	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
 }
 
-func (c *AWSClient) AppFlowConn(ctx context.Context) *appflow_sdkv1.Appflow {
-	return errs.Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
+func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
+	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow))
 }
 
 func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {

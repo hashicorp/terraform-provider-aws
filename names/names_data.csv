@@ -17,7 +17,7 @@ apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,1,,,aw
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,No SDK support
 appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,
-appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,1,,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,
+appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,,2,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,
 application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,1,,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,
 applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,,applicationcostprofiler,,,ApplicationCostProfiler,ApplicationCostProfiler,,1,,,aws_applicationcostprofiler_,,applicationcostprofiler_,Application Cost Profiler,AWS,,x,,,,,

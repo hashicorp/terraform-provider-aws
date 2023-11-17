@@ -30,6 +30,7 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
+	AppFlowEndpointID                    = "appflow"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BedrockEndpointID                    = "bedrock"
