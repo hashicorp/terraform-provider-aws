@@ -2,182 +2,57 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amp"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestScraperExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfamp.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccAMPScraper_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var scraper amp.DescribeScraperResponse
+	var scraper prometheusservice.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_amp_scraper.test"
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, amp.EndpointsID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, amp.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName),
+				Config: testAccScraperConfig_required(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amp", regexache.MustCompile(`scraper:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -189,22 +64,19 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var scraper amp.DescribeScraperResponse
+	var scraper prometheusservice.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_amp_scraper.test"
+	resourceName := "aws_prometheus_scraper.test"
+	eksClusterVersion := "1.28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, amp.EndpointsID)
-			testAccPreCheck(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, amp.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName, testAccScraperVersionNewer),
+				Config: testAccScraperConfig_required(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper(), resourceName),
@@ -215,56 +87,120 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAMPScraper_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper prometheusservice.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_alias(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var v prometheusservice.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	eksClusterVersion := "1.28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_alias(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_amp_scraper" {
+			if rs.Type != "aws_prometheus_scraper" {
 				continue
 			}
 
-			input := &amp.DescribeScraperInput{
-				ScraperId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeScraperWithContext(ctx, &amp.DescribeScraperInput{
-				ScraperId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, amp.ErrCodeNotFoundException) {
-				return nil
-			}
-			if err != nil {
-			        return create.Error(names.AMP, create.ErrActionCheckingDestroyed, tfamp.ResNameScraper, rs.Primary.ID, err)
+			_, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.AMP, create.ErrActionCheckingDestroyed, tfamp.ResNameScraper, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Amazon Prometheus Scraper %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckScraperExists(ctx context.Context, name string, scraper *amp.DescribeScraperResponse) resource.TestCheckFunc {
+func testAccCheckScraperExists(ctx context.Context, name string, v *prometheusservice.ScraperDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.AMP, create.ErrActionCheckingExistence, tfamp.ResNameScraper, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", name)
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.AMP, create.ErrActionCheckingExistence, tfamp.ResNameScraper, name, errors.New("not set"))
+			return fmt.Errorf("No Amazon Prometheus Scraper ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
-		resp, err := conn.DescribeScraperWithContext(ctx, &amp.DescribeScraperInput{
-			ScraperId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.AMP, create.ErrActionCheckingExistence, tfamp.ResNameScraper, rs.Primary.ID, err)
+			return err
 		}
 
-		*scraper = *resp
+		*v = *output
 
 		return nil
 	}
@@ -273,50 +209,312 @@ func testAccCheckScraperExists(ctx context.Context, name string, scraper *amp.De
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
-	input := &amp.ListScrapersInput{}
+	input := &prometheusservice.ListScrapersInput{}
+
 	_, err := conn.ListScrapersWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
+
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
-func testAccCheckScraperNotRecreated(before, after *amp.DescribeScraperResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.ScraperId), aws.StringValue(after.ScraperId); before != after {
-			return create.Error(names.AMP, create.ErrActionCheckingNotRecreated, tfamp.ResNameScraper, aws.StringValue(before.ScraperId), errors.New("recreated"))
-		}
+func testAccScraperConfig_required(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), `
+resource "aws_prometheus_scraper" "test" {
 
-		return nil
+	source {
+	  eks_cluster_arn = aws_eks_cluster.test.arn
+	  subnet_ids = aws_subnet.test[*].id
+	}
+
+	scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  # pod metrics
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+  # container metrics
+  - job_name: cadvisor
+    scheme: https
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+  # apiserver metrics
+  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    job_name: kubernetes-apiservers
+    kubernetes_sd_configs:
+    - role: endpoints
+    relabel_configs:
+    - action: keep
+      regex: default;kubernetes;https
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
+    scheme: https
+  # kube proxy metrics
+  - job_name: kube-proxy
+    honor_labels: true
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_pod_name
+      separator: '/'
+      regex: 'kube-system/kube-proxy.+'
+    - source_labels:
+      - __address__
+      action: replace
+      target_label: __address__
+      regex: (.+?)(\\:\\d+)?
+      replacement: $1:10249
+EOT
+
+	destination {
+	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+	}
+
+}
+`)
+}
+
+func testAccScraperConfig_tags1(rName, eksClusterVersion, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+	source {
+	  eks_cluster_arn = aws_eks_cluster.test.arn
+	  subnet_ids = aws_subnet.test[*].id
+	}
+
+	destination {
+	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+	}
+
+	scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  # pod metrics
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+  # container metrics
+  - job_name: cadvisor
+    scheme: https
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+  # apiserver metrics
+  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    job_name: kubernetes-apiservers
+    kubernetes_sd_configs:
+    - role: endpoints
+    relabel_configs:
+    - action: keep
+      regex: default;kubernetes;https
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
+    scheme: https
+  # kube proxy metrics
+  - job_name: kube-proxy
+    honor_labels: true
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_pod_name
+      separator: '/'
+      regex: 'kube-system/kube-proxy.+'
+    - source_labels:
+      - __address__
+      action: replace
+      target_label: __address__
+      regex: (.+?)(\\:\\d+)?
+      replacement: $1:10249
+EOT
+
+	tags = {
+		%[1]q = %[2]q
+	}
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccScraperConfig_alias(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+
+	alias = %[1]q
+
+	source {
+	  eks_cluster_arn = aws_eks_cluster.test.arn
+	  subnet_ids = aws_subnet.test[*].id
+	}
+
+	scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  # pod metrics
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+  # container metrics
+  - job_name: cadvisor
+    scheme: https
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+  # apiserver metrics
+  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    job_name: kubernetes-apiservers
+    kubernetes_sd_configs:
+    - role: endpoints
+    relabel_configs:
+    - action: keep
+      regex: default;kubernetes;https
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
+    scheme: https
+  # kube proxy metrics
+  - job_name: kube-proxy
+    honor_labels: true
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_pod_name
+      separator: '/'
+      regex: 'kube-system/kube-proxy.+'
+    - source_labels:
+      - __address__
+      action: replace
+      target_label: __address__
+      regex: (.+?)(\\:\\d+)?
+      replacement: $1:10249
+EOT
+
+	destination {
+	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+	}
+
+}
+`, rName))
+}
+
+func testAccScraperConfig_basic(eksClusterName, eksClusterVersion string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_availability_zones" "available" {
+	state = "available"
+}
+
+resource "aws_prometheus_workspace" "test" {
+	alias = %[1]q
+
+	tags = {
+		AMPAgentlessScraper = ""
 	}
 }
 
-func testAccScraperConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+resource "aws_eks_cluster" "test" {
+	name     = %[1]q
+	role_arn = aws_iam_role.test.arn
+	vpc_config {
+	  subnet_ids = aws_subnet.test[*].id
+	}
+	depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+
+resource "aws_iam_role" "test" {
   name = %[1]q
+  assume_role_policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+	{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "eks.${data.aws_partition.current.dns_suffix}"
+		},
+		"Action": "sts:AssumeRole"
+	}]
+}
+POLICY
 }
 
-resource "aws_amp_scraper" "test" {
-  scraper_name             = %[1]q
-  engine_type             = "ActiveAMP"
-  engine_version          = %[2]q
-  host_instance_type      = "amp.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.test.name
+}
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+  tags = {
+	Name                          = %[1]q
+	"kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
-`, rName, version)
+
+resource "aws_subnet" "test" {
+  count = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+  tags = {
+	Name                          = %[1]q
+	"kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+`, eksClusterName, eksClusterVersion)
 }

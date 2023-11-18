@@ -79,6 +79,31 @@ func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.Pr
 	return output.RuleGroupsNamespace, nil
 }
 
+func FindScraperByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.ScraperDescription, error) {
+	input := &prometheusservice.DescribeScraperInput{
+		ScraperId: aws.String(id),
+	}
+
+	output, err := conn.DescribeScraperWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Scraper, nil
+}
+
 func FindWorkspaceByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
 	input := &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),

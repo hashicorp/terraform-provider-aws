@@ -47,6 +47,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_prometheus_rule_group_namespace",
 		},
 		{
+			Factory:  ResourceScraper,
+			TypeName: "aws_prometheus_scraper",
+			Name:     "Scraper",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
 			Name:     "Workspace",

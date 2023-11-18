@@ -129,6 +129,40 @@ func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.
 	return nil, err
 }
 
+func waitScraperCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string, timeout time.Duration) (*prometheusservice.ScraperDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{prometheusservice.ScraperStatusCodeCreating},
+		Target:  []string{prometheusservice.ScraperStatusCodeActive},
+		Refresh: statusScraper(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if out, ok := outputRaw.(*prometheusservice.ScraperDescription); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitScraperDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string, timeout time.Duration) (*prometheusservice.ScraperDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{prometheusservice.ScraperStatusCodeActive, prometheusservice.ScraperStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: statusScraper(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*prometheusservice.ScraperDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitWorkspaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.WorkspaceStatusCodeCreating},
