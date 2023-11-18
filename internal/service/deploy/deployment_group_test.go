@@ -37,11 +37,11 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
-					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "0"),
@@ -62,11 +62,11 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 			},
 			{
 				Config: testAccDeploymentGroupConfig_modified(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-updated-"+rName)),
-					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-updated-"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s-updated`, rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test_updated", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
