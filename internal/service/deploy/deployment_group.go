@@ -57,7 +57,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				group, err := findDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
-					return []*schema.ResourceData{}, err
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 				}
 
 				d.SetId(aws.ToString(group.DeploymentGroupId))
@@ -238,9 +238,9 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTagFilters,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 						},
 						"value": {
 							Type:     schema.TypeString,
@@ -265,9 +265,9 @@ func resourceDeploymentGroup() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTagFilters,
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 									},
 									"value": {
 										Type:     schema.TypeString,
@@ -404,9 +404,9 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTagFilters,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.TagFilterType](),
 						},
 						"value": {
 							Type:     schema.TypeString,
