@@ -66,18 +66,18 @@ The following arguments are optional:
 * `encryptionSpecification` - (Optional) Specifies how the encryption key for encryption at rest is managed for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/EncryptionAtRest.html).
 * `pointInTimeRecovery` - (Optional) Specifies if point-in-time recovery is enabled or disabled for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/PointInTimeRecovery.html).
 * `schemaDefinition` - (Optional) Describes the schema of the table.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Enables Time to Live custom settings for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL.html).
 
 The `capacitySpecification` object takes the following arguments:
 
 * `readCapacityUnits` - (Optional) The throughput capacity specified for read operations defined in read capacity units (RCUs).
-* `throughputMode` - (Optional) The read/write throughput capacity mode for a table. Valid values: `payPerRequest`, `provisioned`. The default value is `payPerRequest`.
+* `throughputMode` - (Optional) The read/write throughput capacity mode for a table. Valid values: `PAY_PER_REQUEST`, `PROVISIONED`. The default value is `PAY_PER_REQUEST`.
 * `writeCapacityUnits` - (Optional) The throughput capacity specified for write operations defined in write capacity units (WCUs).
 
 The `clientSideTimestamps` object takes the following arguments:
 
-* `status` - (Required) Shows how to enable client-side timestamps settings for the specified table. Valid values: `enabled`.
+* `status` - (Required) Shows how to enable client-side timestamps settings for the specified table. Valid values: `ENABLED`.
 
 The `comment` object takes the following arguments:
 
@@ -86,18 +86,18 @@ The `comment` object takes the following arguments:
 The `encryptionSpecification` object takes the following arguments:
 
 * `kmsKeyIdentifier` - (Optional) The Amazon Resource Name (ARN) of the customer managed KMS key.
-* `type` - (Optional) The encryption option specified for the table. Valid values: `awsOwnedKmsKey`, `customerManagedKmsKey`. The default value is `awsOwnedKmsKey`.
+* `type` - (Optional) The encryption option specified for the table. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_MANAGED_KMS_KEY`. The default value is `AWS_OWNED_KMS_KEY`.
 
 The `pointInTimeRecovery` object takes the following arguments:
 
-* `status` - (Optional) Valid values: `enabled`, `disabled`. The default value is `disabled`.
+* `status` - (Optional) Valid values: `ENABLED`, `DISABLED`. The default value is `DISABLED`.
 
 The `schemaDefinition` object takes the following arguments:
 
 * `column` - (Required) The regular columns of the table.
 * `partitionKey` - (Required) The columns that are part of the partition key of the table .
 * `clusteringKey` - (Required) The columns that are part of the clustering key of the table.
-* `staticColumn` - (Required) The columns that have been defined as `static`. Static columns store values that are shared by all rows in the same partition.
+* `staticColumn` - (Required) The columns that have been defined as `STATIC`. Static columns store values that are shared by all rows in the same partition.
 
 The `column` object takes the following arguments:
 
@@ -111,7 +111,7 @@ The `partitionKey` object takes the following arguments:
 The `clusteringKey` object takes the following arguments:
 
 * `name` - (Required) The name of the clustering key column.
-* `orderBy` - (Required) The order modifier. Valid values: `asc`, `desc`.
+* `orderBy` - (Required) The order modifier. Valid values: `ASC`, `DESC`.
 
 The `staticColumn` object takes the following arguments:
 
@@ -119,22 +119,22 @@ The `staticColumn` object takes the following arguments:
 
 The `ttl` object takes the following arguments:
 
-* `status` - (Optional) Valid values: `enabled`.
+* `status` - (Optional) Valid values: `ENABLED`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the table.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -158,4 +158,4 @@ Using `terraform import`, import a table using the `keyspaceName` and `tableName
 % terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2a472d7a9fbc6d115fb0eeeff221a8837a9848972c20cbad7590570183d75aa -->
+<!-- cache-key: cdktf-0.19.0 input-e2a472d7a9fbc6d115fb0eeeff221a8837a9848972c20cbad7590570183d75aa -->

@@ -90,9 +90,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `sourceBackupIdentifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
-* `hsmType` - (Required) The type of HSM module in the cluster. Currently, only `hsm1Medium` is supported.
+* `hsmType` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
 * `subnetIds` - (Required) The IDs of subnets in which cluster will operate.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -103,12 +103,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `vpcId` - The id of the VPC that the CloudHSM cluster resides in.
 * `securityGroupId` - The ID of the security group associated with the CloudHSM cluster.
 * `clusterCertificates` - The list of cluster certificates.
-    * `clusterCertificates0ClusterCertificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
-    * `clusterCertificates0ClusterCsr` - The certificate signing request (CSR). Available only in `uninitialized` state after an HSM instance is added to the cluster.
-    * `clusterCertificates0AwsHardwareCertificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
-    * `clusterCertificates0HsmCertificate` - The HSM certificate issued (signed) by the HSM hardware.
-    * `clusterCertificates0ManufacturerHardwareCertificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+    * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
+    * `cluster_certificates.0.cluster_csr` - The certificate signing request (CSR). Available only in `UNINITIALIZED` state after an HSM instance is added to the cluster.
+    * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
+    * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
+    * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html
@@ -135,4 +135,4 @@ Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. Fo
 % terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-60608d99ff28e60f3d4ab022d7e83a5948556613036f369878a80719c7316ce2 -->
+<!-- cache-key: cdktf-0.19.0 input-60608d99ff28e60f3d4ab022d7e83a5948556613036f369878a80719c7316ce2 -->

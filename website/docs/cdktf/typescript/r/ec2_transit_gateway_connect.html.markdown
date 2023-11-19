@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `protocol` - (Optional) The tunnel protocol. Valid values: `gre`. Default is `gre`.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the Connect should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transitGatewayDefaultRouteTablePropagation` - (Optional) Boolean whether the Connect should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transitGatewayId` - (Required) Identifier of EC2 Transit Gateway.
@@ -57,15 +57,15 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import `awsEc2TransitGatewayConnect` using the EC2 Tra
 % terraform import aws_ec2_transit_gateway_connect.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3587ce9a543683c2a7be3dfe58f86b578cf760c76595adf37a9f30c13a13e9b9 -->
+<!-- cache-key: cdktf-0.19.0 input-3587ce9a543683c2a7be3dfe58f86b578cf760c76595adf37a9f30c13a13e9b9 -->

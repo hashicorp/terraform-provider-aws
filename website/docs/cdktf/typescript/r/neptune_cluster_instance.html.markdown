@@ -66,13 +66,13 @@ This resource supports the following arguments:
   are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the instance during the maintenance window. Default is `true`.
 * `availabilityZone` - (Optional) The EC2 Availability Zone that the neptune instance is created in.
-* `clusterIdentifier` - (Required) The identifier of the [`awsNeptuneCluster`](/docs/providers/aws/r/neptune_cluster.html) in which to launch this instance.
+* `clusterIdentifier` - (Required) The identifier of the [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the neptune instance. Defaults to `neptune`. Valid Values: `neptune`.
 * `engineVersion` - (Optional) The neptune engine version. Currently configuring this argumnet has no effect.
 * `identifier` - (Optional, Forces new resource) The identifier for the neptune instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifierPrefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instanceClass` - (Required) The instance class to use.
-* `neptuneSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptuneSubnetGroupName` of the attached [`awsNeptuneCluster`](/docs/providers/aws/r/neptune_cluster.html).
+* `neptuneSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptune_subnet_group_name` of the attached [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html).
 * `neptuneParameterGroupName` - (Optional) The name of the neptune parameter group to associate with this instance.
 * `port` - (Optional) The port on which the DB accepts connections. Defaults to `8182`.
 * `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00"
@@ -80,7 +80,7 @@ This resource supports the following arguments:
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotionTier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
 * `publiclyAccessible` - (Optional) Bool to control if instance is publicly accessible. Default is `false`.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -93,8 +93,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Instance identifier
 * `kmsKeyArn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storageEncrypted` - Specifies whether the neptune cluster is encrypted.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `writer` – Boolean indicating if this instance is writable. `false` indicates this instance is a read replica.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 
 [1]: https://www.terraform.io/docs/configuration/meta-arguments/count.html
 
@@ -102,9 +102,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `90M`)
-- `update` - (Default `90M`)
-- `delete` - (Default `90M`)
+- `create` - (Default `90m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
@@ -128,4 +128,4 @@ Using `terraform import`, import `awsNeptuneClusterInstance` using the instance 
 % terraform import aws_neptune_cluster_instance.example my-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c9fbfba9a3319bef7009738e3db57be0a358b60956afc9ca57b4650ac05f9ef1 -->
+<!-- cache-key: cdktf-0.19.0 input-c9fbfba9a3319bef7009738e3db57be0a358b60956afc9ca57b4650ac05f9ef1 -->

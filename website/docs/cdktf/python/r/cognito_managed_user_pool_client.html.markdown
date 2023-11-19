@@ -183,4 +183,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-09a5545a9b1f170005d5b45885469f05e619194057d0005875513587b0db3def -->
+<!-- cache-key: cdktf-0.19.0 input-09a5545a9b1f170005d5b45885469f05e619194057d0005875513587b0db3def -->

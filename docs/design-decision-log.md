@@ -8,3 +8,4 @@ as much as possible to allow for external feedback from the community and core c
 | Decision | Description | Issue Link |
 |----------|-------------|------------|
 | [Relationship Resource Design Standards](./design-decisions/relationship-resource-design-standards.md) | Align on design standards for relationship management resources in the Terraform AWS Provider. | [#9901](https://github.com/hashicorp/terraform-provider-aws/issues/9901) |
+| [SecretsManager Secret Target Attachment](./design-decisions/secretsmanager-secret-target-attachment.md) | Assess the feasibility of replicating the `AWS::SecretsManager::SecretTargetAttachment` CloudFormation function with Terraform. | [#9183](https://github.com/hashicorp/terraform-provider-aws/issues/9183) |

@@ -172,4 +172,4 @@ Using `terraform import`, import Glue Classifiers using their name. For example:
 % terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45c5b9dcc31431683f885d5456b092e34a68aaf460831b6201359bdc7708bb7a -->
+<!-- cache-key: cdktf-0.19.0 input-45c5b9dcc31431683f885d5456b092e34a68aaf460831b6201359bdc7708bb7a -->

@@ -123,4 +123,4 @@ Using `terraform import`, import Configuration Recorder Status using the name of
 % terraform import aws_config_configuration_recorder_status.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-eff5be1ca06224bd56323b786df4a302b3a7bde4963a5efe48e7bee409360bcf -->
+<!-- cache-key: cdktf-0.19.0 input-eff5be1ca06224bd56323b786df4a302b3a7bde4963a5efe48e7bee409360bcf -->

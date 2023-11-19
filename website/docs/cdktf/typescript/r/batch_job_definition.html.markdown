@@ -218,21 +218,21 @@ The following arguments are optional:
 * `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
-* `platformCapabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `ec2`. To run the job on Fargate resources, specify `fargate`.
+* `platformCapabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `propagateTags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
 * `retryStrategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
-    Maximum number of `retryStrategy` is `1`.  Defined below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+    Maximum number of `retry_strategy` is `1`.  Defined below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
 
 ### retry_strategy
 
-* `attempts` - (Optional) The number of times to move a job to the `runnable` status. You may specify between `1` and `10` attempts.
+* `attempts` - (Optional) The number of times to move a job to the `RUNNABLE` status. You may specify between `1` and `10` attempts.
 * `evaluateOnExit` - (Optional) The [evaluate on exit](#evaluate_on_exit) conditions under which the job should be retried or failed. If this parameter is specified, then the `attempts` parameter must also be specified. You may specify up to 5 configuration blocks.
 
 #### evaluate_on_exit
 
-* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `retry`, `exit`.
+* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
 * `onExitCode` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `onReason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `onStatusReason` - (Optional) A glob pattern to match against the status reason returned for a job.
@@ -247,7 +247,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -271,4 +271,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6875712bbffb016dedfe19893cba22e65a8cb48a90c99297983075f630c3e600 -->
+<!-- cache-key: cdktf-0.19.0 input-6875712bbffb016dedfe19893cba22e65a8cb48a90c99297983075f630c3e600 -->

@@ -77,4 +77,4 @@ Using `terraform import`, import `awsOrganizationsDelegatedAdministrator` using 
 % terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-745d938c3be3fdd51b8f44d7c0633f240dd4da83077531ec5a373a21b8a1ceb8 -->
+<!-- cache-key: cdktf-0.19.0 input-745d938c3be3fdd51b8f44d7c0633f240dd4da83077531ec5a373a21b8a1ceb8 -->

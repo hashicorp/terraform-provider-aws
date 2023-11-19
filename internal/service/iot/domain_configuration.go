@@ -210,7 +210,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
 
-	return nil
+	return diags
 }
 
 func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -261,6 +261,10 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 			DomainConfigurationStatus: aws.String(iot.DomainConfigurationStatusDisabled),
 		})
 
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+			return diags
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling IoT Domain Configuration (%s): %s", d.Id(), err)
 		}
@@ -270,6 +274,10 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	_, err := conn.DeleteDomainConfigurationWithContext(ctx, &iot.DeleteDomainConfigurationInput{
 		DomainConfigurationName: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IoT Domain Configuration (%s): %s", d.Id(), err)

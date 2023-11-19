@@ -299,20 +299,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cpu` - (Optional) Number of cpu units used by the task. If the `requiresCompatibilities` is `fargate` this field is required.
+* `cpu` - (Optional) Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `executionRoleArn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `inferenceAccelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipcMode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
-* `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requiresCompatibilities` is `fargate` this field is required.
+* `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `networkMode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
 * `runtimePlatform` - (Optional) Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
 * `pidMode` - (Optional) Process namespace to use for the containers in the task. The valid values are `host` and `task`.
-* `placementConstraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placementConstraints` is `10`. [Detailed below](#placement_constraints).
+* `placementConstraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
 * `proxyConfiguration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
 * `ephemeralStorage` - (Optional)  The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
-* `requiresCompatibilities` - (Optional) Set of launch types required by the task. The valid values are `ec2` and `fargate`.
+* `requiresCompatibilities` - (Optional) Set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `skipDestroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taskRoleArn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
@@ -340,20 +340,20 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
 * `fileSystemId` - (Required) ID of the EFS File System.
-* `rootDirectory` - (Optional) Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorizationConfig`.
-* `transitEncryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `enabled`, `disabled`. If this parameter is omitted, the default value of `disabled` is used.
+* `rootDirectory` - (Optional) Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
+* `transitEncryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
 * `transitEncryptionPort` - (Optional) Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorizationConfig` - (Optional) Configuration block for [authorization](#authorization_config) for the Amazon EFS file system. Detailed below.
 
 ### runtime_platform
 
-* `operatingSystemFamily` - (Optional) If the `requiresCompatibilities` is `fargate` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
-* `cpuArchitecture` - (Optional) Must be set to either `x8664` or `arm64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
+* `operatingSystemFamily` - (Optional) If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
+* `cpuArchitecture` - (Optional) Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
 
 #### authorization_config
 
 * `accessPointId` - (Optional) Access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration.
-* `iam` - (Optional) Whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration. Valid values: `enabled`, `disabled`. If this parameter is omitted, the default value of `disabled` is used.
+* `iam` - (Optional) Whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
 
 ### fsx_windows_file_server_volume_configuration
 
@@ -377,7 +377,7 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 
 * `containerName` - (Required) Name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
-* `type` - (Optional) Proxy type. The default value is `appmesh`. The only supported value is `appmesh`.
+* `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ### ephemeral_storage
 
@@ -395,7 +395,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
 * `arnWithoutRevision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
 * `revision` - Revision of the task in a particular family.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -419,4 +419,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e600d146b2b55ceeb9bc9361167e95241f61a5b3e90831c8b6a3c0cb748b8f00 -->
+<!-- cache-key: cdktf-0.19.0 input-e600d146b2b55ceeb9bc9361167e95241f61a5b3e90831c8b6a3c0cb748b8f00 -->

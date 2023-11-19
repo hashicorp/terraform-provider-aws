@@ -18,11 +18,11 @@ func Reverse[S ~[]E, E any](s S) S {
 }
 
 // RemoveAll removes all occurrences of the specified value `r` from a slice `s`.
-func RemoveAll[S ~[]E, E comparable](s S, r E) S {
+func RemoveAll[S ~[]E, E comparable](s S, vs ...E) S {
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {
-		if e != r {
+		if !slices.Contains(vs, e) {
 			v = append(v, e)
 		}
 	}
@@ -115,6 +115,8 @@ func AppendUnique[S ~[]E, E comparable](s S, vs ...E) S {
 }
 
 // IndexOf returns the index of the first occurrence of `v` in `s`, or -1 if not present.
+// This function is similar to the `Index` function in the Go standard `slices` package,
+// the difference being that `s` is a slice of `any` and a runtime type check is made.
 func IndexOf[S ~[]any, E comparable](s S, v E) int {
 	for i := range s {
 		if e, ok := s[i].(E); ok && v == e {

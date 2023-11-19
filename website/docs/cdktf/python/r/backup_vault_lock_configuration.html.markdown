@@ -69,4 +69,4 @@ Using `terraform import`, import Backup vault lock configuration using the `name
 % terraform import aws_backup_vault_lock_configuration.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7a6a16a744584530b702e520addc8fa4bab5b7a770b8ab9d13d1bbcb2f7c3f12 -->
+<!-- cache-key: cdktf-0.19.0 input-7a6a16a744584530b702e520addc8fa4bab5b7a770b8ab9d13d1bbcb2f7c3f12 -->

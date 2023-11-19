@@ -105,4 +105,4 @@ Using `terraform import`, import AWS SSM Activation using the `id`. For example:
 
 -> **Note:** The `activation_code` attribute cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-e0dcbe52e67919de9e8b8b10107faae656e18b0e36f4833aba51256613ff37fd -->
+<!-- cache-key: cdktf-0.19.0 input-e0dcbe52e67919de9e8b8b10107faae656e18b0e36f4833aba51256613ff37fd -->

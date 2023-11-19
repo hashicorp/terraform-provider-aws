@@ -50,13 +50,13 @@ This resource supports the following arguments:
 * `campaignHook` - (Optional) Specifies settings for invoking an AWS Lambda function that customizes a segment for a campaign
 * `limits` - (Optional) The default campaign limits for the app. These limits apply to each campaign for the app, unless the campaign overrides the default with limits of its own
 * `quietTime` - (Optional) The default quiet time for the app. Each campaign for this app sends no messages during this time unless the campaign overrides the default with a quiet time of its own
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `campaignHook` supports the following:
 
-* `lambdaFunctionName` - (Optional) Lambda function name or ARN to be called for delivery. Conflicts with `webUrl`
-* `mode` - (Required if `lambdaFunctionName` or `webUrl` are provided) What mode Lambda should be invoked in. Valid values for this parameter are `delivery`, `filter`.  
-* `webUrl` - (Optional) Web URL to call for hook. If the URL has authentication specified it will be added as authentication to the request. Conflicts with `lambdaFunctionName`
+* `lambdaFunctionName` - (Optional) Lambda function name or ARN to be called for delivery. Conflicts with `web_url`
+* `mode` - (Required if `lambda_function_name` or `web_url` are provided) What mode Lambda should be invoked in. Valid values for this parameter are `DELIVERY`, `FILTER`.  
+* `webUrl` - (Optional) Web URL to call for hook. If the URL has authentication specified it will be added as authentication to the request. Conflicts with `lambda_function_name`
 
 `limits` supports the following:
 
@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `applicationId` - The Application ID of the Pinpoint App.
 * `arn` - Amazon Resource Name (ARN) of the PinPoint Application
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import Pinpoint App using the `applicationId`. For exa
 % terraform import aws_pinpoint_app.name application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-69252b714649cc19bbfedeb89aa6fa806e2f32d0df2739664cb86bc692aacfc6 -->
+<!-- cache-key: cdktf-0.19.0 input-69252b714649cc19bbfedeb89aa6fa806e2f32d0df2739664cb86bc692aacfc6 -->

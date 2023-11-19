@@ -175,4 +175,4 @@ Using `terraform import`, import ECR Replication Configuration using the `regist
 % terraform import aws_ecr_replication_configuration.service 012345678912
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e720b09bffb1410913da15b1daa4aaef042cc175055603ba3335ca4406730fc -->
+<!-- cache-key: cdktf-0.19.0 input-1e720b09bffb1410913da15b1daa4aaef042cc175055603ba3335ca4406730fc -->

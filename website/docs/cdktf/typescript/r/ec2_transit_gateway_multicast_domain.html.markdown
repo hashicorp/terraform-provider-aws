@@ -167,11 +167,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `transitGatewayId` - (Required) EC2 Transit Gateway identifier. The EC2 Transit Gateway must have `multicastSupport` enabled.
+* `transitGatewayId` - (Required) EC2 Transit Gateway identifier. The EC2 Transit Gateway must have `multicast_support` enabled.
 * `autoAcceptSharedAssociations` - (Optional) Whether to automatically accept cross-account subnet associations that are associated with the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
 * `igmpv2Support` - (Optional) Whether to enable Internet Group Management Protocol (IGMP) version 2 for the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
 * `staticSourcesSupport` - (Optional) Whether to enable support for statically configuring multicast group sources for the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Multicast Domain. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Multicast Domain. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -180,14 +180,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - EC2 Transit Gateway Multicast Domain identifier.
 * `arn` - EC2 Transit Gateway Multicast Domain Amazon Resource Name (ARN).
 * `ownerId` - Identifier of the AWS account that owns the EC2 Transit Gateway Multicast Domain.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -211,4 +211,4 @@ Using `terraform import`, import `awsEc2TransitGatewayMulticastDomain` using the
 % terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8493dfab227c918d9b3e4e208962affb97781a33e5cd93321c066ab973c7252b -->
+<!-- cache-key: cdktf-0.19.0 input-8493dfab227c918d9b3e4e208962affb97781a33e5cd93321c066ab973c7252b -->

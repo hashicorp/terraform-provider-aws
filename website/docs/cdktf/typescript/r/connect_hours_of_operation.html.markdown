@@ -73,14 +73,14 @@ This resource supports the following arguments:
 * `description` - (Optional) Specifies the description of the Hours of Operation.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Hours of Operation.
-* `tags` - (Optional) Tags to apply to the Hours of Operation. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Hours of Operation. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeZone` - (Required) Specifies the time zone of the Hours of Operation.
 
 A `config` block supports the following arguments:
 
 * `day` - (Required) Specifies the day that the hours of operation applies to.
-* `endTime` - (Required) A end time block specifies the time that your contact center closes. The `endTime` is documented below.
-* `startTime` - (Required) A start time block specifies the time that your contact center opens. The `startTime` is documented below.
+* `endTime` - (Required) A end time block specifies the time that your contact center closes. The `end_time` is documented below.
+* `startTime` - (Required) A start time block specifies the time that your contact center opens. The `start_time` is documented below.
 
 A `endTime` block supports the following arguments:
 
@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
 * `hoursOfOperationId` - The identifier for the hours of operation.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Hours of Operation separated by a colon (`:`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -123,4 +123,4 @@ Using `terraform import`, import Amazon Connect Hours of Operations using the `i
 % terraform import aws_connect_hours_of_operation.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e685961316f9f34f8486d7fd79d05b0468f7a89263abaaf59ddd74e65a685a9c -->
+<!-- cache-key: cdktf-0.19.0 input-e685961316f9f34f8486d7fd79d05b0468f7a89263abaaf59ddd74e65a685a9c -->

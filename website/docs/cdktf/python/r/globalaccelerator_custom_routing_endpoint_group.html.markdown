@@ -94,4 +94,4 @@ Using `terraform import`, import Global Accelerator custom routing endpoint grou
 % terraform import aws_globalaccelerator_custom_routing_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1cdf76aa1d7720de7b94c9800ff5e5f2715b300edfc472a4a81ea499fa6efa64 -->
+<!-- cache-key: cdktf-0.19.0 input-1cdf76aa1d7720de7b94c9800ff5e5f2715b300edfc472a4a81ea499fa6efa64 -->

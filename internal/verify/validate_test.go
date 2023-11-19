@@ -829,3 +829,40 @@ func TestMapLenBetween(t *testing.T) {
 		})
 	}
 }
+
+func TestMapKeysAre(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+		{
+			name: "not ok",
+			value: map[string]interface{}{
+				"K3": "V3",
+			},
+			wantErr: true,
+		},
+	}
+	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}

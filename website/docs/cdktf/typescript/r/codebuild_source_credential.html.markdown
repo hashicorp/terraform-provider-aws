@@ -70,8 +70,8 @@ This resource supports the following arguments:
 
 * `authType` - (Required) The type of authentication used to connect to a GitHub, GitHub Enterprise, or Bitbucket repository. An OAUTH connection is not supported by the API.
 * `serverType` - (Required) The source provider used for this project.
-* `token` - (Required) For `gitHub` or `GitHub Enterprise`, this is the personal access token. For `bitbucket`, this is the app password.
-* `userName` - (Optional) The Bitbucket username when the authType is `basicAuth`. This parameter is not valid for other types of source providers or connections.
+* `token` - (Required) For `GitHub` or `GitHub Enterprise`, this is the personal access token. For `Bitbucket`, this is the app password.
+* `userName` - (Optional) The Bitbucket username when the authType is `BASIC_AUTH`. This parameter is not valid for other types of source providers or connections.
 
 ## Attribute Reference
 
@@ -102,4 +102,4 @@ Using `terraform import`, import CodeBuild Source Credential using the CodeBuild
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1d3035420b7bbe8f89436bdbdcd040691cc3649bd4b17947a90be506a262d9cb -->
+<!-- cache-key: cdktf-0.19.0 input-1d3035420b7bbe8f89436bdbdcd040691cc3649bd4b17947a90be506a262d9cb -->

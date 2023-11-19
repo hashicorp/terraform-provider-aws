@@ -61,7 +61,7 @@ class MyConvertedCode extends TerraformStack {
 * `urlPath` - (Required) Matches the path from a request URL.
 * `version` - (Required) The version of the sampling rule format (`1` )
 * `attributes` - (Optional) Matches attributes derived from the request.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the sampling rule.
 * `arn` - The ARN of the sampling rule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import XRay Sampling Rules using the name. For example
 % terraform import aws_xray_sampling_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3ca0f87f60b2af282993155f8f46c69e0703d25d278651c0017302f1714b4c23 -->
+<!-- cache-key: cdktf-0.19.0 input-3ca0f87f60b2af282993155f8f46c69e0703d25d278651c0017302f1714b4c23 -->

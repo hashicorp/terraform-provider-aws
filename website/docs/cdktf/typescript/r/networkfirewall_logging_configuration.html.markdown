@@ -128,20 +128,20 @@ This resource supports the following arguments:
 
 The `loggingConfiguration` block supports the following arguments:
 
-* `logDestinationConfig` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only two blocks can be specified; one for `flow` logs and one for `alert` logs.
+* `logDestinationConfig` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only two blocks can be specified; one for `FLOW` logs and one for `ALERT` logs.
 
 ### Log Destination Config
 
 The `logDestinationConfig` block supports the following arguments:
 
-* `logDestination` - (Required) A map describing the logging destination for the chosen `logDestinationType`.
+* `logDestination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
     * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
     * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
 
-* `logDestinationType` - (Required) The location to send logs to. Valid values: `s3`, `cloudWatchLogs`, `kinesisDataFirehose`.
+* `logDestinationType` - (Required) The location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
 
-* `logType` - (Required) The type of log to send. Valid values: `alert` or `flow`. Alert logs report traffic that matches a `statefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
+* `logType` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
 
 ## Attribute Reference
 
@@ -171,4 +171,4 @@ Using `terraform import`, import Network Firewall Logging Configurations using t
 % terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2700cb50e1d426b15657fe101c09e1dc07bb26140cf98ca4ff2db12e4a6d391e -->
+<!-- cache-key: cdktf-0.19.0 input-2700cb50e1d426b15657fe101c09e1dc07bb26140cf98ca4ff2db12e4a6d391e -->

@@ -42,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 * `client_ids` - List of Cognito user pool client IDs.
 * `client_names` - List of Cognito user pool client names.
 
-<!-- cache-key: cdktf-0.18.0 input-0fe61149f327af030714ff2a7ce38b01d25e4ce678ca724c3e6bcaa54b7f9201 -->
+<!-- cache-key: cdktf-0.19.0 input-0fe61149f327af030714ff2a7ce38b01d25e4ce678ca724c3e6bcaa54b7f9201 -->

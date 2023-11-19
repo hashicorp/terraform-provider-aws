@@ -68,23 +68,23 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
-* `protocolType` - (Required) API protocol. Valid values: `http`, `websocket`.
+* `protocolType` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `apiKeySelectionExpression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
-Valid values: `$contextAuthorizerUsageIdentifierKey`, `$requestHeaderXApiKey`. Defaults to `$requestHeaderXApiKey`.
+Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
 Applicable for WebSocket APIs.
 * `corsConfiguration` - (Optional) Cross-origin resource sharing (CORS) [configuration](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html). Applicable for HTTP APIs.
 * `credentialsArn` - (Optional) Part of _quick create_. Specifies any credentials required for the integration. Applicable for HTTP APIs.
 * `description` - (Optional) Description of the API. Must be less than or equal to 1024 characters in length.
-* `disableExecuteApiEndpoint` - (Optional) Whether clients can invoke the API by using the default `executeApi` endpoint.
+* `disableExecuteApiEndpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
 * `routeKey` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `routeSelectionExpression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
-* `tags` - (Optional) Map of tags to assign to the API. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the API. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Part of _quick create_. Quick create produces an API with an integration, a default catch-all route, and a default stage which is configured to automatically deploy changes.
 For HTTP integrations, specify a fully qualified URL. For Lambda integrations, specify a function ARN.
-The type of the integration will be `httpProxy` or `awsProxy`, respectively. Applicable for HTTP APIs.
+The type of the integration will be `HTTP_PROXY` or `AWS_PROXY`, respectively. Applicable for HTTP APIs.
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the HTTP APIs. Supported only for HTTP APIs.
 * `version` - (Optional) Version identifier for the API. Must be between 1 and 64 characters in length.
 * `failOnWarnings` - (Optional) Whether warnings should return an error while API Gateway is creating or updating the resource using an OpenAPI specification. Defaults to `false`. Applicable for HTTP APIs.
@@ -110,12 +110,12 @@ The `corsConfiguration` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API identifier.
-* `apiEndpoint` - URI of the API, of the form `https://{apiId}ExecuteApi.{region}AmazonawsCom` for HTTP APIs and `wss://{apiId}ExecuteApi.{region}AmazonawsCom` for WebSocket APIs.
+* `apiEndpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
 * `arn` - ARN of the API.
-* `executionArn` - ARN prefix to be used in an [`awsLambdaPermission`](/docs/providers/aws/r/lambda_permission.html)'s `sourceArn` attribute
-or in an [`awsIamPolicy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
+* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
+or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -139,4 +139,4 @@ Using `terraform import`, import `awsApigatewayv2Api` using the API identifier. 
 % terraform import aws_apigatewayv2_api.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa8c33d1b4534c72e0765acdfd063cd72de93dec3553988cad57b268051e01d2 -->
+<!-- cache-key: cdktf-0.19.0 input-aa8c33d1b4534c72e0765acdfd063cd72de93dec3553988cad57b268051e01d2 -->

@@ -130,7 +130,7 @@ from imports.aws.networkmanager_connect_attachment import NetworkmanagerConnectA
 from imports.aws.networkmanager_connect_peer import NetworkmanagerConnectPeer
 from imports.aws.networkmanager_vpc_attachment import NetworkmanagerVpcAttachment
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, insideCidrBlocks):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         example = NetworkmanagerVpcAttachment(self, "example",
             core_network_id=Token.as_string(awscc_networkmanager_core_network_example.id),
@@ -154,8 +154,7 @@ class MyConvertedCode(TerraformStack):
             ),
             connect_attachment_id=Token.as_string(aws_networkmanager_connect_attachment_example.id),
             peer_address="127.0.0.1",
-            subnet_arn=test2.arn,
-            inside_cidr_blocks=inside_cidr_blocks
+            subnet_arn=test2.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_networkmanager_connect_peer_example.override_logical_id("example")
@@ -207,4 +206,4 @@ Using `terraform import`, import `aws_networkmanager_connect_peer` using the con
 % terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-010c7af9870efaa2d4e70fcf20dd0a8279a972e0005dd5005199d0f3752a0ded -->
+<!-- cache-key: cdktf-0.19.0 input-010c7af9870efaa2d4e70fcf20dd0a8279a972e0005dd5005199d0f3752a0ded -->

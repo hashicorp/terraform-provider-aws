@@ -126,11 +126,11 @@ This resource supports the following arguments:
 
 * `conclusionStatement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
-you provide a Lambda function in the `fulfillmentActivity`. If you return the intent to the client
-application, you can't specify this element. The `followUpPrompt` and `conclusionStatement` are
+you provide a Lambda function in the `fulfillment_activity`. If you return the intent to the client
+application, you can't specify this element. The `follow_up_prompt` and `conclusion_statement` are
 mutually exclusive. You can specify only one. Attributes are documented under [statement](#statement).
 * `confirmationPrompt` - (Optional) Prompts the user to confirm the intent. This question should
-have a yes or no answer. You you must provide both the `rejectionStatement` and `confirmationPrompt`,
+have a yes or no answer. You you must provide both the `rejection_statement` and `confirmation_prompt`,
 or neither. Attributes are documented under [prompt](#prompt).
 * `createVersion` - (Optional) Determines if a new slot type version is created when the initial
 resource is created and on each update. Defaults to `false`.
@@ -139,10 +139,10 @@ resource is created and on each update. Defaults to `false`.
 invoke this Lambda function to personalize user interaction. Attributes are documented under [code_hook](#code_hook).
 * `followUpPrompt` - (Optional) Amazon Lex uses this prompt to solicit additional activity after
 fulfilling an intent. For example, after the OrderPizza intent is fulfilled, you might prompt the
-user to order a drink. The `followUpPrompt` field and the `conclusionStatement` field are mutually
+user to order a drink. The `follow_up_prompt` field and the `conclusion_statement` field are mutually
 exclusive. You can specify only one. Attributes are documented under [follow_up_prompt](#follow_up_prompt).
 * `fulfillmentActivity` - (Required) Describes how the intent is fulfilled. For example, after a
-user provides all of the information for a pizza order, `fulfillmentActivity` defines how the bot
+user provides all of the information for a pizza order, `fulfillment_activity` defines how the bot
 places an order with a local pizza store. Attributes are documented under [fulfillment_activity](#fulfillment_activity).
 * `name` - (Required) The name of the intent, not case sensitive. Must be less than or equal to 100 characters in length.
 * `parentIntentSignature` - (Optional) A unique identifier for the built-in intent to base this
@@ -150,8 +150,8 @@ intent on. To find the signature for an intent, see
 [Standard Built-in Intents](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/built-in-intent-ref/standard-intents)
 in the Alexa Skills Kit.
 * `rejectionStatement` - (Optional) When the user answers "no" to the question defined in
-`confirmationPrompt`, Amazon Lex responds with this statement to acknowledge that the intent was
-canceled. You must provide both the `rejectionStatement` and the `confirmationPrompt`, or neither.
+`confirmation_prompt`, Amazon Lex responds with this statement to acknowledge that the intent was
+canceled. You must provide both the `rejection_statement` and the `confirmation_prompt`, or neither.
 Attributes are documented under [statement](#statement).
 * `sampleUtterances` - (Optional) An array of utterances (strings) that a user might say to signal
 the intent. For example, "I want {PizzaSize} pizza", "Order {Quantity} {PizzaSize} pizzas".
@@ -183,7 +183,7 @@ documented below under [statement](#statement).
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
-returning the slot data to the client application. Type can be either `returnIntent` or `codeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
+returning the slot data to the client application. Type can be either `ReturnIntent` or `CodeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
 * `codeHook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
 Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 
@@ -260,9 +260,9 @@ included as an argument because the resource will add it automatically when upda
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -286,4 +286,4 @@ Using `terraform import`, import intents using their name. For example:
 % terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->
+<!-- cache-key: cdktf-0.19.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->

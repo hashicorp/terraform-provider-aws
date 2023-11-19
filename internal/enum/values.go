@@ -8,10 +8,12 @@ type Valueser[T ~string] interface {
 	Values() []T
 }
 
-func Values[T Valueser[T]]() []string {
-	l := T("").Values()
+func EnumValues[T Valueser[T]]() []T {
+	return T("").Values()
+}
 
-	return Slice(l...)
+func Values[T Valueser[T]]() []string {
+	return Slice(EnumValues[T]()...)
 }
 
 func Slice[T Valueser[T]](l ...T) []string {

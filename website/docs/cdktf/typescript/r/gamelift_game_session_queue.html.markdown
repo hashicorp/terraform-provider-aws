@@ -56,7 +56,7 @@ This resource supports the following arguments:
 * `destinations` - (Optional) List of fleet/alias ARNs used by session queue for placing game sessions.
 * `notificationTarget` - (Optional) An SNS topic ARN that is set up to receive game session placement notifications.
 * `playerLatencyPolicy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -70,7 +70,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Game Session Queue ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import GameLift Game Session Queues using their `name`
 % terraform import aws_gamelift_game_session_queue.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e69f1135cf583861ec3815dcbcde5d0ca2b5117945e9f7a46b7008c92b6115a -->
+<!-- cache-key: cdktf-0.19.0 input-1e69f1135cf583861ec3815dcbcde5d0ca2b5117945e9f7a46b7008c92b6115a -->

@@ -111,4 +111,4 @@ private IP addresses when queried from instances in a peer VPC.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-b38a9587aaca2300c795e51ead64f4c57e57a85ac3044ada5792edf97aa88b1a -->
+<!-- cache-key: cdktf-0.19.0 input-b38a9587aaca2300c795e51ead64f4c57e57a85ac3044ada5792edf97aa88b1a -->

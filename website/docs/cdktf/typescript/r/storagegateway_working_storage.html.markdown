@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `diskId` - (Required) Local disk identifier. For example, `pci0000:03:000Scsi0:0:0:0`.
+* `diskId` - (Required) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `gatewayArn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 
 ## Attribute Reference
@@ -72,4 +72,4 @@ Using `terraform import`, import `awsStoragegatewayWorkingStorage` using the gat
 % terraform import aws_storagegateway_working_storage.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-70cd2153af665dbf7aff736700a2d421553e7a7e40d49fdf71a96c7ff2a5aa9d -->
+<!-- cache-key: cdktf-0.19.0 input-70cd2153af665dbf7aff736700a2d421553e7a7e40d49fdf71a96c7ff2a5aa9d -->
