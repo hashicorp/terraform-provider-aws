@@ -341,7 +341,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:%s-2$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -358,7 +358,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:%s-3$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -2531,7 +2531,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_lb_target_group" "blue" {
-  name        = "${aws_lb.test.name}-blue"
+  name        = format("%%s-blue", substr(aws_lb.test.name, 0, 26))
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
@@ -2539,7 +2539,7 @@ resource "aws_lb_target_group" "blue" {
 }
 
 resource "aws_lb_target_group" "green" {
-  name        = "${aws_lb.test.name}-green"
+  name        = format("%%s-green", substr(aws_lb.test.name, 0, 26))
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
