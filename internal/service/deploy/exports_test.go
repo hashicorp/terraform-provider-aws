@@ -6,10 +6,10 @@ package deploy
 // Exports for use in tests only.
 var (
 	ResourceApp              = resourceApp
-	ResourceDeploymentConfig = resourceDeploymentConfig
-	ResourceDeploymentGroup  = resourceDeploymentGroup
+	ResourceDeploymentConfig = resourceDeploymentConfig // nosemgrep:ci.deploy-in-var-name
+	ResourceDeploymentGroup  = resourceDeploymentGroup  // nosemgrep:ci.deploy-in-var-name
 
 	FindApplicationByName           = findApplicationByName
-	FindDeploymentConfigByName      = findDeploymentConfigByName
-	FindDeploymentGroupByTwoPartKey = findDeploymentGroupByTwoPartKey
+	FindDeploymentConfigByName      = findDeploymentConfigByName      // nosemgrep:ci.deploy-in-var-name
+	FindDeploymentGroupByTwoPartKey = findDeploymentGroupByTwoPartKey // nosemgrep:ci.deploy-in-var-name
 )
