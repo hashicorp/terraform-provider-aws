@@ -14,9 +14,6 @@ import (
 )
 
 const (
-	AutoScalingConfigurationCreateTimeout = 2 * time.Minute
-	AutoScalingConfigurationDeleteTimeout = 2 * time.Minute
-
 	ConnectionDeleteTimeout = 5 * time.Minute
 
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
@@ -32,32 +29,6 @@ const (
 	VPCIngressConnectionCreateTimeout = 2 * time.Minute
 	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
-
-func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.Client, arn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{AutoScalingConfigurationStatusActive},
-		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
-		Timeout: AutoScalingConfigurationCreateTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.Client, arn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{AutoScalingConfigurationStatusActive},
-		Target:  []string{AutoScalingConfigurationStatusInactive},
-		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
-		Timeout: AutoScalingConfigurationDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 func WaitConnectionDeleted(ctx context.Context, conn *apprunner.Client, name string) error {
 	stateConf := &retry.StateChangeConf{

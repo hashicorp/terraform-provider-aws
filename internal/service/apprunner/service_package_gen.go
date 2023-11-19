@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAutoScalingConfigurationVersion,
+			Factory:  resourceAutoScalingConfigurationVersion,
 			TypeName: "aws_apprunner_auto_scaling_configuration_version",
 			Name:     "AutoScaling Configuration Version",
 			Tags: &types.ServicePackageResourceTags{

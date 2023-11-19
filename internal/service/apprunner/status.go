@@ -12,9 +12,6 @@ import (
 )
 
 const (
-	AutoScalingConfigurationStatusActive   = "active"
-	AutoScalingConfigurationStatusInactive = "inactive"
-
 	CustomDomainAssociationStatusActive                          = "active"
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
@@ -28,26 +25,6 @@ const (
 	VPCIngressConnectionstatusPendingDeletion = "PENDING_DELETION"
 	VPCIngressConnectionstatusDeleted         = "DELETED"
 )
-
-func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &apprunner.DescribeAutoScalingConfigurationInput{
-			AutoScalingConfigurationArn: aws.String(arn),
-		}
-
-		output, err := conn.DescribeAutoScalingConfiguration(ctx, input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.AutoScalingConfiguration == nil {
-			return nil, "", nil
-		}
-
-		return output.AutoScalingConfiguration, string(output.AutoScalingConfiguration.Status), nil
-	}
-}
 
 func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

@@ -67,12 +67,9 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 				continue
 			}
 
-			arn := aws.ToString(summaryConfig.AutoScalingConfigurationArn)
-
-			log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version (%s)", arn)
-			r := ResourceAutoScalingConfigurationVersion()
+			r := resourceAutoScalingConfigurationVersion()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(summaryConfig.AutoScalingConfigurationArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
