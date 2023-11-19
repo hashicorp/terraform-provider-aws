@@ -31,6 +31,7 @@ const (
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
 	AppFlowEndpointID                    = "appflow"
+	AppRunnerEndpointID                  = "apprunner"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BedrockEndpointID                    = "bedrock"
