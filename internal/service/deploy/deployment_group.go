@@ -4,11 +4,9 @@
 package deploy
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 	"time"
 
@@ -21,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -248,7 +245,6 @@ func resourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceTagFilterHash,
 			},
 			"ec2_tag_set": {
 				Type:     schema.TypeSet,
@@ -275,11 +271,9 @@ func resourceDeploymentGroup() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceTagFilterHash,
 						},
 					},
 				},
-				Set: resourceTagSetHash,
 			},
 			"ecs_service": {
 				Type:     schema.TypeList,
@@ -309,7 +303,6 @@ func resourceDeploymentGroup() *schema.Resource {
 						"elb_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      LoadBalancerInfoHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -322,7 +315,6 @@ func resourceDeploymentGroup() *schema.Resource {
 						"target_group_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      LoadBalancerInfoHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -414,7 +406,6 @@ func resourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceTagFilterHash,
 			},
 			"outdated_instances_strategy": {
 				Type:             schema.TypeString,
@@ -453,7 +444,6 @@ func resourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceTriggerHashConfig,
 			},
 		},
 
@@ -1150,7 +1140,7 @@ func flattenEC2TagSet(tagSet *types.EC2TagSet) []map[string]interface{} {
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
 			}
 			tagFilters := map[string]interface{}{
-				"ec2_tag_filter": schema.NewSet(resourceTagFilterHash, filtersAsIntfSlice),
+				"ec2_tag_filter": filtersAsIntfSlice,
 			}
 			result = append(result, tagFilters)
 		}
@@ -1302,8 +1292,8 @@ func flattenLoadBalancerInfo(loadBalancerInfo *types.LoadBalancerInfo) []interfa
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfos(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfos(loadBalancerInfo.TargetGroupInfoList)),
+		"elb_info":               flattenELBInfos(loadBalancerInfo.ElbInfoList),
+		"target_group_info":      flattenTargetGroupInfos(loadBalancerInfo.TargetGroupInfoList),
 		"target_group_pair_info": flattenTargetGroupPairInfos(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
@@ -1359,71 +1349,4 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 	list := make([]map[string]interface{}, 0)
 	list = append(list, m)
 	return list
-}
-
-func resourceTagFilterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	// Nothing's actually required in tag filters, so we must check the
-	// presence of all values before attempting a hash.
-	if v, ok := m["key"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["value"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return create.StringHashcode(buf.String())
-}
-
-func resourceTagSetHash(v interface{}) int {
-	tagSetMap := v.(map[string]interface{})
-	filterSet := tagSetMap["ec2_tag_filter"]
-	filterSetSlice := filterSet.(*schema.Set).List()
-
-	var x uint64 = 1
-	for i, filter := range filterSetSlice {
-		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceTagFilterHash(filter))
-	}
-	return int(x)
-}
-
-func resourceTriggerHashConfig(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["trigger_name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["trigger_target_arn"].(string)))
-
-	if triggerEvents, ok := m["trigger_events"]; ok {
-		names := triggerEvents.(*schema.Set).List()
-		strings := make([]string, len(names))
-		for i, raw := range names {
-			strings[i] = raw.(string)
-		}
-		sort.Strings(strings)
-
-		for _, s := range strings {
-			buf.WriteString(fmt.Sprintf("%s-", s))
-		}
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func LoadBalancerInfoHash(v interface{}) int {
-	var buf bytes.Buffer
-
-	if v == nil {
-		return create.StringHashcode(buf.String())
-	}
-
-	m := v.(map[string]interface{})
-	if v, ok := m["name"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return create.StringHashcode(buf.String())
 }
