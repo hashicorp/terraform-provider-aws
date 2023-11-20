@@ -84,7 +84,7 @@ interpolation.
 * `host_id` - ID of the dedicated host the instance will be assigned to.
 * `host_resource_group_arn` - ARN of the host resource group the instance is associated with.
 * `iam_instance_profile` - Name of the instance profile associated with the Instance.
-* `instance_state` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
+* `instance-state-name` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `instance_type` - Type of the Instance.
 * `ipv6_addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `key_name` - Key name of the Instance.
