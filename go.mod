@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.1
