@@ -2982,7 +2982,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 					} else if tc.invalidConfig {
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.matcher" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
 					} else {
-						// TODO: plan-time validation
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '%s' inclusive`, tc.matcher, tc.validRange))
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3262,7 +3261,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 					if tc.invalidHealthCheckProtocol {
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
 					} else {
-						// TODO: plan-time validation
 						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher GRPC code '%s' must be within '0-99' inclusive`, tc.matcher))
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3336,7 +3334,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
-					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""), // Should be Null
 				)
 			}
 
@@ -3396,15 +3394,28 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 			ctx := acctest.Context(t)
 			var targetGroup elbv2.TargetGroup
 
-			var check resource.TestCheckFunc
+			var (
+				preCheck  resource.TestCheckFunc
+				postCheck resource.TestCheckFunc
+			)
 			if protocolCase.validConfig {
-				check = resource.ComposeAggregateTestCheckFunc(
+				preCheck = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
+				)
+				postCheck = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 				)
 			} else {
-				check = resource.ComposeAggregateTestCheckFunc(
+				preCheck = resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
+					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+				)
+				postCheck = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
 					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
@@ -3418,8 +3429,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
-					PreCheck:        check,
-					PostCheck:       check,
+					PreCheck:        preCheck,
+					PostCheck:       postCheck,
 				}.Steps(),
 			})
 		})
@@ -3512,7 +3523,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""), // Should be Null
 				),
 			},
 		},
@@ -3540,7 +3551,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-				resource.TestCheckNoResourceAttr(resourceName, "vpc_id"),
+				resource.TestCheckResourceAttr(resourceName, "vpc_id", ""), // Should be Null
 			),
 		}.Steps(),
 	})
@@ -3569,7 +3580,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-							resource.TestCheckNoResourceAttr(resourceName, "protocol"),
+							resource.TestCheckResourceAttr(resourceName, "protocol", ""), // Should be Null
 						),
 					},
 				},
@@ -3605,7 +3616,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 					PostCheck: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 						resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-						resource.TestCheckNoResourceAttr(resourceName, "protocol"),
+						resource.TestCheckResourceAttr(resourceName, "protocol", ""), // Should be Null
 					),
 				}.Steps(),
 			})
@@ -3630,7 +3641,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", ""),
 				),
 			},
 		},
@@ -3681,7 +3692,7 @@ func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckNoResourceAttr(resourceName, "port"),
+					resource.TestCheckResourceAttr(resourceName, "port", "0"), // Should be Null
 				),
 			},
 		},
@@ -3709,7 +3720,7 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-				resource.TestCheckNoResourceAttr(resourceName, "port"),
+				resource.TestCheckResourceAttr(resourceName, "port", "0"), // Should be Null
 			),
 		}.Steps(),
 	})
@@ -3797,13 +3808,13 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 
 	testcases := map[string]struct {
 		invalidHealthCheckProtocol bool
-		silentFailure              bool // TODO: silent failures are bad
+		warning                    bool
 	}{
 		elbv2.ProtocolEnumHttp: {
-			silentFailure: true,
+			warning: true,
 		},
 		elbv2.ProtocolEnumHttps: {
-			silentFailure: true,
+			warning: true,
 		},
 		elbv2.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
@@ -3827,7 +3838,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 			}
 			if tc.invalidHealthCheckProtocol {
 				step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value %q when "target_type" is "lambda"`, healthCheckProtocol))
-			} else if tc.silentFailure {
+			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -3835,7 +3846,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
 			} else {
-				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or silentFailure must be set")
+				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or warning must be set")
 			}
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -3857,13 +3868,13 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 
 	testcases := map[string]struct {
 		invalidHealthCheckProtocol bool
-		silentFailure              bool // TODO: silent failures are bad
+		warning                    bool
 	}{
 		elbv2.ProtocolEnumHttp: {
-			silentFailure: true,
+			warning: true,
 		},
 		elbv2.ProtocolEnumHttps: {
-			silentFailure: true,
+			warning: true,
 		},
 		elbv2.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
@@ -3898,7 +3909,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 				// So, they return a `matcher` on read. When Terraform validates the diff, the (incorrectly stored) protocol
 				// `TCP` is checked against the `matcher`, and returns an error.
 				step.ExpectError = regexache.MustCompile(`health_check.matcher is not supported for target_groups with TCP protocol`)
-			} else if tc.silentFailure {
+			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -3906,11 +3917,11 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
 			} else {
-				t.Fatal("invalid test case")
+				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or warning must be set")
 			}
 
 			steps := []resource.TestStep{step}
-			if tc.silentFailure {
+			if tc.warning {
 				steps = append(steps, resource.TestStep{
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 					Config:                   config,
@@ -3938,8 +3949,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_matcherOutOfRange(t *testing.T) 
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_Lambda_HealthCheck_matcher("999"),
-				// TODO: plan-time validation
+				Config:      testAccTargetGroupConfig_Lambda_HealthCheck_matcher("999"),
 				ExpectError: regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '200-499' inclusive`, "999")),
 			},
 		},
@@ -4046,6 +4056,10 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Config:                   t.Config,
 			PlanOnly:                 true,
+		},
+		{
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			Config:                   t.Config,
 			Check:                    t.PostCheck,
 		},
 	}
