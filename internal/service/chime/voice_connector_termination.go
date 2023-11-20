@@ -8,14 +8,15 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -76,7 +77,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -84,9 +85,9 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 		VoiceConnectorId: aws.String(vcId),
 	}
 
-	termination := &chimesdkvoice.Termination{
-		CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
-		CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
+	termination := &awstypes.Termination{
+		CidrAllowedList: flex.ExpandStringValueSet(d.Get("cidr_allow_list").(*schema.Set)),
+		CallingRegions:  flex.ExpandStringValueSet(d.Get("calling_regions").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("disabled"); ok {
@@ -94,7 +95,7 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("cps_limit"); ok {
-		termination.CpsLimit = aws.Int64(int64(v.(int)))
+		termination.CpsLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("default_phone_number"); ok {
@@ -103,7 +104,7 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 
 	input.Termination = termination
 
-	if _, err := conn.PutVoiceConnectorTerminationWithContext(ctx, input); err != nil {
+	if _, err := conn.PutVoiceConnectorTermination(ctx, input); err != nil {
 		return diag.Errorf("creating Chime Voice Connector (%s) termination: %s", vcId, err)
 	}
 
@@ -113,9 +114,9 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.Termination, error) {
+	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.Termination, error) {
 		return findVoiceConnectorTerminationByID(ctx, conn, d.Id())
 	})
 
@@ -137,10 +138,10 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 	d.Set("disabled", resp.Disabled)
 	d.Set("default_phone_number", resp.DefaultPhoneNumber)
 
-	if err := d.Set("calling_regions", flex.FlattenStringList(resp.CallingRegions)); err != nil {
+	if err := d.Set("calling_regions", flex.FlattenStringValueList(resp.CallingRegions)); err != nil {
 		return diag.Errorf("setting termination calling regions (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("cidr_allow_list", flex.FlattenStringList(resp.CidrAllowedList)); err != nil {
+	if err := d.Set("cidr_allow_list", flex.FlattenStringValueList(resp.CidrAllowedList)); err != nil {
 		return diag.Errorf("setting termination cidr allow list (%s): %s", d.Id(), err)
 	}
 
@@ -150,13 +151,13 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
-		termination := &chimesdkvoice.Termination{
-			CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
-			CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
-			CpsLimit:        aws.Int64(int64(d.Get("cps_limit").(int))),
+		termination := &awstypes.Termination{
+			CallingRegions:  flex.ExpandStringValueSet(d.Get("calling_regions").(*schema.Set)),
+			CidrAllowedList: flex.ExpandStringValueSet(d.Get("cidr_allow_list").(*schema.Set)),
+			CpsLimit:        aws.Int32(int32(d.Get("cps_limit").(int))),
 		}
 
 		if v, ok := d.GetOk("default_phone_number"); ok {
@@ -172,7 +173,7 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 			Termination:      termination,
 		}
 
-		_, err := conn.PutVoiceConnectorTerminationWithContext(ctx, input)
+		_, err := conn.PutVoiceConnectorTermination(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Chime Voice Connector (%s) termination: %s", d.Id(), err)
@@ -183,15 +184,15 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input)
+	_, err := conn.DeleteVoiceConnectorTermination(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil
 	}
 
@@ -202,7 +203,7 @@ func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.Termination, error) {
+func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.Termination, error) {
 	in := &chimesdkvoice.GetVoiceConnectorInput{
 		VoiceConnectorId: aws.String(id),
 	}
@@ -211,8 +212,8 @@ func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.
 		VoiceConnectorId: aws.String(id),
 	}
 
-	resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	resp, err := conn.GetVoiceConnectorTermination(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

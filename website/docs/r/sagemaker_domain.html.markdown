@@ -92,7 +92,8 @@ The following arguments are required:
 
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `default_space_settings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domain_name` - (Required) The domain name.
+* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.
+* `domain_name` - (Required) The domain name.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 

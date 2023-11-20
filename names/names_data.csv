@@ -17,7 +17,7 @@ apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,1,,,aw
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,No SDK support
 appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,
-appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,1,,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,
+appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,,2,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,
 application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,1,,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,
 applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,,applicationcostprofiler,,,ApplicationCostProfiler,ApplicationCostProfiler,,1,,,aws_applicationcostprofiler_,,applicationcostprofiler_,Application Cost Profiler,AWS,,x,,,,,
@@ -41,10 +41,10 @@ ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,
-chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,
+chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,,2,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,x,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,x,,,,,
-chime-sdk-voice,chimesdkvoice,chimesdkvoice,chimesdkvoice,,chimesdkvoice,,,ChimeSDKVoice,ChimeSDKVoice,,1,,,aws_chimesdkvoice_,,chimesdkvoice_,Chime SDK Voice,Amazon,,,,,,,
+chime-sdk-voice,chimesdkvoice,chimesdkvoice,chimesdkvoice,,chimesdkvoice,,,ChimeSDKVoice,ChimeSDKVoice,,,2,,aws_chimesdkvoice_,,chimesdkvoice_,Chime SDK Voice,Amazon,,,,,,,
 cleanrooms,cleanrooms,cleanrooms,cleanrooms,,cleanrooms,,,CleanRooms,CleanRooms,,,2,,aws_cleanrooms_,,cleanrooms_,Clean Rooms,AWS,,,,,,,
 ,,,,,,,,,,,,,,,,,CLI (Command Line Interface),AWS,x,,,,,,No SDK support
 configure,configure,,,,,,,,,,,,,,,,CLI Configure options,AWS,x,,,,,,CLI only

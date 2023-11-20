@@ -1,4 +1,15 @@
-## 5.26.0 (Unreleased)
+## 5.27.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
+
+BUG FIXES:
+
+* resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
+* resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
+
+## 5.26.0 (November 16, 2023)
 
 FEATURES:
 
@@ -9,6 +20,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_group: Add `instance_maintenance_policy` attribute ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
+* provider: Adds `https_proxy` and `no_proxy` parameters. ([#34243](https://github.com/hashicorp/terraform-provider-aws/issues/34243))
+* resource/aws_autoscaling_group: Add `instance_maintenance_policy` configuration block ([#34430](https://github.com/hashicorp/terraform-provider-aws/issues/34430))
+* resource/aws_finspace_kx_cluster: Increase default create and update timeouts to 4 hours to allow for increased startup times with large volumes of cached data ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
+* resource/aws_finspace_kx_environment: Increase default delete timeout to 75 minutes ([#34398](https://github.com/hashicorp/terraform-provider-aws/issues/34398))
 * resource/aws_iam_group_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
 * resource/aws_iam_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
 * resource/aws_iam_role_policy_attachment: Add plan-time validation of `policy_arn` ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
@@ -38,7 +54,10 @@ BUG FIXES:
 * resource/aws_chime_voice_connector_termination: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
 * resource/aws_chime_voice_connector_termination_credentials: Fix `read` error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
 * resource/aws_chimesdkmediapipelines_media_insights_pipeline_configuration: Fix eventual consistency error when resource is not created in `us-east-1` ([#34334](https://github.com/hashicorp/terraform-provider-aws/issues/34334))
+* resource/aws_chimesdkvoice_sip_media_application: Fix eventual consistency errors when not using `us-east-1` ([#34426](https://github.com/hashicorp/terraform-provider-aws/issues/34426))
+* resource/aws_chimesdkvoice_sip_rule: Fix eventual consistency errors when not using `us-east-1` ([#34426](https://github.com/hashicorp/terraform-provider-aws/issues/34426))
 * resource/aws_elasticache_user: Fix `UserNotFound: ... is not available for tagging` errors on resource Read when there is a concurrent update to the user ([#34396](https://github.com/hashicorp/terraform-provider-aws/issues/34396))
+* resource/aws_grafana_workspace_api_key: Change `key` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#34105](https://github.com/hashicorp/terraform-provider-aws/issues/34105))
 * resource/aws_iam_group_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
 * resource/aws_iam_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
 * resource/aws_iam_role_policy_attachment: Retry `ConcurrentModificationException` errors on create and delete ([#34378](https://github.com/hashicorp/terraform-provider-aws/issues/34378))
@@ -69,6 +88,7 @@ BUG FIXES:
 * resource/aws_quicksight_template: Nested `column_index` and `row_index` arguments now properly handle zero values ([#33931](https://github.com/hashicorp/terraform-provider-aws/issues/33931))
 * resource/aws_sagemaker_user_profile: Change `default_user_settings.canvas_app_settings.identity_provider_oauth_settings` from TypeSet to TypeList, preventing `interface conversion: interface {} is *schema.Set, not []interface {}` panics ([#34418](https://github.com/hashicorp/terraform-provider-aws/issues/34418))
 * resource/aws_synthetics_canary: Fix to properly suppress differences when `expression` is `rate(0 minutes)` ([#34084](https://github.com/hashicorp/terraform-provider-aws/issues/34084))
+* resource/aws_vpn_connection: Fix `UnsupportedOperation: The tunnel inside ip version parameter is not currently supported in this region` error when creating connections in certain partitions and Regions ([#34420](https://github.com/hashicorp/terraform-provider-aws/issues/34420))
 
 ## 5.25.0 (November 10, 2023)
 

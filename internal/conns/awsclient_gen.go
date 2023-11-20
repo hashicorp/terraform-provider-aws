@@ -8,9 +8,12 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
+	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -82,7 +85,6 @@ import (
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-	appflow_sdkv1 "github.com/aws/aws-sdk-go/service/appflow"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -96,8 +98,6 @@ import (
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	chimesdkmediapipelines_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	chimesdkvoice_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
@@ -270,8 +270,8 @@ func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client
 	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
 }
 
-func (c *AWSClient) AppFlowConn(ctx context.Context) *appflow_sdkv1.Appflow {
-	return errs.Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
+func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
+	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow))
 }
 
 func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
@@ -342,12 +342,12 @@ func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
 	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime))
 }
 
-func (c *AWSClient) ChimeSDKMediaPipelinesConn(ctx context.Context) *chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines {
-	return errs.Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
+func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {
+	return errs.Must(client[*chimesdkmediapipelines_sdkv2.Client](ctx, c, names.ChimeSDKMediaPipelines))
 }
 
-func (c *AWSClient) ChimeSDKVoiceConn(ctx context.Context) *chimesdkvoice_sdkv1.ChimeSDKVoice {
-	return errs.Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
+func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice_sdkv2.Client {
+	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
