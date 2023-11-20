@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -135,9 +135,9 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			connection, err := tfapprunner.FindConnectionsummaryByName(ctx, conn, rs.Primary.ID)
+			_, err := tfapprunner.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -145,9 +145,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if connection != nil {
-				return fmt.Errorf("App Runner Connection (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("App Runner Connection %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -161,30 +159,18 @@ func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner Connection ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		connection, err := tfapprunner.FindConnectionsummaryByName(ctx, conn, rs.Primary.ID)
+		_, err := tfapprunner.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if connection == nil {
-			return fmt.Errorf("App Runner Connection (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccConnectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_connection" "test" {
-  connection_name = %q
+  connection_name = %[1]q
   provider_type   = "GITHUB"
 }
 `, rName)

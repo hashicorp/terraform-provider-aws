@@ -6,6 +6,8 @@ package apprunner
 // Exports for use in tests only.
 var (
 	ResourceAutoScalingConfigurationVersion = resourceAutoScalingConfigurationVersion
+	ResourceConnection                      = resourceConnection
 
 	FindAutoScalingConfigurationByARN = findAutoScalingConfigurationByARN
+	FindConnectionByName              = findConnectionByName
 )
