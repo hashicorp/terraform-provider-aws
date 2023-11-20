@@ -190,7 +190,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("allow_full_table_external_data_access"); ok {
-		settings.AllowFullTableExternalDataAccess = aws.Bool(v(bool))
+		settings.AllowFullTableExternalDataAccess = aws.Bool(v.(bool))
 	}
 
 	input.DataLakeSettings = settings
