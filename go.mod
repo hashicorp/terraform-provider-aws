@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/appflow v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/appflow v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/athena v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.3.1
