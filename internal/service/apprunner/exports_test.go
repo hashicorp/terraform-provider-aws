@@ -8,8 +8,10 @@ var (
 	ResourceAutoScalingConfigurationVersion = resourceAutoScalingConfigurationVersion
 	ResourceConnection                      = resourceConnection
 	ResourceCustomDomainAssociation         = resourceCustomDomainAssociation
+	ResourceObservabilityConfiguration      = resourceObservabilityConfiguration
 
-	FindAutoScalingConfigurationByARN = findAutoScalingConfigurationByARN
-	FindConnectionByName              = findConnectionByName
-	FindCustomDomainByTwoPartKey      = findCustomDomainByTwoPartKey
+	FindAutoScalingConfigurationByARN   = findAutoScalingConfigurationByARN
+	FindConnectionByName                = findConnectionByName
+	FindCustomDomainByTwoPartKey        = findCustomDomainByTwoPartKey
+	FindObservabilityConfigurationByARN = findObservabilityConfigurationByARN
 )

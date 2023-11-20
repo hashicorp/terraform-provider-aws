@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,7 +38,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
 				),
 			},
 			{
@@ -70,7 +68,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
 				),
@@ -161,13 +159,9 @@ func testAccCheckObservabilityConfigurationDestroy(ctx context.Context) resource
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			input := &apprunner.DescribeObservabilityConfigurationInput{
-				ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfapprunner.FindObservabilityConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.DescribeObservabilityConfiguration(ctx, input)
-
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -175,9 +169,7 @@ func testAccCheckObservabilityConfigurationDestroy(ctx context.Context) resource
 				return err
 			}
 
-			if output != nil && output.ObservabilityConfiguration != nil && string(output.ObservabilityConfiguration.Status) != string(types.ObservabilityConfigurationStatusInactive) {
-				return fmt.Errorf("App Runner Observability Configuration (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("App Runner Observability Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -197,21 +189,9 @@ func testAccCheckObservabilityConfigurationExists(ctx context.Context, n string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		input := &apprunner.DescribeObservabilityConfigurationInput{
-			ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfapprunner.FindObservabilityConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.DescribeObservabilityConfiguration(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.ObservabilityConfiguration == nil {
-			return fmt.Errorf("App Runner Observability Configuration (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
