@@ -149,7 +149,7 @@ mediastore,mediastore,mediastore,mediastore,,mediastore,,,MediaStore,MediaStore,
 mediastore-data,mediastoredata,mediastoredata,mediastoredata,,mediastoredata,,,MediaStoreData,MediaStoreData,,1,,,aws_mediastoredata_,,mediastoredata_,Elemental MediaStore Data,AWS,,x,,,,,
 mediatailor,mediatailor,mediatailor,mediatailor,,mediatailor,,,MediaTailor,MediaTailor,,1,,,aws_mediatailor_,,media_tailor_,Elemental MediaTailor,AWS,,x,,,,,
 ,,,,,,,,,,,,,,,,,Elemental On-Premises,AWS,x,,,,,,No SDK support
-emr,emr,emr,emr,,emr,,,EMR,EMR,,1,,,aws_emr_,,emr_,EMR,Amazon,,,,,,,
+emr,emr,emr,emr,,emr,,,EMR,EMR,,1,2,,aws_emr_,,emr_,EMR,Amazon,,,,,,,
 emr-containers,emrcontainers,emrcontainers,emrcontainers,,emrcontainers,,,EMRContainers,EMRContainers,,1,,,aws_emrcontainers_,,emrcontainers_,EMR Containers,Amazon,,,,,,,
 emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRServerless,EMRServerless,,,2,,aws_emrserverless_,,emrserverless_,EMR Serverless,Amazon,,,,,,,
 ,,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,,,No SDK support
