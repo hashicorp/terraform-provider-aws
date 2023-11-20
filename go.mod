@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.46.2
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.6.1
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.1
