@@ -146,8 +146,10 @@ class MyConvertedCode(TerraformStack):
   <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
+  <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -400,4 +402,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-8ab543c6a00b60a4cbcaa97e979a4ee014302a0c9b26c452c8b946f74fda3b0e -->
+<!-- cache-key: cdktf-0.19.0 input-c512f946c3de8eca0fd769921ed13fc6e49b54dd14b00a279129beffc2c5506b -->
