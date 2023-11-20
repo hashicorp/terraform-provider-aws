@@ -49,7 +49,7 @@ func NewDataSource[T any, U any, V ds[T, U]]() V {
 	return v
 }
 
-// SetImpl sets the reader implementation.
+// setImpl sets the reader implementation.
 func (d *DataSourceWithConfigureEx[T]) setImpl(impl dataSourceReader[T]) {
 	d.impl = impl
 }
