@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.48.0
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.40.1
