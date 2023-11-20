@@ -24,6 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.28.0
