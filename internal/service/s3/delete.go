@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 )
 
+const (
+	listObjectVersionsMaxKeys = 1000
+)
+
 // emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
@@ -40,7 +44,7 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 
 	input := &s3.ListObjectVersionsInput{
 		Bucket:  aws.String(bucket),
-		MaxKeys: aws.Int32(1000),
+		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
 	}
 	var lastErr error
 
@@ -240,7 +244,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 
 	input := &s3.ListObjectVersionsInput{
 		Bucket:  aws.String(bucket),
-		MaxKeys: aws.Int32(1000),
+		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
 	}
 	if key != "" {
 		input.Prefix = aws.String(key)
