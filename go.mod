@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.1
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.1
