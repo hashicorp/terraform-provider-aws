@@ -309,7 +309,7 @@ func expandBucketObjectLockConfigurationCorsRuleDefaultRetention(l []interface{}
 	dr := &types.DefaultRetention{}
 
 	if v, ok := tfMap["days"].(int); ok && v > 0 {
-		dr.Days = int32(v)
+		dr.Days = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["mode"].(string); ok && v != "" {
@@ -317,7 +317,7 @@ func expandBucketObjectLockConfigurationCorsRuleDefaultRetention(l []interface{}
 	}
 
 	if v, ok := tfMap["years"].(int); ok && v > 0 {
-		dr.Years = int32(v)
+		dr.Years = aws.Int32(int32(v))
 	}
 
 	return dr

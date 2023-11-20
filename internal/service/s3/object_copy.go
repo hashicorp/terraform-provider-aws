@@ -487,7 +487,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {

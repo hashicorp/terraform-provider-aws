@@ -252,7 +252,7 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 		}
 
 		if v, ok := tfMap["max_age_seconds"].(int); ok {
-			rule.MaxAgeSeconds = int32(v)
+			rule.MaxAgeSeconds = aws.Int32(int32(v))
 		}
 
 		rules = append(rules, rule)
