@@ -140,7 +140,7 @@ This argument supports the following arguments:
 * `description` (Optional) Description of the crawler.
 * `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
-* `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
+* `jdbc_target` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
 * `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
 * `mongodb_target` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
