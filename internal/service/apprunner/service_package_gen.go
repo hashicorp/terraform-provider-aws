@@ -50,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Custom Domain Association",
 		},
 		{
-			Factory:  ResourceObservabilityConfiguration,
+			Factory:  resourceObservabilityConfiguration,
 			TypeName: "aws_apprunner_observability_configuration",
 			Name:     "Observability Configuration",
 			Tags: &types.ServicePackageResourceTags{

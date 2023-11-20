@@ -18,38 +18,9 @@ const (
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
 
-	ObservabilityConfigurationCreateTimeout = 2 * time.Minute
-	ObservabilityConfigurationDeleteTimeout = 2 * time.Minute
-
 	VPCIngressConnectionCreateTimeout = 2 * time.Minute
 	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
-
-func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.Client, observabilityConfigurationArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{ObservabilityConfigurationStatusActive},
-		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
-		Timeout: ObservabilityConfigurationCreateTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner.Client, observabilityConfigurationArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ObservabilityConfigurationStatusActive},
-		Target:  []string{ObservabilityConfigurationStatusInactive},
-		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
-		Timeout: ObservabilityConfigurationDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.Client, vpcIngressConnectionArn string) error {
 	stateConf := &retry.StateChangeConf{

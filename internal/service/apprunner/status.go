@@ -12,33 +12,10 @@ import (
 )
 
 const (
-	ObservabilityConfigurationStatusActive   = "ACTIVE"
-	ObservabilityConfigurationStatusInactive = "INACTIVE"
-
 	VPCIngressConnectionstatusActive          = "AVAILABLE"
 	VPCIngressConnectionstatusPendingDeletion = "PENDING_DELETION"
 	VPCIngressConnectionstatusDeleted         = "DELETED"
 )
-
-func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &apprunner.DescribeObservabilityConfigurationInput{
-			ObservabilityConfigurationArn: aws.String(arn),
-		}
-
-		output, err := conn.DescribeObservabilityConfiguration(ctx, input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.ObservabilityConfiguration == nil {
-			return nil, "", nil
-		}
-
-		return output.ObservabilityConfiguration, string(output.ObservabilityConfiguration.Status), nil
-	}
-}
 
 func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
