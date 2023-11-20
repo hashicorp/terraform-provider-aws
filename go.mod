@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.1
