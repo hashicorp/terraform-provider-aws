@@ -16,13 +16,13 @@ The following example below creates a CloudFront origin access identity.
 
 ```terraform
 data "aws_cloudfront_origin_access_identity" "example" {
-  id = "EDFDVBD632BHDS5"
+  id = "E1ZAKK699EOLAL"
 }
 ```
 
 ## Argument Reference
 
-* `id` (Required) -  The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+* `id` (Required) -  The identifier for the origin access identity. For example: `E1ZAKK699EOLAL`.
 
 ## Attribute Reference
 
