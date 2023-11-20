@@ -138,8 +138,8 @@ github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.36.2 h1:6Ppq/1VdishH9IBWoR/y
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.36.2/go.mod h1:Ov6tQD4Fy+9AGvUgHJmR8JiiIQtvzbLgkd4tMvHhASw=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.2 h1:COfKbV9tpSeJ8rK0wrPyTCoBvTjO9CFjV4yCxPWdcqU=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.2/go.mod h1:T7kVa/dOSMYIeHQ4ItpSMJ3uolDbrKp+1aqxTZDuCew=
-github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.1 h1:7HKyhgqPZwCqtfauvum+uHe1d66WItRUrY/jDL0cplM=
-github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.1/go.mod h1:e+VNDrL0t/jQDaUo1yQ/rj2Ss1Kfc960hXY/SrjJK84=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.2 h1:AfFbYPKcWuSBhfZSDp+IVqGHr1nTpzThjvHHp71jE88=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.2/go.mod h1:uFk9H0T8PVKYR5nBh8p3s0CTHxtnMJPFb0ascBRgoe0=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.40.1 h1:dHB2RWP8vWPEUXfT6stym0/Lmb4KjSjTV3DWF8hZc6E=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.40.1/go.mod h1:97eZCb1cR/9EC2kuDefg8+NUlEiJ6Bmmx/pQd+qLNis=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.26.1 h1:f7+TiT8I39yS0no2ZW6bONQX7igkLiTPnWGQYJYglXY=
