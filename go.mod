@@ -7,9 +7,9 @@ require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.47.12
 	github.com/aws/aws-sdk-go-v2 v1.22.2
-	github.com/aws/aws-sdk-go-v2/config v1.20.0
+	github.com/aws/aws-sdk-go-v2/config v1.25.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.3
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.2
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.7
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.1
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.4.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.27.1 // indirect
@@ -206,11 +206,3 @@ require (
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
-
-exclude ( // Contains INI parsing regression
-	github.com/aws/aws-sdk-go-v2/config v1.21.0
-	github.com/aws/aws-sdk-go-v2/config v1.22.0
-	github.com/aws/aws-sdk-go-v2/config v1.22.1
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.0
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.5.1
-)
