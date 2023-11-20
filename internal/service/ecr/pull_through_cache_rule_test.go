@@ -48,6 +48,37 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRPullThroughCacheRule_credentialArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	credentialArn := "arn:aws:secretsmanager:us-east-1:12345789:secret:docker-hub"
+	resourceName := "aws_ecr_pull_through_cache_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix, credentialArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
+					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
+					resource.TestCheckResourceAttr(resourceName, "credential_arn", credentialArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
@@ -180,6 +211,15 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
   upstream_registry_url = "public.ecr.aws"
 }
 `, repositoryPrefix)
+}
+func testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix string, credentialArn string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = %[1]q
+  upstream_registry_url = "public.ecr.aws"
+  credential_arn = %[2]q
+}
+`, repositoryPrefix, credentialArn)
 }
 
 func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {

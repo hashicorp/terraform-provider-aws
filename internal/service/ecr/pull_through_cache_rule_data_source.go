@@ -39,6 +39,10 @@ func DataSourcePullThroughCacheRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"credential_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -60,6 +64,7 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
+	d.Set("credential_arn", rule.CredentialArn)
 
 	return diags
 }

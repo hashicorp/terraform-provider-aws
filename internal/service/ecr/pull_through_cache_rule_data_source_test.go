@@ -55,6 +55,27 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 	})
 }
 
+func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialArn(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
+					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					resource.TestCheckResourceAttr(dataSource, "credential_arn", "arn:aws:secretsmanager:us-east-1:12345789:secret:docker-hub"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPullThroughCacheRuleDataSourceConfig_basic() string {
 	return `
 resource "aws_ecr_pull_through_cache_rule" "test" {
@@ -79,4 +100,18 @@ data "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = aws_ecr_pull_through_cache_rule.test.ecr_repository_prefix
 }
 `, repositoryPrefix)
+}
+
+func testAccPullThroughCacheRuleDataSourceConfig_credentialArn() string {
+	return `
+resource "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = "ecr-public"
+  upstream_registry_url = "public.ecr.aws"
+  credential_arn = "arn:aws:secretsmanager:us-east-1:12345789:secret:docker-hub"
+}
+
+data "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = aws_ecr_pull_through_cache_rule.test.ecr_repository_prefix
+}
+`
 }

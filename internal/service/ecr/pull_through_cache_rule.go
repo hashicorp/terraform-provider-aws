@@ -51,6 +51,10 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"credential_arn": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -64,6 +68,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	input := &ecr.CreatePullThroughCacheRuleInput{
 		EcrRepositoryPrefix: aws.String(repositoryPrefix),
 		UpstreamRegistryUrl: aws.String(d.Get("upstream_registry_url").(string)),
+		CredentialArn:       aws.String(d.Get("credential_arn").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating ECR Pull Through Cache Rule: %s", input)
@@ -98,6 +103,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
+	d.Set("credential_arn", rule.CredentialArn)
 
 	return diags
 }
