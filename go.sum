@@ -50,8 +50,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.13.2 h1:BdQ0Rx6p6XTy0QZEs+Q3ZGYW
 github.com/aws/aws-sdk-go-v2/service/account v1.13.2/go.mod h1:P4Dy4d97l6iEIYh9vFB+FIohZARQ4x7TJAD2QPTcszU=
 github.com/aws/aws-sdk-go-v2/service/acm v1.21.2 h1:6UTmYHbMulp5h8KcP2otX+ywW7CtmFx4WY3f1FndEBk=
 github.com/aws/aws-sdk-go-v2/service/acm v1.21.2/go.mod h1:j+uDx2hWp5zeKzPMapY8TIx1nE7RKGZkl2LaR1f2UX8=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.1 h1:bYkaptMd4ewb9t+AwB9IC+MWJM7QeCU26mv1hDNt6sk=
-github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.1/go.mod h1:3uNJ3Sg88RLEUxyNNyu1kH3ut+XMFixI8czuQnMCnWI=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.2 h1:imyM4duerCeBOTdb5hvq3/BpIoz4GhfcDR4IKcLK7mg=
+github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.2/go.mod h1:p4GAO4XYNgEnTwwq9jlN6ylz0czky/gJyZ+dU7QMkQg=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.38.1 h1:myUNcCKobvYpvLOogBfI90BMplh+qXLk1sEVWC+mbqE=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.38.1/go.mod h1:NeHPQxI5VTAu/9+G1kreXtXumtR30Pp2Xd0bj88Plls=
 github.com/aws/aws-sdk-go-v2/service/athena v1.34.1 h1:3WEVj9Z29bbbKCwOubER/tC3rW0qgOffwDj5LX30HnI=
