@@ -185,7 +185,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusActive {
+	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {
 		return nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
