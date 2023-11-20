@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.12.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.62.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.18.1
