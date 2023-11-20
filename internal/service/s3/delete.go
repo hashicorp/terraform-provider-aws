@@ -39,7 +39,8 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
+		Bucket:  aws.String(bucket),
+		MaxKeys: aws.Int32(1000),
 	}
 	var lastErr error
 
@@ -236,7 +237,8 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
+		Bucket:  aws.String(bucket),
+		MaxKeys: aws.Int32(1000),
 	}
 	if key != "" {
 		input.Prefix = aws.String(key)
