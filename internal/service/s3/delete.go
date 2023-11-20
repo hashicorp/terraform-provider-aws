@@ -88,12 +88,14 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 	}
 
 	input := &s3.DeleteObjectsInput{
-		Bucket:                    aws.String(bucket),
-		BypassGovernanceRetention: aws.Bool(force),
+		Bucket: aws.String(bucket),
 		Delete: &types.Delete{
 			Objects: toDelete,
 			Quiet:   aws.Bool(true), // Only report errors.
 		},
+	}
+	if force {
+		input.BypassGovernanceRetention = aws.Bool(force)
 	}
 
 	output, err := conn.DeleteObjects(ctx, input)
@@ -388,7 +390,7 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 		input.VersionId = aws.String(v)
 	}
 	if force {
-		input.BypassGovernanceRetention = aws.Bool(true)
+		input.BypassGovernanceRetention = aws.Bool(force)
 	}
 
 	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version (%s)", b, k, v)
