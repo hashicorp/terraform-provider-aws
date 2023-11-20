@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `java21` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `java21` `compatible_runtimes` value
+```
