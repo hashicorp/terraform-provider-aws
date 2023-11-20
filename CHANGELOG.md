@@ -9,6 +9,9 @@ BUG FIXES:
 * resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
 * resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
 
+ENHANCEMENTS:
+* resource/aws_lakeformation_datalake_settings: Add `allow_full_table_external_data_access` ([34471](https://github.com/hashicorp/terraform-provider-aws/issues/34471))
+
 ## 5.26.0 (November 16, 2023)
 
 FEATURES:

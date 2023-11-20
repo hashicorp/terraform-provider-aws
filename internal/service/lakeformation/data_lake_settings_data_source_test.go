@@ -30,6 +30,7 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "false"),
 					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", "false"),
 				),
 			},
 		},
