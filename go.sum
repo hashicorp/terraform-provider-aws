@@ -94,8 +94,8 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2 h1:O6ff5PwwgQ7QkL/XA0H+0U0
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2/go.mod h1:kuVxCbsxbP/h6YTT2BfOj4s/bwXYsG3C/8Qn9gO5QJY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.136.0 h1:nZPVFkGojUUJupKJzaCKE07LaFDO3Tto1U69F8JipsI=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.136.0/go.mod h1:xYJZQIo/YZxEbeBxUYRQJTCJ924EuKtDfrhVx76yzOE=
-github.com/aws/aws-sdk-go-v2/service/eks v1.33.0 h1:6a7enmqn5ehMT6WBCnc/Bq4UAEtiZ1/3OXDVr09NWUM=
-github.com/aws/aws-sdk-go-v2/service/eks v1.33.0/go.mod h1:Caw+bBvj+bjrHNuqmS9ZqSZow77sgF5TQGZy3zY0egA=
+github.com/aws/aws-sdk-go-v2/service/eks v1.33.1 h1:zRB7CTeejJmBpdpzrBkciNLMpg8T+06EvGA/H4Kkvcw=
+github.com/aws/aws-sdk-go-v2/service/eks v1.33.1/go.mod h1:23btAyMrfTvG2zh/3+CZJ1c2eYWiVWP6tPRJwC67sk8=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.1 h1:HhYBETZd3aNmtrlMbJxRf9DlGRPKrOFI0lnvzooWGMA=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.1/go.mod h1:GI2hWXh+a2U1N4a4ODnXQ3aON1Cjt2jijCa9H+3S6kc=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.16.1 h1:g1qJUOmCGs4UH5XyBKDr+jgz3bzFv4WBduMytd/2sOs=
