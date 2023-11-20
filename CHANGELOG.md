@@ -12,6 +12,7 @@ BUG FIXES:
 ENHANCEMENTS:
 * resource/aws_lakeformation_datalake_settings: Add `allow_full_table_external_data_access` ([34471](https://github.com/hashicorp/terraform-provider-aws/issues/34471))
 
+
 ## 5.26.0 (November 16, 2023)
 
 FEATURES:

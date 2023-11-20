@@ -59,7 +59,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Optional: true,
 			},
 			"allow_full_table_external_data_access": {
-				Type:	  schema.TypeBool,
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"authorized_session_tag_value_list": {
