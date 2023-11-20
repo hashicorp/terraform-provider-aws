@@ -310,7 +310,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
             elems = append(elems, objVal)
         }
         
-        listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+        listVal, d := types.ListValue(elemType, elems)
         diags.Append(d...)
         
         return listVal, diags
