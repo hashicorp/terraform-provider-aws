@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.12.2
-	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.11.2
+	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.0
