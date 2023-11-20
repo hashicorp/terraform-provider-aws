@@ -138,8 +138,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(config.AutoScalingConfigurationArn)
-	d.Set("arn", arn)
+	d.Set("arn", config.AutoScalingConfigurationArn)
 	d.Set("auto_scaling_configuration_name", config.AutoScalingConfigurationName)
 	d.Set("auto_scaling_configuration_revision", config.AutoScalingConfigurationRevision)
 	d.Set("latest", config.Latest)

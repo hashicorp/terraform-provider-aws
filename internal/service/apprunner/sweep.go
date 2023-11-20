@@ -123,13 +123,9 @@ func sweepConnections(region string) error {
 		}
 
 		for _, c := range output.ConnectionSummaryList {
-			name := aws.ToString(c.ConnectionName)
-
-			log.Printf("[INFO] Deleting App Runner Connection: %s", name)
-
-			r := ResourceConnection()
+			r := resourceConnection()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(c.ConnectionName))
 			d.Set("arn", c.ConnectionArn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

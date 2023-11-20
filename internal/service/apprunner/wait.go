@@ -14,8 +14,6 @@ import (
 )
 
 const (
-	ConnectionDeleteTimeout = 5 * time.Minute
-
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
 	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
 
@@ -29,19 +27,6 @@ const (
 	VPCIngressConnectionCreateTimeout = 2 * time.Minute
 	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
-
-func WaitConnectionDeleted(ctx context.Context, conn *apprunner.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ConnectionStatusPendingHandshake, types.ConnectionStatusAvailable, types.ConnectionStatusDeleted),
-		Target:  []string{},
-		Refresh: StatusConnection(ctx, conn, name),
-		Timeout: ConnectionDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{

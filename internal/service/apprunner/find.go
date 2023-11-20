@@ -11,45 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 )
 
-func FindConnectionsummaryByName(ctx context.Context, conn *apprunner.Client, name string) (*types.ConnectionSummary, error) {
-	input := &apprunner.ListConnectionsInput{
-		ConnectionName: aws.String(name),
-	}
-
-	var cs types.ConnectionSummary
-	entryExists := false
-
-	paginator := apprunner.NewListConnectionsPaginator(conn, input, func(o *apprunner.ListConnectionsPaginatorOptions) {
-		o.StopOnDuplicateToken = true
-	})
-
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, c := range output.ConnectionSummaryList {
-			if c.ConnectionName == nil {
-				continue
-			}
-
-			if aws.ToString(c.ConnectionName) == name {
-				cs = c
-				entryExists = true
-				break
-			}
-		}
-	}
-
-	if !entryExists {
-		return nil, nil
-	}
-
-	return &cs, nil
-}
-
 func FindCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) (*types.CustomDomain, error) {
 	input := &apprunner.DescribeCustomDomainsInput{
 		ServiceArn: aws.String(serviceArn),

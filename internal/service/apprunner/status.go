@@ -66,22 +66,6 @@ func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn
 	}
 }
 
-func StatusConnection(ctx context.Context, conn *apprunner.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		c, err := FindConnectionsummaryByName(ctx, conn, name)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if c == nil {
-			return nil, "", nil
-		}
-
-		return c, string(c.Status), nil
-	}
-}
-
 func StatusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
