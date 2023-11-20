@@ -160,8 +160,8 @@ github.com/aws/aws-sdk-go-v2/service/rbin v1.12.2 h1:aYQgBK+7GkAqP0NQPZK61JZ1aGN
 github.com/aws/aws-sdk-go-v2/service/rbin v1.12.2/go.mod h1:E5YVuogekEr2GkyAjDm+QEchioSbD5gcrJTV/6BoukI=
 github.com/aws/aws-sdk-go-v2/service/rds v1.63.0 h1:Mb6mn6mRfTpI2WEZkLmmJ7jtiPHKzwJ8otzUA5rIq+o=
 github.com/aws/aws-sdk-go-v2/service/rds v1.63.0/go.mod h1:C73+OVOdaMZNc/Z8PhnLoArk6mCqxkiqfgmCrvNrDDM=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.1 h1:Inwn9EN4uZzKqHEIh+SvbWH7KNUbp9BueqfvgDgaA9A=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.1/go.mod h1:HwEfNPMzZdKGIm4fqsEK8y9hgWjKOqmSA93CcRBiuaM=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.2 h1:iRZScdu21l8ITutmG2qspDmhJ5uhlTbZiQzV39iu+hA=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.2/go.mod h1:qYs3xXMxvKZBlSFpEeUCBb/a1WHR5sHHj2nUGT/KBBY=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.7.0 h1:70rxzf0//gjvBhjMAKmibv9MR18yUTHJioWAcECHyIo=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.7.0/go.mod h1:vcIzurt3qlcSk3xjoe0GUTNY56Edfz9J+zeqC1kNFd0=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.18.1 h1:NtF8pUJSlFcn0IGbmMaM1KvCvUXdjkLc9kCTZg2lpqk=
