@@ -74,8 +74,8 @@ github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.9.0 h1:cfa/XKe8Nq1jBnSwuepY
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.9.0/go.mod h1:sqRgipHqeWUHJ5BMlAOvx6NMYwGNR7p2/85jv1Y9ZSg=
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.20.2 h1:nH3z3djmIczPUPQXeHZD+MXhajK8FBmJTDYZJ01X36o=
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.20.2/go.mod h1:p1t7Srxyl9+iCrYMeNa6JgJXCJkQl5c8pBQ1uca2M5o=
-github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.17.1 h1:VcafeIts2qCKpmv9rzxCLbGhsYb+FNOhFoJQdog4j1o=
-github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.17.1/go.mod h1:/j4ej5XPqwoxrm5y3e4z2zV6CboH17Pphm4lWXqCLAw=
+github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.18.0 h1:zq1CJQpfutSuWPbtP4UWfKVQb63aTjv5IHRrfMYgMqU=
+github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.18.0/go.mod h1:+XOIUq+BB6io1ixRXIJ6NZJcC3Ov1Eak0mOMQw9xMlI=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.1 h1:8WjHh475putyNORU2wuHY1WPBCF07DAFZ5Xnbr/FhGc=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.1/go.mod h1:obrOe0irBQjhrwTABZf33NpNqt1DpJ/wwvGAvnDOueM=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.28.0 h1:alcB5cgTqAVS6VrBge/EP+Cw0GGeBxRmO3aBd3WqlsQ=
