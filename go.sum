@@ -152,8 +152,8 @@ github.com/aws/aws-sdk-go-v2/service/osis v1.5.0 h1:kCYXhE9QpuxJ/mISpf4+y8nDQbC6
 github.com/aws/aws-sdk-go-v2/service/osis v1.5.0/go.mod h1:AZismFax+SLLe3sEOb4lPJOxNr2eRIeDuGHJQOhG8js=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.8.0 h1:rvNc5IQ+8O8MWSBXhBp87OBTFzgfs6Q7DStOu+Chea4=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.8.0/go.mod h1:4uN1pKDsS+A+Blvl6YmAy9IFfZD8DxtqdwcLcZjciWY=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.23.1 h1:PvSF5JF/Xg7pzE8aVYlbf/30DoUvFP/KQ10DyzA3zUk=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.23.1/go.mod h1:OUjaLhZA7pAuSqSYQVHl4c6tbUplabXblJ7RxewWgzo=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.23.2 h1:EMIsBk8ansD+Fs5Fdl3iFL0Cf9Y++68psfK4Owhbga8=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.23.2/go.mod h1:UzuiXD0+X63VTTdvwpSwyhBhnwAygld8Ll/gMT6kAOI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.18.1 h1:6tUl+5VgPbBq1jw7yIG0sdCR9UjXdUwXHSae++YKFBA=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.18.1/go.mod h1:Z0Ga82Q05EYVKQrpFDhgYXxS1SKR0MGn12ZRcWvxo0c=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.12.1 h1:g5YNRBrE7GQhmurswxwo9iAIZvd++K6MhSmFfSJ2U2o=
