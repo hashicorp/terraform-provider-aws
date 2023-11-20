@@ -197,10 +197,6 @@ func testAccCheckVPCConnectorExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner VPC Connector ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 		_, err := tfapprunner.FindVPCConnectorByARN(ctx, conn, rs.Primary.ID)

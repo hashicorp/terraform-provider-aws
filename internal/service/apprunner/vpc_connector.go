@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
 // @Tags(identifierAttribute="arn")
-func ResourceVPCConnector() *schema.Resource {
+func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
 		ReadWithoutTimeout:   resourceVPCConnectorRead,
@@ -72,6 +72,7 @@ func ResourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -79,23 +80,23 @@ func ResourceVPCConnector() *schema.Resource {
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	vpcConnectorName := d.Get("vpc_connector_name").(string)
+	name := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
 		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
 		Subnets:          flex.ExpandStringValueSet(d.Get("subnets").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
-		VpcConnectorName: aws.String(vpcConnectorName),
+		VpcConnectorName: aws.String(name),
 	}
 
 	output, err := conn.CreateVpcConnector(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner VPC Connector (%s): %s", vpcConnectorName, err)
+		return diag.Errorf("creating App Runner VPC Connector (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.VpcConnector.VpcConnectorArn))
 
-	if err := waitVPCConnectorCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPCConnectorCreated(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for App Runner VPC Connector (%s) create: %s", d.Id(), err)
 	}
 
@@ -105,7 +106,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	vpcConnector, err := FindVPCConnectorByARN(ctx, conn, d.Id())
+	vpcConnector, err := findVPCConnectorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner VPC Connector (%s) not found, removing from state", d.Id())
@@ -148,35 +149,18 @@ func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("deleting App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCConnectorDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPCConnectorDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for App Runner VPC Connector (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
 	input := &apprunner.DescribeVpcConnectorInput{
 		VpcConnectorArn: aws.String(arn),
 	}
 
-	output, err := findVPCConnector(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if status := string(output.Status); status == string(types.VpcConnectorStatusInactive) {
-		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func findVPCConnector(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeVpcConnectorInput) (*types.VpcConnector, error) {
 	output, err := conn.DescribeVpcConnector(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -194,12 +178,19 @@ func findVPCConnector(ctx context.Context, conn *apprunner.Client, input *apprun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if status := output.VpcConnector.Status; status == types.VpcConnectorStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
 	return output.VpcConnector, nil
 }
 
 func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCConnectorByARN(ctx, conn, arn)
+		output, err := findVPCConnectorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -213,32 +204,41 @@ func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string)
 	}
 }
 
-const (
-	vpcConnectorCreateTimeout = 2 * time.Minute
-	vpcConnectorDeleteTimeout = 2 * time.Minute
-)
-
-func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.Client, arn string) error {
+func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Target:  enum.Slice(types.VpcConnectorStatusActive),
 		Refresh: statusVPCConnector(ctx, conn, arn),
-		Timeout: vpcConnectorCreateTimeout,
+		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*types.VpcConnector); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitVPCConnectorDeleted(ctx context.Context, conn *apprunner.Client, arn string) error {
+func waitVPCConnectorDeleted(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcConnectorStatusActive),
 		Target:  []string{},
 		Refresh: statusVPCConnector(ctx, conn, arn),
-		Timeout: vpcConnectorDeleteTimeout,
+		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*types.VpcConnector); ok {
+		return output, err
+	}
+
+	return nil, err
 }

@@ -66,7 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCConnector,
+			Factory:  resourceVPCConnector,
 			TypeName: "aws_apprunner_vpc_connector",
 			Name:     "VPC Connector",
 			Tags: &types.ServicePackageResourceTags{

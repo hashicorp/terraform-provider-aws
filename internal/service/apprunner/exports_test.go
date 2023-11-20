@@ -9,11 +9,13 @@ var (
 	ResourceConnection                      = resourceConnection
 	ResourceCustomDomainAssociation         = resourceCustomDomainAssociation
 	ResourceObservabilityConfiguration      = resourceObservabilityConfiguration
+	ResourceVPCConnector                    = resourceVPCConnector
 	ResourceVPCIngressConnection            = resourceVPCIngressConnection
 
 	FindAutoScalingConfigurationByARN   = findAutoScalingConfigurationByARN
 	FindConnectionByName                = findConnectionByName
 	FindCustomDomainByTwoPartKey        = findCustomDomainByTwoPartKey
 	FindObservabilityConfigurationByARN = findObservabilityConfigurationByARN
+	FindVPCConnectorByARN               = findVPCConnectorByARN
 	FindVPCIngressConnectionByARN       = findVPCIngressConnectionByARN
 )
