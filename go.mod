@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.18.2
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/signer v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.28.1
