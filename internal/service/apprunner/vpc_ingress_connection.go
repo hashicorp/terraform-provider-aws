@@ -6,22 +6,26 @@ package apprunner
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_vpc_ingress_connection", name="VPC Ingress Connection")
 // @Tags(identifierAttribute="arn")
-func ResourceVPCIngressConnection() *schema.Resource {
+func resourceVPCIngressConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIngressConnectionCreate,
 		ReadWithoutTimeout:   resourceVPCIngressConnectionRead,
@@ -37,14 +41,9 @@ func ResourceVPCIngressConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"name": {
+			"domain_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"ingress_vpc_configuration": {
 				Type:     schema.TypeList,
@@ -52,22 +51,27 @@ func ResourceVPCIngressConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_id": {
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"vpc_endpoint_id": {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"status": {
+			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
-			"domain_name": {
+			"service_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,17 +100,13 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	output, err := conn.CreateVpcIngressConnection(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner VPC Ingress Configuration (%s): %s", name, err)
-	}
-
-	if output == nil || output.VpcIngressConnection == nil {
-		return diag.Errorf("creating App Runner VPC Ingress Configuration (%s): empty output", name)
+		return diag.Errorf("creating App Runner VPC Ingress Connection (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.VpcIngressConnection.VpcIngressConnectionArn))
 
-	if err := WaitVPCIngressConnectionActive(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner VPC Ingress Configuration (%s) creation: %s", d.Id(), err)
+	if _, err := waitVPCIngressConnectionCreated(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for App Runner VPC Ingress Connection (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceVPCIngressConnectionRead(ctx, d, meta)
@@ -115,47 +115,26 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	input := &apprunner.DescribeVpcIngressConnectionInput{
-		VpcIngressConnectionArn: aws.String(d.Id()),
-	}
+	connection, err := findVPCIngressConnectionByARN(ctx, conn, d.Id())
 
-	output, err := conn.DescribeVpcIngressConnection(ctx, input)
-
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
-		log.Printf("[WARN] App Runner VPC Ingress Configuration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] App Runner VPC Ingress Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner VPC Ingress Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.VpcIngressConnection == nil {
-		return diag.Errorf("reading App Runner VPC Ingress Configuration (%s): empty output", d.Id())
-	}
-
-	if string(output.VpcIngressConnection.Status) == string(types.VpcIngressConnectionStatusDeleted) {
-		if d.IsNewResource() {
-			return diag.Errorf("reading App Runner VPC Ingress Configuration (%s): %s after creation", d.Id(), string(output.VpcIngressConnection.Status))
-		}
-		log.Printf("[WARN] App Runner VPC Ingress Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	config := output.VpcIngressConnection
-	arn := aws.ToString(config.VpcIngressConnectionArn)
-
-	d.Set("arn", arn)
-	d.Set("service_arn", config.ServiceArn)
-	d.Set("name", config.VpcIngressConnectionName)
-	d.Set("status", config.Status)
-	d.Set("domain_name", config.DomainName)
-
-	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(config.IngressVpcConfiguration)); err != nil {
+	d.Set("arn", connection.VpcIngressConnectionArn)
+	d.Set("domain_name", connection.DomainName)
+	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(connection.IngressVpcConfiguration)); err != nil {
 		return diag.Errorf("setting ingress_vpc_configuration: %s", err)
 	}
+	d.Set("name", connection.VpcIngressConnectionName)
+	d.Set("service_arn", connection.ServiceArn)
+	d.Set("status", connection.Status)
 
 	return nil
 }
@@ -168,28 +147,111 @@ func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceD
 func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	input := &apprunner.DeleteVpcIngressConnectionInput{
+	log.Printf("[INFO] Deleting App Runner VPC Ingress Connection: %s", d.Id())
+	_, err := conn.DeleteVpcIngressConnection(ctx, &apprunner.DeleteVpcIngressConnectionInput{
 		VpcIngressConnectionArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteVpcIngressConnection(ctx, input)
+	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner VPC Ingress Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitVPCIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil
-		}
-		return diag.Errorf("waiting for App Runner VPC Ingress Configuration (%s) deletion: %s", d.Id(), err)
+	if _, err := waitVPCIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for App Runner VPC Ingress Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcIngressConnection, error) {
+	input := &apprunner.DescribeVpcIngressConnectionInput{
+		VpcIngressConnectionArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeVpcIngressConnection(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VpcIngressConnection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.VpcIngressConnection.Status; status == types.VpcIngressConnectionStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output.VpcIngressConnection, nil
+}
+
+func statusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCIngressConnectionByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+func waitVPCIngressConnectionCreated(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcIngressConnection, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VpcIngressConnectionStatusPendingCreation),
+		Target:  enum.Slice(types.VpcIngressConnectionStatusAvailable),
+		Refresh: statusVPCIngressConnection(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcIngressConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcIngressConnection, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VpcIngressConnectionStatusAvailable, types.VpcIngressConnectionStatusPendingDeletion),
+		Target:  []string{},
+		Refresh: statusVPCIngressConnection(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcIngressConnection); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandIngressVPCConfiguration(l []interface{}) *types.IngressVpcConfiguration {

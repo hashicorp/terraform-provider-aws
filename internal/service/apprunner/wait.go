@@ -17,36 +17,7 @@ const (
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
-
-	VPCIngressConnectionCreateTimeout = 2 * time.Minute
-	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
-
-func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.Client, vpcIngressConnectionArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{VPCIngressConnectionstatusActive},
-		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
-		Timeout: VPCIngressConnectionCreateTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client, vpcIngressConnectionArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{VPCIngressConnectionstatusActive, VPCIngressConnectionstatusPendingDeletion},
-		Target:  []string{VPCIngressConnectionstatusDeleted},
-		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
-		Timeout: VPCIngressConnectionDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 func WaitServiceCreated(ctx context.Context, conn *apprunner.Client, serviceArn string) error {
 	stateConf := &retry.StateChangeConf{

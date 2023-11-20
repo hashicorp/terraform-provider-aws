@@ -11,32 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-const (
-	VPCIngressConnectionstatusActive          = "AVAILABLE"
-	VPCIngressConnectionstatusPendingDeletion = "PENDING_DELETION"
-	VPCIngressConnectionstatusDeleted         = "DELETED"
-)
-
-func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &apprunner.DescribeVpcIngressConnectionInput{
-			VpcIngressConnectionArn: aws.String(arn),
-		}
-
-		output, err := conn.DescribeVpcIngressConnection(ctx, input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.VpcIngressConnection == nil {
-			return nil, "", nil
-		}
-
-		return output.VpcIngressConnection, string(output.VpcIngressConnection.Status), nil
-	}
-}
-
 func StatusService(ctx context.Context, conn *apprunner.Client, serviceArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeServiceInput{
