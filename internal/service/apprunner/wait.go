@@ -14,9 +14,6 @@ import (
 )
 
 const (
-	CustomDomainAssociationCreateTimeout = 5 * time.Minute
-	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
-
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
@@ -27,32 +24,6 @@ const (
 	VPCIngressConnectionCreateTimeout = 2 * time.Minute
 	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
-
-func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{CustomDomainAssociationStatusCreating},
-		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation, CustomDomainAssociationStatusBindingCertificate},
-		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
-		Timeout: CustomDomainAssociationCreateTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{CustomDomainAssociationStatusActive, CustomDomainAssociationStatusDeleting},
-		Target:  []string{},
-		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
-		Timeout: CustomDomainAssociationDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.Client, observabilityConfigurationArn string) error {
 	stateConf := &retry.StateChangeConf{

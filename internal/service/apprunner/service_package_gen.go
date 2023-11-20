@@ -45,8 +45,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCustomDomainAssociation,
+			Factory:  resourceCustomDomainAssociation,
 			TypeName: "aws_apprunner_custom_domain_association",
+			Name:     "Custom Domain Association",
 		},
 		{
 			Factory:  ResourceObservabilityConfiguration,

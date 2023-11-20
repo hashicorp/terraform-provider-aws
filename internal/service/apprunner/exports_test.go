@@ -7,7 +7,9 @@ package apprunner
 var (
 	ResourceAutoScalingConfigurationVersion = resourceAutoScalingConfigurationVersion
 	ResourceConnection                      = resourceConnection
+	ResourceCustomDomainAssociation         = resourceCustomDomainAssociation
 
 	FindAutoScalingConfigurationByARN = findAutoScalingConfigurationByARN
 	FindConnectionByName              = findConnectionByName
+	FindCustomDomainByTwoPartKey      = findCustomDomainByTwoPartKey
 )

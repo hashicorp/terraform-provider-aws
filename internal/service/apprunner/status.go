@@ -12,12 +12,6 @@ import (
 )
 
 const (
-	CustomDomainAssociationStatusActive                          = "active"
-	CustomDomainAssociationStatusCreating                        = "creating"
-	CustomDomainAssociationStatusDeleting                        = "deleting"
-	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
-	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
-
 	ObservabilityConfigurationStatusActive   = "ACTIVE"
 	ObservabilityConfigurationStatusInactive = "INACTIVE"
 
@@ -63,22 +57,6 @@ func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn
 		}
 
 		return output.VpcIngressConnection, string(output.VpcIngressConnection.Status), nil
-	}
-}
-
-func StatusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if customDomain == nil {
-			return nil, "", nil
-		}
-
-		return customDomain, string(customDomain.Status), nil
 	}
 }
 
