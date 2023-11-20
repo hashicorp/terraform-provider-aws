@@ -66,16 +66,6 @@ func ResourceTargetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceTargetGroupV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: targetGroupUpgradeV0,
-				Version: 0,
-			},
-		},
-
-		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
 			lambdaTargetHealthCheckProtocolCustomizeDiff,
