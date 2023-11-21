@@ -611,7 +611,7 @@ func expandLifecycleRuleAbortIncompleteMultipartUpload(m map[string]interface{})
 	result := &types.AbortIncompleteMultipartUpload{}
 
 	if v, ok := m["days_after_initiation"].(int); ok {
-		result.DaysAfterInitiation = int32(v)
+		result.DaysAfterInitiation = aws.Int32(int32(v))
 	}
 
 	return result
@@ -636,12 +636,12 @@ func expandLifecycleRuleExpiration(l []interface{}) *types.LifecycleExpiration {
 	}
 
 	if v, ok := m["days"].(int); ok && v > 0 {
-		result.Days = int32(v)
+		result.Days = aws.Int32(int32(v))
 	}
 
 	// This cannot be specified with Days or Date
-	if v, ok := m["expired_object_delete_marker"].(bool); ok && result.Date == nil && result.Days == 0 {
-		result.ExpiredObjectDeleteMarker = v
+	if v, ok := m["expired_object_delete_marker"].(bool); ok && result.Date == nil && aws.ToInt32(result.Days) == 0 {
+		result.ExpiredObjectDeleteMarker = aws.Bool(v)
 	}
 
 	return result
@@ -702,11 +702,11 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 	}
 
 	if v, ok := m["object_size_greater_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeGreaterThan = int64(v)
+		result.Value.ObjectSizeGreaterThan = aws.Int64(int64(v))
 	}
 
 	if v, ok := m["object_size_less_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeLessThan = int64(v)
+		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
 	}
 
 	if v, ok := m["prefix"].(string); ok {
@@ -751,11 +751,11 @@ func expandLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *t
 	result := &types.NoncurrentVersionExpiration{}
 
 	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-		result.NewerNoncurrentVersions = int32(v)
+		result.NewerNoncurrentVersions = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["noncurrent_days"].(int); ok {
-		result.NoncurrentDays = int32(v)
+		result.NoncurrentDays = aws.Int32(int32(v))
 	}
 
 	return result
@@ -778,11 +778,11 @@ func expandLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []types.No
 		transition := types.NoncurrentVersionTransition{}
 
 		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-			transition.NewerNoncurrentVersions = int32(v)
+			transition.NewerNoncurrentVersions = aws.Int32(int32(v))
 		}
 
 		if v, ok := tfMap["noncurrent_days"].(int); ok {
-			transition.NoncurrentDays = int32(v)
+			transition.NoncurrentDays = aws.Int32(int32(v))
 		}
 
 		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
@@ -820,7 +820,7 @@ func expandLifecycleRuleTransitions(l []interface{}) []types.Transition {
 		// so only set the transition.Days value when transition.Date is nil
 		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
 		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
-			transition.Days = int32(v)
+			transition.Days = aws.Int32(int32(v))
 		}
 
 		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
@@ -982,7 +982,7 @@ func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.Noncurren
 	}
 
 	m := map[string]interface{}{
-		"newer_noncurrent_versions": strconv.FormatInt(int64(expiration.NewerNoncurrentVersions), 10),
+		"newer_noncurrent_versions": strconv.FormatInt(int64(aws.ToInt32(expiration.NewerNoncurrentVersions)), 10),
 		"noncurrent_days":           expiration.NoncurrentDays,
 	}
 
@@ -998,7 +998,7 @@ func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.Noncur
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"newer_noncurrent_versions": strconv.FormatInt(int64(transition.NewerNoncurrentVersions), 10),
+			"newer_noncurrent_versions": strconv.FormatInt(int64(aws.ToInt32(transition.NewerNoncurrentVersions)), 10),
 			"noncurrent_days":           transition.NoncurrentDays,
 			"storage_class":             transition.StorageClass,
 		}

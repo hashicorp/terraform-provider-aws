@@ -506,7 +506,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = expandReplicationRuleFilter(ctx, v)
-			rule.Priority = int32(tfMap["priority"].(int))
+			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
 		} else {
 			// XML schema V1
 			rule.Prefix = aws.String(tfMap["prefix"].(string))
@@ -684,7 +684,7 @@ func expandReplicationRuleDestinationReplicationTimeValue(l []interface{}) *type
 	result := &types.ReplicationTimeValue{}
 
 	if v, ok := tfMap["minutes"].(int); ok {
-		result.Minutes = int32(v)
+		result.Minutes = aws.Int32(int32(v))
 	}
 
 	return result
