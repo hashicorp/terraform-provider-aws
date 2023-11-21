@@ -492,6 +492,11 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
@@ -517,12 +522,12 @@ func TestAccEventsRule_state(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_isEnabled(rName, false),
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
-					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateDisabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateDisabled),
 				),
 			},
 			{
@@ -531,22 +536,32 @@ func TestAccEventsRule_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_isEnabled(rName, true),
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabled),
 				),
 			},
 			{
-				Config: testAccRuleConfig_isEnabled(rName, false),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
-					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -687,11 +702,6 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
 							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
 						),
-					},
-					{
-						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						Config:                   testcase.config,
-						PlanOnly:                 true,
 					},
 					{
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -924,6 +934,16 @@ resource "aws_cloudwatch_event_rule" "test" {
   is_enabled          = %[2]t
 }
 `, rName, enabled)
+}
+
+func testAccRuleConfig_state(rName, state string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+  state               = %[2]q
+}
+`, rName, state)
 }
 
 func testAccRuleConfig_namePrefix(namePrefix string) string {

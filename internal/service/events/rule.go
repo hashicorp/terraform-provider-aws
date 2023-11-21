@@ -86,7 +86,11 @@ func ResourceRule() *schema.Resource {
 				Type:       schema.TypeBool,
 				Optional:   true,
 				Deprecated: `Use "state" instead`,
-				Default:    true,
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					rawPlan := d.GetRawPlan()
+					rawIsEnabled := rawPlan.GetAttr("is_enabled")
+					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -119,7 +123,7 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice(
-					eventbridge.EventSourceState_Values(),
+					eventbridge.RuleState_Values(),
 					false,
 				),
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
@@ -219,7 +223,13 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		d.Set("event_pattern", pattern)
 	}
-	d.Set("is_enabled", aws.StringValue(output.State) == eventbridge.RuleStateEnabled)
+	switch aws.StringValue(output.State) {
+	case eventbridge.RuleStateEnabled,
+		eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents:
+		d.Set("is_enabled", true)
+	default:
+		d.Set("is_enabled", false)
+	}
 	d.Set("state", aws.StringValue(output.State))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
@@ -378,11 +388,20 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 		apiObject.ScheduleExpression = aws.String(v.(string))
 	}
 
-	state := eventbridge.RuleStateDisabled
-	if d.Get("is_enabled").(bool) {
-		state = eventbridge.RuleStateEnabled
+	rawConfig := d.GetRawConfig()
+	rawState := rawConfig.GetAttr("state")
+	if rawState.IsKnown() && !rawState.IsNull() {
+		apiObject.State = aws.String(rawState.AsString())
+	} else {
+		rawIsEnabled := rawConfig.GetAttr("is_enabled")
+		if rawIsEnabled.IsKnown() && !rawIsEnabled.IsNull() {
+			if rawIsEnabled.True() {
+				apiObject.State = aws.String(eventbridge.RuleStateEnabled)
+			} else {
+				apiObject.State = aws.String(eventbridge.RuleStateDisabled)
+			}
+		}
 	}
-	apiObject.State = aws.String(state)
 
 	return apiObject
 }
