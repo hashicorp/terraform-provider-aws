@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_apprunner_service: Add `network_configuration.ip_address_type` argument
 ```
+
+```release-note:enhancement
+resource/aws_apprunner_service: Add `source_configuration.code_repository.source_directory` argument to support monorepos
+```

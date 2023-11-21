@@ -356,6 +356,12 @@ func resourceService() *schema.Resource {
 											},
 										},
 									},
+									"source_directory": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(0, 4096),
+									},
 								},
 							},
 							ExactlyOneOf: []string{"source_configuration.0.code_repository", "source_configuration.0.image_repository"},
@@ -999,6 +1005,10 @@ func expandServiceCodeRepository(l []interface{}) *types.CodeRepository {
 		result.RepositoryUrl = aws.String(v)
 	}
 
+	if v, ok := tfMap["source_directory"].(string); ok && v != "" {
+		result.SourceDirectory = aws.String(v)
+	}
+
 	return result
 }
 
@@ -1222,6 +1232,7 @@ func flattenServiceCodeRepository(r *types.CodeRepository) []interface{} {
 		"code_configuration":  flattenServiceCodeConfiguration(r.CodeConfiguration),
 		"repository_url":      aws.ToString(r.RepositoryUrl),
 		"source_code_version": flattenServiceSourceCodeVersion(r.SourceCodeVersion),
+		"source_directory":    aws.ToString(r.SourceDirectory),
 	}
 
 	return []interface{}{m}

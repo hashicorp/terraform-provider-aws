@@ -207,6 +207,7 @@ The `code_repository` block supports the following arguments:
 * `code_configuration` - (Optional) Configuration for building and running the service from a source code repository. See [Code Configuration](#code-configuration) below for more details.
 * `repository_url` - (Required) Location of the repository that contains the source code.
 * `source_code_version` - (Required) Version that should be used within the source code repository. See [Source Code Version](#source-code-version) below for more details.
+* `source_directory` - (Optional) The path of the directory that stores source code and configuration files. The build and start commands also execute from here. The path is absolute from root and, if not specified, defaults to the repository root.
 
 ### Image Repository
 
