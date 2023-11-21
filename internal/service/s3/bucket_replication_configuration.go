@@ -775,20 +775,12 @@ func expandSourceSelectionCriteriaSSEKMSEncryptedObjects(l []interface{}) *types
 }
 
 func expandReplicationRuleFilter(ctx context.Context, l []interface{}) types.ReplicationRuleFilter {
-	if len(l) == 0 {
-		return nil
-	}
-
-	var result types.ReplicationRuleFilter
-
-	// Support the empty filter block in terraform i.e. 'filter {}',
-	// which is also supported by the API even though the docs note that
-	// one of Prefix, Tag, or And is required.
-	if l[0] == nil {
-		return result
+	if len(l) == 0 || l[0] == nil {
+		return &types.ReplicationRuleFilterMemberPrefix{}
 	}
 
 	tfMap := l[0].(map[string]interface{})
+	var result types.ReplicationRuleFilter
 
 	if v, ok := tfMap["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result = expandReplicationRuleFilterMemberAnd(ctx, v)
