@@ -242,6 +242,8 @@ resource "aws_lexv2models_bot" "test" {
   data_privacy {
     child_directed = "%[3]t"
   }
+
+	bot_type = "Bot"
 }
 `, rName, ttl, dp))
 }
@@ -258,6 +260,8 @@ resource "aws_lexv2models_bot" "test" {
   data_privacy {
     child_directed = %[3]t
   }
+
+	bot_type = "Bot"
 
   tags = {
     %[4]q = %[5]q
@@ -278,6 +282,8 @@ resource "aws_lexv2models_bot" "test" {
   data_privacy {
     child_directed = %[3]t
   }
+
+	bot_type = "Bot"
 
   tags = {
     %[4]q = %[5]q
