@@ -6,6 +6,7 @@ package neptune_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -40,8 +41,65 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneParameterGroup_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBParameterGroup
+	resourceName := "aws_neptune_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneParameterGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBParameterGroup
+	resourceName := "aws_neptune_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -268,6 +326,23 @@ resource "aws_neptune_parameter_group" "test" {
   }
 }
 `, rName, pApplyMethod, pName, pValue)
+}
+
+func testAccParameterGroupConfig_nameGenerated() string {
+	return fmt.Sprintf(`
+resource "aws_neptune_parameter_group" "test" {
+  family = "neptune1"
+}
+`)
+}
+
+func testAccParameterGroupConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_parameter_group" "test" {
+  family      = "neptune1"
+  name_prefix = %[1]q
+}
+`, namePrefix)
 }
 
 func testAccParameterGroupConfig_description(rName, description string) string {
