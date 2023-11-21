@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -17,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -562,13 +561,9 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			input := &apprunner.DescribeServiceInput{
-				ServiceArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfapprunner.FindServiceByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.DescribeService(ctx, input)
-
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -576,9 +571,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if output != nil && output.Service != nil && string(output.Service.Status) != string(types.ServiceStatusDeleted) {
-				return fmt.Errorf("App Runner Service (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("App Runner Service %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -592,27 +585,11 @@ func testAccCheckServiceExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner Service ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		input := &apprunner.DescribeServiceInput{
-			ServiceArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfapprunner.FindServiceByARN(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.DescribeService(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.Service == nil {
-			return fmt.Errorf("App Runner Service (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

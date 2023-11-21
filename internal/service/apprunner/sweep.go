@@ -180,13 +180,9 @@ func sweepServices(region string) error {
 		}
 
 		for _, service := range output.ServiceSummaryList {
-			arn := aws.ToString(service.ServiceArn)
-
-			log.Printf("[INFO] Deleting App Runner Service: %s", arn)
-
-			r := ResourceService()
+			r := resourceService()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(service.ServiceArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

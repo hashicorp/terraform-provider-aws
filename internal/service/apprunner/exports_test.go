@@ -9,6 +9,7 @@ var (
 	ResourceConnection                      = resourceConnection
 	ResourceCustomDomainAssociation         = resourceCustomDomainAssociation
 	ResourceObservabilityConfiguration      = resourceObservabilityConfiguration
+	ResourceService                         = resourceService
 	ResourceVPCConnector                    = resourceVPCConnector
 	ResourceVPCIngressConnection            = resourceVPCIngressConnection
 
@@ -16,6 +17,7 @@ var (
 	FindConnectionByName                = findConnectionByName
 	FindCustomDomainByTwoPartKey        = findCustomDomainByTwoPartKey
 	FindObservabilityConfigurationByARN = findObservabilityConfigurationByARN
+	FindServiceByARN                    = findServiceByARN
 	FindVPCConnectorByARN               = findVPCConnectorByARN
 	FindVPCIngressConnectionByARN       = findVPCIngressConnectionByARN
 )

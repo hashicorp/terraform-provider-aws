@@ -6,6 +6,7 @@ package apprunner
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,7 +28,7 @@ import (
 
 // @SDKResource("aws_apprunner_service", name="Service")
 // @Tags(identifierAttribute="arn")
-func ResourceService() *schema.Resource {
+func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
 		ReadWithoutTimeout:   resourceServiceRead,
@@ -42,14 +44,12 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_scaling_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"encryption_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -66,7 +66,6 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"health_check_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -97,11 +96,11 @@ func ResourceService() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 51200),
 						},
 						"protocol": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      string(types.HealthCheckProtocolTcp),
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(flattenHealthCheckProtocolValues(types.HealthCheckProtocol("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.HealthCheckProtocolTcp,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
 						},
 						"timeout": {
 							Type:         schema.TypeInt,
@@ -120,7 +119,6 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"instance_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -156,7 +154,6 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -164,6 +161,27 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"egress_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"egress_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.EgressType](),
+									},
+									"vpc_connector_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"ingress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -178,31 +196,9 @@ func ResourceService() *schema.Resource {
 								},
 							},
 						},
-						"egress_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"egress_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(flattenEgressTypeValues(types.EgressType("").Values()), false),
-									},
-									"vpc_connector_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
 					},
 				},
 			},
-
 			"observability_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -221,23 +217,19 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"service_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"service_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"source_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -298,9 +290,9 @@ func ResourceService() *schema.Resource {
 																ValidateFunc: validation.StringLenBetween(0, 51200),
 															},
 															"runtime": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(flattenRuntimeValues(types.Runtime("").Values()), false),
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.Runtime](),
 															},
 															"runtime_environment_secrets": {
 																Type:     schema.TypeMap,
@@ -327,9 +319,9 @@ func ResourceService() *schema.Resource {
 													},
 												},
 												"configuration_source": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(flattenConfigurationSourceValues(types.ConfigurationSource("").Values()), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.ConfigurationSource](),
 												},
 											},
 										},
@@ -346,9 +338,9 @@ func ResourceService() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(flattenSourceCodeVersionTypeValues(types.SourceCodeVersionType("").Values()), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.SourceCodeVersionType](),
 												},
 												"value": {
 													Type:         schema.TypeString,
@@ -410,9 +402,9 @@ func ResourceService() *schema.Resource {
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(flattenImageRepositoryTypeValues(types.ImageRepositoryType("").Values()), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ImageRepositoryType](),
 									},
 								},
 							},
@@ -421,12 +413,10 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -438,9 +428,9 @@ func ResourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	serviceName := d.Get("service_name").(string)
+	name := d.Get("service_name").(string)
 	input := &apprunner.CreateServiceInput{
-		ServiceName:         aws.String(serviceName),
+		ServiceName:         aws.String(name),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
 		Tags:                getTagsIn(ctx),
 	}
@@ -469,39 +459,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]interface{}))
 	}
 
-	var output *apprunner.CreateServiceOutput
-
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		output, err = conn.CreateService(ctx, input)
-
-		if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Error in assuming instance role") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateService(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateService(ctx, input)
+	}, "Error in assuming instance role")
 
 	if err != nil {
-		return diag.Errorf("creating App Runner Service (%s): %s", serviceName, err)
+		return diag.Errorf("creating App Runner Service (%s): %s", name, err)
 	}
 
-	if output == nil || output.Service == nil {
-		return diag.Errorf("creating App Runner Service (%s): empty output", serviceName)
-	}
+	d.SetId(aws.ToString(outputRaw.(*apprunner.CreateServiceOutput).Service.ServiceArn))
 
-	d.SetId(aws.ToString(output.Service.ServiceArn))
-
-	if err := WaitServiceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Service (%s) creation: %s", d.Id(), err)
+	if _, err := waitServiceCreated(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for App Runner Service (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceServiceRead(ctx, d, meta)
@@ -510,13 +479,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	input := &apprunner.DescribeServiceInput{
-		ServiceArn: aws.String(d.Id()),
-	}
+	service, err := findServiceByARN(ctx, conn, d.Id())
 
-	output, err := conn.DescribeService(ctx, input)
-
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -526,56 +491,34 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Service == nil {
-		return diag.Errorf("reading App Runner Service (%s): empty output", d.Id())
-	}
-
-	if string(output.Service.Status) == string(types.ServiceStatusDeleted) {
-		if d.IsNewResource() {
-			return diag.Errorf("reading App Runner Service (%s): %s after creation", d.Id(), string(output.Service.Status))
-		}
-		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	service := output.Service
-	arn := aws.ToString(service.ServiceArn)
-
-	var autoScalingConfigArn string
+	d.Set("arn", service.ServiceArn)
 	if service.AutoScalingConfigurationSummary != nil {
-		autoScalingConfigArn = aws.ToString(service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
+		d.Set("auto_scaling_configuration_arn", service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
+	} else {
+		d.Set("auto_scaling_configuration_arn", nil)
 	}
-
-	d.Set("arn", arn)
-	d.Set("auto_scaling_configuration_arn", autoScalingConfigArn)
-	d.Set("service_id", service.ServiceId)
-	d.Set("service_name", service.ServiceName)
-	d.Set("service_url", service.ServiceUrl)
-	d.Set("status", service.Status)
 	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
 		return diag.Errorf("setting encryption_configuration: %s", err)
 	}
-
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
 		return diag.Errorf("setting health_check_configuration: %s", err)
 	}
-
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
 		return diag.Errorf("setting instance_configuration: %s", err)
 	}
-
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return diag.Errorf("setting network_configuration: %s", err)
 	}
-
 	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
 		return diag.Errorf("setting observability_configuration: %s", err)
 	}
-
+	d.Set("service_id", service.ServiceId)
+	d.Set("service_name", service.ServiceName)
+	d.Set("service_url", service.ServiceUrl)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return diag.Errorf("setting source_configuration: %s", err)
 	}
+	d.Set("status", service.Status)
 
 	return nil
 }
@@ -583,13 +526,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	if d.HasChanges(
-		"auto_scaling_configuration_arn",
-		"instance_configuration",
-		"network_configuration",
-		"observability_configuration",
-		"source_configuration",
-	) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &apprunner.UpdateServiceInput{
 			ServiceArn: aws.String(d.Id()),
 		}
@@ -620,8 +557,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("updating App Runner Service (%s): %s", d.Id(), err)
 		}
 
-		if err := WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for App Runner Service (%s) to update: %s", d.Id(), err)
+		if _, err := waitServiceUpdated(ctx, conn, d.Id()); err != nil {
+			return diag.Errorf("waiting for App Runner Service (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -631,11 +568,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	input := &apprunner.DeleteServiceInput{
+	log.Printf("[INFO] Deleting App Runner Service: %s", d.Id())
+	_, err := conn.DeleteService(ctx, &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteService(ctx, input)
+	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
@@ -645,15 +581,119 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting App Runner Service (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil
-		}
-
-		return diag.Errorf("waiting for App Runner Service (%s) deletion: %s", d.Id(), err)
+	if _, err := waitServiceDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for App Runner Service (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	input := &apprunner.DescribeServiceInput{
+		ServiceArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeService(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Service == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Service.Status; status == types.ServiceStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output.Service, nil
+}
+
+func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findServiceByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitServiceCreated(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServiceUpdated(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
+		Target:  enum.Slice(types.ServiceStatusRunning),
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServiceDeleted(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusRunning, types.ServiceStatusOperationInProgress),
+		Target:  []string{},
+		Refresh: statusService(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Service); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
@@ -1274,64 +1314,4 @@ func flattenServiceImageRepository(r *types.ImageRepository) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-func flattenHealthCheckProtocolValues(t []types.HealthCheckProtocol) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenEgressTypeValues(t []types.EgressType) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenRuntimeValues(t []types.Runtime) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenConfigurationSourceValues(t []types.ConfigurationSource) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenSourceCodeVersionTypeValues(t []types.SourceCodeVersionType) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func flattenImageRepositoryTypeValues(t []types.ImageRepositoryType) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
 }
