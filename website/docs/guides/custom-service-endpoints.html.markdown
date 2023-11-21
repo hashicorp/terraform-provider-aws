@@ -203,6 +203,7 @@ provider "aws" {
   <li><code>mediaconvert</code></li>
   <li><code>medialive</code></li>
   <li><code>mediapackage</code></li>
+  <li><code>mediapackagev2</code></li>
   <li><code>mediastore</code></li>
   <li><code>memorydb</code></li>
   <li><code>mq</code></li>

@@ -53,6 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.27.1
+    github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/osis v1.5.1

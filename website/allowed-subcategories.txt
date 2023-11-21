@@ -95,6 +95,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage Version 2
 Elemental MediaStore
 EventBridge
 EventBridge Pipes

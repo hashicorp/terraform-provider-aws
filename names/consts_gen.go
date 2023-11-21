@@ -137,6 +137,7 @@ const (
 	MediaConvert                 = "mediaconvert"
 	MediaLive                    = "medialive"
 	MediaPackage                 = "mediapackage"
+	MediaPackageV2               = "mediapackagev2"
 	MediaStore                   = "mediastore"
 	MemoryDB                     = "memorydb"
 	Neptune                      = "neptune"

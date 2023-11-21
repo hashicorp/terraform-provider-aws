@@ -697,6 +697,9 @@ service/medialive:
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
+service/mediapackagev2:
+  - 'internal/service/mediapackagev2/**/*'
+  - 'website/**/media_packagev2_*'
 service/mediapackagevod:
   - 'internal/service/mediapackagevod/**/*'
   - 'website/**/mediapackagevod_*'

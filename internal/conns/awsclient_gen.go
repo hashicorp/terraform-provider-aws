@@ -47,6 +47,7 @@ import (
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
+	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -784,6 +785,10 @@ func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client
 
 func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
 	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage))
+}
+
+func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2_sdkv2.Client {
+	return errs.Must(client[*mediapackagev2_sdkv2.Client](ctx, c, names.MediaPackageV2))
 }
 
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
