@@ -199,7 +199,6 @@ import (
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	s3control_sdkv1 "github.com/aws/aws-sdk-go/service/s3control"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
@@ -928,10 +927,6 @@ func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
 	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3))
-}
-
-func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {
-	return errs.Must(conn[*s3control_sdkv1.S3Control](ctx, c, names.S3Control))
 }
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {
