@@ -46,6 +46,15 @@ func ResourceRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRuleV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRuleUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -74,9 +83,10 @@ func ResourceRule() *schema.Resource {
 				},
 			},
 			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Deprecated: `Use "state" instead`,
+				Default:    true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -104,6 +114,20 @@ func ResourceRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					eventbridge.EventSourceState_Values(),
+					false,
+				),
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					if oldValue != "" && newValue == "" {
+						return true
+					}
+					return false
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -196,6 +220,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("event_pattern", pattern)
 	}
 	d.Set("is_enabled", aws.StringValue(output.State) == eventbridge.RuleStateEnabled)
+	d.Set("state", aws.StringValue(output.State))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
