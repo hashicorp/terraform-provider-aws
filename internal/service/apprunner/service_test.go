@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -415,50 +414,6 @@ func TestAccAppRunnerService_ImageRepository_observabilityConfiguration(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/32839
-func TestAccAppRunnerService_ImageRepository_addObservabilityConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_ImageRepository_healthCheckConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.healthy_threshold", "2"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", string(types.HealthCheckProtocolTcp)),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.timeout", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", "0"),
-				),
-			},
-			{
-				Config: testAccServiceConfig_ImageRepository_observabilityConfiguration_disabled(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", "false"),
 				),
 			},

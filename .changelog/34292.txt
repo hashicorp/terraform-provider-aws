@@ -13,7 +13,3 @@ resource/aws_apprunner_service: Allow `health_check_configuration` to be updated
 ```release-note:bug
 resource/aws_apprunner_service: Correctly set `service_url` for private services
 ```
-
-```release-note:bug
-resource/aws_apprunner_service: Change `observability_configuration` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
-```
