@@ -9,3 +9,7 @@ resource/aws_apprunner_service: Add `source_configuration.code_repository.source
 ```release-note:enhancement
 resource/aws_apprunner_service: Allow `health_check_configuration` to be updated in-place
 ```
+
+```release-note:bug
+resource/aws_apprunner_service: Correctly set `service_url` for private services
+```
