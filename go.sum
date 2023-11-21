@@ -96,6 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.0 h1:XCaAqb6eTyyzEKhLTXDmQRJyIIg
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.0/go.mod h1:hrBzQzlQQRmiaeYRQPr0SdSx6fdqP+5YcGhb97LCt8M=
 github.com/aws/aws-sdk-go-v2/service/eks v1.33.2 h1:V31GdxyniIKfST6Dlfan7zvl0V64pdYbhA/A3+1sIYM=
 github.com/aws/aws-sdk-go-v2/service/eks v1.33.2/go.mod h1:DInudKNZjEy7SJ0KfRh4VxaqY04B52Lq2+QRuvObfNQ=
+github.com/aws/aws-sdk-go-v2/service/emr v1.34.1 h1:AkAncVuiOap3LS/kLs1QdVDY9LZyYHOMzCRybLtlxJU=
+github.com/aws/aws-sdk-go-v2/service/emr v1.34.1/go.mod h1:HCZK6jCgxuYABdZFqiiHE3WT2tvTFVjefMB3ZX9dOxA=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.4 h1:V5unlj0Ky5ZuvLkndDQlHbYe3vshVJwavUZ7aGne8oo=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.4/go.mod h1:EC2zElGORkIzy2vPQV5U1qNGXIDzZHjL/KWbpQD6nc0=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.17.1 h1:GcBPj8B8EiVaHOba8Pq+CS+7w7s3q8ndETwPtpleS7A=

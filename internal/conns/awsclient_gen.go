@@ -29,6 +29,7 @@ import (
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
+	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
@@ -552,6 +553,10 @@ func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
 
 func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
 	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR))
+}
+
+func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
+	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR))
 }
 
 func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {

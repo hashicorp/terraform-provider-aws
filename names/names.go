@@ -45,6 +45,7 @@ const (
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
 	EKSEndpointID                        = "eks"
+	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
