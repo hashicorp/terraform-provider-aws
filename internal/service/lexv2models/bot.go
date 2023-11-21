@@ -87,7 +87,7 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"bot_type": schema.StringAttribute{
+			"type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -599,7 +599,7 @@ type resourceBotData struct {
 	TagsAll                 types.Map      `tfsdk:"tags_all"`
 	TestBotAliasTags        types.Map      `tfsdk:"test_bot_alias_tags"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
-	Type                    types.String   `tfsdk:"bot_type"`
+	Type                    types.String   `tfsdk:"type"`
 }
 
 type dataPrivacyData struct {
