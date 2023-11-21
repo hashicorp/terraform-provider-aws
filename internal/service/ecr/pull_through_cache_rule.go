@@ -25,6 +25,7 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 		CreateWithoutTimeout: resourcePullThroughCacheRuleCreate,
 		ReadWithoutTimeout:   resourcePullThroughCacheRuleRead,
 		DeleteWithoutTimeout: resourcePullThroughCacheRuleDelete,
+		UpdateWithoutTimeout: resourcePullThroughCacheRuleUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -53,7 +54,11 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 			},
 			"credential_arn": {
 				Type:     schema.TypeString,
-				ForceNew: true,
+				Optional: true,
+				ValidateFunc: validation.StringMatch(
+					regexache.MustCompile(`^arn:aws:secretsmanager:[a-zA-Z0-9-:]+:secret:ecr\-pullthroughcache\/[a-zA-Z0-9\/_+=.@-]+$`),
+					"must be an arn",
+				),
 			},
 		},
 	}
@@ -81,6 +86,27 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(repositoryPrefix)
 
 	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
+}
+
+func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+
+	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
+	input := &ecr.UpdatePullThroughCacheRuleInput{
+		EcrRepositoryPrefix: aws.String(repositoryPrefix),
+		CredentialArn:       aws.String(d.Get("credential_arn").(string)),
+	}
+
+	log.Printf("[DEBUG] Updating ECR Pull Through Cache Rule: %s", input)
+	_, err := conn.UpdatePullThroughCacheRuleWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("updating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+	}
+
+	d.SetId(repositoryPrefix)
+
+	return resourcePullThroughCacheRuleRead(ctx, d, meta)
 }
 
 func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

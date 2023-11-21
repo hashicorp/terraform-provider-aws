@@ -51,7 +51,6 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 func TestAccECRPullThroughCacheRule_credentialArn(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	credentialArn := "arn:aws:secretsmanager:us-east-1:12345789:secret:docker-hub"
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,13 +60,13 @@ func TestAccECRPullThroughCacheRule_credentialArn(t *testing.T) {
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix, credentialArn),
+				Config: testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix, "docker-hub"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
 					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
-					resource.TestCheckResourceAttr(resourceName, "credential_arn", credentialArn),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "registry-1.docker.io"),
+					resource.TestCheckResourceAttrSet(resourceName, "credential_arn"),
 				),
 			},
 			{
@@ -214,10 +213,21 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 }
 func testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix string, credentialArn string) string {
 	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "ecr-pullthroughcache/%[2]s"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = "test"
+}
+
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q
-  upstream_registry_url = "public.ecr.aws"
-  credential_arn = %[2]q
+  upstream_registry_url = "registry-1.docker.io"
+  depends_on = [aws_secretsmanager_secret.test]
+  credential_arn = aws_secretsmanager_secret.test.arn
 }
 `, repositoryPrefix, credentialArn)
 }
