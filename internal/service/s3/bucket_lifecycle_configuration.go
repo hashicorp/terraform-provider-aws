@@ -888,8 +888,10 @@ func flattenLifecycleRuleAbortIncompleteMultipartUpload(u *types.AbortIncomplete
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"days_after_initiation": u.DaysAfterInitiation,
+	m := make(map[string]interface{})
+
+	if u.DaysAfterInitiation != nil {
+		m["days_after_initiation"] = int(aws.ToInt32(u.DaysAfterInitiation))
 	}
 
 	return []interface{}{m}
@@ -900,13 +902,18 @@ func flattenLifecycleRuleExpiration(expiration *types.LifecycleExpiration) []int
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"days":                         expiration.Days,
-		"expired_object_delete_marker": expiration.ExpiredObjectDeleteMarker,
-	}
+	m := make(map[string]interface{})
 
 	if expiration.Date != nil {
 		m["date"] = expiration.Date.Format(time.RFC3339)
+	}
+
+	if expiration.Days != nil {
+		m["days"] = int(aws.ToInt32(expiration.Days))
+	}
+
+	if expiration.ExpiredObjectDeleteMarker != nil {
+		m["expired_object_delete_marker"] = aws.ToBool(expiration.ExpiredObjectDeleteMarker)
 	}
 
 	return []interface{}{m}
@@ -981,9 +988,14 @@ func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.Noncurren
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"newer_noncurrent_versions": strconv.FormatInt(int64(aws.ToInt32(expiration.NewerNoncurrentVersions)), 10),
-		"noncurrent_days":           expiration.NoncurrentDays,
+	m := make(map[string]interface{})
+
+	if expiration.NewerNoncurrentVersions != nil {
+		m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(expiration.NewerNoncurrentVersions)), 10)
+	}
+
+	if expiration.NoncurrentDays != nil {
+		m["noncurrent_days"] = int(aws.ToInt32(expiration.NoncurrentDays))
 	}
 
 	return []interface{}{m}
@@ -998,9 +1010,15 @@ func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.Noncur
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"newer_noncurrent_versions": strconv.FormatInt(int64(aws.ToInt32(transition.NewerNoncurrentVersions)), 10),
-			"noncurrent_days":           transition.NoncurrentDays,
-			"storage_class":             transition.StorageClass,
+			"storage_class": transition.StorageClass,
+		}
+
+		if transition.NewerNoncurrentVersions != nil {
+			m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(transition.NewerNoncurrentVersions)), 10)
+		}
+
+		if transition.NoncurrentDays != nil {
+			m["noncurrent_days"] = int(aws.ToInt32(transition.NoncurrentDays))
 		}
 
 		results = append(results, m)
