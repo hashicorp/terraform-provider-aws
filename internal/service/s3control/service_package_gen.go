@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
+			Name:     "Account Public Access Block",
 		},
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
