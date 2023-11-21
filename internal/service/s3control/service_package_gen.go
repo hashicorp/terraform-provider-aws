@@ -44,6 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
+			Name:     "Account Public Access Block",
 		},
 		{
 			Factory:  resourceAccessPointPolicy,
