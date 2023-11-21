@@ -236,7 +236,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	default:
 		d.Set("is_enabled", false)
 	}
-	d.Set("state", aws.StringValue(output.State))
+	d.Set("state", output.State)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
