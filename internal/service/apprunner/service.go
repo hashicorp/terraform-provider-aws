@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -501,13 +500,17 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if serviceURL == "" {
 		// Alternate lookup required for private services.
-		serviceSummary, err := findServiceByARN(ctx, conn, d.Id())
-
-		if err != nil {
-			return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
+		input := &apprunner.DescribeCustomDomainsInput{
+			ServiceArn: aws.String(d.Id()),
 		}
 
-		serviceURL = aws.ToString(serviceSummary.ServiceUrl)
+		err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
+			serviceURL = aws.ToString(page.DNSTarget)
+		})
+
+		if err != nil {
+			return diag.Errorf("reading App Runner Service (%s) custom domains: %s", d.Id(), err)
+		}
 	}
 
 	d.Set("arn", service.ServiceArn)
@@ -641,46 +644,6 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	}
 
 	return output.Service, nil
-}
-
-func findServiceSummaryByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.ServiceSummary, error) {
-	input := &apprunner.ListServicesInput{}
-
-	return findServiceSummary(ctx, conn, input, func(v *types.ServiceSummary) bool {
-		return aws.ToString(v.ServiceArn) == arn
-	})
-}
-
-func findServiceSummary(ctx context.Context, conn *apprunner.Client, input *apprunner.ListServicesInput, filter tfslices.Predicate[*types.ServiceSummary]) (*types.ServiceSummary, error) {
-	output, err := findServiceSummaries(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findServiceSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListServicesInput, filter tfslices.Predicate[*types.ServiceSummary]) ([]*types.ServiceSummary, error) {
-	var output []*types.ServiceSummary
-
-	pages := apprunner.NewListServicesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.ServiceSummaryList {
-			v := &v
-			if filter(v) {
-				output = append(output, v)
-			}
-		}
-	}
-
-	return output, nil
 }
 
 func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {

@@ -220,30 +220,42 @@ func findCustomDomain(ctx context.Context, conn *apprunner.Client, input *apprun
 func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) ([]*types.CustomDomain, error) {
 	var output []*types.CustomDomain
 
-	pages := apprunner.NewDescribeCustomDomainsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
+	err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
 		for _, v := range page.CustomDomains {
 			v := &v
 			if filter(v) {
 				output = append(output, v)
 			}
 		}
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
+}
+
+func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, fn func(page *apprunner.DescribeCustomDomainsOutput)) error {
+	pages := apprunner.NewDescribeCustomDomainsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return err
+		}
+
+		fn(page)
+	}
+
+	return nil
 }
 
 const (
