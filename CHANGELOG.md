@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_emr_supported_instance_types` ([#34481](https://github.com/hashicorp/terraform-provider-aws/issues/34481))
 * **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
 
 ENHANCEMENTS:
