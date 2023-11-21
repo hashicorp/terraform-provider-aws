@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -496,6 +497,19 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
 	}
 
+	serviceURL := aws.ToString(service.ServiceUrl)
+
+	if serviceURL == "" {
+		// Alternate lookup required for private services.
+		serviceSummary, err := findServiceByARN(ctx, conn, d.Id())
+
+		if err != nil {
+			return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
+		}
+
+		serviceURL = aws.ToString(serviceSummary.ServiceUrl)
+	}
+
 	d.Set("arn", service.ServiceArn)
 	if service.AutoScalingConfigurationSummary != nil {
 		d.Set("auto_scaling_configuration_arn", service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
@@ -519,7 +533,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("service_id", service.ServiceId)
 	d.Set("service_name", service.ServiceName)
-	d.Set("service_url", service.ServiceUrl)
+	d.Set("service_url", serviceURL)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return diag.Errorf("setting source_configuration: %s", err)
 	}
@@ -627,6 +641,46 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	}
 
 	return output.Service, nil
+}
+
+func findServiceSummaryByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.ServiceSummary, error) {
+	input := &apprunner.ListServicesInput{}
+
+	return findServiceSummary(ctx, conn, input, func(v *types.ServiceSummary) bool {
+		return aws.ToString(v.ServiceArn) == arn
+	})
+}
+
+func findServiceSummary(ctx context.Context, conn *apprunner.Client, input *apprunner.ListServicesInput, filter tfslices.Predicate[*types.ServiceSummary]) (*types.ServiceSummary, error) {
+	output, err := findServiceSummaries(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findServiceSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListServicesInput, filter tfslices.Predicate[*types.ServiceSummary]) ([]*types.ServiceSummary, error) {
+	var output []*types.ServiceSummary
+
+	pages := apprunner.NewListServicesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ServiceSummaryList {
+			v := &v
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
