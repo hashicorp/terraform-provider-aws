@@ -187,7 +187,6 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				// Test resource recreation; HealthConfiguration Forces New resource
 				Config: testAccServiceConfig_ImageRepository_updateHealthCheckConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),

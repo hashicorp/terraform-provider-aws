@@ -5,3 +5,7 @@ resource/aws_apprunner_service: Add `network_configuration.ip_address_type` argu
 ```release-note:enhancement
 resource/aws_apprunner_service: Add `source_configuration.code_repository.source_directory` argument to support monorepos
 ```
+
+```release-note:enhancement
+resource/aws_apprunner_service: Allow `health_check_configuration` to be updated in-place
+```

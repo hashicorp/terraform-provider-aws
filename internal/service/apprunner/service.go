@@ -70,7 +70,6 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -78,42 +77,36 @@ func resourceService() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 						"interval": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 						"path": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(0, 51200),
 						},
 						"protocol": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.HealthCheckProtocolTcp,
-							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
 						},
 						"timeout": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      2,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 						"unhealthy_threshold": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
 					},
@@ -545,6 +538,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("auto_scaling_configuration_arn") {
 			input.AutoScalingConfigurationArn = aws.String(d.Get("auto_scaling_configuration_arn").(string))
+		}
+
+		if d.HasChange("health_check_configuration") {
+			input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(d.Get("health_check_configuration").([]interface{}))
 		}
 
 		if d.HasChange("instance_configuration") {
