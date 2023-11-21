@@ -723,6 +723,79 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 	}
 }
 
+func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
+	const resourceName = "aws_cloudwatch_event_rule.test"
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		enabled           bool
+		state             string
+		expectedIsEnabled string
+		expectedState     string
+	}{
+		"enabled": {
+			enabled:           true,
+			state:             eventbridge.RuleStateEnabled,
+			expectedIsEnabled: "true",
+			expectedState:     eventbridge.RuleStateEnabled,
+		},
+
+		"disabled": {
+			enabled:           false,
+			state:             eventbridge.RuleStateDisabled,
+			expectedIsEnabled: "false",
+			expectedState:     eventbridge.RuleStateDisabled,
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			var v eventbridge.DescribeRuleOutput
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:     func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+				CheckDestroy: testAccCheckRuleDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						ExternalProviders: map[string]resource.ExternalProvider{
+							"aws": {
+								Source:            "hashicorp/aws",
+								VersionConstraint: "5.26.0",
+							},
+						},
+						Config: testAccRuleConfig_isEnabled(rName, testcase.enabled),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckRuleExists(ctx, resourceName, &v),
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+					{
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						Config:                   testAccRuleConfig_state(rName, testcase.state),
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectEmptyPlan(),
+							},
+						},
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
 func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
