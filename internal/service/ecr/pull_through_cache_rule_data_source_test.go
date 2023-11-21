@@ -76,6 +76,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 	})
 }
 
+				),
 func testAccPullThroughCacheRuleDataSourceConfig_basic() string {
 	return `
 resource "aws_ecr_pull_through_cache_rule" "test" {
