@@ -178,8 +178,7 @@ The `network_configuration` block supports the following arguments:
 
 * `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [Ingress Configuration](#ingress-configuration) below for more details.
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [Egress Configuration](#egress-configuration) below for more details.
-* `egress_type` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
-* `vpc_connector_arn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+* `ip_address_type` - (Optional) App Runner provides you with the option to choose between Internet Protocol version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
 
 ### Ingress Configuration
 

@@ -59,6 +59,7 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),

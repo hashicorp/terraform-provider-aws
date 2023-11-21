@@ -196,6 +196,12 @@ func resourceService() *schema.Resource {
 								},
 							},
 						},
+						"ip_address_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.IpAddressTypeIpv4,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 					},
 				},
 			},
@@ -805,6 +811,10 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
+	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+		result.IpAddressType = types.IpAddressType(v)
+	}
+
 	return result
 }
 
@@ -1159,6 +1169,7 @@ func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface
 	m := map[string]interface{}{
 		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
 		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
+		"ip_address_type":       config.IpAddressType,
 	}
 
 	return []interface{}{m}
