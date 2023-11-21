@@ -91,6 +91,9 @@ func ResourceRule() *schema.Resource {
 					rawIsEnabled := rawPlan.GetAttr("is_enabled")
 					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
 				},
+				ConflictsWith: []string{
+					"state",
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -131,6 +134,9 @@ func ResourceRule() *schema.Resource {
 						return true
 					}
 					return false
+				},
+				ConflictsWith: []string{
+					"is_enabled",
 				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
