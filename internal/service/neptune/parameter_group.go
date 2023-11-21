@@ -5,8 +5,8 @@ package neptune
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,12 +45,20 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				StateFunc: func(val interface{}) string {
-					return strings.ToLower(val.(string))
-				},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validParamGroupName,
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,
@@ -100,8 +108,9 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	createOpts := neptune.CreateDBParameterGroupInput{
-		DBParameterGroupName:   aws.String(d.Get("name").(string)),
+		DBParameterGroupName:   aws.String(name),
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
@@ -150,6 +159,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
 	d.Set("arn", arn)
 	d.Set("name", describeResp.DBParameterGroups[0].DBParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName)))
 	d.Set("family", describeResp.DBParameterGroups[0].DBParameterGroupFamily)
 	d.Set("description", describeResp.DBParameterGroups[0].Description)
 
