@@ -52,9 +52,9 @@ func Error(service, action, resource, id string, gotError error) error {
 	return errors.New(ProblemStandardMessage(service, action, resource, id, gotError))
 }
 
-// AddError returns diag.Diagnostics with an additional diag.Diagnostic containing
+// AppendDiagError returns diag.Diagnostics with an additional diag.Diagnostic containing
 // an error using a standardized problem message
-func AddError(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
+func AppendDiagError(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
 	return append(diags, newError(service, action, resource, id, gotError))
 }
 

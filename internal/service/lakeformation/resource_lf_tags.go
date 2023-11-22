@@ -270,7 +270,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return create.AddError(diags, names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
 	}
 
 	if output != nil && len(output.Failures) > 0 {
@@ -279,7 +279,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			diags = create.AddError(diags,
+			diags = create.AppendDiagError(diags,
 				names.LakeFormation,
 				create.ErrActionCreating,
 				ResNameLFTags,
@@ -321,11 +321,11 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 	if err != nil {
-		return create.AddError(diags, names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
 	}
 
 	if err := d.Set("lf_tag", tagger.FlattenTags(output)); err != nil {
-		return create.AddError(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 	}
 
 	return diags
@@ -380,7 +380,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return create.AddError(diags, names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
 	}
 
 	return diags
