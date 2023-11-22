@@ -5,7 +5,7 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
     patterns:
       - pattern: diag.FromErr($ERR)
@@ -19,24 +19,32 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
     patterns:
       - pattern: diag.Errorf(...)
     severity: WARNING
 
-  - id: avoid-create_DiagError
-    fix-regex:
-      regex: create\.DiagError\((.*)\)
-      replacement: create.AppendDiagError(diags, \1)
+  - id: avoid-return-create_DiagError
     languages: [go]
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
-    patterns:
-      - pattern: create.DiagError(...)
+    pattern: return create.DiagError($...ARGS)
+    fix: return create.AppendDiagError(diags, $...ARGS)
+    severity: WARNING
+
+  - id: avoid-append-create_DiagError
+    languages: [go]
+    message: Prefer `create.AppendDiagError` to `create.DiagError`
+    paths:
+      exclude:
+        - internal/service/c[l-z]*
+        - internal/service/[d-z]*
+    pattern: append(diags, create.DiagError($...ARGS)...)
+    fix: create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
 
   - id: avoid-create_DiagSettingError
@@ -47,7 +55,7 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
     patterns:
       - pattern: create.DiagSettingError(...)
@@ -61,7 +69,7 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
     patterns:
       - pattern: return $READFN(...)
@@ -80,7 +88,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/c[h-z]*
+        - internal/service/c[l-z]*
         - internal/service/[d-z]*
     patterns:
       - pattern: return nil
