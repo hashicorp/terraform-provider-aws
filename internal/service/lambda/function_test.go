@@ -2525,7 +2525,9 @@ resource "aws_security_group" "test" {
 }
 
 func testAccFunctionConfig_basic(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(policyName, roleName, sgName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -2533,7 +2535,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
-`, funcName)
+`, funcName))
 }
 
 func testAccFunctionConfig_snapStartEnabled(rName string) string {
