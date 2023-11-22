@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -448,11 +449,11 @@ func flattenValue(apiObject awstypes.VariableValue) []interface{} {
 	// only one of these values should be set at a time
 	switch v := apiObject.(type) {
 	case *awstypes.VariableValueMemberBoolValue:
-		m["bool_value"] = v.Value
+		m["bool_value"] = strconv.FormatBool(v.Value)
 	case *awstypes.VariableValueMemberLongValue:
-		m["long_value"] = v.Value
+		m["long_value"] = strconv.FormatInt(v.Value, 10)
 	case *awstypes.VariableValueMemberDoubleValue:
-		m["double_value"] = v.Value
+		m["double_value"] = strconv.FormatFloat(v.Value, 'f', -1, 64)
 	case *awstypes.VariableValueMemberStringValue:
 		m["string_value"] = v.Value
 	}
