@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,6 +219,38 @@ func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Clie
 	}
 
 	return output.AutoScalingConfiguration, nil
+}
+
+func findAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) (*types.AutoScalingConfigurationSummary, error) {
+	output, err := findAutoScalingConfigurationSummaries(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]*types.AutoScalingConfigurationSummary, error) {
+	var output []*types.AutoScalingConfigurationSummary
+
+	pages := apprunner.NewListAutoScalingConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AutoScalingConfigurationSummaryList {
+			v := &v
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 const (

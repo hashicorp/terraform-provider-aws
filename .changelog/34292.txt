@@ -17,3 +17,7 @@ resource/aws_apprunner_service: Correctly set `service_url` for private services
 ```release-note:enhancement
 resource/aws_apprunner_auto_scaling_configuration_version: Add `has_associated_service` and `is_default` attributes
 ```
+
+```release-note:new-resource
+aws_apprunner_default_auto_scaling_configuration_version
+```
