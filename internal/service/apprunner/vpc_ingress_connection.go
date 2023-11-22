@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,6 +85,8 @@ func resourceVPCIngressConnection() *schema.Resource {
 }
 
 func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("name").(string)
@@ -100,19 +103,21 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	output, err := conn.CreateVpcIngressConnection(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner VPC Ingress Connection (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner VPC Ingress Connection (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.VpcIngressConnection.VpcIngressConnectionArn))
 
 	if _, err := waitVPCIngressConnectionCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner VPC Ingress Connection (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Ingress Connection (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceVPCIngressConnectionRead(ctx, d, meta)
+	return append(diags, resourceVPCIngressConnectionRead(ctx, d, meta)...)
 }
 
 func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	connection, err := findVPCIngressConnectionByARN(ctx, conn, d.Id())
@@ -120,31 +125,33 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner VPC Ingress Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", connection.VpcIngressConnectionArn)
 	d.Set("domain_name", connection.DomainName)
 	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(connection.IngressVpcConfiguration)); err != nil {
-		return diag.Errorf("setting ingress_vpc_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ingress_vpc_configuration: %s", err)
 	}
 	d.Set("name", connection.VpcIngressConnectionName)
 	d.Set("service_arn", connection.ServiceArn)
 	d.Set("status", connection.Status)
 
-	return nil
+	return diags
 }
 
 func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceVPCIngressConnectionRead(ctx, d, meta)
+	return resourceVPCIngressConnectionRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
 }
 
 func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner VPC Ingress Connection: %s", d.Id())
@@ -153,18 +160,18 @@ func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVPCIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner VPC Ingress Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Ingress Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcIngressConnection, error) {
