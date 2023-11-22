@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing tyupe
+// AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing type
 // To facilitate querying and waiters on specific attachment types, attachment_type set to required
 
 // @SDKResource("aws_networkmanager_attachment_accepter")
@@ -150,8 +150,8 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		switch attachmentType {
 		case networkmanager.AttachmentTypeVpc:
-			if _, err := waitVPCAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", attachmentID, err)
+			if _, err := waitVPCAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) to be attached: %s", attachmentID, err)
 			}
 
 		case networkmanager.AttachmentTypeSiteToSiteVpn:
