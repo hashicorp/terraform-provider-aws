@@ -160,33 +160,109 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 }
 
 func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v networkmanager.VpcAttachment
-	resourceName := "aws_networkmanager_vpc_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const (
+		resourceName            = "aws_networkmanager_vpc_attachment.test"
+		coreNetworkResourceName = "aws_networkmanager_core_network.test"
+		vpcResourceName         = "aws_vpc.test"
+	)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCAttachmentConfig_basic(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
+	t.Parallel()
+
+	testcases := map[string]struct {
+		acceptanceRequired bool
+	}{
+		"acceptance_required": {
+			acceptanceRequired: true,
 		},
-	})
+
+		"acceptance_not_required": {
+			acceptanceRequired: false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var v networkmanager.VpcAttachment
+			resourceName := "aws_networkmanager_vpc_attachment.test"
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccVPCAttachmentConfig_basic(rName, testcase.acceptanceRequired),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
+							acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
+						),
+						ExpectNonEmptyPlan: true,
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
+	const (
+		resourceName            = "aws_networkmanager_vpc_attachment.test"
+		coreNetworkResourceName = "aws_networkmanager_core_network.test"
+		vpcResourceName         = "aws_vpc.test"
+	)
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		acceptanceRequired bool
+	}{
+		"acceptance_required": {
+			acceptanceRequired: true,
+		},
+
+		"acceptance_not_required": {
+			acceptanceRequired: false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var v networkmanager.VpcAttachment
+			resourceName := "aws_networkmanager_vpc_attachment.test"
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccVPCAttachmentConfig_Attached_basic(rName, testcase.acceptanceRequired),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
+							acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
+						),
+						ExpectNonEmptyPlan: true,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccNetworkManagerVPCAttachment_Attached_disappearsAccepter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkmanager.VpcAttachment
-	resourceName := "aws_networkmanager_vpc_attachment.test"
+	resourceName := "aws_networkmanager_attachment_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -199,7 +275,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 				Config: testAccVPCAttachmentConfig_Attached_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceAttachmentAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -36,7 +36,7 @@ const (
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
 	latestPolicyVersionID = -1
 	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
-	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
+	waitCoreNetworkPolicyCreatedTimeInMinutes = 5
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
