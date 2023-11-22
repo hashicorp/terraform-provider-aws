@@ -26,6 +26,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
 		DeleteWithoutTimeout: resourceClusterSnapshotDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,31 +36,26 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"db_cluster_snapshot_identifier": {
-				Type:         schema.TypeString,
-				ValidateFunc: validClusterSnapshotIdentifier,
-				Required:     true,
-				ForceNew:     true,
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"db_cluster_identifier": {
 				Type:         schema.TypeString,
-				ValidateFunc: validClusterIdentifier,
 				Required:     true,
 				ForceNew:     true,
-			},
-
-			"availability_zones": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
+				ValidateFunc: validClusterIdentifier,
 			},
 			"db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
+			"db_cluster_snapshot_identifier": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validClusterSnapshotIdentifier,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -77,16 +73,20 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"source_db_cluster_snapshot_arn": {
+			"snapshot_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"snapshot_type": {
+			"source_db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"vpc_id": {
