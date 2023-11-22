@@ -619,7 +619,7 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 
 func testAccCheckFeatureDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_feature" {
 				continue

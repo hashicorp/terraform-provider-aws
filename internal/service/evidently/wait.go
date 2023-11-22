@@ -8,13 +8,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitFeatureCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
@@ -31,7 +32,7 @@ func waitFeatureCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatc
 	return nil, err
 }
 
-func waitFeatureUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudwatchevidently.FeatureStatusUpdating},
 		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
@@ -48,7 +49,7 @@ func waitFeatureUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatc
 	return nil, err
 }
 
-func waitFeatureDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudwatchevidently.FeatureStatusAvailable},
 		Target:  []string{},
