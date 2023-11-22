@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -93,14 +91,14 @@ func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	return output.Project, nil
 }
 
-func FindSegmentByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Segment, error) {
-	input := &cloudwatchevidently.GetSegmentInput{
+func FindSegmentByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrARN string) (*awstypes.Segment, error) {
+	input := &evidently.GetSegmentInput{
 		Segment: aws.String(nameOrARN),
 	}
 
-	output, err := conn.GetSegmentWithContext(ctx, input)
+	output, err := conn.GetSegment(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
