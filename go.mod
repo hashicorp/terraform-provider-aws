@@ -7,9 +7,9 @@ require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.48.3
 	github.com/aws/aws-sdk-go-v2 v1.23.1
-	github.com/aws/aws-sdk-go-v2/config v1.25.4
+	github.com/aws/aws-sdk-go-v2/config v1.25.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.5
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.14.1
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.3
@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/emr v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.4
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.4.3
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/xray v1.22.3
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
@@ -137,7 +137,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.1 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.3 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
