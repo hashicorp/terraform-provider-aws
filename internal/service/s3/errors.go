@@ -19,7 +19,7 @@ const (
 	errCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
 	errCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
 	errCodeNoSuchKey                            = "NoSuchKey"
-	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
+	errCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
 	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
 	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
