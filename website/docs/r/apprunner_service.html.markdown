@@ -261,6 +261,10 @@ The `source_code_version` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Runner service.
+* `auto_scaling_configuration_revision` - The revision of this auto scaling configuration. It's unique among all the active configurations that share the same `auto_scaling_configuration_name`.
+* `has_associated_service` - Indicates if this auto scaling configuration has an App Runner service associated with it.
+* `is_default` - Indicates if this auto scaling configuration should be used as the default for a new App Runner service that does not have an auto scaling configuration ARN specified during creation.
+* `latest` - It's set to `true` for the configuration with the highest `auto_scaling_configuration_revision` among all configurations that share the same `auto_scaling_configuration_name`.
 * `service_id` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
 * `service_url` - Subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
 * `status` - Current state of the App Runner service.

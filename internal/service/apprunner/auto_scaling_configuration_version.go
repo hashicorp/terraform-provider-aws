@@ -5,7 +5,6 @@ package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -58,7 +56,6 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 			},
 			"is_default": {
 				Type:     schema.TypeBool,
-				Optional: true,
 				Computed: true,
 			},
 			"latest": {
@@ -94,17 +91,7 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-				// Updating to 'is_default = false' is a ForceNew.
-				if id, attr := d.Id(), d.GetRawConfig().GetAttr("is_default"); id != "" && attr.IsKnown() && !attr.IsNull() && attr.False() {
-					return d.ForceNew("is_default")
-				}
-
-				return nil
-			},
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -141,12 +128,6 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) create: %s", d.Id(), err)
 	}
 
-	if _, ok := d.GetOk("is_default"); ok {
-		if err := setDefaultAutoScalingConfiguration(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
 	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
@@ -180,15 +161,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
-
-	if d.HasChange("is_default") {
-		// Can only update to 'true' -- see CustomizeDiff above.
-		if err := setDefaultAutoScalingConfiguration(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
+	// Tags only.
 	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
@@ -210,20 +183,6 @@ func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.Resou
 
 	if _, err := waitAutoScalingConfigurationDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) delete: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func setDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client, arn string) error {
-	input := &apprunner.UpdateDefaultAutoScalingConfigurationInput{
-		AutoScalingConfigurationArn: aws.String(arn),
-	}
-
-	_, err := conn.UpdateDefaultAutoScalingConfiguration(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("setting App Runner AutoScaling Configuration Version (%s) as the default: %w", arn, err)
 	}
 
 	return nil

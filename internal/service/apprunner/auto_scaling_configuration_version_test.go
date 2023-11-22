@@ -37,6 +37,8 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "has_associated_service", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
 					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
