@@ -677,7 +677,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -749,7 +749,7 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
