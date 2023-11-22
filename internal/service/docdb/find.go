@@ -59,35 +59,6 @@ func findGlobalClusterIDByARN(ctx context.Context, conn *docdb.DocDB, arn string
 	return ""
 }
 
-func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) (*docdb.DBClusterSnapshot, error) {
-	var dBClusterSnapshot *docdb.DBClusterSnapshot
-
-	input := &docdb.DescribeDBClusterSnapshotsInput{
-		DBClusterIdentifier: aws.String(dBClusterSnapshotID),
-	}
-
-	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, dbcss := range page.DBClusterSnapshots {
-			if dbcss == nil {
-				continue
-			}
-
-			if aws.StringValue(dbcss.DBClusterIdentifier) == dBClusterSnapshotID {
-				dBClusterSnapshot = dbcss
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dBClusterSnapshot, err
-}
-
 func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalClusterID string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 

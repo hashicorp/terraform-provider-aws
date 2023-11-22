@@ -26,6 +26,11 @@ const (
 )
 
 const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+)
+
+const (
 	eventSubscriptionStatusActive    = "active"
 	eventSubscriptionStatusCreating  = "creating"
 	eventSubscriptionStatusDeleting  = "deleting"

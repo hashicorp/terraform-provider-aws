@@ -98,25 +98,6 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	return nil
 }
 
-func WaitForDBClusterSnapshotDeletion(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:        []string{DBClusterSnapshotStatusAvailable, DBClusterSnapshotStatusDeleting},
-		Target:         []string{DBClusterSnapshotStatusDeleted},
-		Refresh:        statusDBClusterSnapshotRefreshFunc(ctx, conn, dBClusterSnapshotID),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for DocumentDB Cluster Snapshot (%s) deletion", dBClusterSnapshotID)
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
-}
-
 func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{GlobalClusterStatusAvailable, GlobalClusterStatusDeleting},

@@ -28,19 +28,3 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 		return globalCluster, aws.StringValue(globalCluster.Status), nil
 	}
 }
-
-func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dBClusterSnapshot, err := FindDBClusterSnapshotById(ctx, conn, dBClusterSnapshotID)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) || dBClusterSnapshot == nil {
-			return nil, DBClusterSnapshotStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("reading DocumentDB Cluster Snapshot (%s): %w", dBClusterSnapshotID, err)
-		}
-
-		return dBClusterSnapshot, aws.StringValue(dBClusterSnapshot.Status), nil
-	}
-}
