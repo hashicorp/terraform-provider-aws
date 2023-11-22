@@ -257,21 +257,25 @@ To prevent this type of Terraform CLI error, the resource implementation should 
 In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:
 
 ```go
-func resourceServiceThingCreate(d *schema.ResourceData, meta interface{}) error {
-    /* ... */
+func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+ 	var diags diag.Diagnostics
 
-    return resourceServiceThingRead(d, meta)
+   /* ... */
+
+    return append(diags, resourceServiceThingRead(ctx, d, meta)...)
 }
 
-func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
-    /* ... */
+func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  	var diags diag.Diagnostics
+
+   /* ... */
 
     output, err := conn.DescribeServiceThing(input)
 
     if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
         log.Printf("[WARN] {Service} {Thing} (%s) not found, removing from state", d.Id())
         d.SetId("")
-        return nil
+        return diags
     }
 
     if err != nil {
