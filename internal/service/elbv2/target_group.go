@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -35,6 +36,22 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+func healthCheckProtocolEnumValues() []string {
+	return []string{
+		elbv2.ProtocolEnumHttp,
+		elbv2.ProtocolEnumHttps,
+		elbv2.ProtocolEnumTcp,
+	}
+}
+
+func protocolVersionEnumValues() []string {
+	return []string{
+		"GRPC",
+		"HTTP1",
+		"HTTP2",
+	}
+}
+
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")
@@ -49,9 +66,10 @@ func ResourceTargetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
+			lambdaTargetHealthCheckProtocolCustomizeDiff,
+			nonLambdaValidationCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -94,9 +112,10 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(2, 10),
 						},
 						"interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  30,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      30,
+							ValidateFunc: validation.IntBetween(5, 300),
 						},
 						"matcher": {
 							Type:     schema.TypeString,
@@ -104,10 +123,13 @@ func ResourceTargetGroup() *schema.Resource {
 							Optional: true,
 						},
 						"path": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validTargetGroupHealthCheckPath,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 1024),
+								validTargetGroupHealthCheckPath,
+							),
 						},
 						"port": {
 							Type:             schema.TypeString,
@@ -123,11 +145,7 @@ func ResourceTargetGroup() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ProtocolEnumHttp,
-								elbv2.ProtocolEnumHttps,
-								elbv2.ProtocolEnumTcp,
-							}, true),
+							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 						"timeout": {
@@ -193,10 +211,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc:  validTargetGroupNamePrefix,
 			},
 			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 65535),
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.IntBetween(1, 65535),
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 			"preserve_client_ip": {
 				Type:             nullable.TypeNullableBool,
@@ -206,10 +225,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"protocol": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 			"protocol_version": {
 				Type:     schema.TypeString,
@@ -219,12 +239,12 @@ func ResourceTargetGroup() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"GRPC",
-					"HTTP1",
-					"HTTP2",
-				}, true),
+				ValidateFunc: validation.StringInSlice(protocolVersionEnumValues(), true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Don't suppress on creation, so that warnings are actually called
+					if d.Id() == "" {
+						return false
+					}
 					if d.Get("target_type").(string) == elbv2.TargetTypeEnumLambda {
 						return true
 					}
@@ -337,9 +357,10 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elbv2.TargetTypeEnum_Values(), false),
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 			},
 		},
 	}
@@ -347,6 +368,10 @@ func ResourceTargetGroup() *schema.Resource {
 
 func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		// Don't suppress on creation, so that warnings are actually called
+		if d.Id() == "" {
+			return false
+		}
 		return d.Get("target_type").(string) == t
 	}
 }
@@ -370,6 +395,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
 	}
 
+	runtimeValidations(d, &diags)
+
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -377,17 +404,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-		if _, ok := d.GetOk("port"); !ok {
-			return sdkdiag.AppendErrorf(diags, "port should be set when target type is %s", d.Get("target_type").(string))
-		}
-
-		if _, ok := d.GetOk("protocol"); !ok {
-			return sdkdiag.AppendErrorf(diags, "protocol should be set when target type is %s", d.Get("target_type").(string))
-		}
-
-		if _, ok := d.GetOk("vpc_id"); !ok {
-			return sdkdiag.AppendErrorf(diags, "vpc_id should be set when target type is %s", d.Get("target_type").(string))
-		}
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
 		input.Protocol = aws.String(d.Get("protocol").(string))
 		switch d.Get("protocol").(string) {
@@ -659,6 +675,10 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", d.Id(), err)
+	}
+
+	if !d.IsNewResource() {
+		runtimeValidations(d, &diags)
 	}
 
 	if err := flattenTargetGroupResource(ctx, d, meta, outputRaw.(*elbv2.TargetGroup)); err != nil {
@@ -1001,13 +1021,9 @@ func FindTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descri
 
 func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if len(value) > 1024 {
+	if !strings.HasPrefix(value, "/") {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 1024 characters: %q", k, value))
-	}
-	if len(value) > 0 && !strings.HasPrefix(value, "/") {
-		errors = append(errors, fmt.Errorf(
-			"%q must begin with a '/' character: %q", k, value))
+			"%q must begin with a '/' character, got %q", k, value))
 	}
 	return
 }
@@ -1062,26 +1078,30 @@ func TargetGroupSuffixFromARN(arn *string) string {
 func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
+	targetType := aws.StringValue(targetGroup.TargetType)
+
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("ip_address_type", targetGroup.IpAddressType)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
-	d.Set("target_type", targetGroup.TargetType)
+	d.Set("target_type", targetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)
 	}
 
-	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
-		d.Set("vpc_id", targetGroup.VpcId)
+	if _, ok := d.GetOk("port"); targetGroup.Port != nil || ok {
 		d.Set("port", targetGroup.Port)
+	}
+	if _, ok := d.GetOk("protocol"); targetGroup.Protocol != nil || ok {
 		d.Set("protocol", targetGroup.Protocol)
 	}
-
-	switch d.Get("protocol").(string) {
-	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+	if _, ok := d.GetOk("protocol_version"); targetGroup.ProtocolVersion != nil || ok {
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
+	if _, ok := d.GetOk("vpc_id"); targetGroup.VpcId != nil || ok {
+		d.Set("vpc_id", targetGroup.VpcId)
 	}
 
 	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
@@ -1245,39 +1265,103 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 	return []interface{}{m}, nil
 }
 
-func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	protocol := diff.Get("protocol").(string)
-
-	// Network Load Balancers have many special quirks to them.
-	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
+func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	healthCheck := make(map[string]any)
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-		healthCheck := healthChecks[0].(map[string]interface{})
-		protocol := healthCheck["protocol"].(string)
+		healthCheck = healthChecks[0].(map[string]interface{})
+	}
 
-		if protocol == elbv2.ProtocolEnumTcp {
-			// Cannot set custom matcher on TCP health checks
-			if m := healthCheck["matcher"].(string); m != "" {
-				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
-			}
-			// Cannot set custom path on TCP health checks
-			if m := healthCheck["path"].(string); m != "" {
-				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
-			}
+	if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
+		if m := healthCheck["matcher"].(string); m != "" {
+			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+				"health_check.matcher",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+			)
+		}
+
+		if m := healthCheck["path"].(string); m != "" {
+			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+				"health_check.path",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+			)
 		}
 	}
 
-	if strings.Contains(protocol, elbv2.ProtocolEnumHttp) {
-		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-			healthCheck := healthChecks[0].(map[string]interface{})
-			// HTTP(S) Target Groups cannot use TCP health checks
-			if p := healthCheck["protocol"].(string); strings.ToLower(p) == "tcp" {
-				return fmt.Errorf("HTTP Target Groups cannot use TCP health checks")
-			}
+	protocol := diff.Get("protocol").(string)
+
+	switch protocol {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+				"protocol",
+				protocol,
+			)
 		}
 	}
 
 	if diff.Id() == "" {
 		return nil
+	}
+
+	return nil
+}
+
+func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	if diff.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		healthCheck := healthChecks[0].(map[string]interface{})
+		healthCheckProtocol := healthCheck["protocol"].(string)
+
+		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+				"target_type",
+				elbv2.TargetTypeEnumLambda,
+			)
+		}
+	}
+
+	return nil
+}
+
+func nonLambdaValidationCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	targetType := diff.Get("target_type").(string)
+	if targetType == elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	config := diff.GetRawConfig()
+
+	if v := config.GetAttr("port"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"port",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("protocol"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"protocol",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("vpc_id"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"vpc_id",
+			"target_type",
+			targetType,
+		)
 	}
 
 	return nil
@@ -1309,4 +1393,116 @@ func flattenLbTargetGroupHealthCheck(targetGroup *elbv2.TargetGroup) []interface
 	}
 
 	return []interface{}{m}
+}
+
+func pathString(path cty.Path) string {
+	var buf strings.Builder
+	for i, step := range path {
+		switch x := step.(type) {
+		case cty.GetAttrStep:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(x.Name)
+		case cty.IndexStep:
+			val := x.Key
+			typ := val.Type()
+			var s string
+			switch {
+			case typ == cty.String:
+				s = val.AsString()
+			case typ == cty.Number:
+				num := val.AsBigFloat()
+				s = num.String()
+			default:
+				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+			}
+			buf.WriteString(fmt.Sprintf("[%s]", s))
+		default:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+		}
+	}
+	return buf.String()
+}
+
+func runtimeValidations(d *schema.ResourceData, diags *diag.Diagnostics) {
+	targetType := d.Get("target_type").(string)
+	if targetType == elbv2.TargetTypeEnumLambda {
+		if _, ok := d.GetOk("protocol"); ok {
+			path := cty.GetAttrPath("protocol")
+			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("protocol_version"); ok {
+			path := cty.GetAttrPath("protocol_version")
+			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("port"); ok {
+			path := cty.GetAttrPath("port")
+			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if _, ok := d.GetOk("vpc_id"); ok {
+			path := cty.GetAttrPath("vpc_id")
+			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+					pathString(path),
+					"target_type",
+					elbv2.TargetTypeEnumLambda),
+			))
+		}
+
+		if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+			healthCheck := healthChecks[0].(map[string]interface{})
+			path := cty.GetAttrPath("health_check")
+
+			if healthCheckProtocol := healthCheck["protocol"].(string); healthCheckProtocol != "" {
+				path := path.GetAttr("protocol")
+				*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+					"Invalid Attribute Combination",
+					fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.", pathString(path), "target_type", elbv2.TargetTypeEnumLambda),
+				))
+			}
+		}
+	} else {
+		if _, ok := d.GetOk("protocol_version"); ok {
+			path := cty.GetAttrPath("protocol_version")
+			protocol := d.Get("protocol").(string)
+			switch protocol {
+			case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+				// Noop
+			default:
+				*diags = append(*diags, errs.NewAttributeWarningDiagnostic(path,
+					"Invalid Attribute Combination",
+					fmt.Sprintf("Attribute %q cannot be specified when %q is %q.\n\nThis will be an error in a future version.",
+						pathString(path),
+						"protocol",
+						protocol),
+				))
+			}
+		}
+	}
 }
