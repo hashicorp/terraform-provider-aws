@@ -513,7 +513,7 @@ type resourceBotLocaleData struct {
 
 type voiceSettingsData struct {
 	VoiceId types.String `tfsdk:"voice_id"`
-	Engine  types.String `tfsdk:"voice_engine"`
+	Engine  types.String `tfsdk:"engine"`
 }
 
 var voiceSettingsAttrTypes = map[string]attr.Type{
