@@ -5,7 +5,8 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: diag.FromErr($ERR)
     severity: WARNING
@@ -18,7 +19,8 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: diag.Errorf(...)
     severity: WARNING
@@ -31,7 +33,8 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: create.DiagError(...)
     severity: WARNING
@@ -44,7 +47,8 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: create.DiagSettingError(...)
     severity: WARNING
@@ -57,7 +61,8 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: return $READFN(...)
       - metavariable-regex:
@@ -75,7 +80,8 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/[c-z]*
+        - internal/service/c[h-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: return nil
       - pattern-not-inside: |
