@@ -19,6 +19,11 @@ const (
 )
 
 const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+)
+
+const (
 	clusterStatusAvailable                  = "available"
 	clusterStatusBackingUp                  = "backing-up"
 	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
