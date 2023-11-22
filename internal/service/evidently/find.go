@@ -68,14 +68,14 @@ func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client,
 	return output.Launch, nil
 }
 
-func FindProjectByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Project, error) {
-	input := &cloudwatchevidently.GetProjectInput{
+func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrARN string) (*awstypes.Project, error) {
+	input := &evidently.GetProjectInput{
 		Project: aws.String(nameOrARN),
 	}
 
-	output, err := conn.GetProjectWithContext(ctx, input)
+	output, err := conn.GetProject(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -131,41 +131,41 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 	return nil, err
 }
 
-func waitProjectCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
+func waitProjectCreated(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{cloudwatchevidently.ProjectStatusAvailable},
+		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
 		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
+	if output, ok := outputRaw.(*awstypes.Project); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitProjectUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) { //nolint:unparam
+func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.ProjectStatusUpdating},
-		Target:  []string{cloudwatchevidently.ProjectStatusAvailable},
+		Pending: enum.Slice(awstypes.ProjectStatusUpdating),
+		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
 		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
+	if output, ok := outputRaw.(*awstypes.Project); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitProjectDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
+func waitProjectDeleted(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudwatchevidently.ProjectStatusAvailable},
 		Target:  []string{},
@@ -175,7 +175,7 @@ func waitProjectDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatc
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
+	if output, ok := outputRaw.(*awstypes.Project); ok {
 		return output, err
 	}
 
