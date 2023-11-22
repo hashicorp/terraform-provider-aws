@@ -28,6 +28,7 @@ BUG FIXES:
 * resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
 * resource/aws_apprunner_service: Correctly set `service_url` for private services ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
 * resource/aws_lb_target_group: Adds plan- and apply-time validation for invalid parameter combinations ([#34488](https://github.com/hashicorp/terraform-provider-aws/issues/34488))
+* resource/aws_lexv2models_bot: Properly send `type` argument on create and update when configured ([#34524](https://github.com/hashicorp/terraform-provider-aws/issues/34524))
 * resource/aws_pipes_pipe: Fix error when zero value is sent to `source_parameters` on update ([#34487](https://github.com/hashicorp/terraform-provider-aws/issues/34487))
 
 ## 5.26.0 (November 16, 2023)
