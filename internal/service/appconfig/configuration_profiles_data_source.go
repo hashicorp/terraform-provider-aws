@@ -38,6 +38,8 @@ const (
 )
 
 func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	appId := d.Get("application_id").(string)
 
@@ -55,7 +57,7 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 
 	d.Set("configuration_profile_ids", aws.StringValueSlice(configIds))
 
-	return nil
+	return diags
 }
 
 func findConfigurationProfileSummariesByApplication(ctx context.Context, conn *appconfig.AppConfig, applicationId string) ([]*appconfig.ConfigurationProfileSummary, error) {

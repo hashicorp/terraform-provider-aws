@@ -85,6 +85,8 @@ const (
 )
 
 func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appId := d.Get("application_id").(string)
@@ -133,7 +135,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.AppConfig, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {
