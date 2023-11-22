@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -269,6 +270,8 @@ const (
 )
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	budgetName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -281,7 +284,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
-		return create.DiagError(names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+		return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
@@ -297,11 +300,11 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("budget_type", budget.BudgetType)
 
 	if err := d.Set("budget_limit", flattenSpend(budget.BudgetLimit)); err != nil {
-		return diag.Errorf("setting budget_spend: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting budget_spend: %s", err)
 	}
 
 	if err := d.Set("calculated_spend", flattenCalculatedSpend(budget.CalculatedSpend)); err != nil {
-		return diag.Errorf("setting calculated_spend: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting calculated_spend: %s", err)
 	}
 
 	d.Set("budget_exceeded", false)
@@ -309,11 +312,11 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if aws.StringValue(budget.BudgetLimit.Unit) == aws.StringValue(budget.CalculatedSpend.ActualSpend.Unit) {
 			bLimit, err := strconv.ParseFloat(aws.StringValue(budget.BudgetLimit.Amount), 64)
 			if err != nil {
-				return create.DiagError(names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+				return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
 			}
 			bSpend, err := strconv.ParseFloat(aws.StringValue(budget.CalculatedSpend.ActualSpend.Amount), 64)
 			if err != nil {
-				return create.DiagError(names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+				return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
 			}
 
 			if bLimit < bSpend {
@@ -327,7 +330,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", budget.BudgetName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
 
-	return nil
+	return diags
 }
 
 func flattenCalculatedSpend(apiObject *budgets.CalculatedSpend) []interface{} {
