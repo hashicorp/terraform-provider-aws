@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_apprunner_service: Add `network_configuration.ip_address_type` argument ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
 * resource/aws_apprunner_service: Add `source_configuration.code_repository.source_directory` argument to support monorepos ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
 * resource/aws_apprunner_service: Allow `health_check_configuration` to be updated in-place ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_cloudwatch_event_rule: Add `state` parameter and deprecate `is_enabled` parameter ([#34510](https://github.com/hashicorp/terraform-provider-aws/issues/34510))
 * resource/aws_elaticache_replication_group: Add `auth_token_update_strategy` argument ([#34460](https://github.com/hashicorp/terraform-provider-aws/issues/34460))
 * resource/aws_lambda_function: Add support for `java21` `runtime` value ([#34476](https://github.com/hashicorp/terraform-provider-aws/issues/34476))
 * resource/aws_lambda_layer_version: Add support for `java21` `compatible_runtimes` value ([#34476](https://github.com/hashicorp/terraform-provider-aws/issues/34476))
