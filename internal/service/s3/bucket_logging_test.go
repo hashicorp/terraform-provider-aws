@@ -33,13 +33,14 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLoggingConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 				),
 			},
 			{
