@@ -4,7 +4,8 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     pattern: diag.FromErr($ERR)
@@ -16,7 +17,8 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     pattern: diag.Errorf($...ARGS)
@@ -28,7 +30,8 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     pattern: return create.DiagError($...ARGS)
@@ -51,7 +54,8 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     pattern: create.DiagSettingError($...ARGS)
@@ -63,7 +67,8 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     patterns:
@@ -81,7 +86,8 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/cloud[f-z]*
+        - internal/service/cloudf[r-z]*
+        - internal/service/cloud[g-z]*
         - internal/service/c[m-z]*
         - internal/service/[d-z]*
     patterns:
