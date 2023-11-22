@@ -95,7 +95,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	out, err := findConfigurationProfileByApplicationAndProfile(ctx, conn, appId, profileId)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
 	}
 
 	d.SetId(ID)
@@ -119,12 +119,12 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set("type", out.Type)
 
 	if err := d.Set("validator", flattenValidators(out.Validators)); err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -132,7 +132,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
 	return diags

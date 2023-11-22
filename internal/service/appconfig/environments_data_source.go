@@ -48,7 +48,7 @@ func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := findEnvironmentsByApplication(ctx, conn, appID)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
 	}
 
 	d.SetId(appID)

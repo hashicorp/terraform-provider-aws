@@ -334,7 +334,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -366,7 +366,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		p, err = getPolicy(ctx, d, meta)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
 	}
 
 	if p == nil && !d.IsNewResource() {
@@ -422,7 +422,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
 	}
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
@@ -433,7 +433,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 	p, err := getPolicy(ctx, d, meta)
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 	if p == nil {
 		return diags
@@ -468,7 +468,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 
 	return diags

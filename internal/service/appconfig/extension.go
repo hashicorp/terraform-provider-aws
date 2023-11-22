@@ -145,11 +145,11 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := conn.CreateExtensionWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
 	}
 
 	d.SetId(aws.StringValue(out.Id))
@@ -171,7 +171,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -213,11 +213,11 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		out, err := conn.UpdateExtensionWithContext(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
 		}
 
 		if out == nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
 		}
 	}
 
@@ -234,7 +234,7 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
 	}
 
 	return diags
