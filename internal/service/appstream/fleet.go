@@ -346,7 +346,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.ComputeCapacityStatus != nil {
 		if err = d.Set("compute_capacity", []interface{}{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
 		}
 	} else {
 		d.Set("compute_capacity", nil)
@@ -359,7 +359,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.DomainJoinInfo != nil {
 		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(fleet.DomainJoinInfo)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
 		}
 	} else {
 		d.Set("domain_join_info", nil)
@@ -379,7 +379,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.VpcConfig != nil {
 		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "vpc_config", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "vpc_config", err)
 		}
 	} else {
 		d.Set("vpc_config", nil)

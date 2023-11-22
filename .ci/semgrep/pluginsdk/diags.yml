@@ -36,6 +36,19 @@ rules:
       - pattern: create.DiagError(...)
     severity: WARNING
 
+  - id: avoid-create_DiagSettingError
+    fix-regex:
+      regex: create\.DiagSettingError\((.*)\)
+      replacement: create.AppendDiagSettingError(diags, \1)
+    languages: [go]
+    message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
+    paths:
+      exclude:
+        - internal/service/[b-z]*
+    patterns:
+      - pattern: create.DiagSettingError(...)
+    severity: WARNING
+
   - id: append-Read-to-diags
     fix-regex:
       regex: return (resource\w+Read\(.*\))

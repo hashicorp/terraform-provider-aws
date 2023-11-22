@@ -390,10 +390,10 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("service_namespace", p.ServiceNamespace)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
+		return create.AppendDiagSettingError(diags, names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
 	}
 	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
+		return create.AppendDiagSettingError(diags, names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
 	}
 
 	return diags

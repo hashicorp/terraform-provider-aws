@@ -81,10 +81,22 @@ func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, i
 	)
 }
 
-// DiagSettingError returns an errors.Error with a standardized error message when setting
-// arguments and attributes values.
+func AppendDiagSettingError(diags diag.Diagnostics, service, resource, id, argument string, gotError error) diag.Diagnostics {
+	return append(diags,
+		diagSettingError(service, resource, id, argument, gotError),
+	)
+}
+
+// DiagSettingError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
+// with a standardized error message when setting arguments and attributes values.
 func DiagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostics {
-	return DiagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
+	return diag.Diagnostics{
+		diagSettingError(service, resource, id, argument, gotError),
+	}
+}
+
+func diagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostic {
+	return diagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
 }
 
 func AppendDiagWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
