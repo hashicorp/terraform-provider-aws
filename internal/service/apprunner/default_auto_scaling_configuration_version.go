@@ -30,7 +30,7 @@ func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 
 type defaultAutoScalingConfigurationVersionResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *defaultAutoScalingConfigurationVersionResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -83,11 +83,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 
 	conn := r.Meta().AppRunnerClient(ctx)
 
-	input := &apprunner.ListAutoScalingConfigurationsInput{}
-
-	output, err := findAutoScalingConfigurationSummary(ctx, conn, input, func(v *awstypes.AutoScalingConfigurationSummary) bool {
-		return aws.ToBool(v.IsDefault)
-	})
+	output, err := findDefaultAutoScalingConfigurationSummary(ctx, conn)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -102,7 +98,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 		return
 	}
 
-	data.AutoScalingConfigurationARN = flex.StringToFramework(ctx, output.AutoScalingConfigurationArn)
+	data.AutoScalingConfigurationARN = fwtypes.ARNValue(aws.ToString(output.AutoScalingConfigurationArn))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -131,6 +127,14 @@ func (*defaultAutoScalingConfigurationVersionResource) Delete(context.Context, r
 	// NoOp.
 }
 
+func findDefaultAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Client) (*awstypes.AutoScalingConfigurationSummary, error) {
+	input := &apprunner.ListAutoScalingConfigurationsInput{}
+
+	return findAutoScalingConfigurationSummary(ctx, conn, input, func(v *awstypes.AutoScalingConfigurationSummary) bool {
+		return string(v.Status) == autoScalingConfigurationStatusActive && aws.ToBool(v.IsDefault)
+	})
+}
+
 func putDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client, arn string) error {
 	input := &apprunner.UpdateDefaultAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(arn),
@@ -146,6 +150,6 @@ func putDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Cli
 }
 
 type defaultAutoScalingConfigurationVersionResourceModel struct {
-	AutoScalingConfigurationARN types.String `tfsdk:"auto_scaling_configuration_arn"`
+	AutoScalingConfigurationARN fwtypes.ARN  `tfsdk:"auto_scaling_configuration_arn"`
 	ID                          types.String `tfsdk:"id"`
 }

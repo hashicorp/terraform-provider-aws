@@ -13,11 +13,13 @@ var (
 	ResourceVPCConnector                    = resourceVPCConnector
 	ResourceVPCIngressConnection            = resourceVPCIngressConnection
 
-	FindAutoScalingConfigurationByARN   = findAutoScalingConfigurationByARN
-	FindConnectionByName                = findConnectionByName
-	FindCustomDomainByTwoPartKey        = findCustomDomainByTwoPartKey
-	FindObservabilityConfigurationByARN = findObservabilityConfigurationByARN
-	FindServiceByARN                    = findServiceByARN
-	FindVPCConnectorByARN               = findVPCConnectorByARN
-	FindVPCIngressConnectionByARN       = findVPCIngressConnectionByARN
+	FindAutoScalingConfigurationByARN          = findAutoScalingConfigurationByARN
+	FindConnectionByName                       = findConnectionByName
+	FindCustomDomainByTwoPartKey               = findCustomDomainByTwoPartKey
+	FindDefaultAutoScalingConfigurationSummary = findDefaultAutoScalingConfigurationSummary
+	FindObservabilityConfigurationByARN        = findObservabilityConfigurationByARN
+	FindServiceByARN                           = findServiceByARN
+	FindVPCConnectorByARN                      = findVPCConnectorByARN
+	FindVPCIngressConnectionByARN              = findVPCIngressConnectionByARN
+	PutDefaultAutoScalingConfiguration         = putDefaultAutoScalingConfiguration
 )

@@ -61,16 +61,18 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		}
 
 		for _, v := range output.AutoScalingConfigurationSummaryList {
+			arn := aws.ToString(v.AutoScalingConfigurationArn)
+
 			// Skip DefaultConfigurations as deletion not supported by the AppRunner service
 			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19840
-			if name := aws.ToString(v.AutoScalingConfigurationName); name == "DefaultConfiguration" {
-				log.Printf("[INFO] Skipping App Runner AutoScaling Configuration: %s", name)
+			if aws.ToBool(v.IsDefault) {
+				log.Printf("[INFO] Skipping App Runner Default AutoScaling Configuration: %s", arn)
 				continue
 			}
 
 			r := resourceAutoScalingConfigurationVersion()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.AutoScalingConfigurationArn))
+			d.SetId(arn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
