@@ -74,6 +74,12 @@ func ResourceJobDefinition() *schema.Resource {
 				ValidateFunc: validJobContainerProperties,
 			},
 
+			"deregister_on_new_revision": {
+				Type:     schema.TypeBool,
+				Default:  true,
+				Optional: true,
+			},
+
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -120,21 +126,18 @@ func ResourceJobDefinition() *schema.Resource {
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempts": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 
 						"evaluate_on_exit": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MinItems: 0,
 							MaxItems: 5,
 							Elem: &schema.Resource{
@@ -142,7 +145,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"action": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 										StateFunc: func(v interface{}) string {
 											return strings.ToLower(v.(string))
 										},
@@ -152,7 +154,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_exit_code": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
@@ -162,7 +163,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -172,7 +172,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_status_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -201,14 +200,12 @@ func ResourceJobDefinition() *schema.Resource {
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempt_duration_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntAtLeast(60),
 						},
 					},
@@ -218,7 +215,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(batch.JobDefinitionType_Values(), true),
 			},
 		},
@@ -336,6 +332,8 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting container_properties: %s", err)
 	}
 
+	d.Set("deregister_on_new_revision", d.Get("deregister_on_new_revision").(bool))
+
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 
 	if err != nil {
@@ -442,11 +440,21 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		// arn contains revision which is used in the Read call
+		currentARN := d.Get("arn").(string)
 		d.SetId(aws.StringValue(jd.JobDefinitionArn))
 		d.Set("revision", jd.Revision)
-	}
 
-	// Tags only.
+		if v := d.Get("deregister_on_new_revision"); v == true {
+			log.Printf("[DEBUG] Deleting Previous Batch Job Definition: %s", currentARN)
+			_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
+				JobDefinition: aws.String(currentARN),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
+			}
+		}
+	}
 
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }

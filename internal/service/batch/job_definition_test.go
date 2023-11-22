@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -85,7 +86,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_attributes(rName, 2, true, 3, 120),
+				Config: testAccJobDefinitionConfig_attributes(rName, 2, true, 3, 120, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
@@ -106,16 +107,25 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccJobDefinitionConfig_attributes(rName, 2, true, 4, 120, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousRegistered(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+				),
+			},
+			{
 				Config: testAccJobDefinitionConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "container"),
@@ -125,11 +135,15 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 			{
-				Config: testAccJobDefinitionConfig_attributes(rName, 1, false, 1, 60),
+				Config: testAccJobDefinitionConfig_attributes(rName, 1, false, 1, 60, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -139,7 +153,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.attempts", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.0.attempt_duration_seconds", "60"),
@@ -626,6 +640,78 @@ func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
+func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Batch Job Queue ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+
+		previousARN := parseJobDefinitionPreviousARN(rs.Primary.ID)
+
+		jobDefinition, err := tfbatch.FindJobDefinitionByARN(ctx, conn, previousARN)
+
+		if err != nil {
+			return err
+		}
+
+		if aws.StringValue(jobDefinition.Status) != "ACTIVE" {
+			return fmt.Errorf("Batch Job Definition %s is a previous revision that is not ACTIVE", previousARN)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckJobDefinitionPreviousDeregistered(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Batch Job Queue ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+
+		previousARN := parseJobDefinitionPreviousARN(rs.Primary.ID)
+
+		_, err := tfbatch.FindJobDefinitionByARN(ctx, conn, previousARN)
+
+		// FindJobDefinitionByARN returns an error if the job is INACTIVE (deregistered)
+		if err != nil {
+			if err.Error() == "INACTIVE" {
+				return nil
+			}
+			return err
+		}
+
+		return fmt.Errorf("Batch Job Definition %s is a previous revision that is still ACTIVE", previousARN)
+	}
+}
+
+func parseJobDefinitionPreviousARN(currentARN string) (previousARN string) {
+	re := regexache.MustCompile(`job-definition/.*?:(.*)`)
+	revisionCurrentStr := re.FindStringSubmatch(currentARN)[1]
+
+	revisionCurrent, _ := strconv.Atoi(revisionCurrentStr)
+	revisionPrevious := revisionCurrent - 1
+
+	re = regexache.MustCompile(`^(arn:aws:batch:[a-z0-9-]+:[0-9]+:job-definition/[a-z0-9-]+):`)
+	arnPrefix := re.FindStringSubmatch(currentARN)[1]
+	previousARN = fmt.Sprintf("%s:%d", arnPrefix, revisionPrevious)
+
+	return previousARN
+}
+
 func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -732,7 +818,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_attributes(rName string, sp int, pt bool, rsa int, timeout int) string {
+func testAccJobDefinitionConfig_attributes(rName string, sp int, pt bool, rsa int, timeout int, dereg bool) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
@@ -756,11 +842,13 @@ resource "aws_batch_job_definition" "test" {
     attempt_duration_seconds = %[5]d
   }
 
+  deregister_on_new_revision = %[6]t
+
   platform_capabilities = [
     "EC2",
   ]
 }
-`, rName, sp, pt, rsa, timeout)
+`, rName, sp, pt, rsa, timeout, dereg)
 }
 
 func testAccJobDefinitionConfig_ContainerProperties_defaultsFargate(rName string) string {

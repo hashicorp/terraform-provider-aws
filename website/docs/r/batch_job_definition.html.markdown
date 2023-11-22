@@ -170,6 +170,7 @@ The following arguments are optional:
 
 * `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
+* `deregister_on_new_revision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left `ACTIVE`. Defaults to `true`.
 * `node_properties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
