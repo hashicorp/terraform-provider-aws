@@ -76,10 +76,10 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 	input := &s3control.PutPublicAccessBlockInput{
 		AccountId: aws.String(accountID),
 		PublicAccessBlockConfiguration: &types.PublicAccessBlockConfiguration{
-			BlockPublicAcls:       d.Get("block_public_acls").(bool),
-			BlockPublicPolicy:     d.Get("block_public_policy").(bool),
-			IgnorePublicAcls:      d.Get("ignore_public_acls").(bool),
-			RestrictPublicBuckets: d.Get("restrict_public_buckets").(bool),
+			BlockPublicAcls:       aws.Bool(d.Get("block_public_acls").(bool)),
+			BlockPublicPolicy:     aws.Bool(d.Get("block_public_policy").(bool)),
+			IgnorePublicAcls:      aws.Bool(d.Get("ignore_public_acls").(bool)),
+			RestrictPublicBuckets: aws.Bool(d.Get("restrict_public_buckets").(bool)),
 		},
 	}
 
@@ -130,10 +130,10 @@ func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	publicAccessBlockConfiguration := &types.PublicAccessBlockConfiguration{
-		BlockPublicAcls:       d.Get("block_public_acls").(bool),
-		BlockPublicPolicy:     d.Get("block_public_policy").(bool),
-		IgnorePublicAcls:      d.Get("ignore_public_acls").(bool),
-		RestrictPublicBuckets: d.Get("restrict_public_buckets").(bool),
+		BlockPublicAcls:       aws.Bool(d.Get("block_public_acls").(bool)),
+		BlockPublicPolicy:     aws.Bool(d.Get("block_public_policy").(bool)),
+		IgnorePublicAcls:      aws.Bool(d.Get("ignore_public_acls").(bool)),
+		RestrictPublicBuckets: aws.Bool(d.Get("restrict_public_buckets").(bool)),
 	}
 	input := &s3control.PutPublicAccessBlockInput{
 		AccountId:                      aws.String(d.Id()),
