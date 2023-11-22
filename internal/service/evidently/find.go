@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +24,7 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client
 
 	output, err := conn.GetFeature(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -41,15 +42,15 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client
 	return output.Feature, nil
 }
 
-func FindLaunchWithProjectNameorARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, launchName, projectNameOrARN string) (*cloudwatchevidently.Launch, error) {
-	input := &cloudwatchevidently.GetLaunchInput{
+func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client, launchName, projectNameOrARN string) (*awstypes.Launch, error) {
+	input := &evidently.GetLaunchInput{
 		Launch:  aws.String(launchName),
 		Project: aws.String(projectNameOrARN),
 	}
 
-	output, err := conn.GetLaunchWithContext(ctx, input)
+	output, err := conn.GetLaunch(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

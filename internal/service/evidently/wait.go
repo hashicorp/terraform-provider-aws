@@ -8,10 +8,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
-	"github.com/aws/aws-sdk-go/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -66,18 +68,18 @@ func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, 
 	return nil, err
 }
 
-func waitLaunchCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{cloudwatchevidently.LaunchStatusCreated},
+		Target:  enum.Slice(awstypes.LaunchStatusCreated),
 		Refresh: statusLaunch(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
-		if v := aws.StringValue(output.StatusReason); v != "" {
+	if output, ok := outputRaw.(*awstypes.Launch); ok {
+		if v := aws.ToString(output.StatusReason); v != "" {
 			tfresource.SetLastError(err, errors.New(v))
 		}
 
@@ -87,18 +89,18 @@ func waitLaunchCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 	return nil, err
 }
 
-func waitLaunchUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.LaunchStatusUpdating},
-		Target:  []string{cloudwatchevidently.LaunchStatusCreated, cloudwatchevidently.LaunchStatusRunning},
+		Pending: enum.Slice(awstypes.LaunchStatusUpdating),
+		Target:  enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusRunning),
 		Refresh: statusLaunch(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
-		if v := aws.StringValue(output.StatusReason); v != "" {
+	if output, ok := outputRaw.(*awstypes.Launch); ok {
+		if v := aws.ToString(output.StatusReason); v != "" {
 			tfresource.SetLastError(err, errors.New(v))
 		}
 
@@ -108,9 +110,9 @@ func waitLaunchUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 	return nil, err
 }
 
-func waitLaunchDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.LaunchStatusCreated, cloudwatchevidently.LaunchStatusCompleted, cloudwatchevidently.LaunchStatusRunning, cloudwatchevidently.LaunchStatusCancelled, cloudwatchevidently.LaunchStatusUpdating},
+		Pending: enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusCompleted, awstypes.LaunchStatusRunning, awstypes.LaunchStatusCancelled, awstypes.LaunchStatusUpdating),
 		Target:  []string{},
 		Refresh: statusLaunch(ctx, conn, id),
 		Timeout: timeout,
@@ -118,8 +120,8 @@ func waitLaunchDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
-		if v := aws.StringValue(output.StatusReason); v != "" {
+	if output, ok := outputRaw.(*awstypes.Launch); ok {
+		if v := aws.ToString(output.StatusReason); v != "" {
 			tfresource.SetLastError(err, errors.New(v))
 		}
 
