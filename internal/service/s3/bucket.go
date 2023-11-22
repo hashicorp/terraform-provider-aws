@@ -43,6 +43,10 @@ import (
 
 const (
 	resNameBucket = "Bucket"
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
@@ -1047,7 +1051,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1076,7 +1080,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
