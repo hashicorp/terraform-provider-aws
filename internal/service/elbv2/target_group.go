@@ -1502,7 +1502,6 @@ func runtimeValidations(d *schema.ResourceData, diags *diag.Diagnostics) {
 						"protocol",
 						protocol),
 				))
-
 			}
 		}
 	}
