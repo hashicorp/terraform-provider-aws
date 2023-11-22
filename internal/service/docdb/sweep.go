@@ -350,34 +350,26 @@ func sweepDBSubnetGroups(region string) error {
 func sweepEventSubscriptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeEventSubscriptionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(out *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		for _, eventSubscription := range out.EventSubscriptionsList {
-			id := aws.StringValue(eventSubscription.CustSubscriptionId)
-			input := &docdb.DeleteEventSubscriptionInput{
-				SubscriptionName: eventSubscription.CustSubscriptionId,
-			}
-
-			log.Printf("[INFO] Deleting DocumentDB Event Subscription: %s", id)
-
-			_, err := conn.DeleteEventSubscriptionWithContext(ctx, input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocumentDB Event Subscription (%s): %s", id, err)
-				continue
-			}
-
-			if _, err := waitEventSubscriptionDeleted(ctx, conn, id, EventSubscriptionDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocumentDB Event Subscription (%s) to be deleted: %s", id, err)
-			}
+	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.EventSubscriptionsList {
+			r := ResourceEventSubscription()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.CustSubscriptionId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
 
@@ -387,7 +379,13 @@ func sweepEventSubscriptions(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving DocumentDB Event Subscriptions: %w", err)
+		return fmt.Errorf("listing DocumentDB Event Subscriptions (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping DocumentDB Event Subscriptions (%s): %w", region, err)
 	}
 
 	return nil
