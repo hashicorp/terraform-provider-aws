@@ -426,19 +426,19 @@ func expandPublicAccessBlockConfiguration(tfMap map[string]interface{}) *types.P
 	apiObject := &types.PublicAccessBlockConfiguration{}
 
 	if v, ok := tfMap["block_public_acls"].(bool); ok {
-		apiObject.BlockPublicAcls = v
+		apiObject.BlockPublicAcls = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["block_public_policy"].(bool); ok {
-		apiObject.BlockPublicPolicy = v
+		apiObject.BlockPublicPolicy = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["ignore_public_acls"].(bool); ok {
-		apiObject.IgnorePublicAcls = v
+		apiObject.IgnorePublicAcls = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["restrict_public_buckets"].(bool); ok {
-		apiObject.RestrictPublicBuckets = v
+		apiObject.RestrictPublicBuckets = aws.Bool(v)
 	}
 
 	return apiObject
@@ -515,11 +515,22 @@ func flattenPublicAccessBlockConfiguration(apiObject *types.PublicAccessBlockCon
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"block_public_acls":       apiObject.BlockPublicAcls,
-		"block_public_policy":     apiObject.BlockPublicPolicy,
-		"ignore_public_acls":      apiObject.IgnorePublicAcls,
-		"restrict_public_buckets": apiObject.RestrictPublicBuckets,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BlockPublicAcls; v != nil {
+		tfMap["block_public_acls"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.BlockPublicPolicy; v != nil {
+		tfMap["block_public_policy"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IgnorePublicAcls; v != nil {
+		tfMap["ignore_public_acls"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.RestrictPublicBuckets; v != nil {
+		tfMap["restrict_public_buckets"] = aws.ToBool(v)
 	}
 
 	return tfMap
