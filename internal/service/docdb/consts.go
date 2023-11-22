@@ -24,3 +24,10 @@ func engine_Values() []string {
 const (
 	errCodeInvalidParameterValue = "InvalidParameterValue"
 )
+
+const (
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
+)

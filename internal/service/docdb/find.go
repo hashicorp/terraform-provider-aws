@@ -8,9 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func findGlobalClusterByARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
@@ -118,48 +115,4 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 	})
 
 	return globalCluster, err
-}
-
-func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.EventSubscription, error) {
-	var eventSubscription *docdb.EventSubscription
-
-	input := &docdb.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(id),
-	}
-
-	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, es := range page.EventSubscriptionsList {
-			if es == nil {
-				continue
-			}
-
-			if aws.StringValue(es.CustSubscriptionId) == id {
-				eventSubscription = es
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeSubscriptionNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if eventSubscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return eventSubscription, nil
 }
