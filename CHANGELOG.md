@@ -19,6 +19,7 @@ BUG FIXES:
 
 * resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
 * resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
+* resource/aws_lb_target_group: Adds plan- and apply-time validation for invalid parameter combinations ([#34488](https://github.com/hashicorp/terraform-provider-aws/issues/34488))
 
 ## 5.26.0 (November 16, 2023)
 
