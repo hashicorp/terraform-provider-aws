@@ -111,7 +111,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 							Optional: true,
 							Computed: true,
 							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.BotType](),
+								enum.FrameworkValidate[awstypes.VoiceEngine](),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
