@@ -189,7 +189,6 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	plan.ID = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
 	state := plan
 
-
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
 	_, err = waitDataLakeCreated(ctx, conn, state.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -230,7 +229,7 @@ func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, r
 
 	state.ARN = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
 	state.ID = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
-	state.Configurations ,_ = flattenDataLakeConfigurations(ctx, out.DataLakes)
+	state.Configurations, _ = flattenDataLakeConfigurations(ctx, out.DataLakes)
 
 	fmt.Println(state.ID.ValueString())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
