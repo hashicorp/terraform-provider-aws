@@ -9,6 +9,7 @@ import (
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
+	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -91,7 +92,6 @@ import (
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	apprunner_sdkv1 "github.com/aws/aws-sdk-go/service/apprunner"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
@@ -282,8 +282,8 @@ func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
 	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh))
 }
 
-func (c *AWSClient) AppRunnerConn(ctx context.Context) *apprunner_sdkv1.AppRunner {
-	return errs.Must(conn[*apprunner_sdkv1.AppRunner](ctx, c, names.AppRunner))
+func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {
+	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner))
 }
 
 func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
