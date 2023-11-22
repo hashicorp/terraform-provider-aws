@@ -5,7 +5,6 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/appsync
         - internal/service/[b-z]*
     patterns:
       - pattern: diag.FromErr($ERR)
@@ -19,7 +18,6 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/appsync
         - internal/service/[b-z]*
     patterns:
       - pattern: diag.Errorf(...)
@@ -33,7 +31,6 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/appsync
         - internal/service/[b-z]*
     patterns:
       - pattern: return $READFN(...)
@@ -52,7 +49,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/appsync
         - internal/service/[b-z]*
     patterns:
       - pattern: return nil
