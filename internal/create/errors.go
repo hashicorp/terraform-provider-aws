@@ -95,7 +95,7 @@ func DiagSettingError(service, resource, id, argument string, gotError error) di
 	return DiagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
 }
 
-func AddWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
+func AppendDiagWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
 	return append(diags,
 		diag.Diagnostic{
 			Severity: diag.Warning,

@@ -356,7 +356,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) || len(input.LFTags) == 0 {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
-		return create.AddWarningMessage(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), "no LF-Tags to remove")
+		return create.AppendDiagWarningMessage(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), "no LF-Tags to remove")
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
