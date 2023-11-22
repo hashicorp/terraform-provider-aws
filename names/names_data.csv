@@ -13,7 +13,7 @@ apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,
 apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,1,,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,
-apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,1,,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,
+apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,No SDK support
 appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,
