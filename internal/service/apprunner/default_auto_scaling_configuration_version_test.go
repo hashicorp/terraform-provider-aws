@@ -95,7 +95,7 @@ resource "aws_apprunner_auto_scaling_configuration_version" "test" {
 }
 
 resource "aws_apprunner_default_auto_scaling_configuration_version" "test" {
-  auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.test[%[2]d].arn 
+  auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.test[%[2]d].arn
 }
 `, rName, idx)
 }
