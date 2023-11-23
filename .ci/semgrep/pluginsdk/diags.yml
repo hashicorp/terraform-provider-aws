@@ -4,7 +4,7 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
@@ -17,7 +17,7 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
@@ -30,7 +30,7 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
@@ -57,7 +57,7 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
@@ -70,7 +70,7 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
@@ -89,7 +89,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/code[g-z]*
+        - internal/service/code[p-z]*
         - internal/service/co[g-z]*
         - internal/service/c[u]*
         - internal/service/[d-z]*
