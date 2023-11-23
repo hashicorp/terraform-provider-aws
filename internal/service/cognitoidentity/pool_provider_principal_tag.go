@@ -102,7 +102,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	ret, err := conn.GetPrincipalTagAttributeMapWithContext(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
@@ -117,7 +117,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ret.IdentityPoolId)
