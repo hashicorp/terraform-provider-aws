@@ -98,6 +98,12 @@ func ResourceTransitGateway() *schema.Resource {
 				Default:      ec2.DnsSupportValueEnable,
 				ValidateFunc: validation.StringInSlice(ec2.DnsSupportValue_Values(), false),
 			},
+			"security_group_referencing_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SecurityGroupReferencingSupportValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.SecurityGroupReferencingSupportValue_Values(), false),
+			},
 			"multicast_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -146,12 +152,13 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &ec2.TransitGatewayRequestOptions{
-			AutoAcceptSharedAttachments:  aws.String(d.Get("auto_accept_shared_attachments").(string)),
-			DefaultRouteTableAssociation: aws.String(d.Get("default_route_table_association").(string)),
-			DefaultRouteTablePropagation: aws.String(d.Get("default_route_table_propagation").(string)),
-			DnsSupport:                   aws.String(d.Get("dns_support").(string)),
-			MulticastSupport:             aws.String(d.Get("multicast_support").(string)),
-			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
+			AutoAcceptSharedAttachments:     aws.String(d.Get("auto_accept_shared_attachments").(string)),
+			DefaultRouteTableAssociation:    aws.String(d.Get("default_route_table_association").(string)),
+			DefaultRouteTablePropagation:    aws.String(d.Get("default_route_table_propagation").(string)),
+			DnsSupport:                      aws.String(d.Get("dns_support").(string)),
+			SecurityGroupReferencingSupport: aws.String(d.Get("security_group_referencing_support").(string)),
+			MulticastSupport:                aws.String(d.Get("multicast_support").(string)),
+			VpnEcmpSupport:                  aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGateway),
 	}
@@ -208,6 +215,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+	d.Set("security_group_referencing_support", transitGateway.Options.SecurityGroupReferencingSupport)
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
@@ -251,6 +259,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("dns_support") {
 			input.Options.DnsSupport = aws.String(d.Get("dns_support").(string))
+		}
+
+		if d.HasChange("security_group_referencing_support") {
+			input.Options.SecurityGroupReferencingSupport = aws.String(d.Get("security_group_referencing_support").(string))
 		}
 
 		if d.HasChange("transit_gateway_cidr_blocks") {

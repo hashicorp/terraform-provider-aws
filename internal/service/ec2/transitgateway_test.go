@@ -54,6 +54,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
 			"Description":                                        testAccTransitGateway_Description,
 			"DnsSupport":                                         testAccTransitGateway_DNSSupport,
+			"SecurityGroupReferencingSupport":                    testAccTransitGateway_SecurityGroupReferencingSupport,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
 		},
 		"MulticastDomain": {
@@ -129,14 +130,15 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"disappears": testAccTransitGatewayRouteTablePropagation_disappears,
 		},
 		"VpcAttachment": {
-			"basic":                testAccTransitGatewayVPCAttachment_basic,
-			"disappears":           testAccTransitGatewayVPCAttachment_disappears,
-			"tags":                 testAccTransitGatewayVPCAttachment_tags,
-			"ApplianceModeSupport": testAccTransitGatewayVPCAttachment_ApplianceModeSupport,
-			"DnsSupport":           testAccTransitGatewayVPCAttachment_DNSSupport,
-			"Ipv6Support":          testAccTransitGatewayVPCAttachment_IPv6Support,
-			"SharedTransitGateway": testAccTransitGatewayVPCAttachment_SharedTransitGateway,
-			"SubnetIds":            testAccTransitGatewayVPCAttachment_SubnetIDs,
+			"basic":                            testAccTransitGatewayVPCAttachment_basic,
+			"disappears":                       testAccTransitGatewayVPCAttachment_disappears,
+			"tags":                             testAccTransitGatewayVPCAttachment_tags,
+			"ApplianceModeSupport":             testAccTransitGatewayVPCAttachment_ApplianceModeSupport,
+			"DnsSupport":                       testAccTransitGatewayVPCAttachment_DNSSupport,
+			"SecurityGroupReferencingSupport ": testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport,
+			"Ipv6Support":                      testAccTransitGatewayVPCAttachment_IPv6Support,
+			"SharedTransitGateway":             testAccTransitGatewayVPCAttachment_SharedTransitGateway,
+			"SubnetIds":                        testAccTransitGatewayVPCAttachment_SubnetIDs,
 			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagation,
@@ -174,6 +176,7 @@ func testAccTransitGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueDisable),
 					resource.TestCheckResourceAttr(resourceName, "multicast_support", ec2.MulticastSupportValueDisable),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
@@ -481,6 +484,42 @@ func testAccTransitGateway_DNSSupport(t *testing.T) {
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGateway_SecurityGroupReferencingSupport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var transitGateway1, transitGateway2 ec2.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_securityGroupReferencingSupport(rName, ec2.SecurityGroupReferencingSupportValueDisable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueDisable),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayConfig_securityGroupReferencingSupport(rName, ec2.SecurityGroupReferencingSupportValueEnable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway2),
+					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueEnable),
 				),
 			},
 		},
@@ -928,6 +967,18 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 `, rName, dnsSupport)
+}
+
+func testAccTransitGatewayConfig_securityGroupReferencingSupport(rName, securityGroupReferencingSupport string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  security_group_referencing_support = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, securityGroupReferencingSupport)
 }
 
 func testAccTransitGatewayConfig_vpnECMPSupport(rName, vpnEcmpSupport string) string {

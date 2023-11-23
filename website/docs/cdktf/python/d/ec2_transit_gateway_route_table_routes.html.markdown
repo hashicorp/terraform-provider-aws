@@ -185,7 +185,7 @@ class MyConvertedCode(TerraformStack):
         trusted_accounts_eu_central1_tgw =
         Ec2TransitGatewayVpcAttachmentAccepter(self, "trusted_accounts_eu-central-1_tgw",
             lifecycle=TerraformResourceLifecycle(
-                ignore_changes=[subnet_ids, id, dns_support, ipv6_support, transit_gateway_id, vpc_id, vpc_owner_id
+                ignore_changes=[subnet_ids, id, dns_support, security_group_referencing_support, ipv6_support, transit_gateway_id, vpc_id, vpc_owner_id
                 ],
                 prevent_destroy=False
             ),

@@ -39,6 +39,7 @@ func testAccTransitGatewayVPCAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueDisable),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -148,6 +149,42 @@ func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T) {
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 ec2.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, ec2.SecurityGroupReferencingSupportValueDisable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueDisable),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, ec2.SecurityGroupReferencingSupportValueEnable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", ec2.SecurityGroupReferencingSupportValueEnable),
 				),
 			},
 		},
@@ -561,6 +598,21 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   }
 }
 `, rName, dnsSupport))
+}
+
+func testAccTransitGatewayVPCAttachmentConfig_securityGroupReferencingSupport(rName, securityGroupReferencingSupport string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  security_group_referencing_support = %[2]q
+  subnet_ids                         = aws_subnet.test[*].id
+  transit_gateway_id                 = aws_ec2_transit_gateway.test.id
+  vpc_id                             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, securityGroupReferencingSupport))
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_ipv6Support(rName, ipv6Support string) string {

@@ -132,7 +132,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "trusted_accounts_eu-
   provider                                        = aws.eu-central-1
   lifecycle {
     prevent_destroy = false
-    ignore_changes  = [subnet_ids, id, dns_support, ipv6_support, transit_gateway_id, vpc_id, vpc_owner_id]
+    ignore_changes  = [subnet_ids, id, dns_support, security_group_referencing_support, ipv6_support, transit_gateway_id, vpc_id, vpc_owner_id]
   }
 }
 
