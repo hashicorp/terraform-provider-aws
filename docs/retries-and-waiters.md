@@ -622,7 +622,7 @@ And consumed within the resource update workflow as follows:
     		// ... AWS Go SDK logic to update attribute ...
 
     		if _, err := waitThingAttributeUpdated(ctx, conn, d.Id(), d.Get("attribute").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-                return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForUpdate, ResNameThing, d.Id(), err)...)
+                return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForUpdate, ResNameThing, d.Id(), err)
     		}
     	}
 
@@ -778,7 +778,7 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
         // ... AWS Go SDK logic to create resource ...
 
     	if _, err := waitThingCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)) {
-            return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForCreation, ResNameThing, d.Id(), err)...)
+            return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForCreation, ResNameThing, d.Id(), err)
     	}
 
     	return append(diags, ExampleThingRead(ctx, d, meta)...)
@@ -788,7 +788,7 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
         // ... AWS Go SDK logic to delete resource ...
 
     	if _, err := waitThingDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-            return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForDeletion, ResNameThing, d.Id(), err)...)
+            return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForDeletion, ResNameThing, d.Id(), err)
     	}
 
     	return diags
