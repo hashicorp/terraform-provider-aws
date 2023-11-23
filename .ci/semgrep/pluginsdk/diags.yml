@@ -4,7 +4,6 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
@@ -19,7 +18,6 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
@@ -33,7 +31,6 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
@@ -61,7 +58,6 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
@@ -75,7 +71,6 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
@@ -99,7 +94,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/connect
         - internal/service/connectcases
         - internal/service/controltower
         - internal/service/cur
