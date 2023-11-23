@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -161,9 +162,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 
 func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 	const (
-		resourceName            = "aws_networkmanager_vpc_attachment.test"
-		coreNetworkResourceName = "aws_networkmanager_core_network.test"
-		vpcResourceName         = "aws_vpc.test"
+		resourceName = "aws_networkmanager_vpc_attachment.test"
 	)
 
 	t.Parallel()
@@ -186,7 +185,6 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v networkmanager.VpcAttachment
-			resourceName := "aws_networkmanager_vpc_attachment.test"
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 			resource.ParallelTest(t, resource.TestCase{
@@ -202,6 +200,11 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 							acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
 						),
 						ExpectNonEmptyPlan: true,
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PostApplyPostRefresh: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+							},
+						},
 					},
 				},
 			})
@@ -211,9 +214,8 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 
 func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 	const (
-		resourceName            = "aws_networkmanager_vpc_attachment.test"
-		coreNetworkResourceName = "aws_networkmanager_core_network.test"
-		vpcResourceName         = "aws_vpc.test"
+		resourceName           = "aws_networkmanager_vpc_attachment.test"
+		attachmentResourceName = "aws_networkmanager_attachment_accepter.test"
 	)
 
 	t.Parallel()
@@ -236,7 +238,6 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v networkmanager.VpcAttachment
-			resourceName := "aws_networkmanager_vpc_attachment.test"
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 			resource.ParallelTest(t, resource.TestCase{
@@ -252,6 +253,12 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 							acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
 						),
 						ExpectNonEmptyPlan: true,
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PostApplyPostRefresh: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+								plancheck.ExpectResourceAction(attachmentResourceName, plancheck.ResourceActionCreate),
+							},
+						},
 					},
 				},
 			})
@@ -260,9 +267,13 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 }
 
 func TestAccNetworkManagerVPCAttachment_Attached_disappearsAccepter(t *testing.T) {
+	const (
+		resourceName           = "aws_networkmanager_vpc_attachment.test"
+		attachmentResourceName = "aws_networkmanager_attachment_accepter.test"
+	)
+
 	ctx := acctest.Context(t)
 	var v networkmanager.VpcAttachment
-	resourceName := "aws_networkmanager_attachment_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,15 +289,24 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappearsAccepter(t *testing.T
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceAttachmentAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(attachmentResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
+	const (
+		resourceName = "aws_networkmanager_vpc_attachment.test"
+	)
+
 	ctx := acctest.Context(t)
 	var v networkmanager.VpcAttachment
-	resourceName := "aws_networkmanager_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,9 +351,7 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 
 func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 	const (
-		resourceName            = "aws_networkmanager_vpc_attachment.test"
-		coreNetworkResourceName = "aws_networkmanager_core_network.test"
-		vpcResourceName         = "aws_vpc.test"
+		resourceName = "aws_networkmanager_vpc_attachment.test"
 	)
 
 	t.Parallel()
