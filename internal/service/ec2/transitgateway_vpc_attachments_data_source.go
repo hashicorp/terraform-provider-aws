@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_vpc_attachments")
@@ -35,6 +36,8 @@ func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 }
 
 func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
@@ -50,7 +53,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 	output, err := FindTransitGatewayVPCAttachments(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway VPC Attachments: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway VPC Attachments: %s", err)
 	}
 
 	var attachmentIDs []string
@@ -62,5 +65,5 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", attachmentIDs)
 
-	return nil
+	return diags
 }
