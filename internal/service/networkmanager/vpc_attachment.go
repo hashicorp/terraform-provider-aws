@@ -377,7 +377,7 @@ func StatusVPCAttachmentState(ctx context.Context, conn *networkmanager.NetworkM
 	}
 }
 
-func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
+func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			networkmanager.AttachmentStateCreating,
@@ -400,7 +400,7 @@ func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func waitVPCAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
+func waitVPCAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			networkmanager.AttachmentStateCreating,
@@ -423,7 +423,7 @@ func waitVPCAttachmentAvailable(ctx context.Context, conn *networkmanager.Networ
 	return nil, err
 }
 
-func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
+func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStateAvailable},
 		Target:  []string{networkmanager.AttachmentStateRejected},
@@ -440,7 +440,7 @@ func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},

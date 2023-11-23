@@ -45,7 +45,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -113,7 +113,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -179,7 +179,7 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -232,7 +232,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -374,7 +374,7 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
@@ -419,6 +419,95 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 					},
 					{
 						Config: testAccVPCAttachmentConfig_updates(rName, testcase.acceptanceRequired, 2, false, true),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v4),
+							testAccCheckVPCAttachmentRecreated(&v3, &v4, testcase.expectRecreation),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+						),
+					},
+					{
+						ResourceName:      resourceName,
+						ImportState:       true,
+						ImportStateVerify: true,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
+	const (
+		resourceName = "aws_networkmanager_vpc_attachment.test"
+	)
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		acceptanceRequired bool
+		expectedState      string
+		expectRecreation   bool
+	}{
+		"acceptance_required": {
+			acceptanceRequired: true,
+			expectedState:      networkmanager.AttachmentStatePendingAttachmentAcceptance,
+			expectRecreation:   true,
+		},
+
+		"acceptance_not_required": {
+			acceptanceRequired: false,
+			expectedState:      networkmanager.AttachmentStateAvailable,
+			expectRecreation:   false,
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var v1, v2, v3, v4 networkmanager.VpcAttachment
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, true, false),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "true"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+						),
+					},
+					{
+						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 1, false, true),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
+							testAccCheckVPCAttachmentRecreated(&v1, &v2, testcase.expectRecreation),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+						),
+					},
+					{
+						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, false, false),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckVPCAttachmentExists(ctx, resourceName, &v3),
+							testAccCheckVPCAttachmentRecreated(&v2, &v3, testcase.expectRecreation),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+						),
+					},
+					{
+						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, false, true),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v4),
 							testAccCheckVPCAttachmentRecreated(&v3, &v4, testcase.expectRecreation),

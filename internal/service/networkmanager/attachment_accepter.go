@@ -30,7 +30,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 		DeleteWithoutTimeout: resourceAttachmentAccepterDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
