@@ -4,7 +4,9 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     pattern: diag.FromErr($ERR)
     fix: sdkdiag.AppendFromErr(diags, $ERR)
     severity: WARNING
@@ -14,7 +16,9 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     pattern: diag.Errorf($...ARGS)
     fix: sdkdiag.AppendErrorf(diags, $...ARGS)
     severity: WARNING
@@ -24,7 +28,9 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     pattern: return create.DiagError($...ARGS)
     fix: return create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
@@ -34,11 +40,9 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/connect
-        - internal/service/connectcases
-        - internal/service/controltower
-        - internal/service/cur
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
     fix: create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
@@ -48,7 +52,9 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     pattern: create.DiagSettingError($...ARGS)
     fix: create.AppendDiagSettingError(diags, $...ARGS)
     severity: WARNING
@@ -58,7 +64,9 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     patterns:
       - pattern: return $READFN($...ARGS)
       - metavariable-regex:
@@ -78,7 +86,9 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/[d-z]*
+        - internal/service/data[s-z]*
+        - internal/service/d[e-z]*
+        - internal/service/[e-z]*
     patterns:
       - pattern: return nil
       - pattern-not-inside: |
