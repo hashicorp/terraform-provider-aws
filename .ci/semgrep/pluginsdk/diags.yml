@@ -4,7 +4,6 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     pattern: return diag.FromErr($ERR)
     fix: return sdkdiag.AppendFromErr(diags, $ERR)
@@ -26,7 +25,6 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     pattern: diag.Errorf($...ARGS)
     fix: sdkdiag.AppendErrorf(diags, $...ARGS)
@@ -37,7 +35,6 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     pattern: return create.DiagError($...ARGS)
     fix: return create.AppendDiagError(diags, $...ARGS)
@@ -48,7 +45,6 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
     fix: create.AppendDiagError(diags, $...ARGS)
@@ -59,7 +55,6 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     pattern: create.DiagSettingError($...ARGS)
     fix: create.AppendDiagSettingError(diags, $...ARGS)
@@ -70,7 +65,7 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/dynamodb
+        - internal//dynamodb
         - internal/service/[e-z]*
     patterns:
       - pattern: return $READFN($...ARGS)
@@ -91,7 +86,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/dynamodb
         - internal/service/[e-z]*
     patterns:
       - pattern: return nil
