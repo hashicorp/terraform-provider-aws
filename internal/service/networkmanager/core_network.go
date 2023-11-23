@@ -436,10 +436,12 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.CoreNetworkStateDeleting},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Pending:    []string{networkmanager.CoreNetworkStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
