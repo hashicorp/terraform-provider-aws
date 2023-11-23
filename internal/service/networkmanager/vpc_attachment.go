@@ -158,6 +158,8 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
@@ -186,10 +188,12 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceVPCAttachmentRead(ctx, d, meta)
+	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
@@ -197,7 +201,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -233,10 +237,12 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	setTagsOut(ctx, a.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -281,7 +287,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	return resourceVPCAttachmentRead(ctx, d, meta)
+	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

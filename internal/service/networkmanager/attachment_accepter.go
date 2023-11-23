@@ -84,6 +84,8 @@ func ResourceAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var state string
@@ -173,10 +175,12 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	return resourceAttachmentAccepterRead(ctx, d, meta)
+	return append(diags, resourceAttachmentAccepterRead(ctx, d, meta)...)
 }
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var a *networkmanager.Attachment
@@ -188,7 +192,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -203,7 +207,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Site To Site VPN Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -218,7 +222,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -233,7 +237,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -252,7 +256,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("segment_name", a.SegmentName)
 	d.Set("state", a.State)
 
-	return nil
+	return diags
 }
 
 func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
