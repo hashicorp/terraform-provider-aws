@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -293,6 +294,8 @@ func resourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	name := d.Get("name").(string)
@@ -351,19 +354,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	)
 
 	if err != nil {
-		return diag.Errorf("creating EKS Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EKS Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*eks.CreateClusterOutput).Cluster.Name))
 
 	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EKS Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
@@ -371,16 +376,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EKS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return diag.Errorf("setting certificate_authority: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
 	// cluster_id is only relevant for clusters on Outposts.
 	if cluster.OutpostConfig != nil {
@@ -388,36 +393,38 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("created_at", aws.ToTime(cluster.CreatedAt).String())
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
 	if err := d.Set("encryption_config", flattenEncryptionConfig(cluster.EncryptionConfig)); err != nil {
-		return diag.Errorf("setting encryption_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return diag.Errorf("setting identity: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
 	}
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return diag.Errorf("setting kubernetes_network_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
 	}
 	d.Set("name", cluster.Name)
 	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return diag.Errorf("setting outpost_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	// Do any version update first.
@@ -430,13 +437,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterVersion(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) version: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) version: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -452,13 +459,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			output, err := conn.AssociateEncryptionConfig(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("associating EKS Cluster (%s) encryption config: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "associating EKS Cluster (%s) encryption config: %s", d.Id(), err)
 			}
 
 			updateID := aws.ToString(output.Update.Id)
 
 			if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
 			}
 		}
 	}
@@ -472,13 +479,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) logging: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) logging: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
@@ -492,7 +499,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -503,7 +510,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -513,14 +520,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	input := &eks.DeleteClusterInput{
@@ -554,24 +563,24 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
 	if errs.IsAErrorMessageContains[*types.ClientException](err, "No cluster found for name:") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EKS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EKS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findClusterByName(ctx context.Context, conn *eks.Client, name string) (*types.Cluster, error) {

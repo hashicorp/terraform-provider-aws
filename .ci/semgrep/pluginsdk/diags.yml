@@ -4,7 +4,7 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     pattern: return diag.FromErr($ERR)
     fix: return sdkdiag.AppendFromErr(diags, $ERR)
@@ -27,7 +27,7 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     pattern: diag.Errorf($...ARGS)
     fix: sdkdiag.AppendErrorf(diags, $...ARGS)
@@ -38,7 +38,7 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     pattern: return create.DiagError($...ARGS)
     fix: return create.AppendDiagError(diags, $...ARGS)
@@ -49,7 +49,7 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
     fix: create.AppendDiagError(diags, $...ARGS)
@@ -60,7 +60,7 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     pattern: create.DiagSettingError($...ARGS)
     fix: create.AppendDiagSettingError(diags, $...ARGS)
@@ -71,7 +71,7 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     patterns:
       - pattern: return $READFN($...ARGS)
@@ -90,7 +90,7 @@ rules:
     message: Append results of $UPDATEFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     patterns:
       - pattern: return $UPDATEFN($...ARGS)
@@ -107,7 +107,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/e[k-v]*
+        - internal/service/e[l-v]*
         - internal/service/[f-z]*
     patterns:
       - pattern: return nil
