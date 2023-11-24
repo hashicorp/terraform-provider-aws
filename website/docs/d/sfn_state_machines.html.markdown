@@ -3,12 +3,12 @@ subcategory: "SFN (Step Functions)"
 layout: "aws"
 page_title: "AWS: aws_sfn_state_machines"
 description: |-
-  Terraform data source for managing an AWS SFN (Step Functions) State Machines.
+  Terraform data source for managing AWS SFN (Step Functions) State Machines.
 ---
 
 # Data Source: aws_sfn_state_machines
 
-Terraform data source for managing an AWS SFN (Step Functions) State Machines.
+Terraform data source for managing AWS SFN (Step Functions) State Machines.
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ data "aws_sfn_state_machines" "all" {
 
 # Get more detailed information about each State Machine
 data "aws_sfn_state_machine" "detailed" {
-  for_each = data.aws_sfn_state_machines.all.name
+  for_each = data.aws_sfn_state_machines.all.names
 
   name = each.value
 }
