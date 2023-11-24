@@ -212,7 +212,7 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 	}
 }
 
-func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) {
+func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
 	const (
 		resourceName           = "aws_networkmanager_vpc_attachment.test"
 		attachmentResourceName = "aws_networkmanager_attachment_accepter.test"
