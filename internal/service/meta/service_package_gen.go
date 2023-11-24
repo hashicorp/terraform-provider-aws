@@ -29,6 +29,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourcePartition,
 		},
 		{
+			Factory: newDataSourceProfile,
+		},
+		{
 			Factory: newDataSourceRegion,
 		},
 		{

@@ -27,6 +27,7 @@ type AWSClient struct {
 	IgnoreTagsConfig        *tftags.IgnoreConfig
 	MediaConvertAccountConn *mediaconvert_sdkv1.MediaConvert
 	Partition               string
+	Profile                 string
 	Region                  string
 	ReverseDNSPrefix        string
 	ServicePackages         map[string]ServicePackage
