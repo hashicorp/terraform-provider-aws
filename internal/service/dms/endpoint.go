@@ -828,7 +828,11 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
-		postgres_settings := expandPostgreSQLSettings()
+		postgres_settings := &dms.PostgreSQLSettings{}
+		if _, ok := d.GetOk("postgres_settings"); ok {
+			postgres_settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]interface{})[0].(map[string]interface{}))
+		}
+
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			postgres_settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			postgres_settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
@@ -2138,8 +2142,48 @@ func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interf
 	return []map[string]interface{}{m}
 }
 
-func expandPostgreSQLSettings() *dms.PostgreSQLSettings {
+func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSettings {
 	settings := &dms.PostgreSQLSettings{}
+
+	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
+		settings.AfterConnectScript = aws.String(v)
+	}
+	if v, ok := tfMap["capture_ddls"].(bool); ok {
+		settings.CaptureDdls = aws.Bool(v)
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		settings.MaxFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["ddl_artifacts_schema"].(string); ok && v != "" {
+		settings.DdlArtifactsSchema = aws.String(v)
+	}
+	if v, ok := tfMap["execute_timeout"].(int); ok {
+		settings.ExecuteTimeout = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["fail_tasks_on_lob_truncation"].(bool); ok {
+		settings.FailTasksOnLobTruncation = aws.Bool(v)
+	}
+	if v, ok := tfMap["heartbeat_enable"].(bool); ok {
+		settings.HeartbeatEnable = aws.Bool(v)
+	}
+	if v, ok := tfMap["heartbeat_schema"].(string); ok && v != "" {
+		settings.HeartbeatSchema = aws.String(v)
+	}
+	if v, ok := tfMap["heartbeat_frequency"].(int); ok {
+		settings.HeartbeatFrequency = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
+		settings.SlotName = aws.String(v)
+	}
+	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
+		settings.PluginName = aws.String(v)
+	}
+	if v, ok := tfMap["trim_space_in_char"].(bool); ok {
+		settings.TrimSpaceInChar = aws.Bool(v)
+	}
+	if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
+		settings.MapBooleanAsBoolean = aws.Bool(v)
+	}
 
 	return settings
 }
