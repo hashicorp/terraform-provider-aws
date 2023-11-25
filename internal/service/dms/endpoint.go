@@ -828,24 +828,22 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
+		postgres_settings := expandPostgreSQLSettings()
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-				DatabaseName:                aws.String(d.Get("database_name").(string)),
-			}
+			postgres_settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			postgres_settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+			postgres_settings.DatabaseName = aws.String(d.Get("database_name").(string))
 		} else {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-				Username:     aws.String(d.Get("username").(string)),
-				Password:     aws.String(d.Get("password").(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int64(int64(d.Get("port").(int))),
-				DatabaseName: aws.String(d.Get("database_name").(string)),
-			}
+			postgres_settings.Username = aws.String(d.Get("username").(string))
+			postgres_settings.Password = aws.String(d.Get("password").(string))
+			postgres_settings.ServerName = aws.String(d.Get("server_name").(string))
+			postgres_settings.Port = aws.Int64(int64(d.Get("port").(int)))
+			postgres_settings.DatabaseName = aws.String(d.Get("database_name").(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+		input.PostgreSQLSettings = postgres_settings
 	case engineNameDynamoDB:
 		input.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -2138,6 +2136,12 @@ func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interf
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandPostgreSQLSettings() *dms.PostgreSQLSettings {
+	settings := &dms.PostgreSQLSettings{}
+
+	return settings
 }
 
 func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
