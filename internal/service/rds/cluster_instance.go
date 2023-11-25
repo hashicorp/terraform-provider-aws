@@ -219,7 +219,7 @@ func ResourceClusterInstance() *schema.Resource {
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
