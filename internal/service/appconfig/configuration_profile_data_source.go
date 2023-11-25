@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +47,11 @@ func DataSourceConfigurationProfile() *schema.Resource {
 			"location_uri": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"kms_key_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.Any(verify.ValidARN, validation.StringLenBetween(1, 256)),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -113,6 +119,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", arn)
 	d.Set("configuration_profile_id", profileId)
 	d.Set("description", out.Description)
+	d.Set("kms_key_identifier", out.KmsKeyIdentifier)
 	d.Set("location_uri", out.LocationUri)
 	d.Set("name", out.Name)
 	d.Set("retrieval_role_arn", out.RetrievalRoleArn)

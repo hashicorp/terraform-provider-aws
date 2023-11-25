@@ -47,6 +47,13 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccConfigurationProfileConfig_kms(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", "alias/"+rName),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -399,6 +406,29 @@ func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName st
 
 		return nil
 	}
+}
+
+func testAccConfigurationProfileConfig_kms(rName string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_name(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "k" {
+  description             = "KMS key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "k_alias" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.k.key_id
+}
+
+resource "aws_appconfig_configuration_profile" "test" {
+  application_id = aws_appconfig_application.test.id
+  name           = %[1]q
+  kms_key_identifier = "alias/%[1]s"
+  location_uri   = "hosted"
+}
+`, rName))
 }
 
 func testAccConfigurationProfileConfig_name(rName string) string {
