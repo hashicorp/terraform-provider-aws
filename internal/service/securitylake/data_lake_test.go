@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -108,11 +109,12 @@ func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfsecuritylake.FindDataLakeByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
@@ -140,9 +142,7 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
 		}
 
-		dl := &resp.DataLakes[0]
-
-		*datalake = *dl
+		*datalake = *resp
 
 		return nil
 	}
@@ -154,8 +154,23 @@ func testAccDataLakeConfig_basic() string {
 		meta_store_manager_role_arn = "arn:aws:iam::182198062889:role/service-role/AmazonSecurityLakeMetaStoreManager"
 	  
 		configurations {
-		  region = "eu-west-2"
-		}
-	  }
+
+			encryption_configuration {
+				kms_key_id = "S3_MANAGED_KEY"
+			  }
+
+			lifecycle_configuration {
+				transitions {
+					days          = 31
+					storage_class = "STANDARD_IA"
+				  }
+				expiration {
+				  	days = 300
+				}
+			}
+			
+		  	region = "eu-west-2"
+	  	}
+	}
 `)
 }

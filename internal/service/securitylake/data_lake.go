@@ -18,22 +18,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Data Lake")
-// @Tags(identifierAttribute="arn")
 func newResourceDataLake(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDataLake{}
 
@@ -64,15 +64,17 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 			"id":  framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			// names.AttrTags:    tftags.TagsAttribute(),
+			// names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"configurations": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
+			"configurations": schema.SetNestedBlock{
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -81,25 +83,30 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"encryption_configuration": schema.SetNestedBlock{
-							Validators: []validator.Set{
-								setvalidator.SizeAtLeast(1),
+						"encryption_configuration": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"kms_key_id": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
+										Default:  stringdefault.StaticString("S3_MANAGED_KEY"),
 									},
 								},
 							},
 						},
-						"lifecycle_configuration": schema.SetNestedBlock{
-							Validators: []validator.Set{
-								setvalidator.SizeAtLeast(1),
+						"lifecycle_configuration": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"expiration": schema.SetNestedBlock{
+									"expiration": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"days": schema.Int64Attribute{
@@ -109,6 +116,9 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 										},
 									},
 									"transitions": schema.SetNestedBlock{
+										Validators: []validator.Set{
+											setvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"days": schema.Int64Attribute{
@@ -123,17 +133,18 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 								},
 							},
 						},
-						"replication_configuration": schema.SetNestedBlock{
-							Validators: []validator.Set{
-								setvalidator.SizeAtLeast(1),
+						"replication_configuration": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"role_arn": schema.StringAttribute{
 										Optional: true,
 									},
-									"regions": schema.StringAttribute{
-										Optional: true,
+									"regions": schema.ListAttribute{
+										ElementType: types.StringType,
+										Optional:    true,
 									},
 								},
 							},
@@ -152,7 +163,9 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 
 func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
+
 	var plan resourceDataLakeData
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -171,6 +184,7 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	out, err := conn.CreateDataLake(ctx, in)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameDataLake, plan.ID.ValueString(), err),
@@ -178,36 +192,29 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 		)
 		return
 	}
-	if out == nil || out.DataLakes == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameDataLake, plan.ID.ValueString(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-	plan.ARN = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
-	plan.ID = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
-	state := plan
 
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitDataLakeCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+	plan.ARN = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	waitOut, err := waitDataLakeCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	fmt.Println(waitOut)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, plan.ARN.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-
-	state.Configurations, _ = flattenDataLakeConfigurations(ctx, out.DataLakes)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	state := plan
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, waitOut)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	var state resourceDataLakeData
+
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,91 +234,62 @@ func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
-	state.ID = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
-	state.Configurations, _ = flattenDataLakeConfigurations(ctx, out.DataLakes)
-
-	fmt.Println(state.ID.ValueString())
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceDataLake) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// conn := r.Meta().SecurityLakeClient(ctx)
+	conn := r.Meta().SecurityLakeClient(ctx)
 
-	// // TIP: -- 2. Fetch the plan
-	// var plan, state resourceDataLakeData
-	// resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	// resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
+	var plan, state resourceDataLakeData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// // TIP: -- 3. Populate a modify input structure and check for changes
-	// if !plan.Name.Equal(state.Name) ||
-	// 	!plan.Description.Equal(state.Description) ||
-	// 	!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-	// 	!plan.Type.Equal(state.Type) {
+	if !plan.Configurations.Equal(state.Configurations) {
 
-	// 	in := &securitylake.UpdateDataLakeInput{
-	// 		// TIP: Mandatory or fields that will always be present can be set when
-	// 		// you create the Input structure. (Replace these with real fields.)
-	// 		DataLakeId:   aws.String(plan.ID.ValueString()),
-	// 		DataLakeName: aws.String(plan.Name.ValueString()),
-	// 		DataLakeType: aws.String(plan.Type.ValueString()),
-	// 	}
+		var configurations []dataLakeConfigurationsData
+		resp.Diagnostics.Append(plan.Configurations.ElementsAs(ctx, &configurations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	// 	if !plan.Description.IsNull() {
-	// 		// TIP: Optional fields should be set based on whether or not they are
-	// 		// used.
-	// 		in.Description = aws.String(plan.Description.ValueString())
-	// 	}
-	// 	if !plan.ComplexArgument.IsNull() {
-	// 		// TIP: Use an expander to assign a complex argument. The elements must be
-	// 		// deserialized into the appropriate struct before being passed to the expander.
-	// 		var tfList []complexArgumentData
-	// 		resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-	// 		if resp.Diagnostics.HasError() {
-	// 			return
-	// 		}
+		in := &securitylake.UpdateDataLakeInput{
+			Configurations: expanddataLakeConfigurations(ctx, configurations),
+		}
 
-	// 		in.ComplexArgument = expandComplexArgument(tfList)
-	// 	}
+		out, err := conn.UpdateDataLake(ctx, in)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameDataLake, plan.ID.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil || out.DataLakes == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameDataLake, plan.ID.ValueString(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
 
-	// 	// TIP: -- 4. Call the AWS modify/update function
-	// 	out, err := conn.UpdateDataLake(ctx, in)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameDataLake, plan.ID.ValueString(), err),
-	// 			err.Error(),
-	// 		)
-	// 		return
-	// 	}
-	// 	if out == nil || out.DataLake == nil {
-	// 		resp.Diagnostics.AddError(
-	// 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameDataLake, plan.ID.ValueString(), nil),
-	// 			errors.New("empty output").Error(),
-	// 		)
-	// 		return
-	// 	}
+		resp.Diagnostics.Append(state.refreshFromOutput(ctx, &out.DataLakes[0])...)
+	}
 
-	// 	// TIP: Using the output from the update function, re-set any computed attributes
-	// 	plan.ARN = flex.StringToFramework(ctx, out.DataLake.Arn)
-	// 	plan.ID = flex.StringToFramework(ctx, out.DataLake.DataLakeId)
-	// }
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := waitDataLakeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForUpdate, ResNameDataLake, plan.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	// // TIP: -- 5. Use a waiter to wait for update to complete
-	// updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	// _, err := waitDataLakeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForUpdate, ResNameDataLake, plan.ID.ValueString(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	// // TIP: -- 6. Save the request plan to response state
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceDataLake) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -358,8 +336,7 @@ func (r *resourceDataLake) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.ListDataLakesOutput, error) {
-	fmt.Println(id)
+func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.DataLakeStatusInitialized)},
 		Target:                    []string{string(awstypes.DataLakeStatusCompleted)},
@@ -370,7 +347,7 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, id stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*securitylake.ListDataLakesOutput); ok {
+	if out, ok := outputRaw.(*awstypes.DataLakeResource); ok {
 		return out, err
 	}
 
@@ -396,7 +373,6 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, id stri
 }
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.ListDataLakesOutput, error) {
-	fmt.Println(id)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{string(awstypes.DataLakeStatusInitialized), string(awstypes.DataLakeStatusCompleted)},
 		Target:  []string{},
@@ -414,17 +390,15 @@ func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, id stri
 
 func createStatusDataLake(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		fmt.Println(id)
 		out, err := FindDataLakeByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
-
 		if err != nil {
 			return nil, "", err
 		}
 
-		return out, string(out.DataLakes[0].CreateStatus), nil
+		return out, string(out.CreateStatus), nil
 	}
 }
 
@@ -438,16 +412,16 @@ func updateStatusDataLake(ctx context.Context, conn *securitylake.Client, id str
 		if err != nil {
 			return nil, "", err
 		}
-		return out, string(out.DataLakes[0].UpdateStatus.Status), nil
+		return out, string(out.UpdateStatus.Status), nil
 	}
 }
 
-func FindDataLakeByID(ctx context.Context, conn *securitylake.Client, id string) (*securitylake.ListDataLakesOutput, error) {
+func FindDataLakeByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.DataLakeResource, error) {
 	region, err := extractRegionFromARN(id)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("The region is %s\n", region)
+
 	in := &securitylake.ListDataLakesInput{
 		Regions: []string{region},
 	}
@@ -465,29 +439,33 @@ func FindDataLakeByID(ctx context.Context, conn *securitylake.Client, id string)
 		return nil, err
 	}
 
-	if out == nil || out.DataLakes == nil {
+	if out == nil || len(out.DataLakes) < 1 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
+	datalakeResource := out.DataLakes[0]
 
-	return out, nil
+	return &datalakeResource, nil
 }
 
-func flattenDataLakeConfigurations(ctx context.Context, apiObjects []awstypes.DataLakeResource) (types.List, diag.Diagnostics) {
+func flattenDataLakeConfigurations(ctx context.Context, apiObjects []*awstypes.DataLakeResource) (types.Set, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: dataLakeConfigurations}
 
 	if len(apiObjects) == 0 {
-		return types.ListNull(elemType), diags
+		return types.SetNull(elemType), diags
 	}
 
 	elems := []attr.Value{}
 	for _, apiObject := range apiObjects {
 
 		encryptionConfiguration, d := flattenEncryptionConfiguration(ctx, apiObject.EncryptionConfiguration)
+		fmt.Println(encryptionConfiguration)
 		diags.Append(d...)
 		lifecycleExpiration, d := flattenLifeCycleConfiguration(ctx, apiObject.LifecycleConfiguration)
+		fmt.Println(lifecycleExpiration)
 		diags.Append(d...)
 		replicationConfiguration, d := flattenReplicationConfiguration(ctx, apiObject.ReplicationConfiguration)
+		fmt.Println(replicationConfiguration)
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
@@ -502,10 +480,10 @@ func flattenDataLakeConfigurations(ctx context.Context, apiObjects []awstypes.Da
 		elems = append(elems, objVal)
 	}
 
-	listVal, d := types.ListValue(elemType, elems)
+	setVal, d := types.SetValue(elemType, elems)
 	diags.Append(d...)
 
-	return listVal, diags
+	return setVal, diags
 }
 
 func flattenLifeCycleConfiguration(ctx context.Context, apiObject *awstypes.DataLakeLifecycleConfiguration) (types.List, diag.Diagnostics) {
@@ -558,7 +536,7 @@ func flattenLifecycleExpiration(ctx context.Context, apiObject *awstypes.DataLak
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleExpirationTypes}
 
-	if apiObject == nil {
+	if apiObject == nil || apiObject.Days == nil {
 		return types.ListNull(elemType), diags
 	}
 
@@ -575,12 +553,12 @@ func flattenLifecycleExpiration(ctx context.Context, apiObject *awstypes.DataLak
 	return listVal, diags
 }
 
-func flattenLifecycleTransitions(ctx context.Context, apiObjects []awstypes.DataLakeLifecycleTransition) (types.List, diag.Diagnostics) {
+func flattenLifecycleTransitions(ctx context.Context, apiObjects []awstypes.DataLakeLifecycleTransition) (types.Set, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTransitionsTypes}
 
-	if len(apiObjects) == 0 {
-		return types.ListNull(elemType), diags
+	if len(apiObjects) == 0 || (apiObjects[0].Days == nil && apiObjects[0].StorageClass == nil) {
+		return types.SetValueMust(elemType, []attr.Value{}), diags
 	}
 
 	elems := []attr.Value{}
@@ -595,17 +573,17 @@ func flattenLifecycleTransitions(ctx context.Context, apiObjects []awstypes.Data
 		elems = append(elems, objVal)
 	}
 
-	listVal, d := types.ListValue(elemType, elems)
+	setVal, d := types.SetValue(elemType, elems)
 	diags.Append(d...)
 
-	return listVal, diags
+	return setVal, diags
 }
 
 func flattenReplicationConfiguration(ctx context.Context, apiObject *awstypes.DataLakeReplicationConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: dataLakeConfigurationsReplicationConfigurationTypes}
 
-	if apiObject == nil {
+	if apiObject == nil || (apiObject.Regions == nil && apiObject.RoleArn == nil) {
 		return types.ListNull(elemType), diags
 	}
 
@@ -709,8 +687,7 @@ func expandLifecycleExpiration(tfList []dataLakeConfigurationsLifecycleExpiratio
 	apiObject := &awstypes.DataLakeLifecycleExpiration{}
 
 	if !tfObj.Days.IsNull() {
-		int32Days := int32(tfObj.Days.ValueInt64())
-		apiObject.Days = aws.Int32(int32Days)
+		apiObject.Days = aws.Int32(int32(tfObj.Days.ValueInt64()))
 	}
 
 	return apiObject
@@ -727,8 +704,7 @@ func expandLifecycleTransitions(tfList []dataLakeConfigurationsLifecycleTransiti
 		item := awstypes.DataLakeLifecycleTransition{}
 
 		if !tfObj.Days.IsNull() {
-			int32Days := int32(tfObj.Days.ValueInt64())
-			item.Days = aws.Int32(int32Days)
+			item.Days = aws.Int32(int32(tfObj.Days.ValueInt64()))
 		}
 
 		if !tfObj.StorageClass.IsNull() {
@@ -762,10 +738,10 @@ func expandReplicationConfiguration(ctx context.Context, tfList []dataLakeConfig
 
 var (
 	dataLakeConfigurations = map[string]attr.Type{
-		"encryption_configuration":  types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsEncryptionTypes}},
-		"lifecycle_configuration":   types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTypes}},
+		"encryption_configuration":  types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsEncryptionTypes}},
+		"lifecycle_configuration":   types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTypes}},
 		"region":                    types.StringType,
-		"replication_configuration": types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsReplicationConfigurationTypes}},
+		"replication_configuration": types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsReplicationConfigurationTypes}},
 	}
 
 	dataLakeConfigurationsEncryptionTypes = map[string]attr.Type{
@@ -782,7 +758,7 @@ var (
 	}
 
 	dataLakeConfigurationsLifecycleTypes = map[string]attr.Type{
-		"expiration":  types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleExpirationTypes}},
+		"expiration":  types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleExpirationTypes}},
 		"transitions": types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTransitionsTypes}},
 	}
 
@@ -792,21 +768,25 @@ var (
 	}
 )
 
+// func (r *resourceDataLake) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+// 	r.List(ctx, request, response)
+// }
+
 type resourceDataLakeData struct {
-	ARN                     types.String   `tfsdk:"arn"`
-	ID                      types.String   `tfsdk:"id"`
-	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
-	Configurations          types.List     `tfsdk:"configurations"`
-	Tags                    types.Map      `tfsdk:"tags"`
-	TagsAll                 types.Map      `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+	ARN                     types.String `tfsdk:"arn"`
+	ID                      types.String `tfsdk:"id"`
+	MetaStoreManagerRoleArn types.String `tfsdk:"meta_store_manager_role_arn"`
+	Configurations          types.Set    `tfsdk:"configurations"`
+	// Tags                    types.Map      `tfsdk:"tags"`
+	// TagsAll                 types.Map      `tfsdk:"tags_all"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 type dataLakeConfigurationsData struct {
-	EncryptionConfiguration  types.Set    `tfsdk:"encryption_configuration"`
-	LifecycleConfiguration   types.Set    `tfsdk:"lifecycle_configuration"`
+	EncryptionConfiguration  types.List   `tfsdk:"encryption_configuration"`
+	LifecycleConfiguration   types.List   `tfsdk:"lifecycle_configuration"`
 	Region                   types.String `tfsdk:"region"`
-	ReplicationConfiguration types.Set    `tfsdk:"replication_configuration"`
+	ReplicationConfiguration types.List   `tfsdk:"replication_configuration"`
 }
 
 type dataLakeConfigurationsEncryption struct {
@@ -814,8 +794,8 @@ type dataLakeConfigurationsEncryption struct {
 }
 
 type dataLakeConfigurationsLifecycle struct {
-	Expiration  types.Set `tfsdk:"expiration"`
-	Transitions types.Set `tfsdk:"transitions"`
+	Expiration  types.List `tfsdk:"expiration"`
+	Transitions types.Set  `tfsdk:"transitions"`
 }
 
 type dataLakeConfigurationsLifecycleExpiration struct {
@@ -835,39 +815,23 @@ type dataLakeConfigurationsReplicationConfiguration struct {
 func extractRegionFromARN(arn string) (string, error) {
 	parts := strings.Split(arn, ":")
 	if len(parts) < 4 {
-		return "", fmt.Errorf("invalid ARN format")
+		return "", fmt.Errorf("invalid ARN: %s", arn)
 	}
 	return parts[3], nil
 }
 
-// refreshFromOutput writes state data from an AWS response object
-// func (rd *resourceDataLakeData) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
-// 	var diags diag.Diagnostics
+func (rd *resourceDataLakeData) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-// 	if out == nil  {
-// 		return diags
-// 	}
+	if out == nil {
+		return diags
+	}
 
-// 	rd.ARN = flex.StringToFramework(ctx, out.DataLakeArn)
-// 	rd.Configurations, d = flattenDataLakeConfigurations(ctx, out)
-// 	if out.Framework != nil {
-// 		rd.FrameworkID = flex.StringToFramework(ctx, out.Framework.Id)
-// 	}
-// 	rd.ID = flex.StringToFramework(ctx, metadata.Id)
-// 	rd.Name = flex.StringToFramework(ctx, metadata.Name)
-// 	rd.Status = flex.StringValueToFramework(ctx, metadata.Status)
+	rd.ARN = flex.StringToFramework(ctx, out.DataLakeArn)
+	rd.ID = flex.StringToFramework(ctx, out.DataLakeArn)
+	configurations, d := flattenDataLakeConfigurations(ctx, []*awstypes.DataLakeResource{out})
+	diags.Append(d...)
+	rd.Configurations = configurations
 
-// 	reportsDestination, d := flattenAssessmentReportsDestination(ctx, metadata.AssessmentReportsDestination)
-// 	diags.Append(d...)
-// 	rd.AssessmentReportsDestination = reportsDestination
-// 	roles, d := flattenAssessmentRoles(ctx, metadata.Roles)
-// 	diags.Append(d...)
-// 	rd.RolesAll = roles
-// 	scope, d := flattenAssessmentScope(ctx, metadata.Scope)
-// 	diags.Append(d...)
-// 	rd.Scope = scope
-
-// 	setTagsOut(ctx, out.Tags)
-
-// 	return diags
-// }
+	return diags
+}
