@@ -5,7 +5,6 @@ package docdb
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -219,8 +218,41 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange("engine_version") {
-		if err := resourceGlobalClusterUpgradeEngineVersion(ctx, d, conn); err != nil {
-			return diag.FromErr(err)
+		engineVersion := d.Get("engine_version").(string)
+
+		for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			if clusterARN, ok := tfMap["db_cluster_arn"].(string); ok && clusterARN != "" {
+				cluster, err := findClusterByARN(ctx, conn, clusterARN)
+
+				if err != nil {
+					return diag.Errorf("reading DocumentDB Cluster (%s): %s", clusterARN, err)
+				}
+
+				clusterID := aws.StringValue(cluster.DBClusterIdentifier)
+				input := &docdb.ModifyDBClusterInput{
+					ApplyImmediately:    aws.Bool(true),
+					DBClusterIdentifier: aws.String(clusterID),
+					EngineVersion:       aws.String(engineVersion),
+				}
+
+				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+					return conn.ModifyDBClusterWithContext(ctx, input)
+				}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
+
+				if err != nil {
+					return diag.Errorf("modifying DocumentDB Cluster (%s) engine version: %s", clusterID, err)
+				}
+
+				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for DocumentDB Cluster (%s) update: %s", clusterID, err)
+				}
+			}
 		}
 	}
 
@@ -230,123 +262,40 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
+	// Remove any members from the global cluster.
+	for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
 		if !ok {
 			continue
 		}
 
-		dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
-		if !ok {
-			continue
+		if clusterARN, ok := tfMap["db_cluster_arn"].(string); ok && clusterARN != "" {
+			if err := removeClusterFromGlobalCluster(ctx, conn, clusterARN, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
+	}
 
-		input := &docdb.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(dbClusterArn),
+	log.Printf("[DEBUG] Deleting DocumentDB Global Cluster: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteGlobalClusterWithContext(ctx, &docdb.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
-		}
-
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			continue
-		}
-		if err != nil {
-			return diag.Errorf("removing DocumentDB Cluster (%s) from Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
-		}
-
-		if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return diag.Errorf("waiting for DocumentDB Cluster (%s) removal from DocumentDB Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
-		}
-	}
-
-	input := &docdb.DeleteGlobalClusterInput{
-		GlobalClusterIdentifier: aws.String(d.Id()),
-	}
-
-	// Allow for eventual consistency
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteGlobalClusterWithContext(ctx, input)
-	}
+		})
+	}, docdb.ErrCodeInvalidGlobalClusterStateFault, "is not empty")
 
 	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting DocumentDB Global Cluster: %s", err)
+		return diag.Errorf("deleting DocumentDB Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for DocumentDB Global Cluster (%s) deletion: %s", d.Id(), err)
+	if _, err := waitGlobalClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for DocumentDB Global Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-// Updating major versions is not supported by documentDB
-// To support minor version upgrades, we will upgrade all cluster members
-func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, conn *docdb.DocDB) error {
-	log.Printf("[DEBUG] Upgrading DocumentDB Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
-	err := resourceGlobalClusterUpgradeMinorEngineVersion(ctx, d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn, d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return err
-	}
-	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
-	if err != nil {
-		return err
-	}
-	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		if _, err := waitDBClusterUpdated(ctx, conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func resourceGlobalClusterUpgradeMinorEngineVersion(ctx context.Context, clusterMembers *schema.Set, engineVersion string, conn *docdb.DocDB, timeout time.Duration) error {
-	for _, clusterMemberRaw := range clusterMembers.List() {
-		clusterMember := clusterMemberRaw.(map[string]interface{})
-		if clusterMemberArn, ok := clusterMember["db_cluster_arn"]; ok && clusterMemberArn.(string) != "" {
-			modInput := &docdb.ModifyDBClusterInput{
-				ApplyImmediately:    aws.Bool(true),
-				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
-				EngineVersion:       aws.String(engineVersion),
-			}
-			err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
-				_, err := conn.ModifyDBClusterWithContext(ctx, modInput)
-				if err != nil {
-					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return retry.RetryableError(err)
-					}
-					return retry.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err := conn.ModifyDBClusterWithContext(ctx, modInput)
-				if err != nil {
-					return err
-				}
-			}
-			if err != nil {
-				return fmt.Errorf("failed to update engine_version on global cluster member (%s): %w", clusterMemberArn, err)
-			}
-		}
-	}
 	return nil
 }
 
