@@ -25,6 +25,7 @@ import (
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
+	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -118,7 +119,6 @@ import (
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	controltower_sdkv1 "github.com/aws/aws-sdk-go/service/controltower"
 	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -446,8 +446,8 @@ func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.
 	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases))
 }
 
-func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
-	return errs.Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
+func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
+	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower))
 }
 
 func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
