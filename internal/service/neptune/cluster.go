@@ -725,7 +725,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	input := neptune.DeleteDBClusterInput{
+	input := &neptune.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
 		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
 	}
@@ -746,7 +746,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteDBClusterWithContext(ctx, &input)
+		return conn.DeleteDBClusterWithContext(ctx, input)
 	}, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state")
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
