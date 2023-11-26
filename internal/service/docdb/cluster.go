@@ -271,7 +271,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	// ModifyDBInstance afterwadocdb to prevent Terraform operators from API
 	// errors or needing to double apply.
 	var requiresModifyDbCluster bool
-	modifyDbClusterInput := &docdb.ModifyDBClusterInput{
+	inputM := &docdb.ModifyDBClusterInput{
 		ApplyImmediately: aws.Bool(true),
 	}
 
@@ -289,12 +289,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
-			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
+			inputM.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 			requiresModifyDbCluster = true
 		}
 
 		if v, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
-			modifyDbClusterInput.DBClusterParameterGroupName = aws.String(v.(string))
+			inputM.DBClusterParameterGroupName = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -319,12 +319,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
-			modifyDbClusterInput.PreferredBackupWindow = aws.String(v.(string))
+			inputM.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
+			inputM.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -431,9 +431,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if requiresModifyDbCluster {
-		modifyDbClusterInput.DBClusterIdentifier = aws.String(d.Id())
+		inputM.DBClusterIdentifier = aws.String(d.Id())
 
-		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
+		_, err := conn.ModifyDBClusterWithContext(ctx, inputM)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster (%s): %s", d.Id(), err)
@@ -463,18 +463,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", d.Id(), err)
 	}
 
-	globalCluster, err := findGlobalClusterByARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
-
 	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if err != nil && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
-		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s) Global Cluster information: %s", d.Id(), err)
-	}
-
-	if globalCluster != nil {
-		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-	} else {
+	if globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn)); tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
 		d.Set("global_cluster_identifier", "")
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Global Cluster information for DocumentDB Cluster (%s): %s", d.Id(), err)
+	} else {
+		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	}
 
 	d.Set("arn", dbc.DBClusterArn)
@@ -482,11 +478,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
-	var cm []string
-	for _, m := range dbc.DBClusterMembers {
-		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
+	var clusterMembers []string
+	for _, v := range dbc.DBClusterMembers {
+		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
 	}
-	d.Set("cluster_members", cm)
+	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
@@ -503,11 +499,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	var vpcg []string
-	for _, g := range dbc.VpcSecurityGroups {
-		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
+	var securityGroupIDs []string
+	for _, v := range dbc.VpcSecurityGroups {
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", vpcg)
+	d.Set("vpc_security_group_ids", securityGroupIDs)
 
 	return diags
 }
@@ -574,9 +570,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 					return true, err
 				}
+
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 					return true, err
 				}
+
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 					return true, err
 				}
@@ -606,15 +604,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters")
 		}
 
-		input := &docdb.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
-			GlobalClusterIdentifier: aws.String(o),
-		}
-
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster (%s) from DocumentDB Global Cluster: %s", d.Id(), err)
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, diag.FromErr(err)...)
 		}
 	}
 
@@ -625,29 +616,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
-
-	// Automatically remove from global cluster to bypass this error on deletion:
-	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-	if d.Get("global_cluster_identifier").(string) != "" {
-		input := &docdb.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
-			GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
-		}
-
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster (%s) from Global Cluster: %s", d.Id(), err)
-		}
-	}
-
+	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &docdb.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
+		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
 	}
-
-	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	input.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
 	if !skipFinalSnapshot {
 		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
@@ -657,7 +630,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+	if v, ok := d.GetOk("global_cluster_identifier"); ok {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
+	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteDBClusterWithContext(ctx, input)
 		},
@@ -665,6 +645,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return true, err
 			}
+
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return true, err
 			}
@@ -718,6 +699,33 @@ func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 	}
 
 	return add, disable
+}
+
+func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.DocDB, clusterARN, globalClusterID string, timeout time.Duration) error {
+	input := &docdb.RemoveFromGlobalClusterInput{
+		DbClusterIdentifier:     aws.String(clusterARN),
+		GlobalClusterIdentifier: aws.String(globalClusterID),
+	}
+
+	_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault, docdb.ErrCodeGlobalClusterNotFoundFault) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("removing DocumentDB Cluster (%s) from DocumentDB Global Cluster (%s): %w", clusterARN, globalClusterID, err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for DocumentDB Cluster (%s) removal from DocumentDB Global Cluster (%s): %w", clusterARN, globalClusterID, err)
+	}
+
+	return nil
 }
 
 func FindDBClusterByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBCluster, error) {
