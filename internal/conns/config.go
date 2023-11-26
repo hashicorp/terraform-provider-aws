@@ -35,10 +35,12 @@ type Config struct {
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
 	ForbiddenAccountIds            []string
-	HTTPProxy                      string
+	HTTPProxy                      *string
+	HTTPSProxy                     *string
 	IgnoreTagsConfig               *tftags.IgnoreConfig
 	Insecure                       bool
 	MaxRetries                     int
+	NoProxy                        string
 	Profile                        string
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
@@ -77,8 +79,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
+		HTTPSProxy:                    c.HTTPSProxy,
+		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
 		Logger:                        logger,
 		MaxRetries:                    c.MaxRetries,
+		NoProxy:                       c.NoProxy,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
 		RetryMode:                     c.RetryMode,
@@ -167,7 +172,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSdkSeverity(d.Severity()),
-			Summary:  fmt.Sprintf("retrieving AWS account details: %s", d.Summary()),
+			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
 	}

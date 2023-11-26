@@ -51,7 +51,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
-* `voiceSettings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user.
+* `voiceSettings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user. See [`voice_settings`](#voice-settings).
 
 ## Attribute Reference
 
@@ -59,6 +59,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Comma-delimited string joining locale ID, bot ID, and bot version.
 * `name` - Specified locale name.
+
+### Voice Settings
+
+* `voiceId` - Identifier of the Amazon Polly voice to use.
+* `engine` - Indicates the type of Amazon Polly voice that Amazon Lex should use for voice interaction with the user. For more information, see the [engine parameter of the SynthesizeSpeech operation](https://docs.aws.amazon.com/polly/latest/dg/API_SynthesizeSpeech.html#polly-SynthesizeSpeech-request-Engine) in the Amazon Polly developer guide. If not specified, the default is `standard`.
 
 ## Timeouts
 
@@ -90,4 +95,4 @@ Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For ex
 % terraform import aws_lexv2models_bot_locale.example bot_locale-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-0499af2a28caed4041cbee4b8076020ef0c48edb267ca729bba6090fb23cbd91 -->
+<!-- cache-key: cdktf-0.19.0 input-4ac8912121fd1b60f2dbf7252c81af1bbc2dce6f89f467f7f580732c21d0a09e -->

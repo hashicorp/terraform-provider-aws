@@ -291,7 +291,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         var diags diag.Diagnostics
         elemType := types.ObjectType{AttrTypes: structureAttrTypes}
         
-        if len(apiObject) == 0 {
+        if len(apiObjects) == 0 {
             return types.ListNull(elemType), diags
         }
         
@@ -310,7 +310,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
             elems = append(elems, objVal)
         }
         
-        listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+        listVal, d := types.ListValue(elemType, elems)
         diags.Append(d...)
         
         return listVal, diags

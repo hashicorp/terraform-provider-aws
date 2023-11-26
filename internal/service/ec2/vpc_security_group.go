@@ -18,12 +18,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -338,10 +341,14 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	ctx = tflog.SetField(ctx, "vpc_id", d.Get("vpc_id"))
+
 	if err := deleteLingeringENIs(ctx, conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("deleting ENIs using Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -349,7 +356,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -359,7 +366,8 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		remainingRetry = 30 * time.Second
 	}
 
-	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
+	tflog.Info(ctx, "Deleting EC2 Security Group")
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		firstShortRetry, // short initial attempt followed by full length attempt
@@ -376,7 +384,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 			err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), true)
 
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
@@ -393,11 +401,11 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Group (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
@@ -405,10 +413,10 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Security Group (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // forceRevokeSecurityGroupRules revokes all of the security group's ingress & egress rules

@@ -10,8 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
@@ -42,7 +42,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func testAccGlobalSettings_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,9 +93,9 @@ func testAccGlobalSettings_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
+			acctest.PreCheckRegion(t, names.USEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +125,7 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 			input := &chimesdkvoice.GetGlobalSettingsInput{}
 
 			const retryTimeout = 10 * time.Second
@@ -133,7 +133,7 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 
 			err := tfresource.Retry(ctx, retryTimeout, func() *retry.RetryError {
 				var err error
-				response, err = conn.GetGlobalSettingsWithContext(ctx, input)
+				response, err = conn.GetGlobalSettings(ctx, input)
 				if err == nil && response.VoiceConnector.CdrBucket != nil {
 					return retry.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
 				}

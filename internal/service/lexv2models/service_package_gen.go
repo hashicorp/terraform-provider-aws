@@ -31,6 +31,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceBotLocale,
 			Name:    "Bot Locale",
 		},
+		{
+			Factory: newResourceBotVersion,
+			Name:    "Bot Version",
+		},
 	}
 }
 
