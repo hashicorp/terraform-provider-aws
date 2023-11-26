@@ -36,3 +36,12 @@ const (
 	eventSubscriptionStatusDeleting  = "deleting"
 	eventSubscriptionStatusModifying = "modifying"
 )
+
+const (
+	globalClusterStatusAvailable = "available"
+	globalClusterStatusCreating  = "creating"
+	globalClusterStatusDeleted   = "deleted"
+	globalClusterStatusDeleting  = "deleting"
+	globalClusterStatusModifying = "modifying"
+	globalClusterStatusUpgrading = "upgrading"
+)
