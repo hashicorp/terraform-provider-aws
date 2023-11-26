@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/controltower"
+	types "github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccControlTowerControl_serial(t *testing.T) {
@@ -32,7 +33,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 
 func testAccControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var control controltower.EnabledControlSummary
+	var control types.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
@@ -43,7 +44,7 @@ func testAccControl_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func testAccControl_basic(t *testing.T) {
 
 func testAccControl_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var control controltower.EnabledControlSummary
+	var control types.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
@@ -71,7 +72,7 @@ func testAccControl_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func testAccControl_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckControlExists(ctx context.Context, n string, v *controltower.EnabledControlSummary) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, n string, v *types.EnabledControlSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -103,7 +104,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
 		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
@@ -119,7 +120,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 
 func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_control" {
