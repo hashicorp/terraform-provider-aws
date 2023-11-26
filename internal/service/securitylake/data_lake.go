@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,8 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,8 +68,7 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// names.AttrTags:    tftags.TagsAttribute(),
-			// names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"configurations": schema.SetNestedBlock{
@@ -180,7 +179,7 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	in := &securitylake.CreateDataLakeInput{
 		Configurations:          expanddataLakeConfigurations(ctx, configurations),
 		MetaStoreManagerRoleArn: aws.String(plan.MetaStoreManagerRoleArn.ValueString()),
-		// Tags:                    getTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateDataLake(ctx, in)
@@ -206,6 +205,9 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	state := plan
+	fmt.Println(plan.Tags)
+	state.Tags = plan.Tags
+	state.MetaStoreManagerRoleArn = plan.MetaStoreManagerRoleArn
 	resp.Diagnostics.Append(state.refreshFromOutput(ctx, waitOut)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -769,17 +771,16 @@ var (
 )
 
 // func (r *resourceDataLake) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-// 	r.List(ctx, request, response)
+// 	r.SetTagsAll(ctx, request, response)
 // }
 
 type resourceDataLakeData struct {
-	ARN                     types.String `tfsdk:"arn"`
-	ID                      types.String `tfsdk:"id"`
-	MetaStoreManagerRoleArn types.String `tfsdk:"meta_store_manager_role_arn"`
-	Configurations          types.Set    `tfsdk:"configurations"`
-	// Tags                    types.Map      `tfsdk:"tags"`
-	// TagsAll                 types.Map      `tfsdk:"tags_all"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	ARN                     types.String   `tfsdk:"arn"`
+	ID                      types.String   `tfsdk:"id"`
+	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
+	Configurations          types.Set      `tfsdk:"configurations"`
+	Tags                    types.Map      `tfsdk:"tags"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
 
 type dataLakeConfigurationsData struct {

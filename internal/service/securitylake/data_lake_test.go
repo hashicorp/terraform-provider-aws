@@ -61,43 +61,32 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 	})
 }
 
-// func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var datalake types.DataLakeResource
+	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
 
-// 	var datalake securitylake.DescribeDataLakeResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_securitylake_data_lake.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.SecurityLakeEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDataLakeConfig_basic(rName, testAccDataLakeVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceDataLake = newResourceDataLake
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
