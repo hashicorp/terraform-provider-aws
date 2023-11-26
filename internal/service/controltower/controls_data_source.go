@@ -35,7 +35,7 @@ func DataSourceControls() *schema.Resource {
 }
 
 func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
 	input := &controltower.ListEnabledControlsInput{
