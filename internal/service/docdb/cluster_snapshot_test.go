@@ -57,6 +57,30 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	})
 }
 
+func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot docdb.DBClusterSnapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
