@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	types "github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,7 +56,7 @@ func ResourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
@@ -66,7 +66,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TargetIdentifier:  aws.String(targetIdentifier),
 	}
 
-	output, err := conn.EnableControlWithContext(ctx, input)
+	output, err := conn.EnableControl(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating ControlTower Control (%s): %s", id, err)
@@ -74,7 +74,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
@@ -82,7 +82,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -109,7 +109,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -118,7 +118,7 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
-	output, err := conn.DisableControlWithContext(ctx, &controltower.DisableControlInput{
+	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
 	})
@@ -127,7 +127,7 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting ControlTower Control (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for ControlTower Control (%s) delete: %s", d.Id(), err)
 	}
 
@@ -153,13 +153,13 @@ func ControlParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TargetIdentifier%[2]sControlIdentifier", id, controlResourceIDSeparator)
 }
 
-func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.ControlTower, targetIdentifier, controlIdentifier string) (*controltower.EnabledControlSummary, error) {
+func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
 	input := &controltower.ListEnabledControlsInput{
 		TargetIdentifier: aws.String(targetIdentifier),
 	}
-	var output *controltower.EnabledControlSummary
+	var output *types.EnabledControlSummary
 
-	err := conn.ListEnabledControlsPagesWithContext(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
+	err := conn.ListEnabledControlsPages(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -169,7 +169,7 @@ func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Cont
 				continue
 			}
 
-			if aws.StringValue(v.ControlIdentifier) == controlIdentifier {
+			if aws.ToString(v.ControlIdentifier) == controlIdentifier {
 				output = v
 
 				return false
@@ -179,7 +179,7 @@ func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Cont
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
+	if tfresource.NotFound(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -197,14 +197,14 @@ func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Cont
 	return output, nil
 }
 
-func findControlOperationByID(ctx context.Context, conn *controltower.ControlTower, id string) (*controltower.ControlOperation, error) {
+func findControlOperationByID(ctx context.Context, conn *controltower.Client, id string) (*types.ControlOperation, error) {
 	input := &controltower.GetControlOperationInput{
 		OperationIdentifier: aws.String(id),
 	}
 
-	output, err := conn.GetControlOperationWithContext(ctx, input)
+	output, err := conn.GetControlOperation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
+	if tfresource.NotFound(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -222,7 +222,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.ControlTow
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) retry.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
@@ -234,11 +234,11 @@ func statusControlOperation(ctx context.Context, conn *controltower.ControlTower
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitOperationSucceeded(ctx context.Context, conn *controltower.ControlTower, id string, timeout time.Duration) (*controltower.ControlOperation, error) { //nolint:unparam
+func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{controltower.ControlOperationStatusInProgress},
 		Target:  []string{controltower.ControlOperationStatusSucceeded},
@@ -248,9 +248,9 @@ func waitOperationSucceeded(ctx context.Context, conn *controltower.ControlTower
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*controltower.ControlOperation); ok {
-		if status := aws.StringValue(output.Status); status == controltower.ControlOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*controltower.Client); ok {
+		if status := aws.ToString(output.Status); status == controltower.ControlOperationStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
