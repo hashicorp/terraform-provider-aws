@@ -26,6 +26,18 @@ const (
 )
 
 const (
+	clusterStatusAvailable                  = "available"
+	clusterStatusBackingUp                  = "backing-up"
+	clusterStatusCreating                   = "creating"
+	clusterStatusDeleting                   = "deleting"
+	clusterStatusMigrating                  = "migrating"
+	clusterStatusModifying                  = "modifying"
+	clusterStatusPreparingDataMigration     = "preparing-data-migration"
+	clusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	clusterStatusUpgrading                  = "upgrading"
+)
+
+const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
 )

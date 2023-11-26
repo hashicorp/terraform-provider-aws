@@ -426,7 +426,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(identifier)
 
-	if _, err := waitDBClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -439,7 +439,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -587,7 +587,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -732,7 +732,7 @@ func FindDBClusterByID(ctx context.Context, conn *docdb.DocDB, id string) (*docd
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input)
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*docdb.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -748,8 +748,16 @@ func FindDBClusterByID(ctx context.Context, conn *docdb.DocDB, id string) (*docd
 	return output, nil
 }
 
-func findDBCluster(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput) (*docdb.DBCluster, error) {
-	output, err := findDBClusters(ctx, conn, input)
+func findClusterByARN(ctx context.Context, conn *docdb.DocDB, arn string) (*docdb.DBCluster, error) {
+	input := &docdb.DescribeDBClustersInput{}
+
+	return findDBCluster(ctx, conn, input, func(v *docdb.DBCluster) bool {
+		return aws.StringValue(v.DBClusterArn) == arn
+	})
+}
+
+func findDBCluster(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*docdb.DBCluster]) (*docdb.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -758,7 +766,7 @@ func findDBCluster(ctx context.Context, conn *docdb.DocDB, input *docdb.Describe
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDBClusters(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput) ([]*docdb.DBCluster, error) {
+func findDBClusters(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*docdb.DBCluster]) ([]*docdb.DBCluster, error) {
 	var output []*docdb.DBCluster
 
 	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
@@ -767,7 +775,7 @@ func findDBClusters(ctx context.Context, conn *docdb.DocDB, input *docdb.Describ
 		}
 
 		for _, v := range page.DBClusters {
-			if v != nil {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -805,41 +813,18 @@ func statusDBCluster(ctx context.Context, conn *docdb.DocDB, id string) retry.St
 	}
 }
 
-func waitDBClusterCreated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
+func waitDBClusterAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"creating",
-			"backing-up",
-			"modifying",
-			"preparing-data-migration",
-			"migrating",
-			"resetting-master-credentials",
+			clusterStatusCreating,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
+			clusterStatusPreparingDataMigration,
+			clusterStatusMigrating,
+			clusterStatusResettingMasterCredentials,
+			clusterStatusUpgrading,
 		},
-		Target:     []string{"available"},
-		Refresh:    statusDBCluster(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*docdb.DBCluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDBClusterUpdated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			"backing-up",
-			"modifying",
-			"resetting-master-credentials",
-			"upgrading",
-		},
-		Target:     []string{"available"},
+		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -858,10 +843,10 @@ func waitDBClusterUpdated(ctx context.Context, conn *docdb.DocDB, id string, tim
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"available",
-			"deleting",
-			"backing-up",
-			"modifying",
+			clusterStatusAvailable,
+			clusterStatusDeleting,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),
