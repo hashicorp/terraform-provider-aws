@@ -48,7 +48,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-None
+This resource exports no additional attributes.
 
 ## Import
 
