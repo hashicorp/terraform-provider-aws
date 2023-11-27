@@ -16,27 +16,23 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 		"Instance": {
 			"basic":      testAccAccessGrantsInstance_basic,
 			"disappears": testAccAccessGrantsInstance_disappears,
-			// TODO Tagging not working during beta.
-			// "tags":       testAccAccessGrantsInstance_tags,
+			"tags":       testAccAccessGrantsInstance_tags,
 		},
 		"Location": {
 			"basic":      testAccAccessGrantsLocation_basic,
 			"disappears": testAccAccessGrantsLocation_disappears,
-			// TODO Tagging not working during beta.
-			// "tags":       testAccAccessGrantsLocation_tags,
-			"update": testAccAccessGrantsLocation_update,
+			"tags":       testAccAccessGrantsLocation_tags,
+			"update":     testAccAccessGrantsLocation_update,
 		},
 		"Grant": {
-			"basic":      testAccAccessGrant_basic,
-			"disappears": testAccAccessGrant_disappears,
-			// TODO Tagging not working during beta.
-			// "tags":       testAccAccessGrant_tags,
+			"basic":                 testAccAccessGrant_basic,
+			"disappears":            testAccAccessGrant_disappears,
+			"tags":                  testAccAccessGrant_tags,
 			"locationConfiguration": testAccAccessGrant_locationConfiguration,
 		},
 		"InstanceResourcePolicy": {
-			"basic": testAccAccessGrantsInstanceResourcePolicy_basic,
-			// TODO NotFound error codes not working.
-			// "disappears": testAccAccessGrantsInstanceResourcePolicy_disappears,
+			"basic":      testAccAccessGrantsInstanceResourcePolicy_basic,
+			"disappears": testAccAccessGrantsInstanceResourcePolicy_disappears,
 		},
 	}
 
