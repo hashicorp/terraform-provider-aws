@@ -193,9 +193,9 @@ func testAccCheckAccessGrantExists(ctx context.Context, n string) resource.TestC
 }
 
 func testAccAccessGrantConfig_baseCustomLocation(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_baseCustomLocation(rName), `
-data "aws_iam_user" "test" {
-  user_name = "teamcity"
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_baseCustomLocation(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
 }
 
 resource "aws_s3control_access_grants_location" "test" {
@@ -204,13 +204,13 @@ resource "aws_s3control_access_grants_location" "test" {
   iam_role_arn   = aws_iam_role.test.arn
   location_scope = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}*"
 }
-`)
+`, rName))
 }
 
 func testAccAccessGrantConfig_baseDefaultLocation(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), `
-data "aws_iam_user" "test" {
-  user_name = "teamcity"
+	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
 }
 
 resource "aws_s3control_access_grants_location" "test" {
@@ -219,7 +219,7 @@ resource "aws_s3control_access_grants_location" "test" {
   iam_role_arn   = aws_iam_role.test.arn
   location_scope = "s3://"
 }
-`)
+`, rName))
 }
 
 func testAccAccessGrantConfig_basic(rName string) string {
@@ -230,7 +230,7 @@ resource "aws_s3control_access_grant" "test" {
 
   grantee {
     grantee_type       = "IAM"
-    grantee_identifier = data.aws_iam_user.test.arn
+    grantee_identifier = aws_iam_user.test.arn
   }
 }
 `)
@@ -244,7 +244,7 @@ resource "aws_s3control_access_grant" "test" {
 
   grantee {
     grantee_type       = "IAM"
-    grantee_identifier = data.aws_iam_user.test.arn
+    grantee_identifier = aws_iam_user.test.arn
   }
 
   tags = {
@@ -262,7 +262,7 @@ resource "aws_s3control_access_grant" "test" {
 
   grantee {
     grantee_type       = "IAM"
-    grantee_identifier = data.aws_iam_user.test.arn
+    grantee_identifier = aws_iam_user.test.arn
   }
 
   tags = {
@@ -281,7 +281,7 @@ resource "aws_s3control_access_grant" "test" {
 
   grantee {
     grantee_type       = "IAM"
-    grantee_identifier = data.aws_iam_user.test.arn
+    grantee_identifier = aws_iam_user.test.arn
   }
 
   access_grants_location_configuration {
