@@ -207,21 +207,6 @@ resource "aws_s3control_access_grants_location" "test" {
 `, rName))
 }
 
-func testAccAccessGrantConfig_baseDefaultLocation(rName string) string {
-	return acctest.ConfigCompose(testAccAccessGrantsLocationConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-}
-
-resource "aws_s3control_access_grants_location" "test" {
-  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_instance.test]
-
-  iam_role_arn   = aws_iam_role.test.arn
-  location_scope = "s3://"
-}
-`, rName))
-}
-
 func testAccAccessGrantConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAccessGrantConfig_baseCustomLocation(rName), `
 resource "aws_s3control_access_grant" "test" {
