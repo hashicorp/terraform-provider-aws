@@ -219,6 +219,35 @@ resource "aws_lb_listener" "example" {
 }
 ```
 
+### Mutual TLS Authentication
+
+```terraform
+
+resource "aws_lb" "example" {
+  load_balancer_type = "application"
+
+  # ...
+}
+
+resource "aws_lb_target_group" "example" {
+  # ...
+}
+
+resource "aws_lb_listener" "example" {
+  load_balancer_arn = aws_lb.example.id
+
+  default_action {
+    target_group_arn = aws_lb_target_group.example.id
+    type             = "forward"
+  }
+
+  mutual_authentication = {
+    mode            = "verify"
+    trust_store_arn = "..."
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -313,6 +342,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `stickiness` - (Optional) Configuration block for target group stickiness for the rule. Detailed below.
+
+### `mutual_authentication`
+
+* `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
+* `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
+* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ##### target_group
 

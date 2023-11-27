@@ -355,6 +355,32 @@ func ResourceListener() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"mutual_authentication": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(MutualAuthenticationModeEnum_Values(), true),
+						},
+						"trust_store_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+
 			"port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -438,6 +464,10 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if sslPolicy, ok := d.GetOk("ssl_policy"); ok {
 		input.SslPolicy = aws.String(sslPolicy.(string))
+	}
+
+	if v, ok := d.GetOk("mutual_authentication"); ok {
+		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]interface{}))
 	}
 
 	output, err := retryListenerCreate(ctx, conn, input)
@@ -549,6 +579,10 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting default_action for ELBv2 listener (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication for ELBv2 listener (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
@@ -590,6 +624,14 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("default_action") {
 			var err error
 			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		if d.HasChange("mutual_authentication") {
+			var err error
+			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -879,6 +921,30 @@ func expandLbListenerActionForwardConfig(l []interface{}) *elbv2.ForwardActionCo
 	return config
 }
 
+func expandMutualAuthenticationAttributes(l []interface{}) *elbv2.MutualAuthenticationAttributes {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	mode := tfMap["mode"].(string)
+	if mode == MutualAuthenticationOff {
+		return &elbv2.MutualAuthenticationAttributes{
+			Mode: aws.String(mode),
+		}
+	}
+
+	return &elbv2.MutualAuthenticationAttributes{
+		Mode:                          aws.String(mode),
+		TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
+		IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
+	}
+}
+
 func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.TargetGroupTuple {
 	if len(l) == 0 {
 		return nil
@@ -964,6 +1030,29 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 	}
 
 	return vActions
+}
+
+func flattenMutualAuthenticationAttributes(description *elbv2.MutualAuthenticationAttributes) []interface{} {
+	if description == nil {
+		return []interface{}{}
+	}
+
+	mode := aws.StringValue(description.Mode)
+	if mode == MutualAuthenticationOff {
+		return []interface{}{
+			map[string]interface{}{
+				"mode": mode,
+			},
+		}
+	}
+
+	m := map[string]interface{}{
+		"mode":                             aws.StringValue(description.Mode),
+		"trust_store_arn":                  aws.StringValue(description.TrustStoreArn),
+		"ignore_client_certificate_expiry": aws.BoolValue(description.IgnoreClientCertificateExpiry),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenAuthenticateOIDCActionConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
@@ -1085,4 +1174,23 @@ func flattenLbListenerActionRedirectConfig(config *elbv2.RedirectActionConfig) [
 	}
 
 	return []interface{}{m}
+}
+
+const (
+	// MutualAuthenticationOff is a MutualAuthenticationModeEnum enum value
+	MutualAuthenticationOff = "off"
+
+	// MutualAuthenticationVerify is a MutualAuthenticationModeEnum enum value
+	MutualAuthenticationVerify = "verify"
+	// MutualAuthenticationPassthrough is a MutualAuthenticationModeEnum enum value
+	MutualAuthenticationPassthrough = "passthrough"
+)
+
+// ProtocolEnum_Values returns all elements of the ProtocolEnum enum
+func MutualAuthenticationModeEnum_Values() []string {
+	return []string{
+		MutualAuthenticationOff,
+		MutualAuthenticationVerify,
+		MutualAuthenticationPassthrough,
+	}
 }

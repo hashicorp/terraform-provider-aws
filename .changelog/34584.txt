@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_lb_trust_store
+```
+
+```release-note:new-data-source
+aws_lb_trust_store
+```
+
+```release-note:enhancement
+resource/aws_lb_listener: Add mutual_authentication configuration block
+```

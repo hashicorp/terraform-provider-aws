@@ -38,6 +38,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_alb_target_group",
 		},
 		{
+			Factory:  DataSourceTrustStore,
+			TypeName: "aws_alb_trust_store",
+		},
+		{
 			Factory:  DataSourceLoadBalancer,
 			TypeName: "aws_lb",
 		},
@@ -52,6 +56,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTargetGroup,
 			TypeName: "aws_lb_target_group",
+		},
+		{
+			Factory:  DataSourceTrustStore,
+			TypeName: "aws_lb_trust_store",
 		},
 		{
 			Factory:  DataSourceLoadBalancers,
@@ -103,6 +111,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_alb_target_group_attachment",
 		},
 		{
+			Factory:  ResourceTrustStore,
+			TypeName: "aws_alb_trust_store",
+			Name:     "Trust Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
@@ -141,6 +157,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTargetGroupAttachment,
 			TypeName: "aws_lb_target_group_attachment",
+		},
+		{
+			Factory:  ResourceTrustStore,
+			TypeName: "aws_lb_trust_store",
+			Name:     "Trust Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

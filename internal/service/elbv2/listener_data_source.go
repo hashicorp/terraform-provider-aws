@@ -257,6 +257,30 @@ func DataSourceListener() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"arn"},
 			},
+			"mutual_authentication": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"trust_store_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"port": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -349,6 +373,10 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+	}
+
+	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
 
 	tags, err := listTags(ctx, conn, d.Id())
