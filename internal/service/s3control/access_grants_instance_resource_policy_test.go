@@ -117,7 +117,7 @@ data "aws_caller_identity" "target" {
 resource "aws_s3control_access_grants_instance" "test" {}
 
 resource "aws_s3control_access_grants_instance_resource_policy" "test" {
-  policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Id": "S3AccessGrantsPolicy",
