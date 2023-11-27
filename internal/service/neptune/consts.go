@@ -12,6 +12,16 @@ const (
 )
 
 const (
+	engineNeptune = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
+)
+
+func engine_Values() []string {
+	return []string{
+		engineNeptune,
+	}
+}
+
+const (
 	clusterEndpointStatusAvailable = "available"
 	clusterEndpointStatusCreating  = "creating"
 	clusterEndpointStatusDeleting  = "deleting"

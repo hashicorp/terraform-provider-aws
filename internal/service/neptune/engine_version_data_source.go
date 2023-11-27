@@ -23,64 +23,52 @@ func DataSourceEngineVersion() *schema.Resource {
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "neptune",
+				Default:  engineNeptune,
 			},
-
 			"engine_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"exportable_log_types": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"parameter_group_family": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-
 			"preferred_versions": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"version"},
 			},
-
 			"supported_timezones": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"supports_read_replica": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"valid_upgrade_targets": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"version": {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
 				ConflictsWith: []string{"preferred_versions"},
 			},
-
 			"version_description": {
 				Type:     schema.TypeString,
 				Computed: true,
