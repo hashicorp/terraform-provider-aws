@@ -439,12 +439,15 @@ const (
     ```go
     // internal/service/{service}/{thing}.go
 
-    function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
+    function ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		var diags diag.Diagnostics
     	// ...
-    	return ExampleThingRead(d, meta)
+    	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
-    function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
+    function ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		var diags diag.Diagnostics
+
     	conn := meta.(*AWSClient).ExampleConn()
 
     	input := &example.OperationInput{/* ... */}
@@ -476,16 +479,16 @@ const (
     	if !d.IsNewResource() && tfawserr.ErrorCodeEquals(err, example.ErrCodeNoSuchEntityException) {
     		log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
     		d.SetId("")
-    		return nil
+    		return diags
     	}
 
     	if err != nil {
-    		return fmt.Errorf("reading Example Thing (%s): %w", d.Id(), err)
+    		return sdkdiag.AppendErrorf(diags, "reading Example Thing (%s): %w", d.Id(), err)
     	}
 
     	// Prevent panics.
     	if output == nil {
-    		return fmt.Errorf("reading Example Thing (%s): empty response", d.Id())
+    		return sdkdiag.AppendErrorf(diags, "reading Example Thing (%s): empty response", d.Id())
     	}
 
     	// ... refresh Terraform state as normal ...
@@ -770,13 +773,15 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
 === "Terraform Plugin SDK V2"
     ```go
     func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+        var diags diag.Diagnostics
+
         // ... AWS Go SDK logic to create resource ...
 
     	if _, err := waitThingCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)) {
             return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForCreation, ResNameThing, d.Id(), err)...)
     	}
 
-    	return ExampleThingRead(d, meta)
+    	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
     func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

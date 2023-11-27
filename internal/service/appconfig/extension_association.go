@@ -64,6 +64,8 @@ func ResourceExtensionAssociation() *schema.Resource {
 }
 
 func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	in := appconfig.CreateExtensionAssociationInput{
@@ -87,10 +89,12 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.StringValue(out.Id))
 
-	return resourceExtensionAssociationRead(ctx, d, meta)
+	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	out, err := FindExtensionAssociationById(ctx, conn, d.Id())
@@ -98,7 +102,7 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -111,10 +115,12 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("resource_arn", out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
-	return nil
+	return diags
 }
 
 func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	requestUpdate := false
 
@@ -139,10 +145,12 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	return resourceExtensionAssociationRead(ctx, d, meta)
+	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
@@ -154,5 +162,5 @@ func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtensionAssociation, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

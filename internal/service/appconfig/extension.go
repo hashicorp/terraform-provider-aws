@@ -124,6 +124,8 @@ func ResourceExtension() *schema.Resource {
 }
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	in := appconfig.CreateExtensionInput{
@@ -152,10 +154,12 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.Id))
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	out, err := FindExtensionById(ctx, conn, d.Id())
@@ -163,7 +167,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtension, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -177,10 +181,12 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
 
-	return nil
+	return diags
 }
 
 func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	requestUpdate := false
 
@@ -215,10 +221,12 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
@@ -229,7 +237,7 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandExtensionActions(actionsListRaw interface{}) []*appconfig.Action {
