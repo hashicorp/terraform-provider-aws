@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.47.12
-	github.com/aws/aws-sdk-go-v2 v1.22.2
+	github.com/aws/aws-sdk-go-v2 v1.23.1
 	github.com/aws/aws-sdk-go-v2/config v1.20.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.3
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.2
@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
-	github.com/aws/aws-sdk-go-v2/service/eks v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.19.1
@@ -132,8 +132,8 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.15.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.4 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.0 // indirect
@@ -145,7 +145,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.1 // indirect
-	github.com/aws/smithy-go v1.16.0 // indirect
+	github.com/aws/smithy-go v1.17.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
@@ -203,8 +203,6 @@ require (
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
-
-replace github.com/aws/aws-sdk-go-v2/service/eks => /Users/brybiggs/Documents/awsSdkGoV2/service/eks
 
 exclude ( // Contains INI parsing regression
 	github.com/aws/aws-sdk-go-v2/config v1.21.0
