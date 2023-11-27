@@ -82,7 +82,7 @@ This resource supports the following arguments:
 
 ### External Connections
 
-* `external_connection_name` - (Required) The name of the external connection associated with a repository.
+* `external_connection_name` - (Required) The name of the external connection associated with a repository. Supported external connection names: `[public:npmjs, public:pypi, public:maven-central, public:maven-googleandroid, public:maven-gradleplugins, public:maven-commonsware, public:maven-clojars, public:nuget-org]`
 
 ## Attribute Reference
 
