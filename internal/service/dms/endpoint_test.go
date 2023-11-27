@@ -1349,6 +1349,32 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_PostgreSQL_settings(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_postgreSQLSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -3795,6 +3821,29 @@ resource "aws_dms_endpoint" "test" {
     Name   = %[1]q
     Update = "updated"
     Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_postgreSQLSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  postgres_settings  {
+	after_connect_script = "SET search_path TO pg_catalog,public;"
+	capture_ddls         = true
+	max_file_size        = 1024
+	execute_timeout      = 100
   }
 }
 `, rName)

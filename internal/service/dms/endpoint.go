@@ -351,7 +351,6 @@ func ResourceEndpoint() *schema.Resource {
 			"postgres_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				Computed:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
@@ -367,59 +366,46 @@ func ResourceEndpoint() *schema.Resource {
 						"max_file_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							//Default:      encryptionModeSseS3,
-							//ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 						},
 						"ddl_artifacts_schema": {
 							Type:     schema.TypeString,
 							Optional: true,
-							//DiffSuppressFunc: tfkms.DiffSuppressKey,
-							//ValidateFunc:     tfkms.ValidateKey,
 						},
 						"execute_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"fail_tasks_on_lob_truncation": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"heartbeat_enable": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"heartbeat_schema": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"heartbeat_frequency": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"slot_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
-						"plugin_name": { // add validation function
+						"plugin_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"trim_space_in_char": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 						"map_boolean_as_boolean": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							// ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
