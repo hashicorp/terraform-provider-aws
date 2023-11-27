@@ -31,22 +31,22 @@ import (
 
 // @FrameworkResource(name="Access Grants Location")
 // @Tags
-func newResourceAccessGrantsLocation(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccessGrantsLocation{}
+func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accessGrantsLocationResource{}
 
 	return r, nil
 }
 
-type resourceAccessGrantsLocation struct {
+type accessGrantsLocationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 }
 
-func (r *resourceAccessGrantsLocation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *accessGrantsLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_s3control_access_grants_location"
 }
 
-func (r *resourceAccessGrantsLocation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_grants_location_arn": schema.StringAttribute{
@@ -88,7 +88,7 @@ func (r *resourceAccessGrantsLocation) Schema(ctx context.Context, request resou
 	}
 }
 
-func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *accessGrantsLocationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data accessGrantsLocationResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -131,7 +131,7 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsLocation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *accessGrantsLocationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data accessGrantsLocationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -182,7 +182,7 @@ func (r *resourceAccessGrantsLocation) Read(ctx context.Context, request resourc
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsLocation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *accessGrantsLocationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new accessGrantsLocationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
@@ -230,7 +230,7 @@ func (r *resourceAccessGrantsLocation) Update(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAccessGrantsLocation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data accessGrantsLocationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -257,7 +257,7 @@ func (r *resourceAccessGrantsLocation) Delete(ctx context.Context, request resou
 	}
 }
 
-func (r *resourceAccessGrantsLocation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *accessGrantsLocationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 

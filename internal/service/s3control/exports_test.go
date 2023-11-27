@@ -8,7 +8,7 @@ var (
 	ResourceAccessGrant                        = newResourceAccessGrant
 	ResourceAccessGrantsInstance               = newResourceAccessGrantsInstance
 	ResourceAccessGrantsInstanceResourcePolicy = newResourceAccessGrantsInstanceResourcePolicy
-	ResourceAccessGrantsLocation               = newResourceAccessGrantsLocation
+	ResourceAccessGrantsLocation               = newAccessGrantsLocationResource
 	ResourceAccessPoint                        = resourceAccessPoint
 	ResourceAccessPointPolicy                  = resourceAccessPointPolicy
 	ResourceAccountPublicAccessBlock           = resourceAccountPublicAccessBlock
