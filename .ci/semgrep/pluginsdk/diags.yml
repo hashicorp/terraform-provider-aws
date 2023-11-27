@@ -4,7 +4,7 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     pattern: return diag.FromErr($ERR)
@@ -28,7 +28,7 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     pattern: diag.Errorf($...ARGS)
@@ -40,7 +40,7 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     pattern: return create.DiagError($...ARGS)
@@ -52,7 +52,7 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
@@ -64,7 +64,7 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     pattern: create.DiagSettingError($...ARGS)
@@ -76,7 +76,7 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     patterns:
@@ -96,7 +96,7 @@ rules:
     message: Append results of $UPDATEFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     patterns:
@@ -114,7 +114,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/fi[rs]*
+        - internal/service/fis
         - internal/service/f[ms]*
         - internal/service/[g-z]*
     patterns:
