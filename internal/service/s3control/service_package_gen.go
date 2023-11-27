@@ -21,13 +21,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAccessGrantsLocationResource,
-			Name:    "Access Grants Location",
+			Factory: newAccessGrantResource,
+			Name:    "Access Grant",
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory: newResourceAccessGrant,
-			Name:    "Access Grant",
+			Factory: newAccessGrantsLocationResource,
+			Name:    "Access Grants Location",
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{

@@ -89,7 +89,7 @@ func sweepAccessGrants(region string) error {
 		}
 
 		for _, v := range page.AccessGrantsList {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessGrant, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantResource, client,
 				framework.NewAttribute("id", fmt.Sprintf("%s%s%s", accountID, accessGrantResourceIDSeparator, aws.ToString(v.AccessGrantId))),
 			))
 		}
