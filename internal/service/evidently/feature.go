@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -201,6 +202,8 @@ func ResourceFeature() *schema.Resource {
 }
 
 func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -231,7 +234,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateFeature(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
 	}
 
 	// the GetFeature API call uses the Feature name and Project ARN
@@ -239,19 +242,21 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(output.Feature.Name), aws.ToString(output.Feature.Project)))
 
 	if _, err := waitFeatureCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) creation: %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Feature (%s) for Project (%s) creation: %s", name, project, err)
 	}
 
-	return resourceFeatureRead(ctx, d, meta)
+	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	featureName, projectNameOrARN, err := FeatureParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	feature, err := FindFeatureWithProjectNameorARN(ctx, conn, featureName, projectNameOrARN)
@@ -259,19 +264,19 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Evidently Feature (%s) for Project (%s): %s", featureName, projectNameOrARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Feature (%s) for Project (%s): %s", featureName, projectNameOrARN, err)
 	}
 
 	if err := d.Set("evaluation_rules", flattenEvaluationRules(feature.EvaluationRules)); err != nil {
-		return diag.Errorf("setting evaluation_rules: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting evaluation_rules: %s", err)
 	}
 
 	if err := d.Set("variations", flattenVariations(feature.Variations)); err != nil {
-		return diag.Errorf("setting variations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting variations: %s", err)
 	}
 
 	d.Set("arn", feature.Arn)
@@ -288,10 +293,12 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	setTagsOut(ctx, feature.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
@@ -320,18 +327,20 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateFeature(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
 		}
 
 		if _, err := waitFeatureUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) update: %s", name, project, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Feature (%s) for Project (%s) update: %s", name, project, err)
 		}
 	}
 
-	return resourceFeatureRead(ctx, d, meta)
+	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
 func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -344,18 +353,18 @@ func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
 	}
 
 	if _, err := waitFeatureDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) deletion: %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Feature (%s) for Project (%s) deletion: %s", name, project, err)
 	}
 
-	return nil
+	return diags
 }
 
 func FeatureParseID(id string) (string, string, error) {
