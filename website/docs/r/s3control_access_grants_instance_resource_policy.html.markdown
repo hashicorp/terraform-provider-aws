@@ -17,7 +17,7 @@ Use a resource policy to manage cross-account access to your S3 Access Grants in
 resource "aws_s3control_access_grants_instance" "example" {}
 
 resource "aws_s3control_access_grants_instance_resource_policy" "example" {
-  policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Id": "S3AccessGrantsPolicy",
