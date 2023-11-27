@@ -86,7 +86,7 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
