@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -90,7 +91,7 @@ func sweepAccessGrants(region string) error {
 
 		for _, v := range page.AccessGrantsList {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantResource, client,
-				framework.NewAttribute("id", fmt.Sprintf("%s%s%s", accountID, accessGrantResourceIDSeparator, aws.ToString(v.AccessGrantId))),
+				framework.NewAttribute("id", fmt.Sprintf("%s%s%s", accountID, flex.ResourceIdSeparator, aws.ToString(v.AccessGrantId))),
 			))
 		}
 	}

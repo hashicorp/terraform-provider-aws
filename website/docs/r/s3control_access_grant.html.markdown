@@ -75,17 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Access Grants using the `account_id` and `access_grant_id`, separated by a forward slash (`/`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Access Grants using the `account_id` and `access_grant_id`, separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_s3control_access_grant.example
-  id = "123456789012/04549c5e-2f3c-4a07-824d-2cafe720aa22"
+  id = "123456789012,04549c5e-2f3c-4a07-824d-2cafe720aa22"
 }
 ```
 
-Using `terraform import`, import S3 Access Grants using the `account_id` and `access_grant_id`, separated by a forward slash (`/`). For example:
+Using `terraform import`, import S3 Access Grants using the `account_id` and `access_grant_id`, separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_s3control_access_grants_location.example 123456789012/04549c5e-2f3c-4a07-824d-2cafe720aa22
+% terraform import aws_s3control_access_grants_location.example 123456789012,04549c5e-2f3c-4a07-824d-2cafe720aa22
 ```

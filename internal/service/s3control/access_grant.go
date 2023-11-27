@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -22,9 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -170,7 +171,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 		data.AccountID = types.StringValue(r.Meta().AccountID)
 	}
 	input := &s3control.CreateAccessGrantInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -190,9 +191,9 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	output := outputRaw.(*s3control.CreateAccessGrantOutput)
-	data.AccessGrantARN = flex.StringToFramework(ctx, output.AccessGrantArn)
-	data.AccessGrantID = flex.StringToFramework(ctx, output.AccessGrantId)
-	data.GrantScope = flex.StringToFramework(ctx, output.GrantScope)
+	data.AccessGrantARN = fwflex.StringToFramework(ctx, output.AccessGrantArn)
+	data.AccessGrantID = fwflex.StringToFramework(ctx, output.AccessGrantId)
+	data.GrantScope = fwflex.StringToFramework(ctx, output.GrantScope)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -235,7 +236,7 @@ func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -293,8 +294,8 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().S3ControlClient(ctx)
 
 	_, err := conn.DeleteAccessGrant(ctx, &s3control.DeleteAccessGrantInput{
-		AccessGrantId: flex.StringFromFramework(ctx, data.AccessGrantID),
-		AccountId:     flex.StringFromFramework(ctx, data.AccountID),
+		AccessGrantId: fwflex.StringFromFramework(ctx, data.AccessGrantID),
+		AccountId:     fwflex.StringFromFramework(ctx, data.AccountID),
 	})
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -362,22 +363,22 @@ type granteeModel struct {
 	GranteeType       fwtypes.StringEnum[awstypes.GranteeType] `tfsdk:"grantee_type"`
 }
 
-const accessGrantResourceIDSeparator = "/"
-
 func (data *accessGrantResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
-	if parts := strings.Split(id, accessGrantResourceIDSeparator); len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		data.AccountID = types.StringValue(parts[0])
-		data.AccessGrantID = types.StringValue(parts[1])
+	parts, err := flex.ExpandResourceId(id, 2, false)
 
-		return nil
+	if err != nil {
+		return err
 	}
 
-	return fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-grant-id", id, accessGrantResourceIDSeparator)
+	data.AccountID = types.StringValue(parts[0])
+	data.AccessGrantID = types.StringValue(parts[1])
+
+	return nil
 }
 
 func (data *accessGrantResourceModel) setID() {
-	data.ID = types.StringValue(strings.Join([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDSeparator))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, 2, false)))
 }
 
 // API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.
