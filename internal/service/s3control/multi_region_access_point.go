@@ -335,21 +335,6 @@ func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.Cl
 	}
 }
 
-const (
-	// Minimum amount of times to verify change propagation
-	propagationContinuousTargetOccurence = 2
-
-	// Minimum amount of time to wait between S3control change polls
-	propagationMinTimeout = 5 * time.Second
-
-	// Maximum amount of time to wait for S3control changes to propagate
-	propagationTimeout = 1 * time.Minute
-
-	multiRegionAccessPointRequestSucceededMinTimeout = 5 * time.Second
-
-	multiRegionAccessPointRequestSucceededDelay = 15 * time.Second
-)
-
 func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string, timeout time.Duration) (*types.AsyncOperation, error) { //nolint:unparam
 	const (
 		// AsyncOperation.RequestStatus values.
@@ -360,8 +345,8 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 		Target:     []string{asyncOperationRequestStatusSucceeded},
 		Timeout:    timeout,
 		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenARN),
-		MinTimeout: multiRegionAccessPointRequestSucceededMinTimeout,
-		Delay:      multiRegionAccessPointRequestSucceededDelay,
+		MinTimeout: 5 * time.Second,
+		Delay:      15 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
