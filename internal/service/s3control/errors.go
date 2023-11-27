@@ -9,6 +9,7 @@ const (
 	errCodeAccessGrantsLocationNotEmptyError    = "AccessGrantsLocationNotEmptyError"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidIAMRole                       = "InvalidIamRole"
+	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeNoSuchAccessPoint                    = "NoSuchAccessPoint"
 	errCodeNoSuchAccessPointPolicy              = "NoSuchAccessPointPolicy"
 	errCodeNoSuchAsyncRequest                   = "NoSuchAsyncRequest"

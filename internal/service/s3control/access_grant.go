@@ -179,9 +179,9 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	// "InvalidRequest: Invalid Grantee in the request".
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateAccessGrant(ctx, input)
-	}, "Invalid Grantee in the request")
+	}, errCodeInvalidRequest, "Invalid Grantee in the request")
 
 	if err != nil {
 		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
