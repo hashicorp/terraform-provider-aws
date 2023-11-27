@@ -237,10 +237,15 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	_, err := conn.DeleteAccessGrantsLocation(ctx, &s3control.DeleteAccessGrantsLocationInput{
+	input := &s3control.DeleteAccessGrantsLocationInput{
 		AccessGrantsLocationId: flex.StringFromFramework(ctx, data.AccessGrantsLocationID),
 		AccountId:              flex.StringFromFramework(ctx, data.AccountID),
-	})
+	}
+
+	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.DeleteAccessGrantsLocation(ctx, input)
+	}, errCodeAccessGrantsLocationNotEmptyError)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return
