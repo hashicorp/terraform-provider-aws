@@ -108,7 +108,7 @@ func (r *resourceAccessGrantsLocation) Create(ctx context.Context, request resou
 		return
 	}
 
-	input.Tags = getTagsInS3Control(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	// TODO: Is this the GA error?
 	// HTTP 400 => Invalid IAM role.
@@ -177,7 +177,7 @@ func (r *resourceAccessGrantsLocation) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOutS3Control(ctx, tagsS3Control(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

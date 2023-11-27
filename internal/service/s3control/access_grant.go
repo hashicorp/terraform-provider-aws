@@ -175,7 +175,7 @@ func (r *resourceAccessGrant) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	input.Tags = getTagsInS3Control(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAccessGrant(ctx, input)
 
@@ -244,7 +244,7 @@ func (r *resourceAccessGrant) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	setTagsOutS3Control(ctx, tagsS3Control(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

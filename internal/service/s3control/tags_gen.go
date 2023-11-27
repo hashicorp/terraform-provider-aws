@@ -31,7 +31,7 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTagsS3Control(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists s3control service tags and set them in Context.
@@ -52,8 +52,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 // []*SERVICE.Tag handling
 
-// tagsS3Control returns s3control service tags.
-func tagsS3Control(tags tftags.KeyValueTags) []awstypes.Tag {
+// Tags returns s3control service tags.
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -68,8 +68,8 @@ func tagsS3Control(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// keyValueTagsS3Control creates tftags.KeyValueTags from s3control service tags.
-func keyValueTagsS3Control(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// KeyValueTags creates tftags.KeyValueTags from s3control service tags.
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -79,11 +79,11 @@ func keyValueTagsS3Control(ctx context.Context, tags []awstypes.Tag) tftags.KeyV
 	return tftags.New(ctx, m)
 }
 
-// getTagsInS3Control returns s3control service tags from Context.
+// getTagsIn returns s3control service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsInS3Control(ctx context.Context) []awstypes.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := tagsS3Control(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -91,10 +91,10 @@ func getTagsInS3Control(ctx context.Context) []awstypes.Tag {
 	return nil
 }
 
-// setTagsOutS3Control sets s3control service tags in Context.
-func setTagsOutS3Control(ctx context.Context, tags []awstypes.Tag) {
+// setTagsOut sets s3control service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(keyValueTagsS3Control(ctx, tags))
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
@@ -129,7 +129,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 		input := &s3control.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			AccountId:   aws.String(resourceType),
-			Tags:        tagsS3Control(updatedTags),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)

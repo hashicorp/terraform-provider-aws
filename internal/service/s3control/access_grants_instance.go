@@ -92,7 +92,7 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
 		AccountId: flex.StringFromFramework(ctx, data.AccountID),
-		Tags:      getTagsInS3Control(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
@@ -155,7 +155,7 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOutS3Control(ctx, tagsS3Control(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
