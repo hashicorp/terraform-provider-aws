@@ -62,7 +62,7 @@ func testAccAccessGrant_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantConfig_basic(rName),
@@ -85,7 +85,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantConfig_tags1(rName, "key1", "value1"),
