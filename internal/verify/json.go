@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 )
 
+// SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
+// two JSON strings representing IAM policies and returns `true` if they are semantically equivalent.
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
 	return PolicyStringsEquivalent(old, new)
 }
@@ -46,7 +48,20 @@ func PolicyStringsEquivalent(s1, s2 string) bool {
 	return equivalent
 }
 
+// SuppressEquivalentJSONDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent.
 func SuppressEquivalentJSONDiffs(k, old, new string, d *schema.ResourceData) bool {
+	return JSONStringsEqual(old, new)
+}
+
+// SuppressEquivalentJSONWithEmptyDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONWithEmptyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old, new := strings.TrimSpace(old), strings.TrimSpace(new); (old == "" || old == "{}") && (new == "" || new == "{}") {
+		return true
+	}
 	return JSONStringsEqual(old, new)
 }
 

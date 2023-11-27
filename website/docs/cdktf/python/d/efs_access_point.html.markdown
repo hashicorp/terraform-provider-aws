@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
     * `path` - Path exposed as the root directory
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-0a6eb33b78fe37cb122bdb76da99c518922b10eb75fae54fd07c18509d2e4a50 -->
+<!-- cache-key: cdktf-0.19.0 input-0a6eb33b78fe37cb122bdb76da99c518922b10eb75fae54fd07c18509d2e4a50 -->

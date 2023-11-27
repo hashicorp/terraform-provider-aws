@@ -44,12 +44,12 @@ This data source exports the following attributes in addition to the arguments a
 
 * `delegatedAdministrators` - The list of delegated administrators in your organization, which have the following attributes:
     * `arn` - The ARN of the delegated administrator's account.
-    * `delegationEnabledDate` - The date when the account was made a delegated administrator.
+    * `delegation_enabled_date` - The date when the account was made a delegated administrator.
     * `email` - The email address that is associated with the delegated administrator's AWS account.
     * `id` - The unique identifier (ID) of the delegated administrator's account.
-    * `joinedMethod` - The method by which the delegated administrator's account joined the organization.
-    * `joinedTimestamp` - The date when the delegated administrator's account became a part of the organization.
+    * `joined_method` - The method by which the delegated administrator's account joined the organization.
+    * `joined_timestamp` - The date when the delegated administrator's account became a part of the organization.
     * `name` - The friendly name of the delegated administrator's account.
     * `status` - The status of the delegated administrator's account in the organization.
 
-<!-- cache-key: cdktf-0.18.0 input-109c5f762c0d10ecbb15ab59b2bb18f8653bf89c01823c41fe23ae6036327116 -->
+<!-- cache-key: cdktf-0.19.0 input-109c5f762c0d10ecbb15ab59b2bb18f8653bf89c01823c41fe23ae6036327116 -->

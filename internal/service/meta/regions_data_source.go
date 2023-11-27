@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
 	d.SetMigratedFromPluginSDK(true)

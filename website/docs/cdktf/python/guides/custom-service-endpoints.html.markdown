@@ -117,6 +117,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bedrock</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
@@ -145,8 +146,10 @@ class MyConvertedCode(TerraformStack):
   <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
+  <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -236,6 +239,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -282,6 +286,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
@@ -397,4 +402,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0112c9f167cfd048cc5a94aa64874964d28a0f6a6dc2d8b62a2962fbc15c3718 -->
+<!-- cache-key: cdktf-0.19.0 input-c512f946c3de8eca0fd769921ed13fc6e49b54dd14b00a279129beffc2c5506b -->

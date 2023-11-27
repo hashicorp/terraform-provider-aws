@@ -92,7 +92,8 @@ The following arguments are required:
 
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `default_space_settings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domain_name` - (Required) The domain name.
+* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.
+* `domain_name` - (Required) The domain name.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 
@@ -132,9 +133,26 @@ The following arguments are optional:
 
 #### canvas_app_settings
 
+* `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
+* `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
+* `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
 * `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. See [Time Series Forecasting Settings](#time_series_forecasting_settings) below.
 * `workspace_settings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace_settings) below.
+
+##### identity_provider_oauth_settings
+
+* `data_source_name` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `secret_arn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
+* `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### direct_deploy_settings
+
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### kendra_settings
+
+* `status` - (Optional) Describes whether the document querying feature is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### model_register_settings
 

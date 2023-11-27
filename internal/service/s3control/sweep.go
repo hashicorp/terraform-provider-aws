@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package s3control
 
 import (
@@ -19,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3control_access_grant", &resource.Sweeper{
 		Name: "aws_s3control_access_grant",
 		F:    sweepAccessGrants,
@@ -101,7 +98,7 @@ func sweepAccessGrants(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		fmt.Errorf("error sweeping S3 Access Grants (%s): %w", region, err)
+		return fmt.Errorf("error sweeping S3 Access Grants (%s): %w", region, err)
 	}
 
 	return nil
@@ -143,7 +140,7 @@ func sweepAccessGrantsInstances(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		fmt.Errorf("error sweeping S3 Access Grants Instances (%s): %w", region, err)
+		return fmt.Errorf("error sweeping S3 Access Grants Instances (%s): %w", region, err)
 	}
 
 	return nil
@@ -185,7 +182,7 @@ func sweepAccessGrantsLocations(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		fmt.Errorf("error sweeping S3 Access Grants Locations (%s): %w", region, err)
+		return fmt.Errorf("error sweeping S3 Access Grants Locations (%s): %w", region, err)
 	}
 
 	return nil

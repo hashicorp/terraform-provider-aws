@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package resourcegroups
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_resourcegroups_group", &resource.Sweeper{
 		Name: "aws_resourcegroups_group",
 		F:    sweepGroups,
@@ -61,8 +58,6 @@ func sweepGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error sweeping Resource Groups Groups (%s): %w", region, err)
 	}
-
-	return nil
 
 	return nil
 }

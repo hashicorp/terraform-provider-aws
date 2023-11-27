@@ -48,6 +48,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_neptune_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_parameter_group_name", parameterGroupResourceName, "name"),
@@ -102,7 +103,7 @@ func TestAccNeptuneClusterInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneClusterInstance_nameGenerated(t *testing.T) {
+func TestAccNeptuneClusterInstance_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -115,10 +116,11 @@ func TestAccNeptuneClusterInstance_nameGenerated(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_nameGenerated(rName),
+				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexache.MustCompile("^tf-")),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "identifier", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-"),
 				),
 			},
 			{
@@ -130,7 +132,7 @@ func TestAccNeptuneClusterInstance_nameGenerated(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
+func TestAccNeptuneClusterInstance_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,7 +145,7 @@ func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_namePrefix(rName, "tf-acc-test-prefix-"),
+				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
@@ -154,9 +156,6 @@ func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"identifier_prefix",
-				},
 			},
 		},
 	})
@@ -303,7 +302,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -324,7 +323,7 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfneptune.FindClusterInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -402,7 +401,7 @@ resource "aws_neptune_cluster_instance" "cluster_instances" {
 `, rName))
 }
 
-func testAccClusterInstanceConfig_nameGenerated(rName string) string {
+func testAccClusterInstanceConfig_identifierGenerated(rName string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), `
 resource "aws_neptune_cluster_instance" "test" {
   cluster_identifier = aws_neptune_cluster.test.id
@@ -414,7 +413,7 @@ resource "aws_neptune_cluster_instance" "test" {
 `)
 }
 
-func testAccClusterInstanceConfig_namePrefix(rName, prefix string) string {
+func testAccClusterInstanceConfig_identifierPrefix(rName, prefix string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_instance" "test" {
   identifier_prefix  = %[1]q

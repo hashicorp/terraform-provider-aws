@@ -42,8 +42,8 @@ func ResourceKxCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute), // Tags only
+			Create: schema.DefaultTimeout(4 * time.Hour),
+			Update: schema.DefaultTimeout(4 * time.Hour),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -155,26 +155,22 @@ func ResourceKxCluster() *schema.Resource {
 			"code": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(3, 255),
 						},
 						"s3_key": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
 					},
@@ -184,7 +180,6 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
 				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 50),
 					validation.MapValueLenBetween(1, 50),
@@ -197,13 +192,11 @@ func ResourceKxCluster() *schema.Resource {
 			"database": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cache_type": {
@@ -217,7 +210,6 @@ func ResourceKxCluster() *schema.Resource {
 											Type: schema.TypeString,
 										},
 										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -225,7 +217,6 @@ func ResourceKxCluster() *schema.Resource {
 						"changeset_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 26),
 						},
 						"database_name": {
@@ -258,7 +249,6 @@ func ResourceKxCluster() *schema.Resource {
 			"initialization_script": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"last_modified_timestamp": {
@@ -509,10 +499,8 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
-	if d.IsNewResource() {
-		if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
-		}
+	if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("command_line_arguments", flattenCommandLineArguments(out.CommandLineArguments)); err != nil {
@@ -537,7 +525,66 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// Tags only.
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
+
+	updateDb := false
+	updateCode := false
+
+	CodeConfigIn := &finspace.UpdateKxClusterCodeConfigurationInput{
+		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
+	}
+
+	DatabaseConfigIn := &finspace.UpdateKxClusterDatabasesInput{
+		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && d.HasChanges("database") {
+		DatabaseConfigIn.Databases = expandDatabases(d.Get("database").([]interface{}))
+		updateDb = true
+	}
+
+	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && d.HasChanges("code") {
+		CodeConfigIn.Code = expandCode(v.([]interface{}))
+		updateCode = true
+	}
+
+	if v, ok := d.GetOk("initialization_script"); ok && d.HasChanges("initialization_script") {
+		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+		CodeConfigIn.InitializationScript = aws.String(v.(string))
+		updateCode = true
+	}
+
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
+		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+		CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+		updateCode = true
+	}
+
+	if updateDb {
+		log.Printf("[DEBUG] Updating FinSpace KxClusterDatabases (%s): %#v", d.Id(), DatabaseConfigIn)
+		if _, err := conn.UpdateKxClusterDatabases(ctx, DatabaseConfigIn); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+	}
+
+	if updateCode {
+		log.Printf("[DEBUG] Updating FinSpace KxClusterCodeConfiguration (%s): %#v", d.Id(), CodeConfigIn)
+		if _, err := conn.UpdateKxClusterCodeConfiguration(ctx, CodeConfigIn); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+		}
+	}
+
+	if !updateCode && !updateDb {
+		return diags
+	}
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 
@@ -570,6 +617,24 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusCreating),
+		Target:                    enum.Slice(types.KxClusterStatusRunning),
+		Refresh:                   statusKxCluster(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*finspace.GetKxClusterOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitKxClusterUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusUpdating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
 		Refresh:                   statusKxCluster(ctx, conn, id),
 		Timeout:                   timeout,
@@ -716,7 +781,7 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 	}
 
 	if v, ok := tfMap["size"].(int); ok && v != 0 {
-		a.Size = int32(v)
+		a.Size = aws.Int32(int32(v))
 	}
 
 	return a
@@ -1005,7 +1070,7 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 		m["type"] = v
 	}
 
-	if v := apiObject.Size; v >= 10 && v <= 16000 {
+	if v := aws.ToInt32(apiObject.Size); v >= 10 && v <= 16000 {
 		m["size"] = v
 	}
 

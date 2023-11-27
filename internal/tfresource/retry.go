@@ -6,6 +6,7 @@ package tfresource
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -96,6 +97,42 @@ func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.
 
 		return false, err
 	})
+}
+
+// RetryUntilEqual retries the specified function until it returns a value equal to `t`.
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
+	var output T
+
+	err := Retry(ctx, timeout, func() *retry.RetryError {
+		var err error
+
+		output, err = f()
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if output != t {
+			return retry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
+		}
+
+		return nil
+	})
+
+	if TimedOut(err) {
+		output, err = f()
+
+		if err == nil && output != t {
+			err = fmt.Errorf("output = %v, want %v", output, t)
+		}
+	}
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return output, nil
 }
 
 // RetryWhenHTTPStatusCodeEquals retries the specified function when it returns one of the specified HTTP status codes.

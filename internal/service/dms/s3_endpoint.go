@@ -576,8 +576,8 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.AddColumnName = aws.Bool(v)
 	}
 
-	if v, ok := d.Get("add_trailing_padding_character").(bool); ok && target { // target
-		s3s.AddTrailingPaddingCharacter = aws.Bool(v)
+	if v, ok := d.GetOk("add_trailing_padding_character"); ok && target { // target
+		s3s.AddTrailingPaddingCharacter = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("bucket_folder"); ok {

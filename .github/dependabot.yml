@@ -35,6 +35,7 @@ updates:
       # go-hclog should only be updated via terraform-plugin-log
       - dependency-name: "github.com/hashicorp/go-hclog"
       - dependency-name: "golang.org/x/tools"
+      # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/grpc"
     schedule:
       interval: "daily"

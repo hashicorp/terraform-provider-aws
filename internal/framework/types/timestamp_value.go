@@ -10,74 +10,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func NewTimestampNull() TimestampValue {
-	return TimestampValue{
-		StringValue: types.StringNull(),
-	}
+func TimestampNull() Timestamp {
+	return Timestamp{StringValue: types.StringNull()}
 }
 
-func NewTimestampUnknown() TimestampValue {
-	return TimestampValue{
-		StringValue: types.StringUnknown(),
-	}
+func TimestampUnknown() Timestamp {
+	return Timestamp{StringValue: types.StringUnknown()}
 }
 
-func NewTimestampValue(t time.Time) TimestampValue {
-	return newTimestampValue(t.Format(time.RFC3339), t)
-}
-
-func NewTimestampValueString(s string) (TimestampValue, error) {
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return TimestampValue{}, err
-	}
-	return newTimestampValue(s, t), nil
-}
-
-func newTimestampValue(s string, t time.Time) TimestampValue {
-	return TimestampValue{
-		StringValue: types.StringValue(s),
-		value:       t,
+func TimestampValue(value string) Timestamp {
+	return Timestamp{
+		StringValue: basetypes.NewStringValue(value),
+		value:       errs.Must(time.Parse(time.RFC3339, value)),
 	}
 }
 
 var (
-	_ basetypes.StringValuable = (*TimestampValue)(nil)
+	_ basetypes.StringValuable = (*Timestamp)(nil)
 )
 
-type TimestampValue struct {
+type Timestamp struct {
 	basetypes.StringValue
-
-	// value contains the parsed value, if not Null or Unknown.
 	value time.Time
 }
 
-func (val TimestampValue) Type(_ context.Context) attr.Type {
-	return TimestampType{}
-}
-
-func (val TimestampValue) Equal(other attr.Value) bool {
-	o, ok := other.(TimestampValue)
+func (v Timestamp) Equal(o attr.Value) bool {
+	other, ok := o.(Timestamp)
 
 	if !ok {
 		return false
 	}
 
-	if val.StringValue.IsUnknown() {
-		return o.StringValue.IsUnknown()
-	}
-
-	if val.StringValue.IsNull() {
-		return o.StringValue.IsNull()
-	}
-
-	return val.value.Equal(o.value)
+	return v.StringValue.Equal(other.StringValue)
 }
 
-// ValueTimestamp returns the known time.Time value. If Timestamp is null or unknown, returns 0.
-// To get the value as a string, use ValueString.
-func (val TimestampValue) ValueTimestamp() time.Time {
-	return val.value
+func (v Timestamp) Type(_ context.Context) attr.Type {
+	return TimestampType
+}
+
+func (v Timestamp) ValueTimestamp() time.Time {
+	return v.value
 }

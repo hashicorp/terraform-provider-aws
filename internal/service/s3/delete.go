@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 )
 
+const (
+	listObjectVersionsMaxKeys = 1000
+)
+
 // emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
@@ -39,7 +43,8 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
+		Bucket:  aws.String(bucket),
+		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
 	}
 	var lastErr error
 
@@ -87,12 +92,14 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 	}
 
 	input := &s3.DeleteObjectsInput{
-		Bucket:                    aws.String(bucket),
-		BypassGovernanceRetention: force,
+		Bucket: aws.String(bucket),
 		Delete: &types.Delete{
 			Objects: toDelete,
-			Quiet:   true, // Only report errors.
+			Quiet:   aws.Bool(true), // Only report errors.
 		},
+	}
+	if force {
+		input.BypassGovernanceRetention = aws.Bool(force)
 	}
 
 	output, err := conn.DeleteObjects(ctx, input)
@@ -181,7 +188,7 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket stri
 		Bucket: aws.String(bucket),
 		Delete: &types.Delete{
 			Objects: toDelete,
-			Quiet:   true, // Only report errors.
+			Quiet:   aws.Bool(true), // Only report errors.
 		},
 	}
 
@@ -236,7 +243,8 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
+		Bucket:  aws.String(bucket),
+		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
 	}
 	if key != "" {
 		input.Prefix = aws.String(key)
@@ -386,7 +394,7 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 		input.VersionId = aws.String(v)
 	}
 	if force {
-		input.BypassGovernanceRetention = true
+		input.BypassGovernanceRetention = aws.Bool(force)
 	}
 
 	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version (%s)", b, k, v)

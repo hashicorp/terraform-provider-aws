@@ -117,11 +117,11 @@ class MyConvertedCode extends TerraformStack {
 
 The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
 
-* `name ` (Required) - Name of the connector profile. The name is unique for each `connectorProfile` in your AWS account.
-* `connectionMode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `public`, `private`.
-* `connectorLabel` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `customConnector` connector type.
+* `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
+* `connectionMode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
+* `connectorLabel` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `CustomConnector` connector type.
 * `connectorProfileConfig` (Required) - Defines the connector-specific configuration and credentials. See [Connector Profile Config](#connector-profile-config) for more details.
-* `connectorType` (Required) - The type of connector. One of: `amplitude`, `customConnector`, `customerProfiles`, `datadog`, `dynatrace`, `eventBridge`, `googleanalytics`, `honeycode`, `infornexus`, `lookoutMetrics`, `marketo`, `redshift`, `s3`, `salesforce`, `sapoData`, `servicenow`, `singular`, `slack`, `snowflake`, `trendmicro`, `upsolver`, `veeva`, `zendesk`.
+* `connectorType` (Required) - The type of connector. One of: `Amplitude`, `CustomConnector`, `CustomerProfiles`, `Datadog`, `Dynatrace`, `EventBridge`, `Googleanalytics`, `Honeycode`, `Infornexus`, `LookoutMetrics`, `Marketo`, `Redshift`, `S3`, `Salesforce`, `SAPOData`, `Servicenow`, `Singular`, `Slack`, `Snowflake`, `Trendmicro`, `Upsolver`, `Veeva`, `Zendesk`.
 * `kmsArn` (Optional) - ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 
 ### Connector Profile Config
@@ -158,21 +158,21 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 #### Custom Connector Profile Credentials
 
 * `apiKey` (Optional) - API keys required for the authentication of the user.
-    * `apiKey` (Required) - The API key required for API key authentication.
-    * `apiSecretKey` (Optional) - The API secret key required for API key authentication.
-* `authenticationType` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `apikey`, `basic`, `custom`, `oauth2`.
+    * `api_key` (Required) - The API key required for API key authentication.
+    * `api_secret_key` (Optional) - The API secret key required for API key authentication.
+* `authenticationType` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `APIKEY`, `BASIC`, `CUSTOM`, `OAUTH2`.
 * `basic` (Optional) - Basic credentials that are required for the authentication of the user.
     * `password` (Required) - The password to use to connect to a resource.
     * `username` (Required) - The username to use to connect to a resource.
 * `custom` (Optional) - If the connector uses the custom authentication mechanism, this holds the required credentials.
-    * `credentialsMap` (Optional) - A map that holds custom authentication credentials.
-    * `customAuthenticationType` (Required) - The custom authentication type that the connector uses.
+    * `credentials_map` (Optional) - A map that holds custom authentication credentials.
+    * `custom_authentication_type` (Required) - The custom authentication type that the connector uses.
 * `oauth2` (Optional) - OAuth 2.0 credentials required for the authentication of the user.
-    * `accessToken` (Optional) - The access token used to access the connector on your behalf.
-    * `clientId` (Optional) - The identifier for the desired client.
-    * `clientSecret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
-    * `oauthRequest` (Optional) - Used by select connectors for which the OAuth workflow is supported. See [OAuth Request](#oauth-request) for more details.
-    * `refreshToken` (Optional) - The refresh token used to refresh an expired access token.
+    * `access_token` (Optional) - The access token used to access the connector on your behalf.
+    * `client_id` (Optional) - The identifier for the desired client.
+    * `client_secret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
+    * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported. See [OAuth Request](#oauth-request) for more details.
+    * `refresh_token` (Optional) - The refresh token used to refresh an expired access token.
 
 #### Datadog Connector Profile Credentials
 
@@ -220,6 +220,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `accessToken` (Optional) - The credentials used to access protected Salesforce resources.
 * `clientCredentialsArn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
+* `jwtToken` (Optional) - A JSON web token (JWT) that authorizes access to Salesforce records.
+* `oauth2GrantType` (Optional) - The OAuth 2.0 grant type used when requesting an access token from Salesforce. Valid values are `CLIENT_CREDENTIALS`, `AUTHORIZATION_CODE`, and `JWT_BEARER`.
 * `oauthRequest` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refreshToken` (Optional) - The credentials used to acquire new access tokens.
 
@@ -229,11 +231,11 @@ The AppFlow connector profile argument layout is a complex structure. The follow
     * `password` (Required) - The password to use to connect to a resource.
     * `username` (Required) - The username to use to connect to a resource.
 * `oauthCredentials` (Optional) - The SAPOData OAuth type authentication credentials.
-    * `accessToken` (Optional) - The access token used to access protected SAPOData resources.
-    * `clientId` (Required) - The identifier for the desired client.
-    * `clientSecret` (Required) -  The client secret used by the OAuth client to authenticate to the authorization server.
-    * `oauthRequest` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
-    * `refreshToken` (Optional) - The refresh token used to refresh expired access token.
+    * `access_token` (Optional) - The access token used to access protected SAPOData resources.
+    * `client_id` (Required) - The identifier for the desired client.
+    * `client_secret` (Required) -  The client secret used by the OAuth client to authenticate to the authorization server.
+    * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
+    * `refresh_token` (Optional) - The refresh token used to refresh expired access token.
 
 #### ServiceNow Connector Profile Credentials
 
@@ -296,9 +298,9 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 #### Custom Connector Profile Properties
 
 * `oauth2Properties` (Optional) - The OAuth 2.0 properties required for OAuth 2.0 authentication.
-    * `oauth2GrantType` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `authorizationCode`, `clientCredentials`.
-    * `tokenUrl` (Required) - The token URL required for OAuth 2.0 authentication.
-    * `tokenUrlCustomProperties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
+    * `oauth2_grant_type` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`.
+    * `token_url` (Required) - The token URL required for OAuth 2.0 authentication.
+    * `token_url_custom_properties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
 * `profileProperties` (Optional) - A map of properties that are required to create a profile for the custom connector.
 
 #### Generic Connector Profile Properties
@@ -329,9 +331,9 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `clientNumber` (Required) - The client number for the client creating the connection.
 * `logonLanguage` (Optional) - The logon language of SAPOData instance.
 * `oauthProperties` (Optional) - The SAPOData OAuth properties required for OAuth type authentication.
-    * `authCodeUrl` (Required) - The authorization code url required to redirect to SAP Login Page to fetch authorization code for OAuth type authentication.
-    * `oauthScopes` (Required) - The OAuth scopes required for OAuth type authentication.
-    * `tokenUrl` (Required) - The token url required to fetch access/refresh tokens using authorization code and also to refresh expired access token using refresh token.
+    * `auth_code_url` (Required) - The authorization code url required to redirect to SAP Login Page to fetch authorization code for OAuth type authentication.
+    * `oauth_scopes` (Required) - The OAuth scopes required for OAuth type authentication.
+    * `token_url` (Required) - The token url required to fetch access/refresh tokens using authorization code and also to refresh expired access token using refresh token.
 * `portNumber` (Required) - The port number of the SAPOData instance.
 * `privateLinkServiceName` (Optional) - The SAPOData Private Link service name to be used for private data transfers.
 
@@ -377,4 +379,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.18.0 input-12a8438ef29150aa2860f41042c61347e6053f7bc63636fa7e0e39ab0a9c445b -->
+<!-- cache-key: cdktf-0.19.0 input-175320c144cddd55dbd02b452b869ed210cf85367e05941516384dd0ea24a19d -->

@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -71,15 +70,10 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 
 // StringToFrameworkARN converts a string pointer to a Framework custom ARN value.
 // A nil string pointer is converted to a null ARN.
-// If diags is nil, any errors cause a panic.
-func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) fwtypes.ARN {
+func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
 	var output fwtypes.ARN
 
-	if diags == nil {
-		panicOnError(Flatten(ctx, v, &output))
-	} else {
-		diags.Append(Flatten(ctx, v, &output)...)
-	}
+	panicOnError(Flatten(ctx, v, &output))
 
 	return output
 }

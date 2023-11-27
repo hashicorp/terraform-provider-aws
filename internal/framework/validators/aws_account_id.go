@@ -24,20 +24,18 @@ func (validator awsAccountIDValidator) MarkdownDescription(ctx context.Context) 
 	return validator.Description(ctx)
 }
 
-// Validate performs the validation.
+// ValidateString performs the validation.
 func (validator awsAccountIDValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	configValue := request.ConfigValue
-
-	if configValue.IsNull() || configValue.IsUnknown() {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
 
 	// https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-identifiers.html.
-	if valueString := configValue.ValueString(); !regexache.MustCompile(`^\d{12}$`).MatchString(valueString) {
+	if !regexache.MustCompile(`^\d{12}$`).MatchString(request.ConfigValue.ValueString()) {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			valueString,
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -49,6 +47,6 @@ func (validator awsAccountIDValidator) ValidateString(ctx context.Context, reque
 //   - Is a string, which represents a valid AWS account ID.
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func AWSAccountID() validator.String {
+func AWSAccountID() validator.String { // nosemgrep:ci.aws-in-func-name
 	return awsAccountIDValidator{}
 }

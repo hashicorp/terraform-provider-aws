@@ -52,7 +52,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes separated by a `,` to create a unique id: `bucketName`,`accessKeyId`
+* `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`access_key_id`
 * `accessKeyId` - The ID of the access key.
 * `createdAt` - The timestamp when the access key was created.
 * `secretAccessKey` - The secret access key used to sign requests. This attribute is not available for imported resources. Note that this will be written to the state file.
@@ -77,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import `awsLightsailBucketAccessKey` using the `id` attribute. For example:
 
 ```console
-% terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIA47VOQ2KPR7LLRZ6D
+% terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIAIOSFODNN7EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4987b702ac9d88a7d12a903a50c895eccdf400c8ee70bccc957c21e050e1eb7f -->
+<!-- cache-key: cdktf-0.19.0 input-b91ae40f371a9970106798bfa657f64698a001e42a15cbfb64853b415f57d3e8 -->

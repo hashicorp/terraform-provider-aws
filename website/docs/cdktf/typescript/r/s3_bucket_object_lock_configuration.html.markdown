@@ -97,7 +97,7 @@ class MyConvertedCode extends TerraformStack {
 <!-- markdownlint-disable MD029 -->
 
 2. Contact AWS Support to provide you with the "Object Lock token" for the specified bucket and use the token (or token ID) within your new `awsS3BucketObjectLockConfiguration` resource.
-   Notice the `objectLockEnabled` argument does not need to be specified as it defaults to `enabled`.
+   Notice the `object_lock_enabled` argument does not need to be specified as it defaults to `Enabled`.
 
 <!-- markdownlint-disable MD029 -->
 ```typescript
@@ -135,10 +135,10 @@ This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
-* `objectLockEnabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `enabled`. Valid values: `enabled`.
+* `objectLockEnabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
 * `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule).
 * `token` - (Optional) Token to allow Object Lock to be enabled for an existing bucket. You must contact AWS support for the bucket's "Object Lock token".
-The token is generated in the back-end when [versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html) is enabled on a bucket. For more details on versioning, see the [`awsS3BucketVersioning` resource](s3_bucket_versioning.html.markdown).
+The token is generated in the back-end when [versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html) is enabled on a bucket. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 
 ### rule
 
@@ -151,14 +151,14 @@ The `rule` configuration block supports the following arguments:
 The `defaultRetention` configuration block supports the following arguments:
 
 * `days` - (Optional, Required if `years` is not specified) Number of days that you want to specify for the default retention period.
-* `mode` - (Required) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `compliance`, `governance`.
+* `mode` - (Required) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
 * `years` - (Optional, Required if `days` is not specified) Number of years that you want to specify for the default retention period.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -199,4 +199,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-48934903e4041e09bace32f0ac7c06d12e2ec061fd285d0370242e8daf326808 -->
+<!-- cache-key: cdktf-0.19.0 input-48934903e4041e09bace32f0ac7c06d12e2ec061fd285d0370242e8daf326808 -->

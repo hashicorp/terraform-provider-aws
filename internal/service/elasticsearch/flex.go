@@ -113,13 +113,17 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.Encrypt
 }
 
 func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+	if m == nil {
+		return nil
+	}
+
 	options := elasticsearch.VPCOptions{}
 
-	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		options.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		options.SubnetIds = flex.ExpandStringSet(v)
 	}
 
 	return &options
@@ -215,7 +219,11 @@ func flattenSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []ma
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
+func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface{} {
+	if o == nil {
+		return nil
+	}
+
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
@@ -231,5 +239,5 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interfa
 		m["vpc_id"] = aws.StringValue(o.VPCId)
 	}
 
-	return []map[string]interface{}{m}
+	return m
 }

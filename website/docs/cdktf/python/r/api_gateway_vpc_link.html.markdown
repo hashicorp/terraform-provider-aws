@@ -83,4 +83,4 @@ Using `terraform import`, import API Gateway VPC Link using the `id`. For exampl
 % terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-67ae655f1b594d4a56352e7b95e9f98e0a7e757e376024aa97ec46526256091e -->
+<!-- cache-key: cdktf-0.19.0 input-67ae655f1b594d4a56352e7b95e9f98e0a7e757e376024aa97ec46526256091e -->

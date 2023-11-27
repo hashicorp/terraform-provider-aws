@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // These "should" be defined by the AWS Go SDK v2, but currently aren't.
@@ -28,14 +30,23 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
+	AppFlowEndpointID                    = "appflow"
+	AppRunnerEndpointID                  = "apprunner"
+	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
+	BedrockEndpointID                    = "bedrock"
+	ChimeSDKVoiceEndpointID              = "voice-chime"
+	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeDeployEndpointID                 = "codedeploy"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
+	EKSEndpointID                        = "eks"
+	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
@@ -63,9 +74,12 @@ const (
 	S3EndpointID                         = "s3"
 	S3ControlEndpointID                  = "s3-control"
 	SESV2EndpointID                      = "sesv2"
+	SNSEndpointID                        = "sns"
+	SQSEndpointID                        = "sqs"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
+	STSEndpointID                        = "sts"
 	SWFEndpointID                        = "swf"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
@@ -76,6 +90,7 @@ const (
 // These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
+	ChinaPartitionID      = "aws-cn"     // AWS China partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.
 	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )
@@ -95,6 +110,7 @@ type ServiceDatum struct {
 	Aliases            []string
 	Brand              string
 	DeprecatedEnvVar   string
+	EndpointOnly       bool
 	EnvVar             string
 	GoV1ClientTypeName string
 	GoV1Package        string
@@ -138,7 +154,7 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
-		if l[ColNotImplemented] != "" {
+		if l[ColNotImplemented] != "" && l[ColEndpointOnly] == "" {
 			continue
 		}
 
@@ -155,6 +171,7 @@ func readCSVIntoServiceData() error {
 		serviceData[p] = &ServiceDatum{
 			Brand:              l[ColBrand],
 			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
+			EndpointOnly:       l[ColEndpointOnly] != "",
 			EnvVar:             l[ColEnvVar],
 			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
 			GoV1Package:        l[ColGoV1Package],
@@ -207,6 +224,50 @@ func Aliases() []string {
 	}
 
 	return keys
+}
+
+type Endpoint struct {
+	ProviderPackage string
+	Aliases         []string
+}
+
+func Endpoints() []Endpoint {
+	endpoints := make([]Endpoint, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		ep := Endpoint{
+			ProviderPackage: k,
+		}
+		if len(v.Aliases) > 1 {
+			idx := slices.Index(v.Aliases, k)
+			if idx != -1 {
+				aliases := slices.Delete(v.Aliases, idx, idx+1)
+				ep.Aliases = aliases
+			}
+		}
+		endpoints = append(endpoints, ep)
+	}
+
+	return endpoints
+}
+
+type ServiceNameUpper struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+}
+
+func ServiceNamesUpper() []ServiceNameUpper {
+	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		sn := ServiceNameUpper{
+			ProviderPackage:   k,
+			ProviderNameUpper: v.ProviderNameUpper,
+		}
+		serviceNames = append(serviceNames, sn)
+	}
+
+	return serviceNames
 }
 
 func ProviderNameUpper(service string) (string, error) {

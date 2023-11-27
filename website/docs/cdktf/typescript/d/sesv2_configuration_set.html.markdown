@@ -47,22 +47,22 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `deliveryOptions` - An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
-    * `sendingPoolName` - The name of the dedicated IP pool to associate with the configuration set.
-    * `tlsPolicy` - Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS).
+    * `sending_pool_name` - The name of the dedicated IP pool to associate with the configuration set.
+    * `tls_policy` - Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS).
 * `reputationOptions` - An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-    * `lastFreshStart` - The date and time (in Unix time) when the reputation metrics were last given a fresh start.
-    * `reputationMetricsEnabled` - Specifies whether tracking of reputation metrics is enabled.
+    * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start.
+    * `reputation_metrics_enabled` - Specifies whether tracking of reputation metrics is enabled.
 * `sendingOptions` - An object that defines whether or not Amazon SES can send email that you send using the configuration set.
-    * `sendingEnabled` - Specifies whether email sending is enabled.
+    * `sending_enabled` - Specifies whether email sending is enabled.
 * `suppressionOptions` - An object that contains information about the suppression list preferences for your account.
-    * `suppressedReasons` - A list that contains the reasons that email addresses are automatically added to the suppression list for your account.
+    * `suppressed_reasons` - A list that contains the reasons that email addresses are automatically added to the suppression list for your account.
 * `tags` - Key-value map of resource tags for the container recipe.
 * `trackingOptions` - An object that defines the open and click tracking options for emails that you send using the configuration set.
-    * `customRedirectDomain` - The domain to use for tracking open and click events.
+    * `custom_redirect_domain` - The domain to use for tracking open and click events.
 * `vdmOptions` - An object that contains information about the VDM preferences for your configuration set.
-    * `dashboardOptions` - Specifies additional settings for your VDM configuration as applicable to the Dashboard.
-        * `engagementMetrics` - Specifies the status of your VDM engagement metrics collection.
-    * `guardianOptions` - Specifies additional settings for your VDM configuration as applicable to the Guardian.
-        * `optimizedSharedDelivery` - Specifies the status of your VDM optimized shared delivery.
+    * `dashboard_options` - Specifies additional settings for your VDM configuration as applicable to the Dashboard.
+        * `engagement_metrics` - Specifies the status of your VDM engagement metrics collection.
+    * `guardian_options` - Specifies additional settings for your VDM configuration as applicable to the Guardian.
+        * `optimized_shared_delivery` - Specifies the status of your VDM optimized shared delivery.
 
-<!-- cache-key: cdktf-0.18.0 input-766473cbe249f97d2e59a5938aa348513964c44ef9762f5fa275491b1409c22a -->
+<!-- cache-key: cdktf-0.19.0 input-766473cbe249f97d2e59a5938aa348513964c44ef9762f5fa275491b1409c22a -->

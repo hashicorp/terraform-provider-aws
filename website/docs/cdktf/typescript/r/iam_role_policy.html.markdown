@@ -83,7 +83,7 @@ assign a random, unique name.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The role policy ID, in the form of `roleName:rolePolicyName`.
+* `id` - The role policy ID, in the form of `role_name:role_policy_name`.
 * `name` - The name of the policy.
 * `policy` - The policy document attached to the role.
 * `role` - The name of the role associated with the policy.
@@ -110,4 +110,4 @@ Using `terraform import`, import IAM Role Policies using the `roleName:rolePolic
 % terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9dd1f967613333456f478e1f20726a88afa276e76829289fff1efaec15c03f59 -->
+<!-- cache-key: cdktf-0.19.0 input-9dd1f967613333456f478e1f20726a88afa276e76829289fff1efaec15c03f59 -->

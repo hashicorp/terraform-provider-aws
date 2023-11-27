@@ -139,17 +139,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `config` - (Optional) The target group configuration. If type is set to `LAMBDA,` this parameter should not be specified.
+* `config` - (Optional) The target group configuration.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Config (`config`) supports the following:
 
 * `health_check` - (Optional) The health check configuration.
-* `ip_address_type` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`
-* `port` - (Required) The port on which the targets are listening.
-* `protocol` - (Required) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`
+* `ip_address_type` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`.
+* `lambda_event_structure_version` - (Optional) The version of the event structure that the Lambda function receives. Supported only if `type` is `LAMBDA`. Valid Values are `V1` | `V2`.
+* `port` - (Optional) The port on which the targets are listening.
+* `protocol` - (Optional) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`.
 * `protocol_version` - (Optional) The protocol version. Valid Values are `HTTP1` | `HTTP2` | `GRPC`. Default value is `HTTP1`.
-* `vpc_identifier` - (Required) The ID of the VPC.
+* `vpc_identifier` - (Optional) The ID of the VPC.
 
 Health Check (`health_check`) supports the following:
 
@@ -200,4 +201,4 @@ Using `terraform import`, import VPC Lattice Target Group using the `id`. For ex
 % terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-41b7a5fa5700af426730c0164eae9858e211d656453b72a5be43cb08472ded0a -->
+<!-- cache-key: cdktf-0.19.0 input-8b0f63dce846bb387e0c2e47e763aeda9a0b71702c33c2b21f0f39c8cf773e37 -->

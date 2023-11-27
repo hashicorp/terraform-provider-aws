@@ -72,6 +72,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_msk_configuration",
 		},
 		{
+			Factory:  ResourceReplicator,
+			TypeName: "aws_msk_replicator",
+			Name:     "Replicator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceScramSecretAssociation,
 			TypeName: "aws_msk_scram_secret_association",
 		},

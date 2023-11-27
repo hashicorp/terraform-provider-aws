@@ -115,4 +115,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` - Subnets used by the domain.
     * `vpc_id` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.18.0 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
+<!-- cache-key: cdktf-0.19.0 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->

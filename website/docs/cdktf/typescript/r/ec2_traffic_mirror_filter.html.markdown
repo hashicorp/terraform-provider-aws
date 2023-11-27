@@ -43,8 +43,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) A description of the filter.
-* `networkServices` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazonDns`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `networkServices` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazon-dns`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the traffic mirror filter.
 * `id` - The name of the filter.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -76,4 +76,4 @@ Using `terraform import`, import traffic mirror filter using the `id`. For examp
 % terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-08ada8ec01a41a5d998f21a5946d9d4b579e2fe8c3ac968d45ecefd291cbd4c3 -->
+<!-- cache-key: cdktf-0.19.0 input-08ada8ec01a41a5d998f21a5946d9d4b579e2fe8c3ac968d45ecefd291cbd4c3 -->

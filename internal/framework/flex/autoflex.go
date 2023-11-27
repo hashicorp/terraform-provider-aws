@@ -975,10 +975,9 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				return diags
 			}
 
-			from := vFrom.Interface().([]string)
-			elements := make([]attr.Value, len(from))
-			for i, v := range from {
-				elements[i] = types.StringValue(v)
+			elements := make([]attr.Value, vFrom.Len())
+			for i := 0; i < vFrom.Len(); i++ {
+				elements[i] = types.StringValue(vFrom.Index(i).String())
 			}
 			list, d := types.ListValue(types.StringType, elements)
 			diags.Append(d...)
@@ -1004,10 +1003,9 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				return diags
 			}
 
-			from := vFrom.Interface().([]string)
-			elements := make([]attr.Value, len(from))
-			for i, v := range from {
-				elements[i] = types.StringValue(v)
+			elements := make([]attr.Value, vFrom.Len())
+			for i := 0; i < vFrom.Len(); i++ {
+				elements[i] = types.StringValue(vFrom.Index(i).String())
 			}
 			set, d := types.SetValue(types.StringType, elements)
 			diags.Append(d...)

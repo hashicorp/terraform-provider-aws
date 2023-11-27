@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `name`,`domainName`,`type`,`target`
+* `id` - A combination of attributes to create a unique id: `name`,`domain_name`,`type`,`target`
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import `awsLightsailDomainEntry` using the id attribut
 % terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5611067be5b2911c504ce2dd0c0db39671077d1db16f1803538d003af55e4cb1 -->
+<!-- cache-key: cdktf-0.19.0 input-5611067be5b2911c504ce2dd0c0db39671077d1db16f1803538d003af55e4cb1 -->

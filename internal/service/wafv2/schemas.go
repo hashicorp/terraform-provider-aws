@@ -343,6 +343,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
 			"headers":             headersSchema(),
+			"ja3_fingerprint":     ja3fingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -783,6 +784,23 @@ func cookiesMatchPatternSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func ja3fingerprintSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
 				},
 			},
 		},

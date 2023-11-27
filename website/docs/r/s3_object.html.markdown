@@ -129,6 +129,33 @@ resource "aws_s3_object" "examplebucket_object" {
 }
 ```
 
+### Ignoring Provider `default_tags`
+
+S3 objects support a [maximum of 10 tags](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html).
+If the resource's own `tags` and the provider-level `default_tags` would together lead to more than 10 tags on an S3 object, use the `override_provider` configuration block to suppress any provider-level `default_tags`.
+
+```terraform
+resource "aws_s3_bucket" "examplebucket" {
+  bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_object" "examplebucket_object" {
+  key    = "someobject"
+  bucket = aws_s3_bucket.examplebucket.id
+  source = "important.txt"
+
+  tags = {
+    Env = "test"
+  }
+
+  override_provider {
+    default_tags {
+      tags = {}
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 -> **Note:** If you specify `content_encoding` you are responsible for encoding the body appropriately. `source`, `content`, and `content_base64` all expect already encoded/compressed bytes.
@@ -157,6 +184,7 @@ The following arguments are optional:
 * `object_lock_legal_hold_status` - (Optional) [Legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
 * `object_lock_mode` - (Optional) Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
 * `object_lock_retain_until_date` - (Optional) Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
+* `override_provider` - (Optional) Override provider-level configuration options. See [Override Provider](#override-provider) below for more details.
 * `server_side_encryption` - (Optional) Server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
@@ -167,6 +195,12 @@ The following arguments are optional:
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
+
+### Override Provider
+
+The `override_provider` block supports the following:
+
+* `default_tags` - (Optional) Override the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Attribute Reference
 

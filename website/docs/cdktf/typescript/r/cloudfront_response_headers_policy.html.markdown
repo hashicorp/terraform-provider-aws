@@ -138,12 +138,12 @@ This resource supports the following arguments:
 
 ### Cors Config
 
-* `accessControlAllowCredentials` - (Required) A Boolean value that CloudFront uses as the value for the `accessControlAllowCredentials` HTTP response header.
-* `accessControlAllowHeaders` - (Required) Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the `accessControlAllowHeaders` HTTP response header.
-* `accessControlAllowMethods` - (Required) Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the `accessControlAllowMethods` HTTP response header. Valid values: `get` | `post` | `options` | `put` | `delete` | `head` | `all`
-* `accessControlAllowOrigins` - (Required) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `accessControlAllowOrigin` HTTP response header.
-* `accessControlExposeHeaders` - (Optional) Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the `accessControlExposeHeaders` HTTP response header.
-* `accessControlMaxAgeSec` - (Optional) A number that CloudFront uses as the value for the `accessControlMaxAge` HTTP response header.
+* `accessControlAllowCredentials` - (Required) A Boolean value that CloudFront uses as the value for the `Access-Control-Allow-Credentials` HTTP response header.
+* `accessControlAllowHeaders` - (Required) Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the `Access-Control-Allow-Headers` HTTP response header.
+* `accessControlAllowMethods` - (Required) Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the `Access-Control-Allow-Methods` HTTP response header. Valid values: `GET` | `POST` | `OPTIONS` | `PUT` | `DELETE` | `HEAD` | `ALL`
+* `accessControlAllowOrigins` - (Required) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
+* `accessControlExposeHeaders` - (Optional) Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the `Access-Control-Expose-Headers` HTTP response header.
+* `accessControlMaxAgeSec` - (Optional) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
 * `originOverride` - (Required) A Boolean value that determines how CloudFront behaves for the HTTP response header.
 
 ### Custom Header
@@ -158,49 +158,49 @@ This resource supports the following arguments:
 
 ### Security Headers Config
 
-* `contentSecurityPolicy` - (Optional) The policy directives and their values that CloudFront includes as values for the `contentSecurityPolicy` HTTP response header. See [Content Security Policy](#content-security-policy) for more information.
-* `contentTypeOptions` - (Optional) Determines whether CloudFront includes the `xContentTypeOptions` HTTP response header with its value set to `nosniff`. See [Content Type Options](#content-type-options) for more information.
-* `frameOptions` - (Optional) Determines whether CloudFront includes the `xFrameOptions` HTTP response header and the header’s value. See [Frame Options](#frame-options) for more information.
-* `referrerPolicy` - (Optional) Determines whether CloudFront includes the `referrerPolicy` HTTP response header and the header’s value. See [Referrer Policy](#referrer-policy) for more information.
-* `strictTransportSecurity` - (Optional) Determines whether CloudFront includes the `strictTransportSecurity` HTTP response header and the header’s value. See [Strict Transport Security](#strict-transport-security) for more information.
-* `xssProtection` - (Optional) Determine whether CloudFront includes the `xXssProtection` HTTP response header and the header’s value. See [XSS Protection](#xss-protection) for more information.
+* `contentSecurityPolicy` - (Optional) The policy directives and their values that CloudFront includes as values for the `Content-Security-Policy` HTTP response header. See [Content Security Policy](#content-security-policy) for more information.
+* `contentTypeOptions` - (Optional) Determines whether CloudFront includes the `X-Content-Type-Options` HTTP response header with its value set to `nosniff`. See [Content Type Options](#content-type-options) for more information.
+* `frameOptions` - (Optional) Determines whether CloudFront includes the `X-Frame-Options` HTTP response header and the header’s value. See [Frame Options](#frame-options) for more information.
+* `referrerPolicy` - (Optional) Determines whether CloudFront includes the `Referrer-Policy` HTTP response header and the header’s value. See [Referrer Policy](#referrer-policy) for more information.
+* `strictTransportSecurity` - (Optional) Determines whether CloudFront includes the `Strict-Transport-Security` HTTP response header and the header’s value. See [Strict Transport Security](#strict-transport-security) for more information.
+* `xssProtection` - (Optional) Determine whether CloudFront includes the `X-XSS-Protection` HTTP response header and the header’s value. See [XSS Protection](#xss-protection) for more information.
 
 ### Content Security Policy
 
-* `contentSecurityPolicy` - (Required) The policy directives and their values that CloudFront includes as values for the `contentSecurityPolicy` HTTP response header.
-* `override` - (Required) Whether CloudFront overrides the `contentSecurityPolicy` HTTP response header received from the origin with the one specified in this response headers policy.
+* `contentSecurityPolicy` - (Required) The policy directives and their values that CloudFront includes as values for the `Content-Security-Policy` HTTP response header.
+* `override` - (Required) Whether CloudFront overrides the `Content-Security-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Content Type Options
 
-* `override` - (Required) Whether CloudFront overrides the `xContentTypeOptions` HTTP response header received from the origin with the one specified in this response headers policy.
+* `override` - (Required) Whether CloudFront overrides the `X-Content-Type-Options` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Frame Options
 
-* `frameOption` - (Required) The value of the `xFrameOptions` HTTP response header. Valid values: `deny` | `sameorigin`
-* `override` - (Required) Whether CloudFront overrides the `xFrameOptions` HTTP response header received from the origin with the one specified in this response headers policy.
+* `frameOption` - (Required) The value of the `X-Frame-Options` HTTP response header. Valid values: `DENY` | `SAMEORIGIN`
+* `override` - (Required) Whether CloudFront overrides the `X-Frame-Options` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Referrer Policy
 
-* `referrerPolicy` - (Required) The value of the `referrerPolicy` HTTP response header. Valid Values: `noReferrer` | `noReferrerWhenDowngrade` | `origin` | `originWhenCrossOrigin` | `sameOrigin` | `strictOrigin` | `strictOriginWhenCrossOrigin` | `unsafeUrl`
-* `override` - (Required) Whether CloudFront overrides the `referrerPolicy` HTTP response header received from the origin with the one specified in this response headers policy.
+* `referrerPolicy` - (Required) The value of the `Referrer-Policy` HTTP response header. Valid Values: `no-referrer` | `no-referrer-when-downgrade` | `origin` | `origin-when-cross-origin` | `same-origin` | `strict-origin` | `strict-origin-when-cross-origin` | `unsafe-url`
+* `override` - (Required) Whether CloudFront overrides the `Referrer-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Strict Transport Security
 
-* `accessControlMaxAgeSec` - (Required) A number that CloudFront uses as the value for the `maxAge` directive in the `strictTransportSecurity` HTTP response header.
-* `includeSubdomains` - (Optional) Whether CloudFront includes the `includeSubDomains` directive in the `strictTransportSecurity` HTTP response header.
-* `override` - (Required) Whether CloudFront overrides the `strictTransportSecurity` HTTP response header received from the origin with the one specified in this response headers policy.
-* `preload` - (Optional) Whether CloudFront includes the `preload` directive in the `strictTransportSecurity` HTTP response header.
+* `accessControlMaxAgeSec` - (Required) A number that CloudFront uses as the value for the `max-age` directive in the `Strict-Transport-Security` HTTP response header.
+* `includeSubdomains` - (Optional) Whether CloudFront includes the `includeSubDomains` directive in the `Strict-Transport-Security` HTTP response header.
+* `override` - (Required) Whether CloudFront overrides the `Strict-Transport-Security` HTTP response header received from the origin with the one specified in this response headers policy.
+* `preload` - (Optional) Whether CloudFront includes the `preload` directive in the `Strict-Transport-Security` HTTP response header.
 
 ### XSS Protection
 
-* `modeBlock` - (Optional) Whether CloudFront includes the `mode=block` directive in the `xXssProtection` header.
-* `override` - (Required) Whether CloudFront overrides the `xXssProtection` HTTP response header received from the origin with the one specified in this response headers policy.
-* `protection` - (Required) A Boolean value that determines the value of the `xXssProtection` HTTP response header. When this setting is `true`, the value of the `xXssProtection` header is `1`. When this setting is `false`, the value of the `xXssProtection` header is `0`.
-* `reportUri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `xXssProtection` header. You cannot specify a `reportUri` when `modeBlock` is `true`.
+* `modeBlock` - (Optional) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
+* `override` - (Required) Whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
+* `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
+* `reportUri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.
 
 ### Server Timing Headers Config
 
-* `enabled` - (Required) A Whether CloudFront adds the `serverTiming` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `enabled` - (Required) A Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `samplingRate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
 
 ## Attribute Reference
@@ -232,4 +232,4 @@ Using `terraform import`, import Cloudfront Response Headers Policies using the 
 % terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-15a6be73fafecd64814710cc46b232493b1b75d7043901288106fe05e9584aec -->
+<!-- cache-key: cdktf-0.19.0 input-15a6be73fafecd64814710cc46b232493b1b75d7043901288106fe05e9584aec -->

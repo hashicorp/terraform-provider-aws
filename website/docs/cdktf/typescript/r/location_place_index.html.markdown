@@ -46,13 +46,13 @@ The following arguments are optional:
 
 * `dataSourceConfiguration` - (Optional) Configuration block with the data storage option chosen for requesting Places. Detailed below.
 * `description` - (Optional) The optional description for the place index resource.
-* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### data_source_configuration
 
 The following arguments are optional:
 
-* `intendedUse` - (Optional) Specifies how the results of an operation will be stored by the caller. Valid values: `singleUse`, `storage`. Default: `singleUse`.
+* `intendedUse` - (Optional) Specifies how the results of an operation will be stored by the caller. Valid values: `SingleUse`, `Storage`. Default: `SingleUse`.
 
 ## Attribute Reference
 
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `createTime` - The timestamp for when the place index resource was created in ISO 8601 format.
 * `indexArn` - The Amazon Resource Name (ARN) for the place index resource. Used to specify a resource across AWS.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updateTime` - The timestamp for when the place index resource was last update in ISO 8601.
 
 ## Import
@@ -85,4 +85,4 @@ Using `terraform import`, import `awsLocationPlaceIndex` resources using the pla
 % terraform import aws_location_place_index.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-394c1ee28ef77e64cf06721c4fa5a97e00829ed4736062d9087e7923bfc8ee3a -->
+<!-- cache-key: cdktf-0.19.0 input-394c1ee28ef77e64cf06721c4fa5a97e00829ed4736062d9087e7923bfc8ee3a -->

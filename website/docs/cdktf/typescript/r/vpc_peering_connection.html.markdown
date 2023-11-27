@@ -167,13 +167,13 @@ This argument supports the following arguments:
 * `peerVpcId` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
 * `vpcId` - (Required) The ID of the requester VPC.
 * `autoAccept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
-* `peerRegion` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `autoAccept` must be `false`,
-and use the `awsVpcPeeringConnectionAccepter` to manage the accepter side.
+* `peerRegion` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`,
+and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts
 the peering connection (a maximum of one).
 * `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requests
 the peering connection (a maximum of one).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Accepter and Requester Arguments
 
@@ -189,7 +189,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the VPC Peering Connection.
 * `acceptStatus` - The status of the VPC Peering Connection request.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Notes
 
@@ -201,9 +201,9 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
-- `update` - (Default `1M`)
-- `delete` - (Default `1M`)
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
@@ -229,4 +229,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-73a508d459b90465fa5267c1055341add54eefba044dcb055a7d430ee33449de -->
+<!-- cache-key: cdktf-0.19.0 input-73a508d459b90465fa5267c1055341add54eefba044dcb055a7d430ee33449de -->

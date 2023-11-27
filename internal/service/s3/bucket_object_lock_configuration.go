@@ -244,13 +244,7 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 		return diag.Errorf("deleting S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
-		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	})
-
-	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Object Lock Configuration (%s) delete: %s", d.Id(), err)
-	}
+	// Don't wait for the object lock configuration to disappear as may still exist.
 
 	return nil
 }
@@ -315,7 +309,7 @@ func expandBucketObjectLockConfigurationCorsRuleDefaultRetention(l []interface{}
 	dr := &types.DefaultRetention{}
 
 	if v, ok := tfMap["days"].(int); ok && v > 0 {
-		dr.Days = int32(v)
+		dr.Days = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["mode"].(string); ok && v != "" {
@@ -323,7 +317,7 @@ func expandBucketObjectLockConfigurationCorsRuleDefaultRetention(l []interface{}
 	}
 
 	if v, ok := tfMap["years"].(int); ok && v > 0 {
-		dr.Years = int32(v)
+		dr.Years = aws.Int32(int32(v))
 	}
 
 	return dr

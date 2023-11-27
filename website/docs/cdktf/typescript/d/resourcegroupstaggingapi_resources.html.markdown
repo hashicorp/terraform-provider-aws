@@ -87,9 +87,9 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `excludeCompliantResources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `includeComplianceDetails` argument is also set to `true`.
+* `excludeCompliantResources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `includeComplianceDetails` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
-* `tagFilter` - (Optional) Specifies a list of Tag Filters (keys and values) to restrict the output to only those resources that have the specified tag and, if included, the specified value. See [Tag Filter](#tag-filter) below. Conflicts with `resourceArnList`.
+* `tagFilter` - (Optional) Specifies a list of Tag Filters (keys and values) to restrict the output to only those resources that have the specified tag and, if included, the specified value. See [Tag Filter](#tag-filter) below. Conflicts with `resource_arn_list`.
 * `resourceTypeFilters` - (Optional) Constraints on the resources that you want returned. The format of each resource type is `service:resourceType`. For example, specifying a resource type of `ec2` returns all Amazon EC2 resources (which includes EC2 instances). Specifying a resource type of `ec2:instance` returns only EC2 instances.
 * `resourceArnList` - (Optional) Specifies a list of ARNs of resources for which you want to retrieve tag data. Conflicts with `filter`.
 
@@ -108,11 +108,11 @@ If you don't specify a `tagFilter`, the response includes all resources that wer
 This data source exports the following attributes in addition to the arguments above:
 
 * `resourceTagMappingList` - List of objects matching the search criteria.
-    * `complianceDetails` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.
-        * `complianceStatus` - Whether the resource is compliant.
+    * `compliance_details` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.
+        * `compliance_status` - Whether the resource is compliant.
         * `keys_with_noncompliant_values ` - Set of tag keys with non-compliant tag values.
         * `non_compliant_keys ` - Set of non-compliant tag keys.
-    * `resourceArn` - ARN of the resource.
+    * `resource_arn` - ARN of the resource.
     * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->
+<!-- cache-key: cdktf-0.19.0 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->

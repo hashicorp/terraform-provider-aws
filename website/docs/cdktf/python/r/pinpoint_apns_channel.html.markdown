@@ -86,4 +86,4 @@ Using `terraform import`, import Pinpoint APNs Channel using the `application-id
 % terraform import aws_pinpoint_apns_channel.apns application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7eba307ddd3d08953ef6f0e4866c8fec850eff4727157433a3de2bca6b525fba -->
+<!-- cache-key: cdktf-0.19.0 input-7eba307ddd3d08953ef6f0e4866c8fec850eff4727157433a3de2bca6b525fba -->

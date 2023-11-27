@@ -316,7 +316,7 @@ func expandTiering(tfMap map[string]interface{}) *types.Tiering {
 	}
 
 	if v, ok := tfMap["days"].(int); ok && v != 0 {
-		apiObject.Days = int32(v)
+		apiObject.Days = aws.Int32(int32(v))
 	}
 
 	return apiObject

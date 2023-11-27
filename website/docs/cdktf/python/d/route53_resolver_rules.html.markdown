@@ -95,4 +95,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `resolver_rule_ids` - IDs of the matched resolver rules.
 
-<!-- cache-key: cdktf-0.18.0 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->
+<!-- cache-key: cdktf-0.19.0 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->

@@ -423,4 +423,4 @@ Using `terraform import`, import Chime SDK Media Pipelines Media Insights Pipeli
 % terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->
+<!-- cache-key: cdktf-0.19.0 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->

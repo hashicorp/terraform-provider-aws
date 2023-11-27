@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
+// ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
+const ProviderErrorDetailPrefix = "An unexpected error was encountered trying to validate an attribute value. " +
+	"This is always an error in the provider. Please report the following to the provider developer:\n\n"
+
 type arnType struct {
 	basetypes.StringType
 }
@@ -42,7 +46,7 @@ func (t arnType) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-func (t arnType) String() string {
+func (arnType) String() string {
 	return "ARNType"
 }
 
@@ -86,7 +90,7 @@ func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr
 	return stringValuable, nil
 }
 
-func (t arnType) ValueType(context.Context) attr.Value {
+func (arnType) ValueType(context.Context) attr.Value {
 	return ARN{}
 }
 
@@ -103,8 +107,7 @@ func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path)
 		diags.AddAttributeError(
 			path,
 			"ARN Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to string: %s", err),
+			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
 		)
 		return diags
 	}
@@ -151,7 +154,7 @@ func (v ARN) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-func (v ARN) Type(context.Context) attr.Type {
+func (ARN) Type(context.Context) attr.Type {
 	return ARNType
 }
 
