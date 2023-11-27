@@ -154,47 +154,34 @@ func ControlParseResourceID(id string) (string, string, error) {
 }
 
 func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
-	input := &controltower.ListEnabledControlsInput{
-		TargetIdentifier: aws.String(targetIdentifier),
-	}
-	var output *types.EnabledControlSummary
-
-	err := conn.ListEnabledControlsPages(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	var nextToken string
+	for {
+		input := &controltower.ListEnabledControlsInput{
+			TargetIdentifier: aws.String(targetIdentifier),
+		}
+		if nextToken != "" {
+			input.NextToken = aws.String(nextToken)
 		}
 
-		for _, v := range page.EnabledControls {
-			if v == nil {
-				continue
-			}
+		out, err := conn.ListEnabledControls(ctx, input)
+		if err != nil {
+			return nil, err
+		}
 
-			if aws.ToString(v.ControlIdentifier) == controlIdentifier {
-				output = v
-
-				return false
+		for _, control := range out.EnabledControls {
+			if aws.ToString(control.ControlIdentifier) == controlIdentifier {
+				return &control, nil
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfresource.NotFound(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if out.NextToken == nil {
+			break
 		}
+
+		nextToken = aws.ToString(out.NextToken)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
+	return nil, nil
 }
 
 func findControlOperationByID(ctx context.Context, conn *controltower.Client, id string) (*types.ControlOperation, error) {

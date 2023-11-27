@@ -6,8 +6,8 @@ package controltower
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,28 +38,32 @@ func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
-	input := &controltower.ListEnabledControlsInput{
-		TargetIdentifier: aws.String(targetIdentifier),
-	}
 
 	var controls []string
-	err := conn.ListEnabledControlsPagesWithContext(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	var nextToken string
+
+	for {
+		input := &controltower.ListEnabledControlsInput{
+			TargetIdentifier: aws.String(targetIdentifier),
+		}
+		if nextToken != "" {
+			input.NextToken = aws.String(nextToken)
 		}
 
-		for _, control := range page.EnabledControls {
-			if control == nil {
-				continue
-			}
-			controls = append(controls, aws.StringValue(control.ControlIdentifier))
+		out, err := conn.ListEnabledControls(ctx, input)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 
-		return !lastPage
-	})
+		for _, control := range out.EnabledControls {
+			controls = append(controls, aws.ToString(control.ControlIdentifier))
+		}
 
-	if err != nil {
-		return diag.Errorf("listing ControlTower Controls (%s): %s", targetIdentifier, err)
+		if out.NextToken == nil {
+			break
+		}
+
+		nextToken = aws.ToString(out.NextToken)
 	}
 
 	d.SetId(targetIdentifier)
