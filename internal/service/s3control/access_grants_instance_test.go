@@ -34,6 +34,7 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -127,18 +128,21 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"identity_center_arn"},
 			},
 			{
 				Config: testAccAccessGrantsInstanceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 				),
 			},
@@ -146,6 +150,7 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
 				),
 			},

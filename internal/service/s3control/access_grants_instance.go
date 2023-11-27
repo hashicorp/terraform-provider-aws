@@ -71,6 +71,12 @@ func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resou
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
+			"identity_center_application_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"identity_center_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -112,6 +118,7 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 	// Set values for unknowns.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.IdentityCenterApplicationARN = flex.StringToFramework(ctx, output.IdentityCenterArn)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -152,11 +159,7 @@ func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resourc
 	// Set attributes for import.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
-	if output.IdentityCenterArn == nil {
-		data.IdentityCenterARN = fwtypes.ARNNull()
-	} else {
-		data.IdentityCenterARN = fwtypes.ARNValue(aws.ToString(output.IdentityCenterArn))
-	}
+	data.IdentityCenterApplicationARN = flex.StringToFramework(ctx, output.IdentityCenterArn)
 
 	tags, err := listTags(ctx, conn, data.AccessGrantsInstanceARN.ValueString(), data.AccountID.ValueString())
 
@@ -302,13 +305,14 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 }
 
 type accessGrantsInstanceResourceModel struct {
-	AccessGrantsInstanceARN types.String `tfsdk:"access_grants_instance_arn"`
-	AccessGrantsInstanceID  types.String `tfsdk:"access_grants_instance_id"`
-	AccountID               types.String `tfsdk:"account_id"`
-	ID                      types.String `tfsdk:"id"`
-	IdentityCenterARN       fwtypes.ARN  `tfsdk:"identity_center_arn"`
-	Tags                    types.Map    `tfsdk:"tags"`
-	TagsAll                 types.Map    `tfsdk:"tags_all"`
+	AccessGrantsInstanceARN      types.String `tfsdk:"access_grants_instance_arn"`
+	AccessGrantsInstanceID       types.String `tfsdk:"access_grants_instance_id"`
+	AccountID                    types.String `tfsdk:"account_id"`
+	ID                           types.String `tfsdk:"id"`
+	IdentityCenterApplicationARN types.String `tfsdk:"identity_center_application_arn"`
+	IdentityCenterARN            fwtypes.ARN  `tfsdk:"identity_center_arn"`
+	Tags                         types.Map    `tfsdk:"tags"`
+	TagsAll                      types.Map    `tfsdk:"tags_all"`
 }
 
 func (data *accessGrantsInstanceResourceModel) InitFromID() error {
