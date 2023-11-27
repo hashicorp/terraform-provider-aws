@@ -177,7 +177,10 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateAccessGrant(ctx, input)
+	// "InvalidRequest: Invalid Grantee in the request".
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateAccessGrant(ctx, input)
+	}, "Invalid Grantee in the request")
 
 	if err != nil {
 		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
@@ -186,6 +189,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
+	output := outputRaw.(*s3control.CreateAccessGrantOutput)
 	data.AccessGrantARN = flex.StringToFramework(ctx, output.AccessGrantArn)
 	data.AccessGrantID = flex.StringToFramework(ctx, output.AccessGrantId)
 	data.GrantScope = flex.StringToFramework(ctx, output.GrantScope)
