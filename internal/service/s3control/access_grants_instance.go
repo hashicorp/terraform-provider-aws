@@ -29,22 +29,22 @@ import (
 
 // @FrameworkResource(name="Access Grants Instance")
 // @Tags
-func newResourceAccessGrantsInstance(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccessGrantsInstance{}
+func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accessGrantsInstanceResource{}
 
 	return r, nil
 }
 
-type resourceAccessGrantsInstance struct {
+type accessGrantsInstanceResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 }
 
-func (r *resourceAccessGrantsInstance) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *accessGrantsInstanceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_s3control_access_grants_instance"
 }
 
-func (r *resourceAccessGrantsInstance) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_grants_instance_arn": schema.StringAttribute{
@@ -76,7 +76,7 @@ func (r *resourceAccessGrantsInstance) Schema(ctx context.Context, request resou
 	}
 }
 
-func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -111,7 +111,7 @@ func (r *resourceAccessGrantsInstance) Create(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -160,7 +160,7 @@ func (r *resourceAccessGrantsInstance) Read(ctx context.Context, request resourc
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsInstance) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *accessGrantsInstanceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
@@ -188,7 +188,7 @@ func (r *resourceAccessGrantsInstance) Update(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data accessGrantsInstanceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -214,7 +214,7 @@ func (r *resourceAccessGrantsInstance) Delete(ctx context.Context, request resou
 	}
 }
 
-func (r *resourceAccessGrantsInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 

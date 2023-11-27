@@ -131,7 +131,7 @@ func sweepAccessGrantsInstances(region string) error {
 		}
 
 		for range page.AccessGrantsInstancesList {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessGrantsInstance, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantsInstanceResource, client,
 				framework.NewAttribute("id", accountID),
 			))
 		}

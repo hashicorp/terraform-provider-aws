@@ -6,7 +6,7 @@ package s3control
 // Exports for use in tests only.
 var (
 	ResourceAccessGrant                        = newAccessGrantResource
-	ResourceAccessGrantsInstance               = newResourceAccessGrantsInstance
+	ResourceAccessGrantsInstance               = newAccessGrantsInstanceResource
 	ResourceAccessGrantsInstanceResourcePolicy = newAccessGrantsInstanceResourcePolicyResource
 	ResourceAccessGrantsLocation               = newAccessGrantsLocationResource
 	ResourceAccessPoint                        = resourceAccessPoint
