@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1278 resources and 525 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1282 resources and 526 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -843,4 +843,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.19.0 input-bba862327aaadd172a35b7e867128a4b54d83aa8e4e7258bf36b039bc7023d06 -->
+<!-- cache-key: cdktf-0.19.0 input-bf5a7359d951d882b7e660f8f8390d5be1445e49b6889212c434bc0254f9658f -->
