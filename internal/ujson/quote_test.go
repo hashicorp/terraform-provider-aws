@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
+	"github.com/hashicorp/terraform-provider-aws/internal/ujson"
 )
 
 type quoteTest struct {

@@ -147,7 +147,7 @@ This resource supports the following arguments:
 
 * `catalog_id` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Optional) A map of key-value pairs used as parameters for this connection.
-* `connection_type` – (Optional) The type of the connection. Supported are: `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, and `NETWORK`. Defaults to `JBDC`.
+* `connection_type` – (Optional) The type of the connection. Supported are: `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, and `NETWORK`. Defaults to `JDBC`.
 * `description` – (Optional) Description of the connection.
 * `match_criteria` – (Optional) A list of criteria that can be used in selecting this connection.
 * `name` – (Required) The name of the connection.
@@ -187,4 +187,4 @@ Using `terraform import`, import Glue Connections using the `CATALOG-ID` (AWS ac
 % terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e5f54a151c81766ea8f354e5241734756142da42a3b5bcc9ad07d0060d066e20 -->
+<!-- cache-key: cdktf-0.19.0 input-78ae01c7f8d6fb137f4b265db70e2caa87ccd65058b4e331423436b8a1ced095 -->

@@ -169,14 +169,19 @@ This resource supports the following arguments:
 * `port` - (May be required, Forces new resource) Port on which targets receive traffic, unless overridden when registering a specific target. Required when `target_type` is `instance`, `ip` or `alb`. Does not apply when `target_type` is `lambda`.
 * `preserveClientIp` - (Optional) Whether client IP preservation is enabled. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#client-ip-preservation) for more information.
 * `protocolVersion` - (Optional, Forces new resource) Only applicable when `protocol` is `HTTP` or `HTTPS`. The protocol version. Specify `GRPC` to send requests to targets using gRPC. Specify `HTTP2` to send requests to targets using HTTP/2. The default is `HTTP1`, which sends requests to targets using HTTP/1.1
-* `protocol` - (May be required, Forces new resource) Protocol to use for routing traffic to the targets. Should be one of `GENEVE`, `HTTP`, `HTTPS`, `TCP`, `TCP_UDP`, `TLS`, or `UDP`. Required when `target_type` is `instance`, `ip` or `alb`. Does not apply when `target_type` is `lambda`.
+* `protocol` - (May be required, Forces new resource) Protocol to use for routing traffic to the targets.
+  Should be one of `GENEVE`, `HTTP`, `HTTPS`, `TCP`, `TCP_UDP`, `TLS`, or `UDP`.
+  Required when `target_type` is `instance`, `ip`, or `alb`.
+  Does not apply when `target_type` is `lambda`.
 * `proxyProtocolV2` - (Optional) Whether to enable support for proxy protocol v2 on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#proxy-protocol) for more information. Default is `false`.
 * `slowStart` - (Optional) Amount time for targets to warm up before the load balancer sends them a full share of requests. The range is 30-900 seconds or 0 to disable. The default value is 0 seconds.
 * `stickiness` - (Optional, Maximum of 1) Stickiness configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targetFailover` - (Optional) Target failover block. Only applicable for Gateway Load Balancer target groups. See [target_failover](#target_failover) for more information.
 * `targetHealthState` - (Optional) Target health state block. Only applicable for Network Load Balancer target groups when `protocol` is `TCP` or `TLS`. See [target_health_state](#target_health_state) for more information.
-* `targetType` - (May be required, Forces new resource) Type of target that you must specify when registering targets with this target group. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html) for supported values. The default is `instance`.
+* `targetType` - (Optional, Forces new resource) Type of target that you must specify when registering targets with this target group.
+  See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html) for supported values.
+  The default is `instance`.
 
   Note that you can't specify targets for a target group using both instance IDs and IP addresses.
 
@@ -195,10 +200,24 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether health checks are enabled. Defaults to `true`.
 * `healthyThreshold` - (Optional)  Number of consecutive health check successes required before considering a target healthy. The range is 2-10. Defaults to 3.
 * `interval` - (Optional) Approximate amount of time, in seconds, between health checks of an individual target. The range is 5-300. For `lambda` target groups, it needs to be greater than the timeout of the underlying `lambda`. Defaults to 30.
-* `matcher` (May be required) Response codes to use when checking for a healthy responses from a target. You can specify multiple values (for example, "200,202" for HTTP(s) or "0,12" for GRPC) or a range of values (for example, "200-299" or "0-99"). Required for HTTP/HTTPS/GRPC ALB. Only applies to Application Load Balancers (i.e., HTTP/HTTPS/GRPC) not Network Load Balancers (i.e., TCP).
+* `matcher` (Optional) The HTTP or gRPC codes to use when checking for a successful response from a target.
+  The `health_check.protocol` must be one of `HTTP` or `HTTPS` or the `target_type` must be `lambda`.
+  Values can be comma-separated individual values (e.g., "200,202") or a range of values (e.g., "200-299").
+    * For gRPC-based target groups (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is `GRPC`), values can be between `0` and `99`. The default is `12`.
+    * When used with an Application Load Balancer (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is not `GRPC`), values can be between `200` and `499`. The default is `200`.
+    * When used with a Network Load Balancer (i.e., the `protocol` is one of `TCP`, `TCP_UDP`, `UDP`, or `TLS`), values can be between `200` and `599`. The default is `200-399`.
+    * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
-* `port` - (Optional) The port the load balancer uses when performing health checks on targets. Default is traffic-port.
-* `protocol` - (Optional) Protocol the load balancer uses when performing health checks on targets. Must be either `TCP`, `HTTP`, or `HTTPS`. The TCP protocol is not supported for health checks if the protocol of the target group is HTTP or HTTPS. Defaults to HTTP.
+    * For HTTP and HTTPS health checks, the default is `/`.
+    * For gRPC health checks, the default is `/Amazon Web Services.ALB/healthcheck`.
+* `port` - (Optional) The port the load balancer uses when performing health checks on targets.
+  Valid values are either `traffic-port`, to use the same port as the target group, or a valid port number between `1` and `65536`.
+  Default is `traffic-port`.
+* `protocol` - (Optional) Protocol the load balancer uses when performing health checks on targets.
+  Must be one of `TCP`, `HTTP`, or `HTTPS`.
+  The `TCP` protocol is not supported for health checks if the protocol of the target group is `HTTP` or `HTTPS`.
+  Default is `HTTP`.
+  Cannot be specified when the `target_type` is `lambda`.
 * `timeout` - (optional) Amount of time, in seconds, during which no response from a target means a failed health check. The range is 2–120 seconds. For target groups with a protocol of HTTP, the default is 6 seconds. For target groups with a protocol of TCP, TLS or HTTPS, the default is 10 seconds. For target groups with a protocol of GENEVE, the default is 5 seconds. If the target type is lambda, the default is 30 seconds.
 * `unhealthyThreshold` - (Optional) Number of consecutive health check failures required before considering a target unhealthy. The range is 2-10. Defaults to 3.
 
@@ -256,4 +275,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3eb6a0b53cb6c1b5567c421e59435e530f84dc8964724aea7f35f11efb516394 -->
+<!-- cache-key: cdktf-0.19.0 input-4319f63f758518383738b8506759300cfee8cab1b7396dff13a6df93452bd7f3 -->
