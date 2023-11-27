@@ -162,7 +162,7 @@ forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,F
 forecastquery,forecastquery,forecastqueryservice,forecastquery,,forecastquery,,forecastqueryservice,ForecastQuery,ForecastQueryService,,1,,,aws_forecastquery_,,forecastquery_,Forecast Query,Amazon,,x,,,,,
 frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDetector,FraudDetector,,1,,,aws_frauddetector_,,frauddetector_,Fraud Detector,Amazon,,x,,,,,
 ,,,,,,,,,,,,,,,,,FreeRTOS,,x,,,,,,No SDK support
-fsx,fsx,fsx,fsx,,fsx,,,FSx,FSx,,1,,,aws_fsx_,,fsx_,FSx,Amazon,,,,,,,
+fsx,fsx,fsx,fsx,,fsx,,,FSx,FSx,,1,2,,aws_fsx_,,fsx_,FSx,Amazon,,,,,,,
 gamelift,gamelift,gamelift,gamelift,,gamelift,,,GameLift,GameLift,,1,,,aws_gamelift_,,gamelift_,GameLift,Amazon,,,,,,,
 globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,1,,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,
 glue,glue,glue,glue,,glue,,,Glue,Glue,,1,,,aws_glue_,,glue_,Glue,AWS,,,,,,,
