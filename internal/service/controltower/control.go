@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -227,8 +228,8 @@ func statusControlOperation(ctx context.Context, conn *controltower.Client, id s
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.ControlOperationStatusInProgress)},
-		Target:  []string{string(types.ControlOperationStatusSucceeded)},
+		Pending: enum.Slice(types.ControlOperationStatusInProgress),
+		Target:  enum.Slice(types.ControlOperationStatusSucceeded),
 		Refresh: statusControlOperation(ctx, conn, id),
 		Timeout: timeout,
 	}
