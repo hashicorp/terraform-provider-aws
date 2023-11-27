@@ -38,6 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.4
+	github.com/aws/aws-sdk-go-v2/service/evidently v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.18.3
