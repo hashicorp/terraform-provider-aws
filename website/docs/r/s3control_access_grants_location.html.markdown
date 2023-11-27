@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage an S3 Access Grants location.
 A location is an S3 resource (bucket or prefix) in a permission grant that the grantee can access.
+The S3 data must be in the same Region as your S3 Access Grants instance.
+When you register a location, you must include the IAM role that has permission to manage the S3 location that you are registering.
 
 ## Example Usage
 

@@ -9,7 +9,8 @@ description: |-
 # Resource: aws_s3control_access_grant
 
 Provides a resource to manage an S3 Access Grant.
-Each access grant has its own ID and gives a user or role (the grantee) access to a registered location. You determine the level of access, such as `READ` or `READWRITE`.
+Each access grant has its own ID and gives an IAM user or role or a directory user, or group (the grantee) access to a registered location. You determine the level of access, such as `READ` or `READWRITE`.
+Before you can create a grant, you must have an S3 Access Grants instance in the same Region as the S3 data.
 
 ## Example Usage
 
