@@ -28,22 +28,22 @@ import (
 )
 
 // @FrameworkResource(name="Access Grants Instance Resource Policy")
-func newResourceAccessGrantsInstanceResourcePolicy(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccessGrantsInstanceResourcePolicy{}
+func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accessGrantsInstanceResourcePolicyResource{}
 
 	return r, nil
 }
 
-type resourceAccessGrantsInstanceResourcePolicy struct {
+type accessGrantsInstanceResourcePolicyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_s3control_access_grants_instance_resource_policy"
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account_id": schema.StringAttribute{
@@ -65,7 +65,7 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Schema(ctx context.Context,
 	}
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data accessGrantsInstanceResourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -98,7 +98,7 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Create(ctx context.Context,
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data accessGrantsInstanceResourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -139,7 +139,7 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Read(ctx context.Context, r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new accessGrantsInstanceResourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
@@ -172,7 +172,7 @@ func (r *resourceAccessGrantsInstanceResourcePolicy) Update(ctx context.Context,
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAccessGrantsInstanceResourcePolicy) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *accessGrantsInstanceResourcePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data accessGrantsInstanceResourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)

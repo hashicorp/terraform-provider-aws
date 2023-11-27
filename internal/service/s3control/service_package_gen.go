@@ -26,6 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory: newAccessGrantsInstanceResourcePolicyResource,
+			Name:    "Access Grants Instance Resource Policy",
+		},
+		{
 			Factory: newAccessGrantsLocationResource,
 			Name:    "Access Grants Location",
 			Tags:    &types.ServicePackageResourceTags{},
@@ -34,10 +38,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceAccessGrantsInstance,
 			Name:    "Access Grants Instance",
 			Tags:    &types.ServicePackageResourceTags{},
-		},
-		{
-			Factory: newResourceAccessGrantsInstanceResourcePolicy,
-			Name:    "Access Grants Instance Resource Policy",
 		},
 	}
 }

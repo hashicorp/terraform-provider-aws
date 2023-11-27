@@ -7,7 +7,7 @@ package s3control
 var (
 	ResourceAccessGrant                        = newAccessGrantResource
 	ResourceAccessGrantsInstance               = newResourceAccessGrantsInstance
-	ResourceAccessGrantsInstanceResourcePolicy = newResourceAccessGrantsInstanceResourcePolicy
+	ResourceAccessGrantsInstanceResourcePolicy = newAccessGrantsInstanceResourcePolicyResource
 	ResourceAccessGrantsLocation               = newAccessGrantsLocationResource
 	ResourceAccessPoint                        = resourceAccessPoint
 	ResourceAccessPointPolicy                  = resourceAccessPointPolicy
