@@ -7743,6 +7743,18 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"cost-optimization-hub": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{
+					Hostname: "cost-optimization-hub.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+			},
+		},
 		"cur": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -35593,6 +35605,16 @@ var awsusgovPartition = partition{
 				},
 			},
 		},
+		"arc-zonal-shift": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+			},
+		},
 		"athena": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -42043,11 +42065,95 @@ var awsisoPartition = partition{
 		"rds": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "rds-fips.us-iso-east-1",
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-east-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "rds-fips.us-iso-west-1",
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "rds.us-iso-east-1",
+				}: endpoint{
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region:  "rds.us-iso-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-east-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "rds.us-iso-west-1",
+				}: endpoint{
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region:  "rds.us-iso-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "us-iso-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-east-1.c2s.ic.gov",
+				},
+				endpointKey{
+					Region: "us-iso-east-1-fips",
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-east-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-iso-west-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-iso-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-west-1.c2s.ic.gov",
+				},
+				endpointKey{
+					Region: "us-iso-west-1-fips",
+				}: endpoint{
+					Hostname: "rds-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
 			},
 		},
 		"redshift": service{
@@ -42778,8 +42884,50 @@ var awsisobPartition = partition{
 		"rds": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "rds-fips.us-isob-east-1",
+				}: endpoint{
+					Hostname: "rds-fips.us-isob-east-1.sc2s.sgov.gov",
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "rds.us-isob-east-1",
+				}: endpoint{
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region:  "rds.us-isob-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-isob-east-1.sc2s.sgov.gov",
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-isob-east-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-isob-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds-fips.us-isob-east-1.sc2s.sgov.gov",
+				},
+				endpointKey{
+					Region: "us-isob-east-1-fips",
+				}: endpoint{
+					Hostname: "rds-fips.us-isob-east-1.sc2s.sgov.gov",
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
 			},
 		},
 		"redshift": service{
