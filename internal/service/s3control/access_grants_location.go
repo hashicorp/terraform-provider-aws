@@ -110,11 +110,9 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	input.Tags = getTagsIn(ctx)
 
-	// TODO: Is this the GA error?
-	// HTTP 400 => Invalid IAM role.
-	outputRaw, err := tfresource.RetryWhenHTTPStatusCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateAccessGrantsLocation(ctx, input)
-	}, http.StatusBadRequest)
+	}, errCodeInvalidIAMRole)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.LocationScope.ValueString()), err.Error())
@@ -206,11 +204,9 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		// TODO: Is this the GA error?
-		// HTTP 400 => Invalid IAM role.
-		_, err := tfresource.RetryWhenHTTPStatusCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.UpdateAccessGrantsLocation(ctx, input)
-		}, http.StatusBadRequest)
+		}, errCodeInvalidIAMRole)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating S3 Access Grants Location (%s)", new.ID.ValueString()), err.Error())

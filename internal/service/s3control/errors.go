@@ -7,6 +7,7 @@ package s3control
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3control/#pkg-constants
 const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
+	errCodeInvalidIAMRole                       = "InvalidIamRole"
 	errCodeNoSuchAccessPoint                    = "NoSuchAccessPoint"
 	errCodeNoSuchAccessPointPolicy              = "NoSuchAccessPointPolicy"
 	errCodeNoSuchAsyncRequest                   = "NoSuchAsyncRequest"
