@@ -45,7 +45,7 @@ type resourcePodIdentityAssociationData struct {
 	CreatedAt      types.String `tfsdk:"created_at"`
 	Namespace      types.String `tfsdk:"namespace"`
 	ModifiedAt     types.String `tfsdk:"modified_at"`
-	RoleArn        types.String `tfsdk:"role_arn"`
+	RoleArn        fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount types.String `tfsdk:"service_account"`
 	Tags           types.Map    `tfsdk:"tags"`
 	TagsAll        types.Map    `tfsdk:"tags_all"`
@@ -69,6 +69,9 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 			"association_arn": framework.ARNAttributeComputedOnly(),
 			"association_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"cluster_name": schema.StringAttribute{
 				Required: true,
@@ -78,10 +81,15 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 			},
 			"created_at": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id": framework.IDAttribute(),
 			"modified_at": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"namespace": schema.StringAttribute{
 				Required: true,
@@ -90,8 +98,11 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 				},
 			},
 			"role_arn": schema.StringAttribute{
-				Required:   true,
 				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"service_account": schema.StringAttribute{
 				Required: true,
@@ -174,7 +185,7 @@ func (r *resourcePodIdentityAssociation) Read(ctx context.Context, req resource.
 	state.CreatedAt = flex.StringToFramework(ctx, aws.String(out.CreatedAt.Format(time.RFC3339)))
 	state.ModifiedAt = flex.StringToFramework(ctx, aws.String(out.ModifiedAt.Format(time.RFC3339)))
 	state.Namespace = flex.StringToFramework(ctx, out.Namespace)
-	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
+	state.RoleArn = fwtypes.ARNValue(aws.ToString(out.RoleArn))
 	state.ServiceAccount = flex.StringToFramework(ctx, out.ServiceAccount)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

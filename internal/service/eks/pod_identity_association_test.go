@@ -142,23 +142,13 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, name string, 
 	}
 }
 
-func testAccCheckPodIdentityAssociationNotRecreated(before, after *eks.DescribePodIdentityAssociationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Association.AssociationId), aws.ToString(after.Association.AssociationId); before != after {
-			return create.Error(names.EKS, create.ErrActionCheckingNotRecreated, tfeks.ResNamePodIdentityAssociation, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "cluster" {
   name_prefix = %[1]q
 
   assume_role_policy = <<POLICY
@@ -180,7 +170,7 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "test_cluster" {
+resource "aws_iam_role_policy_attachment" "cluster" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.test.name
 }
@@ -209,13 +199,13 @@ resource "aws_subnet" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test_cluster]
+  depends_on = [aws_iam_role_policy_attachment.cluster]
 }
 `, rName))
 }
@@ -223,7 +213,7 @@ resource "aws_eks_cluster" "test" {
 func testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
-resource "aws_iam_role" "example" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<POLICY
@@ -245,9 +235,9 @@ resource "aws_iam_role" "example" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "example" {
+resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
-  role       = aws_iam_role.example.name
+  role       = aws_iam_role.test.name
 }
 `, rName))
 }
