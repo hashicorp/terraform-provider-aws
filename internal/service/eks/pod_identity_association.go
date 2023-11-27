@@ -44,6 +44,7 @@ type resourcePodIdentityAssociationData struct {
 	AssociationId  types.String `tfsdk:"association_id"`
 	ClusterName    types.String `tfsdk:"cluster_name"`
 	CreatedAt      types.String `tfsdk:"created_at"`
+	ID             types.String `tfsdk:"id"`
 	Namespace      types.String `tfsdk:"namespace"`
 	ModifiedAt     types.String `tfsdk:"modified_at"`
 	RoleArn        fwtypes.ARN  `tfsdk:"role_arn"`
@@ -113,6 +114,7 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -145,7 +147,7 @@ func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resourc
 		)
 		return
 	}
-	if out == nil || out.Association == nil {
+	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EKS, create.ErrActionCreating, ResNamePodIdentityAssociation, plan.AssociationId.String(), nil),
 			errors.New("empty output").Error(),
@@ -156,6 +158,7 @@ func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resourc
 	plan.AssociationArn = fwflex.StringToFramework(ctx, out.Association.AssociationArn)
 	plan.AssociationId = fwflex.StringToFramework(ctx, out.Association.AssociationId)
 	plan.CreatedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.CreatedAt.Format(time.RFC3339)))
+	plan.ID = fwflex.StringToFramework(ctx, out.Association.AssociationId)
 	plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -291,14 +294,14 @@ func (r *resourcePodIdentityAssociation) Delete(ctx context.Context, req resourc
 func (r *resourcePodIdentityAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected association-id%[2]scluster-name", req.ID, idSeparator)
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sassociation-id", req.ID, idSeparator)
 		resp.Diagnostics.AddError(fmt.Sprintf("importing Pod Identity Association (%s)", req.ID), err.Error())
 		return
 	}
 
 	state := resourcePodIdentityAssociationData{
-		AssociationId: types.StringValue(parts[0]),
-		ClusterName:   types.StringValue(parts[1]),
+		AssociationId: types.StringValue(parts[1]),
+		ClusterName:   types.StringValue(parts[0]),
 	}
 
 	diags := resp.State.Set(ctx, &state)
@@ -311,13 +314,14 @@ func (r *resourcePodIdentityAssociation) ModifyPlan(ctx context.Context, request
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, AssociationId, ClusterName string) (*awstypes.PodIdentityAssociation, error) {
+func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, AssociationId, ClusterName string) (*eks.DescribePodIdentityAssociationOutput, error) {
 	in := &eks.DescribePodIdentityAssociationInput{
 		AssociationId: aws.String(AssociationId),
 		ClusterName:   aws.String(ClusterName),
 	}
 
 	out, err := conn.DescribePodIdentityAssociation(ctx, in)
+
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -330,9 +334,9 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 		return nil, err
 	}
 
-	if out == nil || out.Association == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.Association, nil
+	return out, nil
 }

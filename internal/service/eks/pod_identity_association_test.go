@@ -52,6 +52,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -139,6 +140,17 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, name string, 
 		*podidentityassociation = *resp
 
 		return nil
+	}
+}
+
+func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["association_id"]), nil
 	}
 }
 
