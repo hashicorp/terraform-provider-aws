@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -19,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -103,7 +104,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 		data.AccountID = types.StringValue(r.Meta().AccountID)
 	}
 	input := &s3control.CreateAccessGrantsLocationInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -122,8 +123,8 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	// Set values for unknowns.
 	output := outputRaw.(*s3control.CreateAccessGrantsLocationOutput)
-	data.AccessGrantsLocationARN = flex.StringToFramework(ctx, output.AccessGrantsLocationArn)
-	data.AccessGrantsLocationID = flex.StringToFramework(ctx, output.AccessGrantsLocationId)
+	data.AccessGrantsLocationARN = fwflex.StringToFramework(ctx, output.AccessGrantsLocationArn)
+	data.AccessGrantsLocationID = fwflex.StringToFramework(ctx, output.AccessGrantsLocationId)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -162,7 +163,7 @@ func (r *accessGrantsLocationResource) Read(ctx context.Context, request resourc
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -199,7 +200,7 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 
 	if !new.IAMRoleARN.Equal(old.IAMRoleARN) {
 		input := &s3control.UpdateAccessGrantsLocationInput{}
-		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -238,8 +239,8 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	input := &s3control.DeleteAccessGrantsLocationInput{
-		AccessGrantsLocationId: flex.StringFromFramework(ctx, data.AccessGrantsLocationID),
-		AccountId:              flex.StringFromFramework(ctx, data.AccountID),
+		AccessGrantsLocationId: fwflex.StringFromFramework(ctx, data.AccessGrantsLocationID),
+		AccountId:              fwflex.StringFromFramework(ctx, data.AccountID),
 	}
 
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
@@ -299,20 +300,20 @@ type accessGrantsLocationResourceModel struct {
 	TagsAll                 types.Map    `tfsdk:"tags_all"`
 }
 
-const accessGrantsLocationResourceIDSeparator = "/"
-
 func (data *accessGrantsLocationResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
-	if parts := strings.Split(id, accessGrantsLocationResourceIDSeparator); len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		data.AccountID = types.StringValue(parts[0])
-		data.AccessGrantsLocationID = types.StringValue(parts[1])
+	parts, err := flex.ExpandResourceId(id, 2, false)
 
-		return nil
+	if err != nil {
+		return err
 	}
 
-	return fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-grants-location-id", id, accessGrantsLocationResourceIDSeparator)
+	data.AccountID = types.StringValue(parts[0])
+	data.AccessGrantsLocationID = types.StringValue(parts[1])
+
+	return nil
 }
 
 func (data *accessGrantsLocationResourceModel) setID() {
-	data.ID = types.StringValue(strings.Join([]string{data.AccountID.ValueString(), data.AccessGrantsLocationID.ValueString()}, accessGrantsLocationResourceIDSeparator))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantsLocationID.ValueString()}, 2, false)))
 }
