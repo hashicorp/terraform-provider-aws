@@ -300,9 +300,13 @@ type accessGrantsLocationResourceModel struct {
 	TagsAll                 types.Map    `tfsdk:"tags_all"`
 }
 
+const (
+	accessGrantsLocationResourceIDPartCount = 2
+)
+
 func (data *accessGrantsLocationResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, 2, false)
+	parts, err := flex.ExpandResourceId(id, accessGrantsLocationResourceIDPartCount, false)
 
 	if err != nil {
 		return err
@@ -315,5 +319,5 @@ func (data *accessGrantsLocationResourceModel) InitFromID() error {
 }
 
 func (data *accessGrantsLocationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantsLocationID.ValueString()}, 2, false)))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantsLocationID.ValueString()}, accessGrantsLocationResourceIDPartCount, false)))
 }

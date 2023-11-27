@@ -363,9 +363,13 @@ type granteeModel struct {
 	GranteeType       fwtypes.StringEnum[awstypes.GranteeType] `tfsdk:"grantee_type"`
 }
 
+const (
+	accessGrantResourceIDPartCount = 2
+)
+
 func (data *accessGrantResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, 2, false)
+	parts, err := flex.ExpandResourceId(id, accessGrantResourceIDPartCount, false)
 
 	if err != nil {
 		return err
@@ -378,7 +382,7 @@ func (data *accessGrantResourceModel) InitFromID() error {
 }
 
 func (data *accessGrantResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, 2, false)))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDPartCount, false)))
 }
 
 // API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.
