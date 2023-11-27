@@ -156,6 +156,8 @@ func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name_prefix = %[1]q
 
@@ -179,7 +181,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "test_cluster" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.test.name
 }
 
@@ -244,7 +246,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
   role       = aws_iam_role.example.name
 }
 `, rName))
