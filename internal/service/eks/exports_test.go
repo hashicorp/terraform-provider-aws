@@ -10,6 +10,7 @@ var (
 	ResourceFargateProfile         = resourceFargateProfile
 	ResourceIdentityProviderConfig = resourceIdentityProviderConfig
 	ResourceNodeGroup              = resourceNodeGroup
+	ResourcePodIdentityAssociation = newResourcePodIdentityAssociation
 
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
 	FindClusterByName                          = findClusterByName

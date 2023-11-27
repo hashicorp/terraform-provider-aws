@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -32,7 +31,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Pod Identity Association")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="association_id")
 func newResourcePodIdentityAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePodIdentityAssociation{}
 
