@@ -21,8 +21,9 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -66,7 +67,12 @@ func (r *resourcePodIdentityAssociation) Metadata(_ context.Context, req resourc
 func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"association_arn": framework.ARNAttributeComputedOnly(),
+			"association_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"association_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -100,9 +106,6 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"service_account": schema.StringAttribute{
 				Required: true,
@@ -126,11 +129,11 @@ func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resourc
 	}
 
 	in := &eks.CreatePodIdentityAssociationInput{
-		ClusterName:        flex.StringFromFramework(ctx, plan.ClusterName),
+		ClusterName:        fwflex.StringFromFramework(ctx, plan.ClusterName),
 		ClientRequestToken: aws.String(sdkid.UniqueId()),
-		Namespace:          flex.StringFromFramework(ctx, plan.Namespace),
-		RoleArn:            flex.StringFromFramework(ctx, plan.RoleArn),
-		ServiceAccount:     flex.StringFromFramework(ctx, plan.ServiceAccount),
+		Namespace:          fwflex.StringFromFramework(ctx, plan.Namespace),
+		RoleArn:            fwflex.StringFromFramework(ctx, plan.RoleArn),
+		ServiceAccount:     fwflex.StringFromFramework(ctx, plan.ServiceAccount),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -150,9 +153,10 @@ func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resourc
 		return
 	}
 
-	plan.AssociationArn = flex.StringToFramework(ctx, out.Association.AssociationArn)
-	plan.AssociationId = flex.StringToFramework(ctx, out.Association.AssociationId)
-	plan.CreatedAt = flex.StringToFramework(ctx, aws.String(out.Association.CreatedAt.Format(time.RFC3339)))
+	plan.AssociationArn = fwflex.StringToFramework(ctx, out.Association.AssociationArn)
+	plan.AssociationId = fwflex.StringToFramework(ctx, out.Association.AssociationId)
+	plan.CreatedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.CreatedAt.Format(time.RFC3339)))
+	plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -160,49 +164,63 @@ func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resourc
 func (r *resourcePodIdentityAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EKSClient(ctx)
 
-	var state resourcePodIdentityAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var data resourcePodIdentityAssociationData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, state.AssociationId.ValueString(), state.ClusterName.ValueString())
+	out, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, data.AssociationId.ValueString(), data.ClusterName.ValueString())
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionSetting, ResNamePodIdentityAssociation, state.AssociationId.String(), err),
+			create.ProblemStandardMessage(names.EKS, create.ErrActionSetting, ResNamePodIdentityAssociation, data.AssociationId.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.AssociationArn = flex.StringToFramework(ctx, out.AssociationArn)
-	state.AssociationId = flex.StringToFramework(ctx, out.AssociationId)
-	state.ClusterName = flex.StringToFramework(ctx, out.ClusterName)
-	state.CreatedAt = flex.StringToFramework(ctx, aws.String(out.CreatedAt.Format(time.RFC3339)))
-	state.ModifiedAt = flex.StringToFramework(ctx, aws.String(out.ModifiedAt.Format(time.RFC3339)))
-	state.Namespace = flex.StringToFramework(ctx, out.Namespace)
-	state.RoleArn = fwtypes.ARNValue(aws.ToString(out.RoleArn))
-	state.ServiceAccount = flex.StringToFramework(ctx, out.ServiceAccount)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().EKSClient(ctx)
-
-	var plan, state resourcePodIdentityAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// Set attributes for import.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.RoleArn.Equal(state.RoleArn) {
+	tags, err := listTags(ctx, conn, data.AssociationArn.ValueString())
 
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("listing tags for Pod Identity Association (%s)", data.AssociationId.ValueString()), err.Error())
+
+		return
+	}
+
+	setTagsOut(ctx, Tags(tags))
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourcePodIdentityAssociationData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().EKSClient(ctx)
+
+	if !plan.RoleArn.Equal(state.RoleArn) {
 		in := &eks.UpdatePodIdentityAssociationInput{
 			AssociationId: aws.String(plan.AssociationId.ValueString()),
 			ClusterName:   aws.String(plan.ClusterName.ValueString()),
@@ -228,28 +246,32 @@ func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resourc
 			return
 		}
 
-		// Using the output from the update function, re-set any computed attributes
-		plan.AssociationArn = flex.StringToFramework(ctx, out.Association.AssociationArn)
-		plan.AssociationId = flex.StringToFramework(ctx, out.Association.AssociationId)
-		plan.CreatedAt = flex.StringToFramework(ctx, aws.String(out.Association.CreatedAt.Format(time.RFC3339)))
-		plan.ModifiedAt = flex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
+		plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
+	}
+
+	if oldTagsAll, newTagsAll := state.TagsAll, plan.TagsAll; !newTagsAll.Equal(oldTagsAll) {
+		if err := updateTags(ctx, conn, plan.AssociationArn.ValueString(), oldTagsAll, newTagsAll); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("updating tags for Pod Identity Association (%s)", plan.AssociationId.ValueString()), err.Error())
+
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourcePodIdentityAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().EKSClient(ctx)
-
 	var state resourcePodIdentityAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().EKSClient(ctx)
+
 	in := &eks.DeletePodIdentityAssociationInput{
-		AssociationId: aws.String(state.AssociationId.ValueString()),
-		ClusterName:   aws.String(state.ClusterName.ValueString()),
+		AssociationId: fwflex.StringFromFramework(ctx, state.AssociationId),
+		ClusterName:   fwflex.StringFromFramework(ctx, state.ClusterName),
 	}
 
 	_, err := conn.DeletePodIdentityAssociation(ctx, in)
