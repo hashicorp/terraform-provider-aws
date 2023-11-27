@@ -22,6 +22,7 @@ resource "aws_s3control_access_grants_instance" "example" {}
 This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the S3 Access Grants instance. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `identity_center_arn` - (Optional) The ARN of the AWS IAM Identity Center instance associated with the S3 Access Grants instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
