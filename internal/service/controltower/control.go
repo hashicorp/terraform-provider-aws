@@ -221,26 +221,24 @@ func statusControlOperation(ctx context.Context, conn *controltower.Client, id s
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, aws.ToString((*string)(&output.Status)), nil
 	}
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{controltower.ControlOperationStatusInProgress},
-		Target:  []string{controltower.ControlOperationStatusSucceeded},
+		Pending: []string{string(types.ControlOperationStatusInProgress)},
+		Target:  []string{string(types.ControlOperationStatusSucceeded)},
 		Refresh: statusControlOperation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*controltower.Client); ok {
-		if status := aws.ToString(output.Status); status == controltower.ControlOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
-		}
+	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
-		return output, err
+		return output.ControlOperation, err
 	}
 
 	return nil, err
