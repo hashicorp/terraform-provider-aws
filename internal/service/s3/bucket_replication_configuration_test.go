@@ -1196,7 +1196,7 @@ func TestAccS3BucketReplicationConfiguration_directoryBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketReplicationConfigurationConfig_directoryBucket(rName, s3.StorageClassStandard),
-				ExpectError: regexache.MustCompile(`NoSuchBucket`), // Waiting for resource migration to AWS SDK for Go v2.
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
