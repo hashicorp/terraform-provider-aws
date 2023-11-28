@@ -35,7 +35,6 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.DocDBElasticEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +44,8 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
@@ -53,7 +53,6 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					resource.TestCheckResourceAttr(resourceName, "client_token", fmt.Sprintf("%s-token", rName)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexp.MustCompile(`cluster/.+`)),
 				),
 			},
@@ -83,7 +82,6 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.DocDBElasticEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,6 +94,111 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdocdbelastic.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDocDBElasticCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cluster awstypes.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdbelastic_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBElasticCluster_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cluster awstypes.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdbelastic_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexp.MustCompile(`cluster/.+`)),
+				),
+			},
+			{
+				Config: testAccClusterConfig_update(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexp.MustCompile(`cluster/.+`)),
+				),
 			},
 		},
 	})
@@ -166,34 +269,22 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func testAccClusterBaseConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+`, rName),
+	)
+}
+
 func testAccClusterConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "main" {
-  cidr_block = "10.10.0.0/16"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.10.${count.index}.0/24"
-  vpc_id            = aws_vpc.main.id
-}
-
-resource "aws_security_group" "basic" {
-  name   = "%[1]s-security-group"
-  vpc_id = aws_vpc.main.id
-}
-
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_docdbelastic_cluster" "test" {
   name   = %[1]q
   shard_capacity = 2
@@ -206,7 +297,61 @@ resource "aws_docdbelastic_cluster" "test" {
   preferred_maintenance_window = "tue:04:00-tue:04:30"
 
   vpc_security_group_ids = [
-    aws_security_group.basic.id
+    aws_security_group.test.id
+  ]
+
+  subnet_ids = [
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id
+  ]
+}
+`, rName))
+}
+
+func testAccClusterConfig_update(rName string, shardCapacity int) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_docdbelastic_cluster" "test" {
+  name   = %[1]q
+  shard_capacity = %[2]d
+  shard_count    = 1
+
+  admin_user_name     = "testuser"
+  admin_user_password = "testpassword"
+  auth_type           = "PLAIN_TEXT"
+
+  preferred_maintenance_window = "tue:04:00-tue:04:30"
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  subnet_ids = [
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id
+  ]
+}
+`, rName, shardCapacity))
+}
+
+func testAccClusterConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_docdbelastic_cluster" "test" {
+  name   = %[1]q
+  shard_capacity = 2
+  shard_count    = 1
+
+  admin_user_name     = "testuser"
+  admin_user_password = "testpassword"
+  auth_type           = "PLAIN_TEXT"
+
+  preferred_maintenance_window = "tue:04:00-tue:04:30"
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
   ]
 
   subnet_ids = [
@@ -214,10 +359,41 @@ resource "aws_docdbelastic_cluster" "test" {
     aws_subnet.test[1].id
   ]
 
-
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, key1, value1))
+}
+
+func testAccClusterConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_docdbelastic_cluster" "test" {
+  name   = %[1]q
+  shard_capacity = 2
+  shard_count    = 1
+
+  admin_user_name     = "testuser"
+  admin_user_password = "testpassword"
+  auth_type           = "PLAIN_TEXT"
+
+  preferred_maintenance_window = "tue:04:00-tue:04:30"
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  subnet_ids = [
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id
+  ]
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, key1, value1, key2, value2))
 }

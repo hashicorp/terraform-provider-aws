@@ -43,16 +43,16 @@ The following arguments are optional:
 
 * `kms_key_id` - (Optional) ARN of a KMS key that is used to encrypt the Elastic DocumentDB cluster. If not specified, the default encryption key that KMS creates for your account is used.
 * `preffered_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur in UTC. Format: `ddd:hh24:mi-ddd:hh24:mi`. If not specified, AWS will choose a random 30-minute window on a random day of the week.
-* `subnet_ids` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates
-* `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
-  with the Elastic DocumentDB Cluster
+* `subnet_ids` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates.
+* `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Elastic DocumentDB Cluster
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `cluster_arn` - ARN of the DocumentDB Elastic Cluster
-* `cluster_endpoint` - The DNS address of the DocDB instance
+* `arn` - ARN of the DocumentDB Elastic Cluster
+* `endpoint` - The DNS address of the DocDB instance
 
 ## Timeouts
 
