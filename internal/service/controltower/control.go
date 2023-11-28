@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
-	types "github.com/aws/aws-sdk-go-v2/service/controltower/types"
+	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_controltower_control", name="Control")
-func ResourceControl() *schema.Resource {
+func resourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,
 		ReadWithoutTimeout:   resourceControlRead,
@@ -91,7 +92,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
-	output, err := FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+	output, err := findEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
@@ -140,35 +141,53 @@ const (
 	controlResourceIDPartCount = 2
 )
 
-func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
-	var nextToken string
-	for {
-		input := &controltower.ListEnabledControlsInput{
-			TargetIdentifier: aws.String(targetIdentifier),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
+func findEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
+	input := &controltower.ListEnabledControlsInput{
+		TargetIdentifier: aws.String(targetIdentifier),
+	}
+
+	return findEnabledControl(ctx, conn, input, func(v *types.EnabledControlSummary) bool {
+		return aws.ToString(v.ControlIdentifier) == controlIdentifier
+	})
+}
+
+func findEnabledControl(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) (*types.EnabledControlSummary, error) {
+	output, err := findEnabledControls(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]*types.EnabledControlSummary, error) {
+	var output []*types.EnabledControlSummary
+
+	pages := controltower.NewListEnabledControlsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
-		out, err := conn.ListEnabledControls(ctx, input)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, control := range out.EnabledControls {
-			if aws.ToString(control.ControlIdentifier) == controlIdentifier {
-				return &control, nil
+		for _, v := range page.EnabledControls {
+			v := v
+			if v := &v; filter(v) {
+				output = append(output, v)
 			}
 		}
-
-		if out.NextToken == nil {
-			break
-		}
-
-		nextToken = aws.ToString(out.NextToken)
 	}
 
-	return nil, nil
+	return output, nil
 }
 
 func findControlOperationByID(ctx context.Context, conn *controltower.Client, id string) (*types.ControlOperation, error) {
@@ -178,7 +197,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 
 	output, err := conn.GetControlOperation(ctx, input)
 
-	if tfresource.NotFound(err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
