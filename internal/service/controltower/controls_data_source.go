@@ -8,14 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_controltower_controls")
-func DataSourceControls() *schema.Resource {
+// @SDKDataSource("aws_controltower_controls", name="Control")
+func dataSourceControls() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceControlsRead,
 
@@ -38,36 +40,20 @@ func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
+	input := &controltower.ListEnabledControlsInput{
+		TargetIdentifier: aws.String(targetIdentifier),
+	}
 
-	var controls []string
-	var nextToken string
+	controls, err := findEnabledControls(ctx, conn, input, tfslices.PredicateTrue[*types.EnabledControlSummary]())
 
-	for {
-		input := &controltower.ListEnabledControlsInput{
-			TargetIdentifier: aws.String(targetIdentifier),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-
-		out, err := conn.ListEnabledControls(ctx, input)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		for _, control := range out.EnabledControls {
-			controls = append(controls, aws.ToString(control.ControlIdentifier))
-		}
-
-		if out.NextToken == nil {
-			break
-		}
-
-		nextToken = aws.ToString(out.NextToken)
+	if err != nil {
+		return diag.Errorf("reading ControlTower Controls (%s): %s", targetIdentifier, err)
 	}
 
 	d.SetId(targetIdentifier)
-	d.Set("enabled_controls", controls)
+	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v *types.EnabledControlSummary) string {
+		return aws.ToString(v.ControlIdentifier)
+	}))
 
 	return nil
 }

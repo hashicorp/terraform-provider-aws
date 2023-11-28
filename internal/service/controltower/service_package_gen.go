@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceControls,
+			Factory:  dataSourceControls,
 			TypeName: "aws_controltower_controls",
+			Name:     "Control",
 		},
 	}
 }
