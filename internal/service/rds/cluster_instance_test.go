@@ -1362,7 +1362,7 @@ func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAcces
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 }
 
@@ -1392,13 +1392,13 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = %[1]q
-  engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = data.aws_rds_engine_version.default.version
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
+  cluster_identifier   = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  database_name        = "mydb"
+  master_username      = "foo"
+  master_password      = "mustbeeightcharacters"
+  skip_final_snapshot  = true
   db_subnet_group_name = aws_db_subnet_group.test.name
 }
 
