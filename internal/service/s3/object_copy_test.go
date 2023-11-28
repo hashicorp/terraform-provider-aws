@@ -440,7 +440,6 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	// sourceName := "aws_s3_object.source"
 	sourceKey := "source"
 	targetKey := "target"
 
@@ -474,7 +473,6 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_algorithm", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "customer_key"),
 					resource.TestCheckResourceAttr(resourceName, "customer_key_md5", ""),
-					// resource.TestCheckResourceAttrPair(resourceName, "etag", sourceName, "etag"), TODO
 					resource.TestCheckNoResourceAttr(resourceName, "expected_bucket_owner"),
 					resource.TestCheckNoResourceAttr(resourceName, "expected_source_bucket_owner"),
 					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
@@ -498,7 +496,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
 					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ZONAL"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ONEZONE"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
