@@ -45,7 +45,7 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 
 	out, err := findConfigurationProfileSummariesByApplication(ctx, conn, appId)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfiles, appId, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfiles, appId, err)
 	}
 
 	d.SetId(appId)
