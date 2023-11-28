@@ -34,22 +34,22 @@ var (
 )
 
 // @FrameworkResource(name="Directory Bucket")
-func newResourceDirectoryBucket(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDirectoryBucket{}
+func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &directoryBucketResource{}
 
 	return r, nil
 }
 
-type resourceDirectoryBucket struct {
+type directoryBucketResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 }
 
-func (r *resourceDirectoryBucket) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *directoryBucketResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_s3_directory_bucket"
 }
 
-func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *directoryBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	dataRedundancyType := fwtypes.StringEnumType[awstypes.DataRedundancy]()
 	bucketTypeType := fwtypes.StringEnumType[awstypes.BucketType]()
 	locationTypeType := fwtypes.StringEnumType[awstypes.LocationType]()
@@ -122,7 +122,7 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 	}
 }
 
-func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *directoryBucketResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -170,7 +170,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *directoryBucketResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -218,7 +218,7 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDirectoryBucket) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *directoryBucketResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
@@ -236,7 +236,7 @@ func (r *resourceDirectoryBucket) Update(ctx context.Context, request resource.U
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *directoryBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data directoryBucketResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -280,7 +280,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 }
 
 // arn returns the ARN of the specified bucket.
-func (r *resourceDirectoryBucket) arn(bucket string) string {
+func (r *directoryBucketResource) arn(bucket string) string {
 	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 

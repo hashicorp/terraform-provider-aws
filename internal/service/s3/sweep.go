@@ -285,7 +285,7 @@ func sweepDirectoryBuckets(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDirectoryBucket, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
 				framework.NewAttribute("id", aws.ToString(v.Name)),
 			))
 		}
