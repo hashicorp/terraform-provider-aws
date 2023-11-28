@@ -39,6 +39,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_controltower_control",
 			Name:     "Control",
 		},
+		{
+			Factory:  resourceLandingZone,
+			TypeName: "aws_controltower_landing_zone",
+			Name:     "Landing Zone",
+		},
 	}
 }
 
