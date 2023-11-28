@@ -72,6 +72,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &controltower.CreateLandingZoneInput{
 		Manifest: document.NewLazyDocument(manifest),
 		Version:  aws.String(version),
+		Tags:     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
