@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourcePodIdentityAssociation,
 			Name:    "Pod Identity Association",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "association_id",
+				IdentifierAttribute: "association_arn",
 			},
 		},
 	}

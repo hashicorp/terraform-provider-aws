@@ -32,7 +32,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Pod Identity Association")
-// @Tags(identifierAttribute="association_id")
+// @Tags(identifierAttribute="association_arn")
 func newResourcePodIdentityAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePodIdentityAssociation{}
 
@@ -195,16 +195,6 @@ func (r *resourcePodIdentityAssociation) Read(ctx context.Context, req resource.
 		return
 	}
 
-	tags, err := listTags(ctx, conn, data.AssociationArn.ValueString())
-
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("listing tags for Pod Identity Association (%s)", data.AssociationId.ValueString()), err.Error())
-
-		return
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -250,14 +240,6 @@ func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resourc
 		}
 
 		plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
-	}
-
-	if oldTagsAll, newTagsAll := state.TagsAll, plan.TagsAll; !newTagsAll.Equal(oldTagsAll) {
-		if err := updateTags(ctx, conn, plan.AssociationArn.ValueString(), oldTagsAll, newTagsAll); err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating tags for Pod Identity Association (%s)", plan.AssociationId.ValueString()), err.Error())
-
-			return
-		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

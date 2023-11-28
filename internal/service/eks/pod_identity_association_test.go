@@ -263,6 +263,10 @@ resource "aws_eks_pod_identity_association" "test" {
   namespace       = %[1]q
   service_account = "%[1]s-sa"
   role_arn        = aws_iam_role.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
