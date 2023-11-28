@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -69,7 +70,17 @@ func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resou
 					fwvalidators.AWSAccountID(),
 				},
 			},
-			names.AttrID:      framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
+			"identity_center_application_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"identity_center_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -91,8 +102,9 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 		data.AccountID = types.StringValue(r.Meta().AccountID)
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
-		AccountId: flex.StringFromFramework(ctx, data.AccountID),
-		Tags:      getTagsIn(ctx),
+		AccountId:         flex.StringFromFramework(ctx, data.AccountID),
+		IdentityCenterArn: flex.StringFromFramework(ctx, data.IdentityCenterARN),
+		Tags:              getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateAccessGrantsInstance(ctx, input)
@@ -106,6 +118,7 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 	// Set values for unknowns.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.IdentityCenterApplicationARN = flex.StringToFramework(ctx, output.IdentityCenterArn)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -146,6 +159,7 @@ func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resourc
 	// Set attributes for import.
 	data.AccessGrantsInstanceARN = flex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
 	data.AccessGrantsInstanceID = flex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.IdentityCenterApplicationARN = flex.StringToFramework(ctx, output.IdentityCenterArn)
 
 	tags, err := listTags(ctx, conn, data.AccessGrantsInstanceARN.ValueString(), data.AccountID.ValueString())
 
@@ -177,6 +191,24 @@ func (r *accessGrantsInstanceResource) Update(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
+	if oldARN, newARN := old.IdentityCenterARN, new.IdentityCenterARN; !newARN.Equal(oldARN) {
+		if !oldARN.IsNull() {
+			if err := disassociateAccessGrantsInstanceIdentityCenterInstance(ctx, conn, old.ID.ValueString()); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("dissociating S3 Access Grants Instance (%s) IAM Identity Center instance", old.ID.ValueString()), err.Error())
+
+				return
+			}
+		}
+
+		if !newARN.IsNull() {
+			if err := associateAccessGrantsInstanceIdentityCenterInstance(ctx, conn, new.ID.ValueString(), newARN.ValueString()); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("associating S3 Access Grants Instance (%s) IAM Identity Center instance (%s)", new.ID.ValueString(), newARN.ValueString()), err.Error())
+
+				return
+			}
+		}
+	}
+
 	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
 		if err := updateTags(ctx, conn, new.AccessGrantsInstanceARN.ValueString(), new.AccountID.ValueString(), oldTagsAll, newTagsAll); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating tags for S3 Access Grants Instance (%s)", new.ID.ValueString()), err.Error())
@@ -199,6 +231,14 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().S3ControlClient(ctx)
 
+	if !data.IdentityCenterARN.IsNull() {
+		if err := disassociateAccessGrantsInstanceIdentityCenterInstance(ctx, conn, data.ID.ValueString()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("dissociating S3 Access Grants Instance (%s) IAM Identity Center instance", data.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
 	_, err := conn.DeleteAccessGrantsInstance(ctx, &s3control.DeleteAccessGrantsInstanceInput{
 		AccountId: flex.StringFromFramework(ctx, data.AccountID),
 	})
@@ -216,6 +256,27 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 
 func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
+}
+
+func associateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID, identityCenterARN string) error {
+	input := &s3control.AssociateAccessGrantsIdentityCenterInput{
+		AccountId:         aws.String(accountID),
+		IdentityCenterArn: aws.String(identityCenterARN),
+	}
+
+	_, err := conn.AssociateAccessGrantsIdentityCenter(ctx, input)
+
+	return err
+}
+
+func disassociateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID string) error {
+	input := &s3control.DissociateAccessGrantsIdentityCenterInput{
+		AccountId: aws.String(accountID),
+	}
+
+	_, err := conn.DissociateAccessGrantsIdentityCenter(ctx, input)
+
+	return err
 }
 
 func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accountID string) (*s3control.GetAccessGrantsInstanceOutput, error) {
@@ -244,12 +305,14 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 }
 
 type accessGrantsInstanceResourceModel struct {
-	AccessGrantsInstanceARN types.String `tfsdk:"access_grants_instance_arn"`
-	AccessGrantsInstanceID  types.String `tfsdk:"access_grants_instance_id"`
-	AccountID               types.String `tfsdk:"account_id"`
-	ID                      types.String `tfsdk:"id"`
-	Tags                    types.Map    `tfsdk:"tags"`
-	TagsAll                 types.Map    `tfsdk:"tags_all"`
+	AccessGrantsInstanceARN      types.String `tfsdk:"access_grants_instance_arn"`
+	AccessGrantsInstanceID       types.String `tfsdk:"access_grants_instance_id"`
+	AccountID                    types.String `tfsdk:"account_id"`
+	ID                           types.String `tfsdk:"id"`
+	IdentityCenterApplicationARN types.String `tfsdk:"identity_center_application_arn"`
+	IdentityCenterARN            fwtypes.ARN  `tfsdk:"identity_center_arn"`
+	Tags                         types.Map    `tfsdk:"tags"`
+	TagsAll                      types.Map    `tfsdk:"tags_all"`
 }
 
 func (data *accessGrantsInstanceResourceModel) InitFromID() error {

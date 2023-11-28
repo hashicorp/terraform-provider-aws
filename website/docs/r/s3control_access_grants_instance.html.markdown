@@ -13,8 +13,18 @@ You can have one S3 Access Grants instance per Region in your account.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_s3control_access_grants_instance" "example" {}
+```
+
+### AWS IAM Identity Center
+
+```terraform
+resource "aws_s3control_access_grants_instance" "example" {
+  identity_center_arn = "arn:aws:sso:::instance/ssoins-890759e9c7bfdc1d"
+}
 ```
 
 ## Argument Reference
@@ -22,6 +32,7 @@ resource "aws_s3control_access_grants_instance" "example" {}
 This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the S3 Access Grants instance. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `identity_center_arn` - (Optional) The ARN of the AWS IAM Identity Center instance associated with the S3 Access Grants instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -30,6 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `access_grants_instance_arn` - Amazon Resource Name (ARN) of the S3 Access Grants instance.
 * `access_grants_instance_id` - Unique ID of the S3 Access Grants instance.
+* `identity_center_application_arn` - The ARN of the AWS IAM Identity Center instance application; a subresource of the original Identity Center instance.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
