@@ -17,39 +17,9 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_docdb_global_cluster", &resource.Sweeper{
-		Name: "aws_docdb_global_cluster",
-		F:    sweepGlobalClusters,
-		Dependencies: []string{
-			"aws_docdb_cluster",
-		},
-	})
-
-	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
-		Name: "aws_docdb_subnet_group",
-		F:    sweepSubnetGroups,
-		Dependencies: []string{
-			"aws_docdb_cluster_instance",
-		},
-	})
-
-	resource.AddTestSweepers("aws_docdb_event_subscription", &resource.Sweeper{
-		Name: "aws_docdb_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
-
 	resource.AddTestSweepers("aws_docdb_cluster", &resource.Sweeper{
 		Name: "aws_docdb_cluster",
 		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_docdb_cluster_instance",
-			"aws_docdb_cluster_snapshot",
-		},
-	})
-
-	resource.AddTestSweepers("aws_docdb_cluster_snapshot", &resource.Sweeper{
-		Name: "aws_docdb_cluster_snapshot",
-		F:    sweepClusterSnapshots,
 		Dependencies: []string{
 			"aws_docdb_cluster_instance",
 		},
@@ -64,7 +34,36 @@ func RegisterSweepers() {
 		Name: "aws_docdb_cluster_parameter_group",
 		F:    sweepClusterParameterGroups,
 		Dependencies: []string{
-			"aws_docdb_cluster_instance",
+			"aws_docdb_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_docdb_cluster_snapshot", &resource.Sweeper{
+		Name: "aws_docdb_cluster_snapshot",
+		F:    sweepClusterSnapshots,
+		Dependencies: []string{
+			"aws_docdb_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_docdb_event_subscription", &resource.Sweeper{
+		Name: "aws_docdb_event_subscription",
+		F:    sweepEventSubscriptions,
+	})
+
+	resource.AddTestSweepers("aws_docdb_global_cluster", &resource.Sweeper{
+		Name: "aws_docdb_global_cluster",
+		F:    sweepGlobalClusters,
+		Dependencies: []string{
+			"aws_docdb_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
+		Name: "aws_docdb_subnet_group",
+		F:    sweepSubnetGroups,
+		Dependencies: []string{
+			"aws_docdb_cluster",
 		},
 	})
 }
