@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.5
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.8.4
