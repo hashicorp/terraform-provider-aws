@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/osis v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.23.5
-	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.4
+	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.63.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.22.4

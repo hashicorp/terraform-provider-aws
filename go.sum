@@ -164,8 +164,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.8.3 h1:3/URySnhhd2ExI0aMSIxD16ztsv
 github.com/aws/aws-sdk-go-v2/service/pipes v1.8.3/go.mod h1:3bkjBP5RDfxzTeWNMhHs+KK0KIJhxbTpBvezqUodO2w=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.23.5 h1:ONbOQr6ct+e0zLtz72kw1c8bl9IZcgA3NyNe8SG4wbc=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.23.5/go.mod h1:dydCkw132hGSOeKK43YHrnupHB9VGdSVpD8kdgUieW4=
-github.com/aws/aws-sdk-go-v2/service/qldb v1.18.4 h1:3hHGCrqpJRExbS+tteWva0iqCkbP5iykBXOKSfABYmY=
-github.com/aws/aws-sdk-go-v2/service/qldb v1.18.4/go.mod h1:0SJbLjtz0rdXUPw2VgCYnFRoYdxjT69um3+/Jx2qjNs=
+github.com/aws/aws-sdk-go-v2/service/qldb v1.18.5 h1:iULB2u5quHM+baSo2OSQ9/jutXkt/RN4lpNHjyPjkLM=
+github.com/aws/aws-sdk-go-v2/service/qldb v1.18.5/go.mod h1:HhiTmwaBYi3oCFPcAUy93ecfomgUGi48j3ATOALWsW8=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.12.4 h1:hl6OR9yv2AKyj7UXbfhhfCwrHMOHqijjre9qFUDYoFc=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.12.4/go.mod h1:3ek97n3CuKKzfu8mMc+FXvc+rtRZXbYQIMzSFlIpVvk=
 github.com/aws/aws-sdk-go-v2/service/rds v1.63.4 h1:3Iiqs2cu0/H8DsKE+VVpWStCBlYlP78dvgODrlb/Y74=
