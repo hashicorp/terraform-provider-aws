@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,6 +79,8 @@ func resourceVPCConnector() *schema.Resource {
 }
 
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("vpc_connector_name").(string)
@@ -91,19 +94,21 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateVpcConnector(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner VPC Connector (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner VPC Connector (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.VpcConnector.VpcConnectorArn))
 
 	if _, err := waitVPCConnectorCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner VPC Connector (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Connector (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceVPCConnectorRead(ctx, d, meta)
+	return append(diags, resourceVPCConnectorRead(ctx, d, meta)...)
 }
 
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	vpcConnector, err := findVPCConnectorByARN(ctx, conn, d.Id())
@@ -111,11 +116,11 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner VPC Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner VPC Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", vpcConnector.VpcConnectorArn)
@@ -125,15 +130,17 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 
-	return nil
+	return diags
 }
 
 func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceVPCConnectorRead(ctx, d, meta)
+	return resourceVPCConnectorRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
@@ -142,18 +149,18 @@ func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner VPC Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVPCConnectorDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner VPC Connector (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Connector (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {

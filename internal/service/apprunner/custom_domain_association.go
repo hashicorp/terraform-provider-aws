@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -91,6 +92,8 @@ func resourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
@@ -105,25 +108,27 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AssociateCustomDomain(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner Custom Domain Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Custom Domain Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 	d.Set("dns_target", output.DNSTarget)
 
 	if _, err := waitCustomDomainAssociationCreated(ctx, conn, domainName, serviceARN); err != nil {
-		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Custom Domain Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCustomDomainAssociationRead(ctx, d, meta)
+	return append(diags, resourceCustomDomainAssociationRead(ctx, d, meta)...)
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName, serviceArn, err := customDomainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
@@ -131,30 +136,32 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner Custom Domain Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Custom Domain Association (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
-		return diag.Errorf("setting certificate_validation_records: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
 	d.Set("domain_name", customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
 	d.Set("status", customDomain.Status)
 
-	return nil
+	return diags
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName, serviceARN, err := customDomainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
@@ -164,18 +171,18 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner Custom Domain Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Custom Domain Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceARN); err != nil {
-		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Custom Domain Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const customDomainAssociationIDSeparator = ","

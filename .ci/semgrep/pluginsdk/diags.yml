@@ -5,7 +5,7 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service
+        - internal/service/[b-z]*
     patterns:
       - pattern: diag.FromErr($ERR)
     severity: WARNING
@@ -18,7 +18,72 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service
+        - internal/service/[b-z]*
     patterns:
       - pattern: diag.Errorf(...)
+    severity: WARNING
+
+  - id: avoid-create_DiagError
+    fix-regex:
+      regex: create\.DiagError\((.*)\)
+      replacement: create.AppendDiagError(diags, \1)
+    languages: [go]
+    message: Prefer `create.AppendDiagError` to `create.DiagError`
+    paths:
+      exclude:
+        - internal/service/[b-z]*
+    patterns:
+      - pattern: create.DiagError(...)
+    severity: WARNING
+
+  - id: avoid-create_DiagSettingError
+    fix-regex:
+      regex: create\.DiagSettingError\((.*)\)
+      replacement: create.AppendDiagSettingError(diags, \1)
+    languages: [go]
+    message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
+    paths:
+      exclude:
+        - internal/service/[b-z]*
+    patterns:
+      - pattern: create.DiagSettingError(...)
+    severity: WARNING
+
+  - id: append-Read-to-diags
+    fix-regex:
+      regex: return (resource\w+Read\(.*\))
+      replacement: return append(diags, \1...)
+    languages: [go]
+    message: Append results of $READFN to diags instead of returning directly
+    paths:
+      exclude:
+        - internal/service/[b-z]*
+    patterns:
+      - pattern: return $READFN(...)
+      - metavariable-regex:
+          metavariable: "$READFN"
+          regex: resource\w+Read
+    severity: WARNING
+
+  - id: return-diags-not-nil
+    fix-regex:
+      regex: return nil
+      replacement: return diags
+    languages: [go]
+    message: Return diags instead of nil
+    paths:
+      include:
+        - internal/service
+      exclude:
+        - internal/service/[b-z]*
+    patterns:
+      - pattern: return nil
+      - pattern-not-inside: |
+          func(...) {
+            ...
+          }
+      - pattern-inside: |
+          func $F(...) diag.Diagnostics {
+            ...
+          }
     severity: WARNING

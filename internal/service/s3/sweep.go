@@ -35,6 +35,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_s3_access_point",
 			"aws_s3_object",
+			"aws_s3control_access_grants_instance",
 			"aws_s3control_multi_region_access_point",
 		},
 	})

@@ -8,6 +8,7 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
@@ -25,6 +26,7 @@ import (
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
+	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -32,6 +34,7 @@ import (
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
@@ -107,7 +110,6 @@ import (
 	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
 	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
 	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
-	cloudwatchevidently_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
 	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
@@ -118,7 +120,6 @@ import (
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	controltower_sdkv1 "github.com/aws/aws-sdk-go/service/controltower"
 	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -268,6 +269,10 @@ func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfi
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
 	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
+}
+
+func (c *AWSClient) AppFabricClient(ctx context.Context) *appfabric_sdkv2.Client {
+	return errs.Must(client[*appfabric_sdkv2.Client](ctx, c, names.AppFabric))
 }
 
 func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
@@ -446,8 +451,8 @@ func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.
 	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases))
 }
 
-func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
-	return errs.Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
+func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
+	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower))
 }
 
 func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
@@ -586,8 +591,8 @@ func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBrid
 	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events))
 }
 
-func (c *AWSClient) EvidentlyConn(ctx context.Context) *cloudwatchevidently_sdkv1.CloudWatchEvidently {
-	return errs.Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](ctx, c, names.Evidently))
+func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {
+	return errs.Must(client[*evidently_sdkv2.Client](ctx, c, names.Evidently))
 }
 
 func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {

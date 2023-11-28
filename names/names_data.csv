@@ -12,6 +12,7 @@ amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,,amplifyuibu
 apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,,1,,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,
 apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,1,,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,
+appfabric,appfabric,appfabric,appfabric,,appfabric,,,AppFabric,AppFabric,,,2,,aws_appfabric_,,appfabric_,AppFabric,AWS,,,,,,,
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,No SDK support
@@ -68,7 +69,7 @@ cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudse
 cloudtrail,cloudtrail,cloudtrail,cloudtrail,,cloudtrail,,,CloudTrail,CloudTrail,,1,,aws_cloudtrail,aws_cloudtrail_,,cloudtrail,CloudTrail,AWS,,,,,,,
 cloudwatch,cloudwatch,cloudwatch,cloudwatch,,cloudwatch,,,CloudWatch,CloudWatch,,1,,aws_cloudwatch_(?!(event_|log_|query_)),aws_cloudwatch_,,cloudwatch_dashboard;cloudwatch_metric_;cloudwatch_composite_,CloudWatch,Amazon,,,,,,,
 application-insights,applicationinsights,applicationinsights,applicationinsights,,applicationinsights,,,ApplicationInsights,ApplicationInsights,,1,,,aws_applicationinsights_,,applicationinsights_,CloudWatch Application Insights,Amazon,,,,,,,
-evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidently,Evidently,CloudWatchEvidently,,1,,,aws_evidently_,,evidently_,CloudWatch Evidently,Amazon,,,,,,,
+evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidently,Evidently,CloudWatchEvidently,,,2,,aws_evidently_,,evidently_,CloudWatch Evidently,Amazon,,,,,,,
 internetmonitor,internetmonitor,internetmonitor,internetmonitor,,internetmonitor,,,InternetMonitor,InternetMonitor,,,2,,aws_internetmonitor_,,internetmonitor_,CloudWatch Internet Monitor,Amazon,,,,,,,
 logs,logs,cloudwatchlogs,cloudwatchlogs,,logs,,cloudwatchlog;cloudwatchlogs,Logs,CloudWatchLogs,,,2,aws_cloudwatch_(log_|query_),aws_logs_,,cloudwatch_log_;cloudwatch_query_,CloudWatch Logs,Amazon,,,,,,,
 rum,rum,cloudwatchrum,rum,,rum,,cloudwatchrum,RUM,CloudWatchRUM,,1,,,aws_rum_,,rum_,CloudWatch RUM,Amazon,,,,,,,
@@ -98,7 +99,7 @@ connectparticipant,connectparticipant,connectparticipant,connectparticipant,,con
 voice-id,voiceid,voiceid,voiceid,,voiceid,,,VoiceID,VoiceID,,1,,,aws_voiceid_,,voiceid_,Connect Voice ID,Amazon,,x,,,,,
 wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,ConnectWisdomService,,1,,,aws_wisdom_,,wisdom_,Connect Wisdom,Amazon,,x,,,,,
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,No SDK support
-controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,1,,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,
+controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,
 cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,No SDK support
