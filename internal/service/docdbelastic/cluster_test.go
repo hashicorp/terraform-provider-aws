@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdocdbelastic "github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +35,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			//acctest.PreCheckPartitionHasService(t, names.DocDBElasticEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +63,6 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"admin_user_password",
-					"client_token",
 				},
 			},
 		},
@@ -83,6 +83,7 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			//acctest.PreCheckPartitionHasService(t, names.DocDBElasticEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -92,7 +93,7 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdbelastic.ResourceCluster(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdocdbelastic.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,14 +110,13 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetCluster(ctx, &docdbelastic.GetClusterInput{
-				ClusterArn: aws.String(rs.Primary.ID),
-			})
+			_, err := tfdocdbelastic.FindClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *awstypes.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
@@ -139,15 +139,13 @@ func testAccCheckClusterExists(ctx context.Context, name string, cluster *awstyp
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient(ctx)
-		resp, err := conn.GetCluster(ctx, &docdbelastic.GetClusterInput{
-			ClusterArn: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfdocdbelastic.FindClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.DocDBElastic, create.ErrActionCheckingExistence, tfdocdbelastic.ResNameCluster, rs.Primary.ID, err)
 		}
 
-		*cluster = *resp.Cluster
+		*cluster = *resp
 
 		return nil
 	}
@@ -170,8 +168,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
 }
@@ -199,10 +195,9 @@ resource "aws_security_group" "basic" {
 }
 
 resource "aws_docdbelastic_cluster" "test" {
-  cluster_name   = %[1]q
+  name   = %[1]q
   shard_capacity = 2
   shard_count    = 1
-  client_token   = "%[1]s-token"
 
   admin_user_name     = "testuser"
   admin_user_password = "testpassword"

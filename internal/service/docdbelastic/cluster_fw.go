@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,8 +39,8 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
 	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
@@ -91,9 +90,8 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-				Computed:   true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -108,6 +106,9 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			"preferred_maintenance_window": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"shard_capacity": schema.Int64Attribute{
 				Required: true,
@@ -388,7 +389,7 @@ type resourceClusterData struct {
 	AuthType                   types.String   `tfsdk:"auth_type"`
 	Endpoint                   types.String   `tfsdk:"endpoint"`
 	ID                         types.String   `tfsdk:"id"`
-	KmsKeyID                   fwtypes.ARN    `tfsdk:"kms_key_id"`
+	KmsKeyID                   types.String   `tfsdk:"kms_key_id"`
 	Name                       types.String   `tfsdk:"name"`
 	PreferredMaintenanceWindow types.String   `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64    `tfsdk:"shard_capacity"`
@@ -496,9 +497,9 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *aws
 
 	r.AdminUserName = flex.StringToFrameworkLegacy(ctx, output.AdminUserName)
 	r.AuthType = flex.StringValueToFramework(ctx, string(output.AuthType))
-	r.ARN = flex.StringToFramework(ctx, output.ClusterName)
+	r.ARN = flex.StringToFramework(ctx, output.ClusterArn)
 	r.Endpoint = flex.StringToFramework(ctx, output.ClusterEndpoint)
-	r.KmsKeyID = flex.StringToFrameworkARN(ctx, output.KmsKeyId)
+	r.KmsKeyID = flex.StringToFramework(ctx, output.KmsKeyId)
 	r.Name = flex.StringToFramework(ctx, output.ClusterName)
 	r.PreferredMaintenanceWindow = flex.StringToFramework(ctx, output.PreferredMaintenanceWindow)
 	r.ShardCapacity = flex.Int32ToFramework(ctx, output.ShardCapacity)
