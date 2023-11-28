@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/appfabric v1.4.3
+	github.com/aws/aws-sdk-go-v2/service/appfabric v1.4.5
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/athena v1.35.2
