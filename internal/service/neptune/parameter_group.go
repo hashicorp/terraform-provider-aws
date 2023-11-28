@@ -131,48 +131,32 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	describeOpts := neptune.DescribeDBParameterGroupsInput{
-		DBParameterGroupName: aws.String(d.Id()),
+	dbParameterGroup, err := FindDBParameterGroupByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	describeResp, err := conn.DescribeDBParameterGroupsWithContext(ctx, &describeOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	if describeResp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): empty result", d.Id())
-	}
+	d.Set("arn", dbParameterGroup.DBParameterGroupArn)
+	d.Set("description", dbParameterGroup.Description)
+	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set("name", dbParameterGroup.DBParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
 
-	if len(describeResp.DBParameterGroups) != 1 ||
-		aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName) != d.Id() {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): no match", d.Id())
-	}
-
-	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
-	d.Set("arn", arn)
-	d.Set("name", describeResp.DBParameterGroups[0].DBParameterGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName)))
-	d.Set("family", describeResp.DBParameterGroups[0].DBParameterGroupFamily)
-	d.Set("description", describeResp.DBParameterGroups[0].Description)
-
-	// Only include user customized parameters as there's hundreds of system/default ones
-	describeParametersOpts := neptune.DescribeDBParametersInput{
+	// Only include user customized parameters as there's hundreds of system/default ones,
+	input := &neptune.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 		Source:               aws.String("user"),
 	}
 
-	var parameters []*neptune.Parameter
-	err = conn.DescribeDBParametersPagesWithContext(ctx, &describeParametersOpts,
-		func(describeParametersResp *neptune.DescribeDBParametersOutput, lastPage bool) bool {
-			parameters = append(parameters, describeParametersResp.Parameters...)
-			return !lastPage
-		})
+	parameters, err := findDBParameters(ctx, conn, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
@@ -323,6 +307,37 @@ func findDBParameterGroups(ctx context.Context, conn *neptune.Neptune, input *ne
 		}
 
 		for _, v := range page.DBParameterGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDBParameters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParametersInput) ([]*neptune.Parameter, error) {
+	var output []*neptune.Parameter
+
+	err := conn.DescribeDBParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBParametersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Parameters {
 			if v != nil {
 				output = append(output, v)
 			}
