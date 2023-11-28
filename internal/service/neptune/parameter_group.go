@@ -36,13 +36,26 @@ func ResourceParameterGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceParameterGroupRead,
 		UpdateWithoutTimeout: resourceParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -60,22 +73,17 @@ func ResourceParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      neptune.ApplyMethodPendingReboot,
+							ValidateFunc: validation.StringInSlice(neptune.ApplyMethod_Values(), false),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -83,15 +91,6 @@ func ResourceParameterGroup() *schema.Resource {
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
-						},
-						"apply_method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  neptune.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice([]string{
-								neptune.ApplyMethodImmediate,
-								neptune.ApplyMethodPendingReboot,
-							}, false),
 						},
 					},
 				},
@@ -109,22 +108,21 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	createOpts := neptune.CreateDBParameterGroupInput{
-		DBParameterGroupName:   aws.String(name),
+	input := &neptune.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
+		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create Neptune Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateDBParameterGroupWithContext(ctx, &createOpts)
+	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DBParameterGroup.DBParameterGroupName))
-	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
-	log.Printf("[INFO] Neptune Parameter Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
+	d.Set("arn", output.DBParameterGroup.DBParameterGroupArn)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
