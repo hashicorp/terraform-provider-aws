@@ -61,7 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.6.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.5.3
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.8.2
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.12.4
